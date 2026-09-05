@@ -192,19 +192,19 @@
           <input type="text" id="reg-eleve-option" placeholder="Option (Ex: Scientifique)" required>
         </div>
         <button type="submit" class="btn btn-secondary">
-          <i class="fa-solid fa-plus-circle"></i> Générer le Matricule Élève
+          <i class="fa-solid fa-plus-circle"></i> Générer le Matricule & Initialiser le Bulletin
         </button>
       </form>
 
       <div id="registration-result" style="display: none;" class="alert-success">
-        <p style="font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Inscription effectuée !</p>
+        <p style="font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Inscription effectuée avec les matières de base !</p>
         <p style="margin-top: 6px;">Matricule officiel : <span id="new-matricule-display" class="matricule-badge"></span></p>
       </div>
     </div>
 
     <!-- Consultation Bulletin -->
     <div class="card">
-      <h3><i class="fa-solid fa-file-invoice" style="color: var(--primary);"></i> 2. Consulter le Bulletin Scolaire</h3>
+      <h3><i class="fa-solid fa-file-invoice" style="color: var(--primary);"></i> 2. Consulter le Bulletin Unique</h3>
       <div style="display: flex; gap: 8px; margin-top: 1rem;">
         <input type="text" id="search-student" placeholder="Entrez le Matricule (Ex: MAT-4821)" style="flex: 1;">
         <button class="btn" style="width: auto;" onclick="afficherBulletin()">
@@ -217,9 +217,7 @@
     <div class="card">
       <h3><i class="fa-solid fa-book-open" style="color: var(--primary);"></i> 3. Leçons & Cours Disponibles</h3>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Consultez et téléchargez les cours déposés par les enseignants.</p>
-      <div id="liste-cours-eleve" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
-        <!-- Injecté dynamiquement -->
-      </div>
+      <div id="liste-cours-eleve" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;"></div>
     </div>
 
     <!-- Zone d'affichage Bulletin -->
@@ -358,17 +356,17 @@
         </form>
       </div>
 
-      <!-- Ajout Note -->
+      <!-- Ajout ou Mise à jour de Note -->
       <div class="card">
-        <h3><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Enregistrer une Note</h3>
+        <h3><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Enregistrer / Mettre à jour une Note</h3>
         <form onsubmit="ajouterNote(event)">
           <div class="form-group">
             <label>Matricule de l'élève</label>
             <input type="text" id="note-matricule" placeholder="Sélectionnez un élève ci-dessus" readonly style="background: #e2e8f0;" required>
           </div>
-          <input type="text" id="note-matiere" placeholder="Matière (Ex: Mathématiques)" required>
+          <input type="text" id="note-matiere" placeholder="Matière (Ex: Mathématiques, Français...)" required>
           <input type="number" id="note-valeur" min="0" max="20" step="0.5" placeholder="Note / 20" required>
-          <button type="submit" class="btn"><i class="fa-solid fa-floppy-disk"></i> Enregistrer la note</button>
+          <button type="submit" class="btn"><i class="fa-solid fa-floppy-disk"></i> Enregistrer la note sur le bulletin</button>
         </form>
       </div>
 
@@ -514,8 +512,26 @@
     const option = document.getElementById('reg-eleve-option').value.trim();
     const matricule = genererMatricule();
 
+    // 1. Enregistrement des informations de l'élève
     db.ref('eleves/' + matricule).set({ matricule, nom, postnom, prenom, classe, option }, err => {
       if (!err) {
+        // 2. Initialisation automatique de plusieurs matières de base sur son bulletin unique
+        const matieresDeBase = [
+          { key: "mathematiques", nom: "Mathématiques" },
+          { key: "francais", nom: "Français" },
+          { key: "histoire", nom: "Histoire" },
+          { key: "geographie", nom: "Géographie" },
+          { key: "sciences", nom: "Sciences / Biologie" },
+          { key: "anglais", nom: "Anglais" }
+        ];
+
+        matieresDeBase.forEach(m => {
+          db.ref(`notes/${matricule}/${m.key}`).set({
+            matiere: m.nom,
+            note: "-" // Initialement sans note ou vide
+          });
+        });
+
         document.getElementById('new-matricule-display').innerText = matricule;
         document.getElementById('registration-result').style.display = 'block';
         document.getElementById('search-student').value = matricule;
@@ -547,7 +563,6 @@
     document.getElementById('absence-matricule').value = matricule;
   }
 
-  // Publication d'un cours avec code unique automatique
   function publierCours(e) {
     e.preventDefault();
     const titre = document.getElementById('cours-titre').value.trim();
@@ -571,7 +586,6 @@
     });
   }
 
-  // Chargement des leçons en temps réel pour les élèves
   db.ref('cours').on('value', snapshot => {
     const container = document.getElementById('liste-cours-eleve');
     container.innerHTML = '';
@@ -602,18 +616,27 @@
   function ajouterNote(e) {
     e.preventDefault();
     const matricule = document.getElementById('note-matricule').value;
-    const matiere = document.getElementById('note-matiere').value.trim();
-    const note = parseFloat(document.getElementById('note-valeur').value);
+    const matiereNom = document.getElementById('note-matiere').value.trim();
+    const noteValeur = parseFloat(document.getElementById('note-valeur').value);
 
     if(!matricule) {
       alert("Veuillez sélectionner un élève.");
       return;
     }
 
-    db.ref('notes').push({ matricule, matiere, note }, () => {
-      alert(`Note enregistrée !`);
-      document.getElementById('note-matiere').value = '';
-      document.getElementById('note-valeur').value = '';
+    const matiereKey = matiereNom.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "_");
+
+    db.ref(`notes/${matricule}/${matiereKey}`).set({
+      matiere: matiereNom,
+      note: noteValeur
+    }, (err) => {
+      if(!err) {
+        alert(`Note de ${matiereNom} enregistrée/mise à jour sur le bulletin !`);
+        document.getElementById('note-matiere').value = '';
+        document.getElementById('note-valeur').value = '';
+      }
     });
   }
 
@@ -672,29 +695,37 @@
 
       document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR');
 
-      db.ref('notes').orderByChild('matricule').equalTo(queryMatricule).once('value', notesSnap => {
+      db.ref('notes/' + queryMatricule).once('value', notesSnap => {
         const tbody = document.getElementById('notes-list');
         tbody.innerHTML = '';
-        let total = 0, count = 0;
+        let total = 0, countNumNotes = 0;
 
         if (notesSnap.exists()) {
           notesSnap.forEach(child => {
             const n = child.val();
-            total += parseFloat(n.note);
-            count++;
+            const estNoteValid = !isNaN(parseFloat(n.note));
+            
+            if (estNoteValid) {
+              total += parseFloat(n.note);
+              countNumNotes++;
+            }
+
             tbody.innerHTML += `
               <tr>
                 <td class="left-align">${n.matiere}</td>
-                <td>${n.note}/20</td>
+                <td>${estNoteValid ? n.note + '/20' : '-'}</td>
                 <td>-</td><td>-</td><td>-</td>
-                <td><strong>${n.note}/20</strong></td>
+                <td><strong>${estNoteValid ? n.note + '/20' : '-'}</strong></td>
               </tr>
             `;
           });
-          const moy = (total / count).toFixed(1);
-          tbody.innerHTML += `<tr style="background:#f8fafc; font-weight:bold;"><td class="left-align">MOYENNE</td><td colspan="4">---</td><td style="color:var(--primary);">${moy}/20</td></tr>`;
+
+          if (countNumNotes > 0) {
+            const moy = (total / countNumNotes).toFixed(1);
+            tbody.innerHTML += `<tr style="background:#f8fafc; font-weight:bold;"><td class="left-align">MOYENNE GÉNÉRALE</td><td colspan="4">---</td><td style="color:var(--primary);">${moy}/20</td></tr>`;
+          }
         } else {
-          tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-muted); text-align:center;">Aucune note</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-muted); text-align:center;">Aucune matière enregistrée</td></tr>';
         }
       });
 
