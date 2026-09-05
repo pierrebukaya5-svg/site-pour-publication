@@ -199,7 +199,7 @@
       <div id="registration-result" style="display: none;" class="alert-success">
         <p style="font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Inscription effectuée !</p>
         <p style="margin-top: 6px;">Matricule officiel : <span id="new-matricule-display" class="matricule-badge"></span></p>
-        <p style="font-size: 0.8rem; margin-top: 0.4rem; color: #047857;">⚠️ Ce matricule est requis pour l'attribution des notes.</p>
+        <p style="font-size: 0.8rem; margin-top: 0.4rem; color: #047857;">⚠️ Ce matricule est unique et lié définitivement à l'élève.</p>
       </div>
     </div>
 
@@ -336,11 +336,25 @@
         </button>
       </div>
 
+      <!-- Selection globale de l'élève par nom -->
+      <div class="card" style="background: #f0f9ff; border: 1px solid #bae6fd;">
+        <h3><i class="fa-solid fa-user-check" style="color: var(--primary);"></i> Choisir l'Élève concerné</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Sélectionnez l'élève par son nom. Son matricule sera conservé automatiquement.</p>
+        <div class="form-group" style="margin-top: 10px;">
+          <select id="select-eleve-global" onchange="synchroniserEleveSelectionne()">
+            <option value="">-- Sélectionnez un élève dans la liste --</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Ajout Note -->
       <div class="card">
         <h3><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Enregistrer une Note</h3>
         <form onsubmit="ajouterNote(event)">
-          <input type="text" id="note-matricule" placeholder="Matricule de l'élève (Ex: MAT-1001)" required>
+          <div class="form-group">
+            <label>Matricule de l'élève</label>
+            <input type="text" id="note-matricule" placeholder="Sélectionnez un élève ci-dessus" readonly style="background: #e2e8f0;" required>
+          </div>
           <input type="text" id="note-matiere" placeholder="Matière (Ex: Mathématiques)" required>
           <input type="number" id="note-valeur" min="0" max="20" step="0.5" placeholder="Note / 20" required>
           <button type="submit" class="btn"><i class="fa-solid fa-floppy-disk"></i> Enregistrer la note</button>
@@ -351,7 +365,10 @@
       <div class="card">
         <h3><i class="fa-solid fa-gavel" style="color: var(--primary);"></i> Conduite & Décision du Conseil</h3>
         <form onsubmit="enregistrerDecision(event)">
-          <input type="text" id="decision-matricule" placeholder="Matricule de l'élève (Ex: MAT-1001)" required>
+          <div class="form-group">
+            <label>Matricule de l'élève</label>
+            <input type="text" id="decision-matricule" placeholder="Sélectionnez un élève ci-dessus" readonly style="background: #e2e8f0;" required>
+          </div>
           
           <div class="form-group">
             <label>Conduite / Discipline</label>
@@ -383,7 +400,10 @@
       <div class="card">
         <h3><i class="fa-solid fa-user-slash" style="color: var(--danger);"></i> Signaler une Absence</h3>
         <form onsubmit="ajouterAbsence(event)">
-          <input type="text" id="absence-matricule" placeholder="Matricule de l'élève (Ex: MAT-1001)" required>
+          <div class="form-group">
+            <label>Matricule de l'élève</label>
+            <input type="text" id="absence-matricule" placeholder="Sélectionnez un élève ci-dessus" readonly style="background: #e2e8f0;" required>
+          </div>
           <div class="form-group">
             <label>Date de l'absence</label>
             <input type="date" id="absence-date" required>
@@ -461,6 +481,7 @@
         document.getElementById('login-form').style.display = 'none';
         document.getElementById('welcome-msg').innerText = `Tableau de bord : ${snapshot.val().user}`;
         document.getElementById('prof-dashboard').style.display = 'block';
+        chargerListeElevesProf();
       } else {
         alert("Identifiant ou mot de passe incorrect.");
       }
@@ -500,58 +521,81 @@
     });
   }
 
+  // Charger la liste déroulante dynamique des élèves pour le professeur
+  function chargerListeElevesProf() {
+    db.ref('eleves').on('value', snapshot => {
+      const select = document.getElementById('select-eleve-global');
+      select.innerHTML = '<option value="">-- Sélectionnez un élève dans la liste --</option>';
+      
+      if (snapshot.exists()) {
+        snapshot.forEach(child => {
+          const eleve = child.val();
+          const option = document.createElement('option');
+          option.value = eleve.matricule;
+          option.textContent = `${eleve.nom.toUpperCase()} ${eleve.postnom.toUpperCase()} ${eleve.prenom} (${eleve.classe} - ${eleve.matricule})`;
+          select.appendChild(option);
+        });
+      }
+    });
+  }
+
+  // Remplir automatiquement le matricule correspondant à l'élève sélectionné
+  function synchroniserEleveSelectionne() {
+    const matricule = document.getElementById('select-eleve-global').value;
+    document.getElementById('note-matricule').value = matricule;
+    document.getElementById('decision-matricule').value = matricule;
+    document.getElementById('absence-matricule').value = matricule;
+  }
+
   function ajouterNote(e) {
     e.preventDefault();
-    const matricule = document.getElementById('note-matricule').value.trim().toUpperCase();
+    const matricule = document.getElementById('note-matricule').value;
     const matiere = document.getElementById('note-matiere').value.trim();
     const note = parseFloat(document.getElementById('note-valeur').value);
 
-    db.ref('eleves/' + matricule).get().then(snapshot => {
-      if (!snapshot.exists()) {
-        alert("Matricule non trouvé dans le système.");
-        return;
-      }
-      db.ref('notes').push({ matricule, matiere, note }, () => {
-        alert(`Note de ${note}/20 enregistrée avec succès !`);
-        e.target.reset();
-      });
+    if(!matricule) {
+      alert("Veuillez d'abord sélectionner un élève dans la liste en haut.");
+      return;
+    }
+
+    db.ref('notes').push({ matricule, matiere, note }, () => {
+      alert(`Note de ${note}/20 enregistrée avec succès !`);
+      document.getElementById('note-matiere').value = '';
+      document.getElementById('note-valeur').value = '';
     });
   }
 
   function enregistrerDecision(e) {
     e.preventDefault();
-    const matricule = document.getElementById('decision-matricule').value.trim().toUpperCase();
+    const matricule = document.getElementById('decision-matricule').value;
     const conduite = document.getElementById('decision-conduite').value;
     const decision = document.getElementById('decision-statut').value;
 
-    db.ref('eleves/' + matricule).get().then(snapshot => {
-      if (!snapshot.exists()) {
-        alert("Matricule non trouvé.");
-        return;
+    if(!matricule) {
+      alert("Veuillez d'abord sélectionner un élève dans la liste en haut.");
+      return;
+    }
+
+    db.ref('eleves/' + matricule).update({ conduite, decision }, (err) => {
+      if(!err) {
+        alert("Conduite et Décisions enregistrées avec succès !");
       }
-      db.ref('eleves/' + matricule).update({ conduite, decision }, (err) => {
-        if(!err) {
-          alert("Conduite et Décisions enregistrées pour cet élève !");
-          e.target.reset();
-        }
-      });
     });
   }
 
   function ajouterAbsence(e) {
     e.preventDefault();
-    const matricule = document.getElementById('absence-matricule').value.trim().toUpperCase();
+    const matricule = document.getElementById('absence-matricule').value;
     const date = document.getElementById('absence-date').value;
 
-    db.ref('eleves/' + matricule).get().then(snapshot => {
-      if (!snapshot.exists()) {
-        alert("Matricule non trouvé.");
-        return;
-      }
-      db.ref('absences').push({ matricule, date }, () => {
-        alert(`Absence enregistrée pour le ${date}`);
-        e.target.reset();
-      });
+    if(!matricule) {
+      alert("Veuillez d'abord sélectionner un élève dans la liste en haut.");
+      return;
+    }
+
+    db.ref('absences').push({ matricule, date }, () => {
+      alert(`Absence enregistrée pour le ${date}`);
+      document.getElementById('absence-date').value = '';
     });
   }
 
@@ -572,7 +616,6 @@
       document.getElementById('st-classe').innerText = eleve.classe;
       document.getElementById('st-option').innerText = eleve.option || 'Enseignement Général';
       
-      // Conduite et Décision enregistrées par le professeur
       document.getElementById('st-conduite').innerText = eleve.conduite || 'Non renseignée';
       
       const elDecision = document.getElementById('st-decision');
@@ -618,7 +661,6 @@
             `;
           });
 
-          // Moyenne générale
           const moyenne = (totalObtenu / count).toFixed(1);
           tbody.innerHTML += `
             <tr style="background: #f8fafc; font-weight: bold;">
