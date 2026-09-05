@@ -41,6 +41,8 @@
     th { background: #f1f5f9; }
     
     .toggle-link { color: var(--primary); text-align: center; cursor: pointer; margin-top: 1rem; text-decoration: underline; font-size: 0.9rem; }
+    .student-info p { margin-bottom: 0.5rem; font-weight: 500; }
+    .matricule-badge { font-weight: bold; color: var(--primary); font-size: 1.1rem; }
   </style>
 </head>
 <body>
@@ -55,25 +57,33 @@
   <!-- Espace Élève -->
   <div id="sec-eleve" class="section active">
     <h2>Espace Élève</h2>
-    <p>Consultez vos notes, vos absences et téléchargez votre bulletin.</p>
+    <p>Saisissez votre matricule pour consulter votre bulletin.</p>
     
     <div class="card">
-      <label>Matricule / Nom de l'élève</label>
-      <input type="text" id="search-student" placeholder="Ex: Bukaya">
-      <button class="btn" style="margin-top: 10px;" onclick="afficherBulletin()">Rechercher</button>
+      <label>Matricule de l'élève</label>
+      <input type="text" id="search-student" placeholder="Ex: MAT-4821">
+      <button class="btn" style="margin-top: 10px;" onclick="afficherBulletin()">Accéder à mes notes</button>
     </div>
 
     <div id="bulletin-zone" class="card" style="display:none;">
       <div id="pdf-content">
-        <h3 id="student-name">Bulletin de l'élève</h3>
+        <h3>Bulletin Scolaire</h3>
+        <div class="student-info" style="margin-top: 1rem; background: #ffffff; padding: 1rem; border-radius: 6px; border: 1px solid var(--border);">
+          <p><strong>Matricule :</strong> <span id="st-matricule" class="matricule-badge"></span></p>
+          <p><strong>Nom :</strong> <span id="st-nom"></span></p>
+          <p><strong>Post-nom :</strong> <span id="st-postnom"></span></p>
+          <p><strong>Prénom :</strong> <span id="st-prenom"></span></p>
+          <p><strong>Classe :</strong> <span id="st-classe"></span></p>
+          <p><strong>Option :</strong> <span id="st-option"></span></p>
+        </div>
         
-        <h4 style="margin-top: 1rem;">Notes :</h4>
+        <h4 style="margin-top: 1.5rem;">Notes :</h4>
         <table>
           <thead><tr><th>Matière</th><th>Note</th></tr></thead>
           <tbody id="notes-list"></tbody>
         </table>
 
-        <h4 style="margin-top: 1rem;">Absences :</h4>
+        <h4 style="margin-top: 1.5rem;">Absences :</h4>
         <p id="absence-count">0 absence(s) enregistrée(s)</p>
       </div>
       <button class="btn btn-secondary" style="margin-top: 1rem; width: 100%;" onclick="telechargerPDF()">📄 Télécharger le Bulletin (PDF)</button>
@@ -85,7 +95,7 @@
     <!-- Formulaire de Connexion -->
     <div id="login-form">
       <h2>Connexion Enseignant</h2>
-      <p>Connectez-vous pour enregistrer des notes et absences</p>
+      <p>Connectez-vous pour enregistrer des élèves, notes et absences</p>
       <form onsubmit="login(event)">
         <label>Identifiant</label>
         <input type="text" id="login-user" required placeholder="Ex: bukaya">
@@ -117,11 +127,25 @@
         <button onclick="logout()" style="padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Déconnexion</button>
       </div>
       
+      <!-- Inscription d'un élève -->
+      <div class="card">
+        <h3>Enregistrer un nouvel élève</h3>
+        <p style="font-size: 0.85rem; color: #64748b;">Le matricule sera généré automatiquement lors de la création.</p>
+        <form onsubmit="enregistrerEleve(event)">
+          <input type="text" id="eleve-nom" placeholder="Nom" required>
+          <input type="text" id="eleve-postnom" placeholder="Post-nom" required>
+          <input type="text" id="eleve-prenom" placeholder="Prénom" required>
+          <input type="text" id="eleve-classe" placeholder="Classe (Ex: 6ème A, 4ème)" required>
+          <input type="text" id="eleve-option" placeholder="Option (Ex: Scientifique, Littéraire, Gestion...)" required>
+          <button type="submit" class="btn" style="background: #059669;">Créer l'élève & Générer le matricule</button>
+        </form>
+      </div>
+
       <!-- Saisie des Notes -->
       <div class="card">
         <h3>Ajouter une note</h3>
         <form onsubmit="ajouterNote(event)">
-          <input type="text" id="note-eleve" placeholder="Nom de l'élève" required>
+          <input type="text" id="note-matricule" placeholder="Matricule de l'élève (Ex: MAT-1001)" required>
           <input type="text" id="note-matiere" placeholder="Matière (ex: Mathématiques)" required>
           <input type="number" id="note-valeur" min="0" max="20" step="0.5" placeholder="Note /20" required>
           <button type="submit" class="btn">Enregistrer la note</button>
@@ -132,7 +156,7 @@
       <div class="card">
         <h3>Signaler une absence</h3>
         <form onsubmit="ajouterAbsence(event)">
-          <input type="text" id="absence-eleve" placeholder="Nom de l'élève" required>
+          <input type="text" id="absence-matricule" placeholder="Matricule de l'élève (Ex: MAT-1001)" required>
           <input type="date" id="absence-date" required>
           <button type="submit" class="btn" style="background: #dc2626;">Signaler l'absence</button>
         </form>
@@ -142,22 +166,22 @@
 </div>
 
 <script>
-  // Récupération ou initialisation des données stockées dans le navigateur
   const db = {
     users: JSON.parse(localStorage.getItem('prof_users')) || [
-      { user: "bukaya", pass: "1234" } // Compte par défaut
+      { user: "bukaya", pass: "1234" }
+    ],
+    eleves: JSON.parse(localStorage.getItem('prof_eleves')) || [
+      { matricule: "MAT-1001", nom: "Lelo", postnom: "Kabuya", prenom: "Leo", classe: "6ème", option: "Scientifique" }
     ],
     notes: JSON.parse(localStorage.getItem('prof_notes')) || [
-      { eleve: "Bukaya", matiere: "Mathématiques", note: 16 },
-      { eleve: "Bukaya", matiere: "Physique", note: 14 }
+      { matricule: "MAT-1001", matiere: "Mathématiques", note: 18 }
     ],
-    absences: JSON.parse(localStorage.getItem('prof_absences')) || [
-      { eleve: "Bukaya", date: "2026-09-01" }
-    ]
+    absences: JSON.parse(localStorage.getItem('prof_absences')) || []
   };
 
   function saveData() {
     localStorage.setItem('prof_users', JSON.stringify(db.users));
+    localStorage.setItem('prof_eleves', JSON.stringify(db.eleves));
     localStorage.setItem('prof_notes', JSON.stringify(db.notes));
     localStorage.setItem('prof_absences', JSON.stringify(db.absences));
   }
@@ -214,7 +238,7 @@
       document.getElementById('welcome-msg').innerText = `Espace de ${account.user}`;
       document.getElementById('prof-dashboard').style.display = 'block';
     } else {
-      alert("Identifiant ou mot de passe incorrect. Cliquez sur 'Créer un identifiant' si vous n'avez pas encore de compte.");
+      alert("Identifiant ou mot de passe incorrect.");
     }
   }
 
@@ -225,38 +249,87 @@
     document.getElementById('login-pass').value = '';
   }
 
+  function genererMatricule() {
+    let matricule;
+    do {
+      const num = Math.floor(1000 + Math.random() * 9000);
+      matricule = `MAT-${num}`;
+    } while (db.eleves.some(e => e.matricule === matricule));
+    return matricule;
+  }
+
+  function enregistrerEleve(e) {
+    e.preventDefault();
+    const nom = document.getElementById('eleve-nom').value.trim();
+    const postnom = document.getElementById('eleve-postnom').value.trim();
+    const prenom = document.getElementById('eleve-prenom').value.trim();
+    const classe = document.getElementById('eleve-classe').value.trim();
+    const option = document.getElementById('eleve-option').value.trim();
+
+    const matricule = genererMatricule();
+
+    db.eleves.push({ matricule, nom, postnom, prenom, classe, option });
+    saveData();
+
+    alert(`Élève ${prenom} ${nom} créé avec succès !\nSon matricule attribué est : ${matricule}`);
+    e.target.reset();
+  }
+
   function ajouterNote(e) {
     e.preventDefault();
-    const eleve = document.getElementById('note-eleve').value;
-    const matiere = document.getElementById('note-matiere').value;
+    const matricule = document.getElementById('note-matricule').value.trim().toUpperCase();
+    const matiere = document.getElementById('note-matiere').value.trim();
     const note = document.getElementById('note-valeur').value;
     
-    db.notes.push({ eleve, matiere, note });
+    if (!db.eleves.find(e => e.matricule === matricule)) {
+      alert("Ce matricule n'existe pas. Veuillez d'abord créer l'élève.");
+      return;
+    }
+
+    db.notes.push({ matricule, matiere, note });
     saveData();
-    alert(`Note ajoutée pour ${eleve}`);
+    alert(`Note ajoutée pour l'élève ${matricule}`);
     e.target.reset();
   }
 
   function ajouterAbsence(e) {
     e.preventDefault();
-    const eleve = document.getElementById('absence-eleve').value;
+    const matricule = document.getElementById('absence-matricule').value.trim().toUpperCase();
     const date = document.getElementById('absence-date').value;
     
-    db.absences.push({ eleve, date });
+    if (!db.eleves.find(e => e.matricule === matricule)) {
+      alert("Ce matricule n'existe pas.");
+      return;
+    }
+
+    db.absences.push({ matricule, date });
     saveData();
-    alert(`Absence enregistrée pour ${eleve}`);
+    alert(`Absence enregistrée pour l'élève ${matricule}`);
     e.target.reset();
   }
 
   function afficherBulletin() {
-    const query = document.getElementById('search-student').value.toLowerCase().trim();
-    if (!query) return;
+    const queryMatricule = document.getElementById('search-student').value.trim().toUpperCase();
+    if (!queryMatricule) return;
 
-    const notes = db.notes.filter(n => n.eleve.toLowerCase() === query);
-    const absences = db.absences.filter(a => a.eleve.toLowerCase() === query);
+    const eleve = db.eleves.find(e => e.matricule === queryMatricule);
 
-    document.getElementById('student-name').innerText = `Bulletin de : ${query.toUpperCase()}`;
-    
+    if (!eleve) {
+      alert("Aucun élève trouvé avec ce matricule.");
+      document.getElementById('bulletin-zone').style.display = 'none';
+      return;
+    }
+
+    const notes = db.notes.filter(n => n.matricule === queryMatricule);
+    const absences = db.absences.filter(a => a.matricule === queryMatricule);
+
+    document.getElementById('st-matricule').innerText = eleve.matricule;
+    document.getElementById('st-nom').innerText = eleve.nom;
+    document.getElementById('st-postnom').innerText = eleve.postnom;
+    document.getElementById('st-prenom').innerText = eleve.prenom;
+    document.getElementById('st-classe').innerText = eleve.classe;
+    document.getElementById('st-option').innerText = eleve.option || 'N/A';
+
     const tbody = document.getElementById('notes-list');
     tbody.innerHTML = notes.length 
       ? notes.map(n => `<tr><td>${n.matiere}</td><td>${n.note}/20</td></tr>`).join('')
