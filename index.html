@@ -53,7 +53,7 @@
 <body>
 
 <div class="container">
-  <!-- Onglets de Navigation -->
+  <!-- Navigation -->
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchTab('eleve')">🎓 Espace Élève</button>
     <button class="tab-btn" onclick="switchTab('prof')">🔐 Espace Professeur</button>
@@ -64,7 +64,6 @@
     <h2>Espace Élève</h2>
     <p>Créez votre compte pour obtenir votre matricule ou consultez votre bulletin.</p>
     
-    <!-- Création profil élève -->
     <div class="card">
       <h3>1. Créer mon profil élève (Obtenir un matricule)</h3>
       <form onsubmit="creerCompteEleve(event)">
@@ -78,11 +77,10 @@
       <div id="registration-result" style="display: none;" class="alert-success">
         <p><strong>Compte créé avec succès !</strong></p>
         <p>Votre matricule est : <span id="new-matricule-display" class="matricule-badge"></span></p>
-        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #166534;">⚠️ Transmettez ce matricule à votre enseignant pour la saisie de vos notes.</p>
+        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #166534;">⚠️ Transmettez ce matricule à votre enseignant.</p>
       </div>
     </div>
 
-    <!-- Consultation du bulletin -->
     <div class="card" style="margin-top: 2rem;">
       <h3>2. Consulter mon bulletin</h3>
       <div style="display: flex; gap: 10px; margin-top: 10px;">
@@ -118,7 +116,6 @@
 
   <!-- Espace Professeur -->
   <div id="sec-prof" class="section">
-    <!-- Formulaire de Connexion -->
     <div id="login-form">
       <h2>Connexion Enseignant</h2>
       <p>Connectez-vous pour enregistrer des notes et absences</p>
@@ -132,7 +129,6 @@
       <div class="toggle-link" onclick="toggleAuthForm('register')">Pas encore de compte ? Créer un identifiant</div>
     </div>
 
-    <!-- Formulaire d'Inscription -->
     <div id="register-form" style="display: none;">
       <h2>Créer un compte Enseignant</h2>
       <p>Choisissez un identifiant et un mot de passe</p>
@@ -146,7 +142,6 @@
       <div class="toggle-link" onclick="toggleAuthForm('login')">Déjà un compte ? Se connecter</div>
     </div>
 
-    <!-- Dashboard Professeur -->
     <div id="prof-dashboard" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2 id="welcome-msg">Espace Enseignant</h2>
@@ -176,7 +171,7 @@
 </div>
 
 <script>
-  // Configuration Firebase associée à votre projet
+  // Configuration Firebase avec vos clés
   const firebaseConfig = {
     apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
     authDomain: "site-publication.firebaseapp.com",
@@ -187,7 +182,6 @@
     appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
   };
 
-  // Initialisation de Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
@@ -275,6 +269,8 @@
         document.getElementById('registration-result').style.display = 'block';
         document.getElementById('search-student').value = matricule;
         e.target.reset();
+      } else {
+        alert("Erreur lors de l'enregistrement : " + err.message);
       }
     });
   }
@@ -287,7 +283,7 @@
 
     db.ref('eleves/' + matricule).get().then(snapshot => {
       if (!snapshot.exists()) {
-        alert("Ce matricule n'existe pas dans la base de données.");
+        alert("Ce matricule n'existe pas dans le serveur.");
         return;
       }
       db.ref('notes').push({ matricule, matiere, note }, () => {
