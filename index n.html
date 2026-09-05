@@ -142,19 +142,25 @@
 </div>
 
 <script>
-  // Base de données temporaire
+  // Récupération des données sauvegardées dans le navigateur ou initialisation
   const db = {
-    users: [
-      { user: "bukaya", pass: "1234" } // Compte par défaut
+    users: JSON.parse(localStorage.getItem('prof_users')) || [
+      { user: "bukaya", pass: "1234" }
     ],
-    notes: [
+    notes: JSON.parse(localStorage.getItem('prof_notes')) || [
       { eleve: "Bukaya", matiere: "Mathématiques", note: 16 },
       { eleve: "Bukaya", matiere: "Physique", note: 14 }
     ],
-    absences: [
+    absences: JSON.parse(localStorage.getItem('prof_absences')) || [
       { eleve: "Bukaya", date: "2026-09-01" }
     ]
   };
+
+  function saveData() {
+    localStorage.setItem('prof_users', JSON.stringify(db.users));
+    localStorage.setItem('prof_notes', JSON.stringify(db.notes));
+    localStorage.setItem('prof_absences', JSON.stringify(db.absences));
+  }
 
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -190,6 +196,7 @@
     }
 
     db.users.push({ user, pass });
+    saveData();
     alert("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
     e.target.reset();
     toggleAuthForm('login');
@@ -225,6 +232,7 @@
     const note = document.getElementById('note-valeur').value;
     
     db.notes.push({ eleve, matiere, note });
+    saveData();
     alert(`Note ajoutée pour ${eleve}`);
     e.target.reset();
   }
@@ -235,6 +243,7 @@
     const date = document.getElementById('absence-date').value;
     
     db.absences.push({ eleve, date });
+    saveData();
     alert(`Absence enregistrée pour ${eleve}`);
     e.target.reset();
   }
