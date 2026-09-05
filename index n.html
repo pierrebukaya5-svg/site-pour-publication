@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portail Scolaire — Gestion des Notes</title>
+  <title>Portail Scolaire</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -14,14 +14,13 @@
       --text-muted: #64748b;
       --border: #e2e8f0;
       --danger: #ef4444;
-      --success: #10b981;
       --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
     body { background-color: var(--bg-color); color: var(--text-main); padding: 24px; display: flex; justify-content: center; }
-    .container { width: 100%; max-width: 650px; background: var(--card-bg); border-radius: 16px; padding: 32px; box-shadow: var(--shadow); border: 1px solid var(--border); }
-    .nav-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: #f1f5f9; padding: 6px; border-radius: 12px; }
-    .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; background: transparent; color: var(--text-muted); }
+    .container { width: 100%; max-width: 600px; background: var(--card-bg); border-radius: 16px; padding: 32px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .nav-tabs { display: flex; gap: 6px; margin-bottom: 24px; background: #f1f5f9; padding: 6px; border-radius: 12px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; background: transparent; color: var(--text-muted); }
     .tab-btn.active { background: white; color: var(--primary); }
     .header { text-align: center; margin-bottom: 20px; }
     .form-group { margin-bottom: 16px; }
@@ -30,107 +29,106 @@
     input:focus { border-color: var(--primary); background: #fff; }
     button.btn-main { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 8px; }
     button.btn-danger { background: var(--danger); }
-    button.btn-sm { padding: 6px 10px; font-size: 0.75rem; border-radius: 6px; border: none; cursor: pointer; color: white; }
-    button.btn-edit { background: #f59e0b; margin-right: 4px; }
+    button.btn-sm { padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; border: none; cursor: pointer; color: white; background: var(--danger); }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; font-size: 0.88rem; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; font-size: 0.85rem; }
     th { background: #f8fafc; }
     .status-msg { margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 0.875rem; text-align: center; display: none; }
     .status-msg.success { display: block; background: #ecfdf5; color: #065f46; }
     .status-msg.error { display: block; background: #fef2f2; color: #991b1b; }
-    .badge { display: inline-block; padding: 4px 8px; background: #e0e7ff; color: #3730a3; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+    .badge { display: inline-block; padding: 4px 8px; background: #e0e7ff; color: #3730a3; border-radius: 6px; font-weight: 600; }
   </style>
 </head>
 <body>
 
   <div class="container">
+    
+    <!-- BARRE D'ONGLETS -->
     <div class="nav-tabs">
-      <button class="tab-btn active" id="btn-eleve" onclick="changerOnglet('eleve')">🔍 Espace Élèves</button>
+      <button class="tab-btn active" id="btn-eleve" onclick="changerOnglet('eleve')">🔍 Élèves</button>
       <button class="tab-btn" id="btn-login" onclick="changerOnglet('login')">🔑 Connexion Prof</button>
       <button class="tab-btn" id="btn-register" onclick="changerOnglet('register')">📝 Inscription Prof</button>
     </div>
 
-    <!-- 1. CONSULTATION ÉLÈVE -->
+    <!-- ONGLET 1 : ESPACE ÉLÈVES -->
     <div id="section-eleve">
       <div class="header">
         <h2>Consultation par Matricule</h2>
       </div>
       <div class="form-group">
-        <label>Matricule Élève</label>
+        <label>Matricule de l'Élève</label>
         <input type="text" id="search-matricule" placeholder="Ex: MAT-0001">
       </div>
-      <button class="btn-main" onclick="chercherNotes()">Voir mes notes</button>
+      <button class="btn-main" onclick="chercherNotes()">Consulter les notes</button>
       <div id="resultats-table"></div>
     </div>
 
-    <!-- 2. CONNEXION PROF -->
+    <!-- ONGLET 2 : CONNEXION PROF -->
     <div id="section-login" style="display: none;">
       <div class="header">
-        <h2>Connexion Professeur</h2>
+        <h2>Connexion Enseignant</h2>
       </div>
       <form onsubmit="seConnecter(event)">
         <div class="form-group">
           <label>Identifiant</label>
-          <input type="text" id="login-id" required>
+          <input type="text" id="login-id" placeholder="Entrez votre identifiant" required>
         </div>
         <div class="form-group">
           <label>Mot de passe</label>
-          <input type="password" id="login-pass" required>
+          <input type="password" id="login-pass" placeholder="••••••••" required>
         </div>
-        <button type="submit" class="btn-main">Connexion</button>
+        <button type="submit" class="btn-main">Se connecter</button>
       </form>
     </div>
 
-    <!-- 3. INSCRIPTION PROF -->
+    <!-- ONGLET 3 : INSCRIPTION PROF -->
     <div id="section-register" style="display: none;">
       <div class="header">
-        <h2>Nouveau Compte Enseignant</h2>
+        <h2>Inscription Enseignant</h2>
       </div>
       <form onsubmit="sInscrire(event)">
         <div class="form-group">
-          <label>Identifiant</label>
-          <input type="text" id="reg-id" required>
+          <label>Identifiant souhaité</label>
+          <input type="text" id="reg-id" placeholder="Ex: bukaya" required>
         </div>
         <div class="form-group">
-          <label>Matière d'enseignement</label>
-          <input type="text" id="reg-matiere" placeholder="Ex: Physique" required>
+          <label>Matière enseignée</label>
+          <input type="text" id="reg-matiere" placeholder="Ex: Mathématiques" required>
         </div>
         <div class="form-group">
           <label>Mot de passe</label>
-          <input type="password" id="reg-pass" required>
+          <input type="password" id="reg-pass" placeholder="••••••••" required>
         </div>
         <button type="submit" class="btn-main">Créer mon compte</button>
       </form>
     </div>
 
-    <!-- 4. FENÊTRE DÉDIÉE AU PROFESSEUR CONNECTÉ -->
+    <!-- FENÊTRE PROFESSEUR CONNECTÉ -->
     <div id="section-saisie" style="display: none;">
       <div class="header">
-        <h2>Espace Professeur</h2>
-        <p id="prof-info" style="color: var(--primary); font-weight: 600; margin-top: 4px;"></p>
+        <h2>Espace Enseignant</h2>
+        <p id="prof-info" style="color: var(--primary); font-weight: 600;"></p>
       </div>
 
-      <!-- Formulaire d'ajout de note par matricule -->
       <form onsubmit="enregistrerNote(event)">
         <div class="form-group">
-          <label>Code Matricule de l'Élève</label>
+          <label>Matricule Élève</label>
           <input type="text" id="note-matricule" placeholder="Ex: MAT-0001" required>
         </div>
         <div class="form-group">
           <label>Nom complet de l'Élève</label>
-          <input type="text" id="note-nom" placeholder="Ex: Paul Kabamba" required>
+          <input type="text" id="note-nom" placeholder="Ex: Alice Martin" required>
         </div>
         <div class="form-group">
-          <label>Note attribuée (/20)</label>
-          <input type="number" id="note-valeur" step="0.5" min="0" max="20" placeholder="Ex: 16" required>
+          <label>Note (/20)</label>
+          <input type="number" id="note-valeur" step="0.5" min="0" max="20" placeholder="Ex: 15.5" required>
         </div>
-        <button type="submit" class="btn-main">➕ Enregistrer la note pour ce matricule</button>
+        <button type="submit" class="btn-main">Attribuer la note</button>
       </form>
 
       <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--border);">
 
-      <!-- Liste des cotes saisies par le prof -->
-      <h3 style="font-size: 1rem; margin-bottom: 12px;">Notes attribuées par vous :</h3>
+      <h3>Vos notes saisies :</h3>
       <div id="liste-notes-prof"></div>
 
       <br>
@@ -138,6 +136,7 @@
     </div>
 
     <div id="status" class="status-msg"></div>
+
   </div>
 
   <script>
@@ -162,58 +161,7 @@
       status.textContent = texte;
     }
 
-    // Élève : Rechercher par matricule
-    async function chercherNotes() {
-      const mat = document.getElementById('search-matricule').value.trim();
-      if (!mat) return alert("Veuillez saisir un matricule.");
-
-      const res = await fetch('/api/notes/eleve/' + encodeURIComponent(mat));
-      const result = await res.json();
-      const div = document.getElementById('resultats-table');
-
-      if (!result.data || result.data.length === 0) {
-        div.innerHTML = "<p style='margin-top:15px; color:var(--danger);'>Aucune note associée à ce matricule.</p>";
-        return;
-      }
-
-      let html = `<table><thead><tr><th>Matricule</th><th>Élève</th><th>Matière</th><th>Note</th><th>Professeur</th></tr></thead><tbody>`;
-      result.data.forEach(item => {
-        html += `<tr>
-          <td><span class="badge">${item.matricule}</span></td>
-          <td>${item.nom}</td>
-          <td>${item.matiere}</td>
-          <td><strong>${item.note}/20</strong></td>
-          <td>${item.professeur}</td>
-        </tr>`;
-      });
-      html += `</tbody></table>`;
-      div.innerHTML = html;
-    }
-
-    // Professeur : Connexion
-    async function seConnecter(e) {
-      e.preventDefault();
-      const identifiant = document.getElementById('login-id').value.trim();
-      const mot_de_passe = document.getElementById('login-pass').value.trim();
-
-      const res = await fetch('/api/login-prof', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifiant, mot_de_passe })
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        profConnecte = data.prof;
-        document.getElementById('prof-info').textContent = `Enseignant : ${profConnecte.identifiant} | Matière : ${profConnecte.matiere}`;
-        changerOnglet('saisie');
-        chargerNotesProfesseur();
-      } else {
-        afficherMessage("❌ " + data.message, 'error');
-      }
-    }
-
-    // Professeur : Inscription
+    // Inscription du professeur
     async function sInscrire(e) {
       e.preventDefault();
       const identifiant = document.getElementById('reg-id').value.trim();
@@ -228,14 +176,37 @@
       const data = await res.json();
 
       if (data.success) {
-        afficherMessage("✅ Compte créé avec succès ! Connectez-vous.", 'success');
+        afficherMessage("✅ " + data.message + " Connectez-vous maintenant.", 'success');
         changerOnglet('login');
       } else {
         afficherMessage("❌ " + data.message, 'error');
       }
     }
 
-    // Professeur : Ajouter une note liée au matricule
+    // Connexion du professeur
+    async function seConnecter(e) {
+      e.preventDefault();
+      const identifiant = document.getElementById('login-id').value.trim();
+      const mot_de_passe = document.getElementById('login-pass').value.trim();
+
+      const res = await fetch('/api/login-prof', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifiant, mot_de_passe })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        profConnecte = data.prof;
+        document.getElementById('prof-info').textContent = `Identifiant : ${profConnecte.identifiant} | Matière : ${profConnecte.matiere}`;
+        changerOnglet('saisie');
+        chargerNotesProfesseur();
+      } else {
+        afficherMessage("❌ " + data.message, 'error');
+      }
+    }
+
+    // Enregistrement d'une note
     async function enregistrerNote(e) {
       e.preventDefault();
       const matricule = document.getElementById('note-matricule').value.trim();
@@ -256,7 +227,7 @@
       const data = await res.json();
 
       if (data.success) {
-        afficherMessage("✅ Note enregistrée pour le matricule " + matricule, 'success');
+        afficherMessage("✅ Note attribuée à " + nom + " (" + matricule + ")", 'success');
         document.getElementById('note-matricule').value = '';
         document.getElementById('note-nom').value = '';
         document.getElementById('note-valeur').value = '';
@@ -266,7 +237,7 @@
       }
     }
 
-    // Professeur : Charger la liste de ses notes saisies
+    // Charger les notes du professeur
     async function chargerNotesProfesseur() {
       if (!profConnecte) return;
       const res = await fetch('/api/notes/prof/' + encodeURIComponent(profConnecte.identifiant));
@@ -274,7 +245,7 @@
       const div = document.getElementById('liste-notes-prof');
 
       if (!result.data || result.data.length === 0) {
-        div.innerHTML = "<p style='color:var(--text-muted); font-size:0.85rem;'>Aucune note enregistrée pour le moment.</p>";
+        div.innerHTML = "<p style='color:var(--text-muted); font-size:0.85rem; margin-top:10px;'>Aucune note saisie pour l'instant.</p>";
         return;
       }
 
@@ -284,24 +255,47 @@
           <td><span class="badge">${item.matricule}</span></td>
           <td>${item.nom}</td>
           <td><strong>${item.note}/20</strong></td>
-          <td>
-            <button class="btn-sm btn-danger" onclick="supprimerNote(${item.id})">Supprimer</button>
-          </td>
+          <td><button class="btn-sm" onclick="supprimerNote(${item.id})">Supprimer</button></td>
         </tr>`;
       });
       html += `</tbody></table>`;
       div.innerHTML = html;
     }
 
-    // Professeur : Supprimer une note
+    // Supprimer une note
     async function supprimerNote(id) {
-      if (!confirm("Voulez-vous vraiment supprimer cette note ?")) return;
+      if (!confirm("Voulez-vous supprimer cette note ?")) return;
       const res = await fetch('/api/notes/' + id, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        afficherMessage("Note supprimée.", 'success');
         chargerNotesProfesseur();
       }
+    }
+
+    // Consultation côté Élève
+    async function chercherNotes() {
+      const mat = document.getElementById('search-matricule').value.trim();
+      if (!mat) return alert("Veuillez saisir un matricule.");
+
+      const res = await fetch('/api/notes/eleve/' + encodeURIComponent(mat));
+      const result = await res.json();
+      const div = document.getElementById('resultats-table');
+
+      if (!result.data || result.data.length === 0) {
+        div.innerHTML = "<p style='margin-top:15px; color:var(--danger);'>Aucun résultat pour ce matricule.</p>";
+        return;
+      }
+
+      let html = `<table><thead><tr><th>Matière</th><th>Note</th><th>Enseignant</th></tr></thead><tbody>`;
+      result.data.forEach(item => {
+        html += `<tr>
+          <td>${item.matiere}</td>
+          <td><strong>${item.note}/20</strong></td>
+          <td>${item.professeur}</td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+      div.innerHTML = html;
     }
 
     function deconnexion() {
