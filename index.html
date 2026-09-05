@@ -5,173 +5,387 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portail Scolaire — Élèves & Professeurs</title>
   
-  <!-- Librairies externes : html2pdf et Firebase (compatibles navigateur) -->
+  <!-- Polices Google & FontAwesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Librairies externes -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   
   <style>
     :root {
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --bg: #f8fafc;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eeef2;
+      --secondary: #10b981;
+      --secondary-hover: #059669;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --bg: #f3f4f6;
       --card-bg: #ffffff;
-      --text: #1e293b;
-      --border: #e2e8f0;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --radius: 12px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 2rem; min-height: 100vh; }
-    .container { background: var(--card-bg); border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 100%; max-width: 700px; padding: 2rem; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     
-    .nav-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; margin-bottom: 1.5rem; }
-    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 6px; cursor: pointer; font-weight: 600; color: #64748b; }
-    .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    
-    .section { display: none; }
+    body { 
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); 
+      color: var(--text-main); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      padding: 1.5rem; 
+      min-height: 100vh; 
+    }
+
+    .container { 
+      background: var(--card-bg); 
+      border-radius: var(--radius); 
+      box-shadow: var(--shadow); 
+      width: 100%; 
+      max-width: 750px; 
+      padding: 2.5rem; 
+      border: 1px solid rgba(255,255,255,0.8);
+    }
+
+    /* En-tête */
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Onglets de Navigation */
+    .nav-tabs { 
+      display: flex; 
+      background: #f8fafc; 
+      padding: 6px; 
+      border-radius: 10px; 
+      margin-bottom: 2rem; 
+      border: 1px solid var(--border);
+    }
+    .tab-btn { 
+      flex: 1; 
+      padding: 12px; 
+      border: none; 
+      background: transparent; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-weight: 600; 
+      color: var(--text-muted); 
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .tab-btn.active { 
+      background: white; 
+      color: var(--primary); 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+    }
+
+    .section { display: none; animation: fadeIn 0.3s ease-in-out; }
     .section.active { display: block; }
 
-    form { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
-    label { font-size: 0.875rem; font-weight: 600; text-transform: uppercase; color: #475569; }
-    input, select { padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; }
-    button.btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-    button.btn:hover { background: var(--primary-hover); }
-    button.btn-secondary { background: #059669; }
-    button.btn-secondary:hover { background: #047857; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-    .card { background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 8px; margin-top: 1rem; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { border: 1px solid var(--border); padding: 8px; text-align: left; }
-    th { background: #f1f5f9; }
+    /* Formulaires & Inputs */
+    form { display: flex; flex-direction: column; gap: 1.2rem; margin-top: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
     
-    .toggle-link { color: var(--primary); text-align: center; cursor: pointer; margin-top: 1rem; text-decoration: underline; font-size: 0.9rem; }
-    .student-info p { margin-bottom: 0.5rem; font-weight: 500; }
-    .matricule-badge { font-weight: bold; color: var(--primary); font-size: 1.1rem; }
-    .alert-success { background: #dcfce7; color: #15803d; padding: 1rem; border-radius: 6px; border: 1px solid #bbf7d0; margin-top: 1rem; }
+    input, select { 
+      padding: 12px 14px; 
+      border: 1px solid var(--border); 
+      border-radius: 8px; 
+      font-size: 0.95rem; 
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      background: #f9fafb;
+    }
+    input:focus, select:focus {
+      border-color: var(--primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    /* Boutons */
+    button.btn { 
+      background: var(--primary); 
+      color: white; 
+      border: none; 
+      padding: 12px 18px; 
+      border-radius: 8px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+    button.btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    button.btn-secondary { background: var(--secondary); }
+    button.btn-secondary:hover { background: var(--secondary-hover); }
+    button.btn-danger { background: var(--danger); }
+    button.btn-danger:hover { background: var(--danger-hover); }
+
+    /* Cartes & Encart d'Information */
+    .card { 
+      background: #ffffff; 
+      border: 1px solid var(--border); 
+      padding: 1.5rem; 
+      border-radius: 10px; 
+      margin-top: 1.2rem; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .card h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Tableaux */
+    table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 1rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    th, td { padding: 12px 16px; text-align: left; }
+    th { background: #f8fafc; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    td { border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+    tr:last-child td { border-bottom: none; }
+
+    /* Badges & Alertes */
+    .matricule-badge { 
+      font-weight: 700; 
+      color: var(--primary); 
+      background: #eef2ff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 1rem;
+      display: inline-block;
+    }
+    .alert-success { 
+      background: #ecfdf5; 
+      color: #065f46; 
+      padding: 1.2rem; 
+      border-radius: 8px; 
+      border: 1px solid #a7f3d0; 
+      margin-top: 1.2rem; 
+    }
+    .toggle-link { 
+      color: var(--primary); 
+      text-align: center; 
+      cursor: pointer; 
+      margin-top: 1.2rem; 
+      font-size: 0.9rem; 
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .toggle-link:hover { text-decoration: underline; color: var(--primary-hover); }
+
+    /* Info Élève */
+    .student-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 1rem;
+      background: #f9fafb;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .student-info-grid p { font-size: 0.9rem; color: var(--text-main); }
+    .student-info-grid strong { color: var(--text-muted); }
   </style>
 </head>
 <body>
 
 <div class="container">
+  
+  <div class="header">
+    <h1><i class="fa-solid fa-graduation-cap"></i> Portail Scolaire</h1>
+    <p>Gestion en ligne des bulletins et résultats scolaires</p>
+  </div>
+
   <!-- Navigation -->
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('eleve')">🎓 Espace Élève</button>
-    <button class="tab-btn" onclick="switchTab('prof')">🔐 Espace Professeur</button>
+    <button class="tab-btn active" onclick="switchTab('eleve')">
+      <i class="fa-solid fa-user-graduate"></i> Espace Élève
+    </button>
+    <button class="tab-btn" onclick="switchTab('prof')">
+      <i class="fa-solid fa-user-tie"></i> Espace Enseignant
+    </button>
   </div>
 
   <!-- Espace Élève -->
   <div id="sec-eleve" class="section active">
-    <h2>Espace Élève</h2>
-    <p>Créez votre compte pour obtenir votre matricule ou consultez votre bulletin.</p>
     
+    <!-- Inscription Élève -->
     <div class="card">
-      <h3>1. Créer mon profil élève (Obtenir un matricule)</h3>
+      <h3><i class="fa-solid fa-id-card" style="color: var(--primary);"></i> 1. Inscription Élève</h3>
       <form onsubmit="creerCompteEleve(event)">
-        <input type="text" id="reg-eleve-nom" placeholder="Nom" required>
-        <input type="text" id="reg-eleve-postnom" placeholder="Post-nom" required>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <input type="text" id="reg-eleve-nom" placeholder="Nom" required>
+          <input type="text" id="reg-eleve-postnom" placeholder="Post-nom" required>
+        </div>
         <input type="text" id="reg-eleve-prenom" placeholder="Prénom" required>
-        <input type="text" id="reg-eleve-classe" placeholder="Classe (Ex: 6ème A, 4ème)" required>
-        <input type="text" id="reg-eleve-option" placeholder="Option (Ex: Scientifique, Littéraire...)" required>
-        <button type="submit" class="btn btn-secondary">Créer mon compte & Générer mon matricule</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <input type="text" id="reg-eleve-classe" placeholder="Classe (ex: 6ème A)" required>
+          <input type="text" id="reg-eleve-option" placeholder="Option (ex: Informatique)" required>
+        </div>
+        <button type="submit" class="btn btn-secondary">
+          <i class="fa-solid fa-plus-circle"></i> Obtenir mon matricule
+        </button>
       </form>
+
       <div id="registration-result" style="display: none;" class="alert-success">
-        <p><strong>Compte créé avec succès !</strong></p>
-        <p>Votre matricule est : <span id="new-matricule-display" class="matricule-badge"></span></p>
-        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #166534;">⚠️ Transmettez ce matricule à votre enseignant.</p>
+        <p style="font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Profil créé avec succès !</p>
+        <p style="margin-top: 8px;">Votre matricule : <span id="new-matricule-display" class="matricule-badge"></span></p>
+        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #047857;">⚠️ Conservez ce matricule et transmettez-le à votre enseignant.</p>
       </div>
     </div>
 
-    <div class="card" style="margin-top: 2rem;">
-      <h3>2. Consulter mon bulletin</h3>
-      <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input type="text" id="search-student" placeholder="Ex: MAT-4821" style="flex: 1;">
-        <button class="btn" onclick="afficherBulletin()">Accéder</button>
+    <!-- Consultation Bulletin -->
+    <div class="card" style="margin-top: 1.5rem;">
+      <h3><i class="fa-solid fa-file-invoice" style="color: var(--primary);"></i> 2. Consulter mon Bulletin</h3>
+      <div style="display: flex; gap: 10px; margin-top: 1rem;">
+        <input type="text" id="search-student" placeholder="Matricule (Ex: MAT-4821)" style="flex: 1;">
+        <button class="btn" onclick="afficherBulletin()">
+          <i class="fa-solid fa-magnifying-glass"></i> Afficher
+        </button>
       </div>
     </div>
 
-    <div id="bulletin-zone" class="card" style="display:none;">
-      <div id="pdf-content">
-        <h3>Bulletin Scolaire</h3>
-        <div class="student-info" style="margin-top: 1rem; background: #ffffff; padding: 1rem; border-radius: 6px; border: 1px solid var(--border);">
+    <!-- Zone d'affichage Bulletin -->
+    <div id="bulletin-zone" class="card" style="display:none; margin-top: 1.5rem;">
+      <div id="pdf-content" style="padding: 10px;">
+        <h2 style="color: var(--primary); font-size: 1.4rem; text-align: center; margin-bottom: 1rem;">Bulletin Scolaire</h2>
+        
+        <div class="student-info-grid">
           <p><strong>Matricule :</strong> <span id="st-matricule" class="matricule-badge"></span></p>
-          <p><strong>Nom :</strong> <span id="st-nom"></span></p>
-          <p><strong>Post-nom :</strong> <span id="st-postnom"></span></p>
-          <p><strong>Prénom :</strong> <span id="st-prenom"></span></p>
           <p><strong>Classe :</strong> <span id="st-classe"></span></p>
+          <p><strong>Nom complet :</strong> <span id="st-nom"></span> <span id="st-postnom"></span> <span id="st-prenom"></span></p>
           <p><strong>Option :</strong> <span id="st-option"></span></p>
         </div>
         
-        <h4 style="margin-top: 1.5rem;">Notes :</h4>
+        <h4 style="margin-top: 1.5rem; color: var(--text-main);"><i class="fa-solid fa-book-open"></i> Notes</h4>
         <table>
-          <thead><tr><th>Matière</th><th>Note</th></tr></thead>
+          <thead>
+            <tr><th>Matière</th><th>Note / 20</th></tr>
+          </thead>
           <tbody id="notes-list"></tbody>
         </table>
 
-        <h4 style="margin-top: 1.5rem;">Absences :</h4>
-        <p id="absence-count">0 absence(s) enregistrée(s)</p>
+        <h4 style="margin-top: 1.5rem; color: var(--text-main);"><i class="fa-solid fa-calendar-xmark"></i> Absences</h4>
+        <p id="absence-count" style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.95rem;">0 absence(s) enregistrée(s)</p>
       </div>
-      <button class="btn btn-secondary" style="margin-top: 1rem; width: 100%;" onclick="telechargerPDF()">📄 Télécharger le Bulletin (PDF)</button>
+
+      <button class="btn btn-secondary" style="margin-top: 1.5rem; width: 100%;" onclick="telechargerPDF()">
+        <i class="fa-solid fa-file-pdf"></i> Télécharger le Bulletin (PDF)
+      </button>
     </div>
   </div>
 
-  <!-- Espace Professeur -->
+  <!-- Espace Enseignant -->
   <div id="sec-prof" class="section">
-    <div id="login-form">
-      <h2>Connexion Enseignant</h2>
-      <p>Connectez-vous pour enregistrer des notes et absences</p>
+    
+    <!-- Connexion Enseignant -->
+    <div id="login-form" class="card">
+      <h3><i class="fa-solid fa-lock" style="color: var(--primary);"></i> Connexion Enseignant</h3>
       <form onsubmit="login(event)">
-        <label>Identifiant</label>
-        <input type="text" id="login-user" required placeholder="Ex: bukaya">
-        <label>Mot de passe</label>
-        <input type="password" id="login-pass" required placeholder="••••••••">
-        <button type="submit" class="btn">Se connecter</button>
+        <div class="form-group">
+          <label>Identifiant</label>
+          <input type="text" id="login-user" required placeholder="Identifiant">
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="login-pass" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</button>
       </form>
-      <div class="toggle-link" onclick="toggleAuthForm('register')">Pas encore de compte ? Créer un identifiant</div>
+      <div class="toggle-link" onclick="toggleAuthForm('register')">Nouveau compte enseignant ? Cliquez ici</div>
     </div>
 
-    <div id="register-form" style="display: none;">
-      <h2>Créer un compte Enseignant</h2>
-      <p>Choisissez un identifiant et un mot de passe</p>
+    <!-- Inscription Enseignant -->
+    <div id="register-form" class="card" style="display: none;">
+      <h3><i class="fa-solid fa-user-plus" style="color: var(--secondary);"></i> Créer un profil Enseignant</h3>
       <form onsubmit="register(event)">
-        <label>Nouvel Identifiant</label>
-        <input type="text" id="reg-user" required placeholder="Ex: bukaya">
-        <label>Mot de passe</label>
-        <input type="password" id="reg-pass" required placeholder="••••••••">
-        <button type="submit" class="btn" style="background: #059669;">Créer mon compte</button>
+        <div class="form-group">
+          <label>Identifiant</label>
+          <input type="text" id="reg-user" required placeholder="Choisissez un identifiant">
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="reg-pass" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-check"></i> Valider mon inscription</button>
       </form>
       <div class="toggle-link" onclick="toggleAuthForm('login')">Déjà un compte ? Se connecter</div>
     </div>
 
+    <!-- Tableau de bord Enseignant -->
     <div id="prof-dashboard" style="display: none;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 id="welcome-msg">Espace Enseignant</h2>
-        <button onclick="logout()" style="padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Déconnexion</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 id="welcome-msg" style="font-size: 1.3rem; color: var(--primary);">Tableau de bord</h2>
+        <button onclick="logout()" class="btn btn-danger" style="padding: 8px 14px; font-size: 0.85rem;">
+          <i class="fa-solid fa-power-off"></i> Déconnexion
+        </button>
       </div>
 
+      <!-- Ajout Note -->
       <div class="card">
-        <h3>Ajouter une note</h3>
+        <h3><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Attribuer une note</h3>
         <form onsubmit="ajouterNote(event)">
-          <input type="text" id="note-matricule" placeholder="Matricule de l'élève (Ex: MAT-1001)" required>
-          <input type="text" id="note-matiere" placeholder="Matière (ex: Mathématiques)" required>
-          <input type="number" id="note-valeur" min="0" max="20" step="0.5" placeholder="Note /20" required>
-          <button type="submit" class="btn">Enregistrer la note</button>
+          <input type="text" id="note-matricule" placeholder="Matricule (Ex: MAT-1001)" required>
+          <input type="text" id="note-matiere" placeholder="Matière (Ex: Mathématiques)" required>
+          <input type="number" id="note-valeur" min="0" max="20" step="0.5" placeholder="Note / 20" required>
+          <button type="submit" class="btn"><i class="fa-solid fa-floppy-disk"></i> Enregistrer la note</button>
         </form>
       </div>
 
+      <!-- Ajout Absence -->
       <div class="card">
-        <h3>Signaler une absence</h3>
+        <h3><i class="fa-solid fa-user-slash" style="color: var(--danger);"></i> Signaler une absence</h3>
         <form onsubmit="ajouterAbsence(event)">
-          <input type="text" id="absence-matricule" placeholder="Matricule de l'élève (Ex: MAT-1001)" required>
-          <input type="date" id="absence-date" required>
-          <button type="submit" class="btn" style="background: #dc2626;">Signaler l'absence</button>
+          <input type="text" id="absence-matricule" placeholder="Matricule (Ex: MAT-1001)" required>
+          <div class="form-group">
+            <label>Date de l'absence</label>
+            <input type="date" id="absence-date" required>
+          </div>
+          <button type="submit" class="btn btn-danger"><i class="fa-solid fa-bell"></i> Enregistrer l'absence</button>
         </form>
       </div>
     </div>
   </div>
+
 </div>
 
 <script>
-  // Configuration Firebase avec vos clés
   const firebaseConfig = {
     apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
     authDomain: "site-publication.firebaseapp.com",
@@ -215,10 +429,10 @@
 
     db.ref('users/' + user.toLowerCase()).get().then(snapshot => {
       if (snapshot.exists()) {
-        alert("Cet identifiant existe déjà !");
+        alert("Cet identifiant est déjà utilisé !");
       } else {
         db.ref('users/' + user.toLowerCase()).set({ user, pass }, () => {
-          alert("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
+          alert("Compte enseignant créé avec succès !");
           e.target.reset();
           toggleAuthForm('login');
         });
@@ -270,7 +484,7 @@
         document.getElementById('search-student').value = matricule;
         e.target.reset();
       } else {
-        alert("Erreur lors de l'enregistrement : " + err.message);
+        alert("Erreur réseau lors de la création du compte.");
       }
     });
   }
@@ -283,7 +497,7 @@
 
     db.ref('eleves/' + matricule).get().then(snapshot => {
       if (!snapshot.exists()) {
-        alert("Ce matricule n'existe pas dans le serveur.");
+        alert("Matricule inconnu.");
         return;
       }
       db.ref('notes').push({ matricule, matiere, note }, () => {
@@ -300,7 +514,7 @@
 
     db.ref('eleves/' + matricule).get().then(snapshot => {
       if (!snapshot.exists()) {
-        alert("Ce matricule n'existe pas.");
+        alert("Matricule inconnu.");
         return;
       }
       db.ref('absences').push({ matricule, date }, () => {
@@ -335,10 +549,10 @@
         if (notesSnap.exists()) {
           notesSnap.forEach(child => {
             const n = child.val();
-            tbody.innerHTML += `<tr><td>${n.matiere}</td><td>${n.note}/20</td></tr>`;
+            tbody.innerHTML += `<tr><td>${n.matiere}</td><td><strong>${n.note}</strong> / 20</td></tr>`;
           });
         } else {
-          tbody.innerHTML = '<tr><td colspan="2">Aucune note enregistrée</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="2" style="color: var(--text-muted); text-align: center;">Aucune note enregistrée</td></tr>';
         }
       });
 
