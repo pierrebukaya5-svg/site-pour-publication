@@ -39,6 +39,8 @@
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th, td { border: 1px solid var(--border); padding: 8px; text-align: left; }
     th { background: #f1f5f9; }
+    
+    .toggle-link { color: var(--primary); text-align: center; cursor: pointer; margin-top: 1rem; text-decoration: underline; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -80,20 +82,40 @@
 
   <!-- Espace Professeur -->
   <div id="sec-prof" class="section">
+    <!-- Formulaire de Connexion -->
     <div id="login-form">
       <h2>Connexion Enseignant</h2>
       <p>Connectez-vous pour enregistrer les notes et absences</p>
       <form onsubmit="login(event)">
         <label>Identifiant</label>
-        <input type="text" required placeholder="Ex: bukaya">
+        <input type="text" id="login-user" required placeholder="Ex: bukaya">
         <label>Mot de passe</label>
-        <input type="password" required placeholder="••••••••">
+        <input type="password" id="login-pass" required placeholder="••••••••">
         <button type="submit" class="btn">Se connecter</button>
       </form>
+      <div class="toggle-link" onclick="toggleAuthForm('register')">Pas encore de compte ? S'inscrire</div>
     </div>
 
+    <!-- Formulaire d'Inscription -->
+    <div id="register-form" style="display: none;">
+      <h2>Inscription Enseignant</h2>
+      <p>Créez vos identifiants pour accéder à l'espace enseignant</p>
+      <form onsubmit="register(event)">
+        <label>Nouvel Identifiant</label>
+        <input type="text" id="reg-user" required placeholder="Ex: bukaya">
+        <label>Mot de passe</label>
+        <input type="password" id="reg-pass" required placeholder="••••••••">
+        <button type="submit" class="btn" style="background: #059669;">Créer mon compte</button>
+      </form>
+      <div class="toggle-link" onclick="toggleAuthForm('login')">Déjà un compte ? Se connecter</div>
+    </div>
+
+    <!-- Tableau de bord après connexion -->
     <div id="prof-dashboard" style="display: none;">
-      <h2>Gestion de la classe</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 id="welcome-msg">Gestion de la classe</h2>
+        <button onclick="logout()" style="padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Déconnexion</button>
+      </div>
       
       <!-- Saisie des Notes -->
       <div class="card">
@@ -120,8 +142,11 @@
 </div>
 
 <script>
-  // Base de données temporaire (navigateur)
+  // Base de données temporaire
   const db = {
+    users: [
+      { user: "bukaya", pass: "1234" } // Compte par défaut
+    ],
     notes: [
       { eleve: "Bukaya", matiere: "Mathématiques", note: 16 },
       { eleve: "Bukaya", matiere: "Physique", note: 14 }
@@ -144,10 +169,53 @@
     }
   }
 
+  function toggleAuthForm(mode) {
+    if (mode === 'register') {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('register-form').style.display = 'block';
+    } else {
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+    }
+  }
+
+  function register(e) {
+    e.preventDefault();
+    const user = document.getElementById('reg-user').value.trim();
+    const pass = document.getElementById('reg-pass').value.trim();
+
+    if (db.users.find(u => u.user.toLowerCase() === user.toLowerCase())) {
+      alert("Cet identifiant existe déjà !");
+      return;
+    }
+
+    db.users.push({ user, pass });
+    alert("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
+    e.target.reset();
+    toggleAuthForm('login');
+  }
+
   function login(e) {
     e.preventDefault();
-    document.getElementById('login-form').style.display = 'none';
-    document.getElementById('prof-dashboard').style.display = 'block';
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value.trim();
+
+    const account = db.users.find(u => u.user.toLowerCase() === user.toLowerCase() && u.pass === pass);
+
+    if (account) {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('welcome-msg').innerText = `Espace de ${account.user}`;
+      document.getElementById('prof-dashboard').style.display = 'block';
+    } else {
+      alert("Identifiant ou mot de passe incorrect.");
+    }
+  }
+
+  function logout() {
+    document.getElementById('prof-dashboard').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
   }
 
   function ajouterNote(e) {
