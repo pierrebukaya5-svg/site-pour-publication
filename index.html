@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portail Scolaire RDC — Gestion Centralisée</title>
-    <!-- Tailwind CSS pour un design moderne -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -41,7 +41,7 @@
     <!-- Contenu Principal -->
     <main class="max-w-4xl w-full mx-auto px-4 py-8 flex-grow">
 
-        <!-- Navigation des Rôles (Si non connecté) -->
+        <!-- Navigation des Rôles -->
         <div id="role-selector" class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-wrap gap-2 justify-center">
             <button onclick="switchTab('eleve')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium transition bg-blue-600 text-white shadow-sm" data-target="eleve">🎓 Élève</button>
             <button onclick="switchTab('parent')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-100" data-target="parent">👨‍👩‍👧 Parent</button>
@@ -55,7 +55,7 @@
             <!-- ESPACE ÉLÈVE -->
             <div id="section-eleve" class="auth-section">
                 <h2 class="text-lg font-bold text-slate-900 mb-1">Espace Élève</h2>
-                <p class="text-sm text-slate-500 mb-6">Consultez vos notes et votre parcours scolaire avec votre identifiant unique (ex: MAT-1001).</p>
+                <p class="text-sm text-slate-500 mb-6">Consultez vos notes et votre parcours scolaire avec votre matricule (ex: MAT-1001).</p>
                 <form onsubmit="connexionEleve(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Numéro Matricule</label>
@@ -94,7 +94,7 @@
             <!-- ESPACE GÉRANT -->
             <div id="section-gerant" class="auth-section hidden">
                 <h2 class="text-lg font-bold text-slate-900 mb-1">Accès Espace Gérant</h2>
-                <p class="text-sm text-slate-500 mb-6">Entrez le mot de passe maître de l'établissement pour accéder aux outils de création de comptes.</p>
+                <p class="text-sm text-slate-500 mb-6">Entrez le mot de passe maître de l'établissement pour accéder aux outils d'administration.</p>
                 <form onsubmit="connexionGerant(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Mot de passe Gérant</label>
@@ -104,10 +104,8 @@
                 </form>
             </div>
 
-            <!-- TABLEAU DE BORD (Masqué par défaut) -->
-            <div id="dashboard-container" class="hidden">
-                <!-- Rempli dynamiquement selon le rôle connecté -->
-            </div>
+            <!-- TABLEAU DE BORD -->
+            <div id="dashboard-container" class="hidden"></div>
 
         </div>
     </main>
@@ -117,17 +115,16 @@
         Portail Scolaire RDC &copy; 2026 — Tous droits réservés
     </footer>
 
-    <!-- Script Logique & Firebase -->
+    <!-- Script -->
     <script>
-        // Configuration Firebase (liée au projet site-publication)
         const firebaseConfig = {
             databaseURL: "https://site-publication-default-rtdb.firebaseio.com/"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Mot de passe maître du gérant (modifiable ici)
-        const MASTER_PASSWORD = "gestion2026";
+        // Mot de passe par défaut si non modifié dans la base de données
+        const DEFAULT_MASTER = "gestion2026";
 
         function switchTab(role) {
             document.querySelectorAll('.auth-section').forEach(el => el.classList.add('hidden'));
@@ -135,7 +132,6 @@
                 btn.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
                 btn.classList.add('text-slate-600', 'hover:bg-slate-100');
             });
-
             document.getElementById(`section-${role}`).classList.remove('hidden');
             const activeBtn = document.querySelector(`[data-target="${role}"]`);
             if(activeBtn) {
@@ -147,12 +143,17 @@
         function connexionGerant(e) {
             e.preventDefault();
             const mdp = document.getElementById('gerant-mdp').value;
-            if(mdp === MASTER_PASSWORD) {
-                sessionStorage.setItem('role', 'gerant');
-                chargerDashboardGerant();
-            } else {
-                alert("Mot de passe maître incorrect.");
-            }
+            
+            // Vérifie dans Firebase si un mot de passe personnalisé existe, sinon utilise la valeur par défaut
+            db.ref('config/masterPassword').once('value').then(snapshot => {
+                const currentMaster = snapshot.exists() ? snapshot.val() : DEFAULT_MASTER;
+                if(mdp === currentMaster) {
+                    sessionStorage.setItem('role', 'gerant');
+                    chargerDashboardGerant();
+                } else {
+                    alert("Mot de passe maître incorrect.");
+                }
+            });
         }
 
         function connexionEleve(e) {
@@ -164,7 +165,7 @@
                     sessionStorage.setItem('userMatricule', mat);
                     chargerDashboardEleve(snapshot.val());
                 } else {
-                    alert("Matricule élève introuvable dans la base de données.");
+                    alert("Matricule élève introuvable.");
                 }
             });
         }
@@ -205,21 +206,21 @@
         function chargerDashboardGerant() {
             document.getElementById('role-selector').classList.add('hidden');
             document.querySelectorAll('.auth-section').forEach(el => el.classList.add('hidden'));
-            
-            const status = document.getElementById('user-status');
-            status.classList.remove('hidden');
+            document.getElementById('user-status').classList.remove('hidden');
             document.getElementById('welcome-msg').innerText = "Connecté en tant que : Gérant";
 
             const dash = document.getElementById('dashboard-container');
             dash.classList.remove('hidden');
             dash.innerHTML = `
-                <h2 class="text-xl font-bold text-slate-900 mb-4">Tableau de Bord - Gérant</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-900">Tableau de Bord - Gérant</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="p-5 border border-slate-200 rounded-xl bg-slate-50">
                         <h3 class="font-semibold text-slate-800 mb-3">Enregistrer un Élève</h3>
                         <form onsubmit="ajouterEleve(event)" class="space-y-3">
                             <input type="text" id="new-mat" placeholder="Matricule (ex: MAT-1002)" required class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm">
-                            <input type="text" id="new-nom" placeholder="Nom complet de l'élève" required class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm">
+                            <input type="text" id="new-nom" placeholder="Nom complet" required class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm">
                             <input type="text" id="new-classe" placeholder="Classe (ex: 6ème Math)" required class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm">
                             <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700">Créer le compte élève</button>
                         </form>
@@ -234,7 +235,29 @@
                         </form>
                     </div>
                 </div>
+                <!-- Section Modification Mot de Passe -->
+                <div class="p-5 border border-slate-200 rounded-xl bg-amber-50/50">
+                    <h3 class="font-semibold text-slate-800 mb-2">Sécurité : Modifier le Mot de Passe Maître</h3>
+                    <p class="text-xs text-slate-500 mb-4">Changez le mot de passe requis pour accéder à cet espace d'administration.</p>
+                    <form onsubmit="modifierMotDePasse(event)" class="space-y-3 max-w-md">
+                        <input type="password" id="new-master-mdp" placeholder="Nouveau mot de passe maître" required class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white">
+                        <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Mettre à jour le mot de passe</button>
+                    </form>
+                </div>
             `;
+        }
+
+        function modifierMotDePasse(e) {
+            e.preventDefault();
+            const nouveauMdp = document.getElementById('new-master-mdp').value.trim();
+            if(nouveauMdp.length < 4) {
+                alert("Le mot de passe doit contenir au moins 4 caractères.");
+                return;
+            }
+            db.ref('config/masterPassword').set(nouveauMdp).then(() => {
+                alert("Mot de passe maître mis à jour avec succès !");
+                document.getElementById('new-master-mdp').value = '';
+            });
         }
 
         function ajouterEleve(e) {
@@ -332,7 +355,7 @@
             e.preventDefault();
             const mat = document.getElementById('note-mat').value.trim();
             const noteVal = document.getElementById('note-val').value;
-            const profCours = sessionStorage.getItem('userProf'); // Idéalement lié au cours de l'enseignant
+            const profCours = sessionStorage.getItem('userProf');
 
             db.ref('enseignants/' + profCours).once('value').then(snapshot => {
                 if(snapshot.exists()) {
