@@ -1,36 +1,124 @@
-<!-- Formulaire disponible uniquement sur l'Espace Enseignant -->
-<div class="card p-3 my-3">
-  <h4>Publier une nouvelle leçon</h4>
-  <form id="form-cours">
-    <input type="text" id="titre-cours" class="form-control mb-2" placeholder="Titre du cours" required>
-    <input type="text" id="matiere-cours" class="form-control mb-2" placeholder="Matière (ex: Mathématiques)" required>
-    <input type="url" id="url-pdf" class="form-control mb-2" placeholder="Lien du fichier PDF (ex: Google Drive, Cloudinary...)" required>
-    <button type="submit" class="btn btn-primary">Publier la leçon</button>
-  </form>
-</div>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plateforme de Cours</title>
+  <!-- Bootstrap CSS pour le design -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container my-4">
 
-<script>
-  // Script pour enregistrer la leçon dans Firebase
-  document.getElementById('form-cours').addEventListener('submit', function(e) {
-    e.preventDefault();
+  <h2 class="mb-4">Portail de Gestion des Leçons</h2>
 
-    const titre = document.getElementById('titre-cours').value;
-    const matiere = document.getElementById('matiere-cours').value;
-    const urlPdf = document.getElementById('url-pdf').value;
+  <!-- Espace Professeur : Dépôt de cours -->
+  <div class="card p-4 mb-4 shadow-sm">
+    <h4 class="text-primary">Espace Professeur : Publier une nouvelle leçon</h4>
+    <form id="form-cours">
+      <div class="mb-3">
+        <label for="titre-cours" class="form-label">Titre du cours</label>
+        <input type="text" id="titre-cours" class="form-control" placeholder="Ex: Introduction aux Équations" required>
+      </div>
+      <div class="mb-3">
+        <label for="matiere-cours" class="form-label">Matière</label>
+        <input type="text" id="matiere-cours" class="form-control" placeholder="Ex: Mathématiques" required>
+      </div>
+      <div class="mb-3">
+        <label for="url-pdf" class="form-label">Lien du fichier PDF</label>
+        <input type="url" id="url-pdf" class="form-control" placeholder="Ex: Lien Google Drive ou Cloudinary" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Publier la leçon</button>
+    </form>
+  </div>
 
-    // Référence vers la collection cours
-    const coursRef = firebase.database().ref('cours');
-    
-    coursRef.push({
-      titre: titre,
-      matiere: matiere,
-      fichier_url: urlPdf,
-      date: new Date().toLocaleDateString('fr-FR')
-    }).then(() => {
-      alert('Leçon publiée avec succès !');
-      document.getElementById('form-cours').reset();
-    }).catch(error => {
-      console.error("Erreur d'enregistrement : ", error);
+  <!-- Espace Élève : Consultation et Téléchargement -->
+  <div class="card p-4 shadow-sm">
+    <h4 class="text-success">Espace Élève : Leçons & Cours disponibles</h4>
+    <ul id="liste-cours" class="list-group mt-3">
+      <!-- Les leçons s'afficheront dynamiquement ici -->
+    </ul>
+  </div>
+
+  <!-- Firebase SDK (Version compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+  <script>
+    // ⚙️ CONFIGURATION FIREBASE (À adapter avec vos propres identifiants de projet)
+    const firebaseConfig = {
+      apiKey: "VOTRE_API_KEY",
+      authDomain: "VOTRE_AUTH_DOMAIN",
+      databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
+      projectId: "site-publication",
+      storageBucket: "VOTRE_STORAGE_BUCKET",
+      messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
+      appId: "VOTRE_APP_ID"
+    };
+
+    // Initialisation de Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // 1. Gestion de la publication par le professeur (Génération du code unique)
+    document.getElementById('form-cours').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const titre = document.getElementById('titre-cours').value;
+      const matiere = document.getElementById('matiere-cours').value;
+      const urlPdf = document.getElementById('url-pdf').value;
+
+      const coursRef = database.ref('cours');
+      
+      // Génération automatique d'un identifiant unique (clé Firebase)
+      const nouveauCoursRef = coursRef.push();
+      
+      nouveauCoursRef.set({
+        id_unique: nouveauCoursRef.key,
+        titre: titre,
+        matiere: matiere,
+        fichier_url: urlPdf,
+        date: new Date().toLocaleDateString('fr-FR')
+      }).then(() => {
+        alert('Leçon publiée avec succès ! Code unique généré : ' + nouveauCoursRef.key);
+        document.getElementById('form-cours').reset();
+      }).catch(error => {
+        console.error("Erreur d'enregistrement : ", error);
+        alert("Erreur lors de la publication.");
+      });
     });
-  });
-</script>
+
+    // 2. Affichage en temps réel pour les élèves (Lecture et Téléchargement)
+    const listeCours = document.getElementById('liste-cours');
+    const coursRef = database.ref('cours');
+
+    coursRef.on('value', (snapshot) => {
+      listeCours.innerHTML = '';
+      const data = snapshot.val();
+
+      if (data) {
+        Object.keys(data).forEach(key => {
+          const cours = data[key];
+          const li = document.createElement('li');
+          li.className = 'list-group-item d-flex justify-content-between align-items-center py-3';
+          
+          li.innerHTML = `
+            <div>
+              <h5 class="mb-1">${cours.titre}</h5>
+              <span class="badge bg-secondary">${cours.matiere}</span>
+              <small class="text-muted ms-2">Publié le ${cours.date}</small>
+              <br><small class="text-info font-monospace">Code unique : ${cours.id_unique || key}</small>
+            </div>
+            <a href="${cours.fichier_url}" target="_blank" download class="btn btn-sm btn-success">
+              📥 Télécharger PDF
+            </a>
+          `;
+          
+          listeCours.appendChild(li);
+        });
+      } else {
+        listeCours.innerHTML = '<li class="list-group-item text-muted">Aucune leçon disponible pour le moment.</li>';
+      }
+    });
+  </script>
+</body>
+</html>
