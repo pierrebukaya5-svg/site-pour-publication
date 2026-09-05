@@ -4,8 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portail Scolaire — Élèves & Professeurs</title>
-  <!-- Librairie pour générer les bulletins PDF -->
+  
+  <!-- Librairies externes : html2pdf et Firebase (compatibles navigateur) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  
   <style>
     :root {
       --primary: #2563eb;
@@ -43,15 +47,13 @@
     .toggle-link { color: var(--primary); text-align: center; cursor: pointer; margin-top: 1rem; text-decoration: underline; font-size: 0.9rem; }
     .student-info p { margin-bottom: 0.5rem; font-weight: 500; }
     .matricule-badge { font-weight: bold; color: var(--primary); font-size: 1.1rem; }
-    
     .alert-success { background: #dcfce7; color: #15803d; padding: 1rem; border-radius: 6px; border: 1px solid #bbf7d0; margin-top: 1rem; }
-    .loading { opacity: 0.6; pointer-events: none; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Navigation -->
+  <!-- Onglets de Navigation -->
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchTab('eleve')">🎓 Espace Élève</button>
     <button class="tab-btn" onclick="switchTab('prof')">🔐 Espace Professeur</button>
@@ -62,7 +64,7 @@
     <h2>Espace Élève</h2>
     <p>Créez votre compte pour obtenir votre matricule ou consultez votre bulletin.</p>
     
-    <!-- Inscription Élève -->
+    <!-- Création profil élève -->
     <div class="card">
       <h3>1. Créer mon profil élève (Obtenir un matricule)</h3>
       <form onsubmit="creerCompteEleve(event)">
@@ -70,17 +72,17 @@
         <input type="text" id="reg-eleve-postnom" placeholder="Post-nom" required>
         <input type="text" id="reg-eleve-prenom" placeholder="Prénom" required>
         <input type="text" id="reg-eleve-classe" placeholder="Classe (Ex: 6ème A, 4ème)" required>
-        <input type="text" id="reg-eleve-option" placeholder="Option (Ex: Scientifique, Littéraire, Gestion...)" required>
-        <button type="submit" id="btn-create-eleve" class="btn btn-secondary">Créer mon compte & Générer mon matricule</button>
+        <input type="text" id="reg-eleve-option" placeholder="Option (Ex: Scientifique, Littéraire...)" required>
+        <button type="submit" class="btn btn-secondary">Créer mon compte & Générer mon matricule</button>
       </form>
       <div id="registration-result" style="display: none;" class="alert-success">
         <p><strong>Compte créé avec succès !</strong></p>
         <p>Votre matricule est : <span id="new-matricule-display" class="matricule-badge"></span></p>
-        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #166534;">⚠️ Conservez bien ce matricule, donnez-le à vos enseignants pour recevoir vos notes.</p>
+        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #166534;">⚠️ Transmettez ce matricule à votre enseignant pour la saisie de vos notes.</p>
       </div>
     </div>
 
-    <!-- Consultation du Bulletin -->
+    <!-- Consultation du bulletin -->
     <div class="card" style="margin-top: 2rem;">
       <h3>2. Consulter mon bulletin</h3>
       <div style="display: flex; gap: 10px; margin-top: 10px;">
@@ -130,7 +132,7 @@
       <div class="toggle-link" onclick="toggleAuthForm('register')">Pas encore de compte ? Créer un identifiant</div>
     </div>
 
-    <!-- Formulaire d'Inscription Professeur -->
+    <!-- Formulaire d'Inscription -->
     <div id="register-form" style="display: none;">
       <h2>Créer un compte Enseignant</h2>
       <p>Choisissez un identifiant et un mot de passe</p>
@@ -144,17 +146,15 @@
       <div class="toggle-link" onclick="toggleAuthForm('login')">Déjà un compte ? Se connecter</div>
     </div>
 
-    <!-- Tableau de bord Enseignant -->
+    <!-- Dashboard Professeur -->
     <div id="prof-dashboard" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2 id="welcome-msg">Espace Enseignant</h2>
         <button onclick="logout()" style="padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Déconnexion</button>
       </div>
 
-      <!-- Saisie des Notes -->
       <div class="card">
         <h3>Ajouter une note</h3>
-        <p style="font-size: 0.85rem; color: #64748b;">Entrez le matricule fourni par l'élève.</p>
         <form onsubmit="ajouterNote(event)">
           <input type="text" id="note-matricule" placeholder="Matricule de l'élève (Ex: MAT-1001)" required>
           <input type="text" id="note-matiere" placeholder="Matière (ex: Mathématiques)" required>
@@ -163,7 +163,6 @@
         </form>
       </div>
 
-      <!-- Saisie des Absences -->
       <div class="card">
         <h3>Signaler une absence</h3>
         <form onsubmit="ajouterAbsence(event)">
@@ -177,55 +176,20 @@
 </div>
 
 <script>
-  // API JSONBin pour synchroniser entre ordinateurs et téléphones
-  const BIN_ID = '67220556ad19ca34f8c2e64b'; // ID de test public
-  const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-  const API_KEY = '$2a$10$89X34z3Rms7G8l0qWlhq5.dE0N5Wv1K2U./e3G4Jb.uXJ/Z1P0E22'; 
+  // Configuration Firebase associée à votre projet
+  const firebaseConfig = {
+    apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
+    authDomain: "site-publication.firebaseapp.com",
+    databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
+    projectId: "site-publication",
+    storageBucket: "site-publication.firebasestorage.app",
+    messagingSenderId: "934019778891",
+    appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
+  };
 
-  let db = { users: [], eleves: [], notes: [], absences: [] };
-
-  // Charger la base de données en ligne au démarrage
-  async function loadData() {
-    try {
-      const res = await fetch(API_URL, {
-        headers: { 'X-Master-Key': API_KEY }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        db = data.record || db;
-      }
-    } catch (e) {
-      console.warn("Connexion en ligne échouée, passage en local :", e);
-      db.users = JSON.parse(localStorage.getItem('prof_users')) || [{ user: "bukaya", pass: "1234" }];
-      db.eleves = JSON.parse(localStorage.getItem('prof_eleves')) || [];
-      db.notes = JSON.parse(localStorage.getItem('prof_notes')) || [];
-      db.absences = JSON.parse(localStorage.getItem('prof_absences')) || [];
-    }
-  }
-
-  // Sauvegarder la base de données en ligne
-  async function saveData() {
-    localStorage.setItem('prof_users', JSON.stringify(db.users));
-    localStorage.setItem('prof_eleves', JSON.stringify(db.eleves));
-    localStorage.setItem('prof_notes', JSON.stringify(db.notes));
-    localStorage.setItem('prof_absences', JSON.stringify(db.absences));
-
-    try {
-      await fetch(API_URL, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': API_KEY
-        },
-        body: JSON.stringify(db)
-      });
-    } catch (e) {
-      console.error("Erreur de synchronisation en ligne :", e);
-    }
-  }
-
-  // Charger les données dès l'ouverture de la page
-  loadData();
+  // Initialisation de Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -250,39 +214,38 @@
     }
   }
 
-  async function register(e) {
+  function register(e) {
     e.preventDefault();
-    await loadData();
     const user = document.getElementById('reg-user').value.trim();
     const pass = document.getElementById('reg-pass').value.trim();
 
-    if (db.users.find(u => u.user.toLowerCase() === user.toLowerCase())) {
-      alert("Cet identifiant existe déjà !");
-      return;
-    }
-
-    db.users.push({ user, pass });
-    await saveData();
-    alert("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
-    e.target.reset();
-    toggleAuthForm('login');
+    db.ref('users/' + user.toLowerCase()).get().then(snapshot => {
+      if (snapshot.exists()) {
+        alert("Cet identifiant existe déjà !");
+      } else {
+        db.ref('users/' + user.toLowerCase()).set({ user, pass }, () => {
+          alert("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
+          e.target.reset();
+          toggleAuthForm('login');
+        });
+      }
+    });
   }
 
-  async function login(e) {
+  function login(e) {
     e.preventDefault();
-    await loadData();
-    const user = document.getElementById('login-user').value.trim();
+    const user = document.getElementById('login-user').value.trim().toLowerCase();
     const pass = document.getElementById('login-pass').value.trim();
 
-    const account = db.users.find(u => u.user.toLowerCase() === user.toLowerCase() && u.pass === pass);
-
-    if (account) {
-      document.getElementById('login-form').style.display = 'none';
-      document.getElementById('welcome-msg').innerText = `Espace de ${account.user}`;
-      document.getElementById('prof-dashboard').style.display = 'block';
-    } else {
-      alert("Identifiant ou mot de passe incorrect.");
-    }
+    db.ref('users/' + user).get().then(snapshot => {
+      if (snapshot.exists() && snapshot.val().pass === pass) {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('welcome-msg').innerText = `Espace de ${snapshot.val().user}`;
+        document.getElementById('prof-dashboard').style.display = 'block';
+      } else {
+        alert("Identifiant ou mot de passe incorrect.");
+      }
+    });
   }
 
   function logout() {
@@ -293,18 +256,11 @@
   }
 
   function genererMatricule() {
-    let matricule;
-    do {
-      const num = Math.floor(1000 + Math.random() * 9000);
-      matricule = `MAT-${num}`;
-    } while (db.eleves.some(e => e.matricule === matricule));
-    return matricule;
+    return 'MAT-' + Math.floor(1000 + Math.random() * 9000);
   }
 
-  async function creerCompteEleve(e) {
+  function creerCompteEleve(e) {
     e.preventDefault();
-    await loadData();
-
     const nom = document.getElementById('reg-eleve-nom').value.trim();
     const postnom = document.getElementById('reg-eleve-postnom').value.trim();
     const prenom = document.getElementById('reg-eleve-prenom').value.trim();
@@ -313,83 +269,90 @@
 
     const matricule = genererMatricule();
 
-    db.eleves.push({ matricule, nom, postnom, prenom, classe, option });
-    await saveData();
-
-    document.getElementById('new-matricule-display').innerText = matricule;
-    document.getElementById('registration-result').style.display = 'block';
-    document.getElementById('search-student').value = matricule;
-    
-    e.target.reset();
+    db.ref('eleves/' + matricule).set({ matricule, nom, postnom, prenom, classe, option }, err => {
+      if (!err) {
+        document.getElementById('new-matricule-display').innerText = matricule;
+        document.getElementById('registration-result').style.display = 'block';
+        document.getElementById('search-student').value = matricule;
+        e.target.reset();
+      }
+    });
   }
 
-  async function ajouterNote(e) {
+  function ajouterNote(e) {
     e.preventDefault();
-    await loadData();
-
     const matricule = document.getElementById('note-matricule').value.trim().toUpperCase();
     const matiere = document.getElementById('note-matiere').value.trim();
     const note = document.getElementById('note-valeur').value;
-    
-    if (!db.eleves.find(e => e.matricule === matricule)) {
-      alert("Ce matricule n'existe pas. Vérifiez le matricule fourni par l'élève.");
-      return;
-    }
 
-    db.notes.push({ matricule, matiere, note });
-    await saveData();
-    alert(`Note ajoutée pour l'élève ${matricule}`);
-    e.target.reset();
+    db.ref('eleves/' + matricule).get().then(snapshot => {
+      if (!snapshot.exists()) {
+        alert("Ce matricule n'existe pas dans la base de données.");
+        return;
+      }
+      db.ref('notes').push({ matricule, matiere, note }, () => {
+        alert(`Note enregistrée pour l'élève ${matricule}`);
+        e.target.reset();
+      });
+    });
   }
 
-  async function ajouterAbsence(e) {
+  function ajouterAbsence(e) {
     e.preventDefault();
-    await loadData();
-
     const matricule = document.getElementById('absence-matricule').value.trim().toUpperCase();
     const date = document.getElementById('absence-date').value;
-    
-    if (!db.eleves.find(e => e.matricule === matricule)) {
-      alert("Ce matricule n'existe pas.");
-      return;
-    }
 
-    db.absences.push({ matricule, date });
-    await saveData();
-    alert(`Absence enregistrée pour l'élève ${matricule}`);
-    e.target.reset();
+    db.ref('eleves/' + matricule).get().then(snapshot => {
+      if (!snapshot.exists()) {
+        alert("Ce matricule n'existe pas.");
+        return;
+      }
+      db.ref('absences').push({ matricule, date }, () => {
+        alert(`Absence enregistrée pour l'élève ${matricule}`);
+        e.target.reset();
+      });
+    });
   }
 
-  async function afficherBulletin() {
-    await loadData();
+  function afficherBulletin() {
     const queryMatricule = document.getElementById('search-student').value.trim().toUpperCase();
     if (!queryMatricule) return;
 
-    const eleve = db.eleves.find(e => e.matricule === queryMatricule);
+    db.ref('eleves/' + queryMatricule).get().then(eleveSnap => {
+      if (!eleveSnap.exists()) {
+        alert("Aucun élève trouvé avec ce matricule.");
+        document.getElementById('bulletin-zone').style.display = 'none';
+        return;
+      }
 
-    if (!eleve) {
-      alert("Aucun élève trouvé avec ce matricule.");
-      document.getElementById('bulletin-zone').style.display = 'none';
-      return;
-    }
+      const eleve = eleveSnap.val();
+      document.getElementById('st-matricule').innerText = eleve.matricule;
+      document.getElementById('st-nom').innerText = eleve.nom;
+      document.getElementById('st-postnom').innerText = eleve.postnom;
+      document.getElementById('st-prenom').innerText = eleve.prenom;
+      document.getElementById('st-classe').innerText = eleve.classe;
+      document.getElementById('st-option').innerText = eleve.option || 'N/A';
 
-    const notes = db.notes.filter(n => n.matricule === queryMatricule);
-    const absences = db.absences.filter(a => a.matricule === queryMatricule);
+      db.ref('notes').orderByChild('matricule').equalTo(queryMatricule).once('value', notesSnap => {
+        const tbody = document.getElementById('notes-list');
+        tbody.innerHTML = '';
+        if (notesSnap.exists()) {
+          notesSnap.forEach(child => {
+            const n = child.val();
+            tbody.innerHTML += `<tr><td>${n.matiere}</td><td>${n.note}/20</td></tr>`;
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="2">Aucune note enregistrée</td></tr>';
+        }
+      });
 
-    document.getElementById('st-matricule').innerText = eleve.matricule;
-    document.getElementById('st-nom').innerText = eleve.nom;
-    document.getElementById('st-postnom').innerText = eleve.postnom;
-    document.getElementById('st-prenom').innerText = eleve.prenom;
-    document.getElementById('st-classe').innerText = eleve.classe;
-    document.getElementById('st-option').innerText = eleve.option || 'N/A';
+      db.ref('absences').orderByChild('matricule').equalTo(queryMatricule).once('value', absSnap => {
+        const count = absSnap.exists() ? absSnap.numChildren() : 0;
+        document.getElementById('absence-count').innerText = `${count} absence(s) enregistrée(s)`;
+      });
 
-    const tbody = document.getElementById('notes-list');
-    tbody.innerHTML = notes.length 
-      ? notes.map(n => `<tr><td>${n.matiere}</td><td>${n.note}/20</td></tr>`).join('')
-      : '<tr><td colspan="2">Aucune note enregistrée pour le moment</td></tr>';
-
-    document.getElementById('absence-count').innerText = `${absences.length} absence(s) enregistrée(s)`;
-    document.getElementById('bulletin-zone').style.display = 'block';
+      document.getElementById('bulletin-zone').style.display = 'block';
+    });
   }
 
   function telechargerPDF() {
