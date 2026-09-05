@@ -3,122 +3,720 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plateforme de Cours</title>
-  <!-- Bootstrap CSS pour le design -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Portail Scolaire RDC — Élèves & Enseignants</title>
+  
+  <!-- Polices Google & FontAwesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Librairies externes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-hover: #1e40af;
+      --secondary: #059669;
+      --secondary-hover: #047857;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #4b5563;
+      --border: #d1d5db;
+      --radius: 10px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    
+    body { 
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); 
+      color: var(--text-main); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      padding: 1rem; 
+      min-height: 100vh; 
+    }
+
+    .container { 
+      background: var(--card-bg); 
+      border-radius: var(--radius); 
+      box-shadow: var(--shadow); 
+      width: 100%; 
+      max-width: 850px; 
+      padding: 2rem; 
+      border: 1px solid rgba(255,255,255,0.8);
+    }
+
+    .header { text-align: center; margin-bottom: 1.5rem; }
+    .header h1 { font-size: 1.6rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+    .nav-tabs { display: flex; background: #f8fafc; padding: 5px; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid var(--border); gap: 5px; }
+    .tab-btn { flex: 1; padding: 10px 14px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
+    .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    form { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+    label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); }
+    input, select { padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; background: #f9fafb; width: 100%; }
+    input:focus, select:focus { border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
+
+    button.btn { background: var(--primary); color: white; border: none; padding: 12px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; width: 100%; }
+    button.btn:hover { background: var(--primary-hover); }
+    button.btn-secondary { background: var(--secondary); }
+    button.btn-secondary:hover { background: var(--secondary-hover); }
+    button.btn-danger { background: var(--danger); }
+    button.btn-danger:hover { background: var(--danger-hover); }
+
+    .card { background: #ffffff; border: 1px solid var(--border); padding: 1.25rem; border-radius: 10px; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .card h3 { font-size: 1.05rem; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+
+    .matricule-badge { font-weight: 700; color: var(--primary); background: #eff6ff; padding: 4px 10px; border-radius: 6px; font-size: 0.95rem; display: inline-block; }
+    .alert-success { background: #ecfdf5; color: #065f46; padding: 1rem; border-radius: 8px; border: 1px solid #a7f3d0; margin-top: 1rem; }
+    .toggle-link { color: var(--primary); text-align: center; cursor: pointer; margin-top: 1rem; font-size: 0.85rem; font-weight: 500; }
+
+    /* STYLES BULLETIN CONGOLAIS (RDC) */
+    .bulletin-container {
+      background: #ffffff;
+      border: 2px solid #1e3a8a;
+      padding: 1.5rem;
+      border-radius: 6px;
+      font-family: 'Times New Roman', Times, serif;
+      color: #000;
+    }
+    .rdc-header {
+      text-align: center;
+      border-bottom: 2px solid #1e3a8a;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+    .rdc-header h4 { font-size: 1rem; text-transform: uppercase; font-weight: bold; }
+    .rdc-header h3 { font-size: 1.1rem; text-transform: uppercase; color: #1e3a8a; margin: 4px 0; }
+    .rdc-header p { font-size: 0.85rem; font-style: italic; }
+
+    .rdc-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      font-size: 0.9rem;
+      background: #f8fafc;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+
+    .table-bulletin {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.85rem;
+    }
+    .table-bulletin th, .table-bulletin td {
+      border: 1px solid #000;
+      padding: 6px;
+      text-align: center;
+    }
+    .table-bulletin th {
+      background-color: #f1f5f9;
+      font-weight: bold;
+    }
+    .table-bulletin td.left-align {
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .rdc-footer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      border-top: 1px solid #cbd5e1;
+      padding-top: 15px;
+    }
+
+    @media (max-width: 650px) {
+      body { padding: 0.5rem; }
+      .container { padding: 1rem; }
+      .grid-2, .rdc-info-grid { grid-template-columns: 1fr; }
+      .tab-btn { font-size: 0.8rem; padding: 8px; }
+      .table-bulletin { font-size: 0.75rem; }
+      .table-bulletin th, .table-bulletin td { padding: 4px; }
+    }
+  </style>
 </head>
-<body class="container my-4">
+<body>
 
-  <h2 class="mb-4">Portail de Gestion des Leçons</h2>
-
-  <!-- Espace Professeur : Dépôt de cours -->
-  <div class="card p-4 mb-4 shadow-sm">
-    <h4 class="text-primary">Espace Professeur : Publier une nouvelle leçon</h4>
-    <form id="form-cours">
-      <div class="mb-3">
-        <label for="titre-cours" class="form-label">Titre du cours</label>
-        <input type="text" id="titre-cours" class="form-control" placeholder="Ex: Introduction aux Équations" required>
-      </div>
-      <div class="mb-3">
-        <label for="matiere-cours" class="form-label">Matière</label>
-        <input type="text" id="matiere-cours" class="form-control" placeholder="Ex: Mathématiques" required>
-      </div>
-      <div class="mb-3">
-        <label for="url-pdf" class="form-label">Lien du fichier PDF</label>
-        <input type="url" id="url-pdf" class="form-control" placeholder="Ex: Lien Google Drive ou Cloudinary" required>
-      </div>
-      <button type="submit" class="btn btn-primary">Publier la leçon</button>
-    </form>
+<div class="container">
+  
+  <div class="header">
+    <h1><i class="fa-solid fa-graduation-cap"></i> Portail Scolaire RDC</h1>
+    <p>Système National de Gestion des Bulletins & Cours en Ligne</p>
   </div>
 
-  <!-- Espace Élève : Consultation et Téléchargement -->
-  <div class="card p-4 shadow-sm">
-    <h4 class="text-success">Espace Élève : Leçons & Cours disponibles</h4>
-    <ul id="liste-cours" class="list-group mt-3">
-      <!-- Les leçons s'afficheront dynamiquement ici -->
-    </ul>
+  <!-- Navigation -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('eleve')">
+      <i class="fa-solid fa-user-graduate"></i> Espace Élève
+    </button>
+    <button class="tab-btn" onclick="switchTab('prof')">
+      <i class="fa-solid fa-user-tie"></i> Espace Enseignant
+    </button>
   </div>
 
-  <!-- Firebase SDK (Version compat) -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <!-- Espace Élève -->
+  <div id="sec-eleve" class="section active">
+    
+    <!-- Inscription Élève -->
+    <div class="card">
+      <h3><i class="fa-solid fa-id-card" style="color: var(--primary);"></i> 1. Enregistrement d'un Élève</h3>
+      <form onsubmit="creerCompteEleve(event)">
+        <div class="grid-2">
+          <input type="text" id="reg-eleve-nom" placeholder="Nom (Ex: KABAMBA)" required>
+          <input type="text" id="reg-eleve-postnom" placeholder="Post-nom (Ex: MUTOMBO)" required>
+        </div>
+        <input type="text" id="reg-eleve-prenom" placeholder="Prénom (Ex: Jean-Luc)" required>
+        <div class="grid-2">
+          <input type="text" id="reg-eleve-classe" placeholder="Classe (Ex: 8ème EB)" required>
+          <input type="text" id="reg-eleve-option" placeholder="Option (Ex: Scientifique)" required>
+        </div>
+        <button type="submit" class="btn btn-secondary">
+          <i class="fa-solid fa-plus-circle"></i> Générer le Matricule Élève
+        </button>
+      </form>
 
-  <script>
-    // ⚙️ CONFIGURATION FIREBASE (À adapter avec vos propres identifiants de projet)
-    const firebaseConfig = {
-      apiKey: "VOTRE_API_KEY",
-      authDomain: "VOTRE_AUTH_DOMAIN",
-      databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
-      projectId: "site-publication",
-      storageBucket: "VOTRE_STORAGE_BUCKET",
-      messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
-      appId: "VOTRE_APP_ID"
-    };
+      <div id="registration-result" style="display: none;" class="alert-success">
+        <p style="font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Inscription effectuée !</p>
+        <p style="margin-top: 6px;">Matricule officiel : <span id="new-matricule-display" class="matricule-badge"></span></p>
+      </div>
+    </div>
 
-    // Initialisation de Firebase
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    <!-- Consultation Bulletin -->
+    <div class="card">
+      <h3><i class="fa-solid fa-file-invoice" style="color: var(--primary);"></i> 2. Consulter le Bulletin Scolaire</h3>
+      <div style="display: flex; gap: 8px; margin-top: 1rem;">
+        <input type="text" id="search-student" placeholder="Entrez le Matricule (Ex: MAT-4821)" style="flex: 1;">
+        <button class="btn" style="width: auto;" onclick="afficherBulletin()">
+          <i class="fa-solid fa-magnifying-glass"></i> Afficher
+        </button>
+      </div>
+    </div>
 
-    // 1. Gestion de la publication par le professeur (Génération du code unique)
-    document.getElementById('form-cours').addEventListener('submit', function(e) {
-      e.preventDefault();
+    <!-- Consultation des Cours & Leçons en ligne -->
+    <div class="card">
+      <h3><i class="fa-solid fa-book-open" style="color: var(--primary);"></i> 3. Leçons & Cours Disponibles</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Consultez et téléchargez les cours déposés par les enseignants.</p>
+      <div id="liste-cours-eleve" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <!-- Injecté dynamiquement -->
+      </div>
+    </div>
 
-      const titre = document.getElementById('titre-cours').value;
-      const matiere = document.getElementById('matiere-cours').value;
-      const urlPdf = document.getElementById('url-pdf').value;
+    <!-- Zone d'affichage Bulletin -->
+    <div id="bulletin-zone" class="card" style="display:none; padding: 0.5rem; background: transparent; border: none; box-shadow: none;">
+      <div id="pdf-content" class="bulletin-container">
+        
+        <div class="rdc-header">
+          <h4>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h4>
+          <p>MINISTÈRE DE L'ÉDUCATION NATIONALE ET NOUVELLE CITOYENNETÉ</p>
+          <h3>BULLETIN SCOLAIRE OFFICIEL</h3>
+          <p>Année Scolaire : 2025 – 2026</p>
+        </div>
 
-      const coursRef = database.ref('cours');
-      
-      // Génération automatique d'un identifiant unique (clé Firebase)
-      const nouveauCoursRef = coursRef.push();
-      
-      nouveauCoursRef.set({
-        id_unique: nouveauCoursRef.key,
-        titre: titre,
-        matiere: matiere,
-        fichier_url: urlPdf,
-        date: new Date().toLocaleDateString('fr-FR')
-      }).then(() => {
-        alert('Leçon publiée avec succès ! Code unique généré : ' + nouveauCoursRef.key);
-        document.getElementById('form-cours').reset();
-      }).catch(error => {
-        console.error("Erreur d'enregistrement : ", error);
-        alert("Erreur lors de la publication.");
-      });
-    });
+        <div class="rdc-info-grid">
+          <div><strong>NOMS :</strong> <span id="st-fullname">---</span></div>
+          <div><strong>MATRICULE :</strong> <span id="st-matricule">---</span></div>
+          <div><strong>CLASSE :</strong> <span id="st-classe">---</span></div>
+          <div><strong>OPTION :</strong> <span id="st-option">---</span></div>
+        </div>
 
-    // 2. Affichage en temps réel pour les élèves (Lecture et Téléchargement)
-    const listeCours = document.getElementById('liste-cours');
-    const coursRef = database.ref('cours');
+        <div style="overflow-x: auto;">
+          <table class="table-bulletin">
+            <thead>
+              <tr>
+                <th rowspan="2" style="width: 35%;">BRANCHES / MATIÈRES</th>
+                <th colspan="2">1er SEMESTRE</th>
+                <th colspan="2">2ème SEMESTRE</th>
+                <th rowspan="2">TOTAL GÉNÉRAL</th>
+              </tr>
+              <tr>
+                <th>1ère P.</th>
+                <th>2ème P. / EX.1</th>
+                <th>3ème P.</th>
+                <th>4ème P. / EX.2</th>
+              </tr>
+            </thead>
+            <tbody id="notes-list"></tbody>
+          </table>
+        </div>
 
-    coursRef.on('value', (snapshot) => {
-      listeCours.innerHTML = '';
-      const data = snapshot.val();
+        <div style="margin-top: 15px; font-size: 0.85rem; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div style="border: 1px solid #000; padding: 8px;">
+            <strong>CONDUITE :</strong> <span id="st-conduite" style="font-weight: bold;">Non attribuée</span><br>
+            <strong>ABSENCES :</strong> <span id="absence-count">0 jour(s)</span>
+          </div>
+          <div style="border: 1px solid #000; padding: 8px;">
+            <strong>DÉCISION DU CONSEIL :</strong><br>
+            <span id="st-decision" style="font-weight: bold; color: #1e3a8a;">En cours</span>
+          </div>
+        </div>
 
-      if (data) {
-        Object.keys(data).forEach(key => {
-          const cours = data[key];
-          const li = document.createElement('li');
-          li.className = 'list-group-item d-flex justify-content-between align-items-center py-3';
-          
-          li.innerHTML = `
-            <div>
-              <h5 class="mb-1">${cours.titre}</h5>
-              <span class="badge bg-secondary">${cours.matiere}</span>
-              <small class="text-muted ms-2">Publié le ${cours.date}</small>
-              <br><small class="text-info font-monospace">Code unique : ${cours.id_unique || key}</small>
-            </div>
-            <a href="${cours.fichier_url}" target="_blank" download class="btn btn-sm btn-success">
-              📥 Télécharger PDF
-            </a>
-          `;
-          
-          listeCours.appendChild(li);
-        });
+        <div class="rdc-footer">
+          <div>
+            <p>Kinshasa, le <span id="current-date"></span></p>
+            <p style="margin-top: 25px; font-weight: bold;">Sceau de l'Établissement</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="margin-top: 25px; font-weight: bold;">Le Chef d'Établissement</p>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="btn btn-secondary" style="margin-top: 1.25rem;" onclick="telechargerPDF()">
+        <i class="fa-solid fa-file-pdf"></i> Télécharger le Bulletin (Format PDF)
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Espace Enseignant -->
+  <div id="sec-prof" class="section">
+    
+    <!-- Connexion Enseignant -->
+    <div id="login-form" class="card">
+      <h3><i class="fa-solid fa-lock" style="color: var(--primary);"></i> Connexion Enseignant</h3>
+      <form onsubmit="login(event)">
+        <div class="form-group">
+          <label>Identifiant</label>
+          <input type="text" id="login-user" required placeholder="Identifiant">
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="login-pass" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</button>
+      </form>
+      <div class="toggle-link" onclick="toggleAuthForm('register')">Nouveau compte enseignant ? Cliquez ici</div>
+    </div>
+
+    <!-- Inscription Enseignant -->
+    <div id="register-form" class="card" style="display: none;">
+      <h3><i class="fa-solid fa-user-plus" style="color: var(--secondary);"></i> Créer un compte Enseignant</h3>
+      <form onsubmit="register(event)">
+        <div class="form-group">
+          <label>Identifiant</label>
+          <input type="text" id="reg-user" required placeholder="Choisissez un identifiant">
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="reg-pass" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-check"></i> Valider mon inscription</button>
+      </form>
+      <div class="toggle-link" onclick="toggleAuthForm('login')">Déjà un compte ? Se connecter</div>
+    </div>
+
+    <!-- Tableau de bord Enseignant -->
+    <div id="prof-dashboard" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <h2 id="welcome-msg" style="font-size: 1.2rem; color: var(--primary);">Tableau de bord</h2>
+        <button onclick="logout()" class="btn btn-danger" style="width: auto; padding: 6px 12px; font-size: 0.8rem;">
+          <i class="fa-solid fa-power-off"></i> Déconnexion
+        </button>
+      </div>
+
+      <!-- Selection globale de l'élève par nom -->
+      <div class="card" style="background: #f0f9ff; border: 1px solid #bae6fd;">
+        <h3><i class="fa-solid fa-user-check" style="color: var(--primary);"></i> Choisir l'Élève concerné</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Le matricule sera conservé automatiquement.</p>
+        <div class="form-group" style="margin-top: 10px;">
+          <select id="select-eleve-global" onchange="synchroniserEleveSelectionne()">
+            <option value="">-- Sélectionnez un élève dans la liste --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Dépôt de Leçon (Cours en Ligne avec Code Unique) -->
+      <div class="card" style="border-left: 4px solid var(--secondary);">
+        <h3><i class="fa-solid fa-cloud-arrow-up" style="color: var(--secondary);"></i> Publier une Leçon / Cours PDF</h3>
+        <form onsubmit="publierCours(event)">
+          <input type="text" id="cours-titre" placeholder="Titre du cours (Ex: Introduction aux Équations)" required>
+          <input type="text" id="cours-matiere" placeholder="Matière (Ex: Mathématiques)" required>
+          <input type="url" id="cours-url" placeholder="Lien direct du PDF (ex: Google Drive, Cloudinary...)" required>
+          <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-upload"></i> Publier la leçon (Code unique automatique)</button>
+        </form>
+      </div>
+
+      <!-- Ajout Note -->
+      <div class="card">
+        <h3><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Enregistrer une Note</h3>
+        <form onsubmit="ajouterNote(event)">
+          <div class="form-group">
+            <label>Matricule de l'élève</label>
+            <input type="text" id="note-matricule" placeholder="Sélectionnez un élève ci-dessus" readonly style="background: #e2e8f0;" required>
+          </div>
+          <input type="text" id="note-matiere" placeholder="Matière (Ex: Mathématiques)" required>
+          <input type="number" id="note-valeur" min="0" max="20" step="0.5" placeholder="Note / 20" required>
+          <button type="submit" class="btn"><i class="fa-solid fa-floppy-disk"></i> Enregistrer la note</button>
+        </form>
+      </div>
+
+      <!-- Conduite & Décision -->
+      <div class="card">
+        <h3><i class="fa-solid fa-gavel" style="color: var(--primary);"></i> Conduite & Décision du Conseil</h3>
+        <form onsubmit="enregistrerDecision(event)">
+          <div class="form-group">
+            <label>Matricule de l'élève</label>
+            <input type="text" id="decision-matricule" placeholder="Sélectionnez un élève" readonly style="background: #e2e8f0;" required>
+          </div>
+          <div class="form-group">
+            <label>Conduite</label>
+            <select id="decision-conduite" required>
+              <option value="">-- Sélectionner la conduite --</option>
+              <option value="A (Excellente)">A - Excellente</option>
+              <option value="B (Bonne)">B - Bonne</option>
+              <option value="C (Médiocre)">C - Médiocre</option>
+              <option value="D (Mauvaise)">D - Mauvaise</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Décision</label>
+            <select id="decision-statut" required>
+              <option value="">-- Sélectionner la décision --</option>
+              <option value="PASSE DANS LA CLASSE SUPÉRIEURE">PASSE DANS LA CLASSE SUPÉRIEURE</option>
+              <option value="DOUBLE LA CLASSE">DOUBLE LA CLASSE</option>
+              <option value="AJOURNÉ(E) / EXAMEN DE REPÊCHAGE">AJOURNÉ(E) (Repêchage)</option>
+              <option value="EXCLU(E) DE L'ÉTABLISSEMENT">EXCLU(E)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-check-double"></i> Enregistrer</button>
+        </form>
+      </div>
+
+      <!-- Ajout Absence -->
+      <div class="card">
+        <h3><i class="fa-solid fa-user-slash" style="color: var(--danger);"></i> Signaler une Absence</h3>
+        <form onsubmit="ajouterAbsence(event)">
+          <div class="form-group">
+            <label>Matricule de l'élève</label>
+            <input type="text" id="absence-matricule" placeholder="Sélectionnez un élève" readonly style="background: #e2e8f0;" required>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="absence-date" required>
+          </div>
+          <button type="submit" class="btn btn-danger"><i class="fa-solid fa-bell"></i> Enregistrer l'absence</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
+    authDomain: "site-publication.firebaseapp.com",
+    databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
+    projectId: "site-publication",
+    storageBucket: "site-publication.firebasestorage.app",
+    messagingSenderId: "934019778891",
+    appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    if(tab === 'eleve') {
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      document.getElementById('sec-eleve').classList.add('active');
+    } else {
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      document.getElementById('sec-prof').classList.add('active');
+    }
+  }
+
+  function toggleAuthForm(mode) {
+    if (mode === 'register') {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('register-form').style.display = 'block';
+    } else {
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+    }
+  }
+
+  function register(e) {
+    e.preventDefault();
+    const user = document.getElementById('reg-user').value.trim().toLowerCase();
+    const pass = document.getElementById('reg-pass').value.trim();
+    db.ref('users/' + user).get().then(snapshot => {
+      if (snapshot.exists()) {
+        alert("Cet identifiant est déjà utilisé !");
       } else {
-        listeCours.innerHTML = '<li class="list-group-item text-muted">Aucune leçon disponible pour le moment.</li>';
+        db.ref('users/' + user).set({ user, pass }, () => {
+          alert("Compte enseignant créé avec succès !");
+          e.target.reset();
+          toggleAuthForm('login');
+        });
       }
     });
-  </script>
+  }
+
+  function login(e) {
+    e.preventDefault();
+    const user = document.getElementById('login-user').value.trim().toLowerCase();
+    const pass = document.getElementById('login-pass').value.trim();
+    db.ref('users/' + user).get().then(snapshot => {
+      if (snapshot.exists() && snapshot.val().pass === pass) {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('welcome-msg').innerText = `Tableau de bord : ${snapshot.val().user}`;
+        document.getElementById('prof-dashboard').style.display = 'block';
+        chargerListeElevesProf();
+      } else {
+        alert("Identifiant ou mot de passe incorrect.");
+      }
+    });
+  }
+
+  function logout() {
+    document.getElementById('prof-dashboard').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+  }
+
+  function genererMatricule() {
+    return 'MAT-' + Math.floor(1000 + Math.random() * 9000);
+  }
+
+  function creerCompteEleve(e) {
+    e.preventDefault();
+    const nom = document.getElementById('reg-eleve-nom').value.trim();
+    const postnom = document.getElementById('reg-eleve-postnom').value.trim();
+    const prenom = document.getElementById('reg-eleve-prenom').value.trim();
+    const classe = document.getElementById('reg-eleve-classe').value.trim();
+    const option = document.getElementById('reg-eleve-option').value.trim();
+    const matricule = genererMatricule();
+
+    db.ref('eleves/' + matricule).set({ matricule, nom, postnom, prenom, classe, option }, err => {
+      if (!err) {
+        document.getElementById('new-matricule-display').innerText = matricule;
+        document.getElementById('registration-result').style.display = 'block';
+        document.getElementById('search-student').value = matricule;
+        e.target.reset();
+      }
+    });
+  }
+
+  function chargerListeElevesProf() {
+    db.ref('eleves').on('value', snapshot => {
+      const select = document.getElementById('select-eleve-global');
+      select.innerHTML = '<option value="">-- Sélectionnez un élève dans la liste --</option>';
+      if (snapshot.exists()) {
+        snapshot.forEach(child => {
+          const eleve = child.val();
+          const option = document.createElement('option');
+          option.value = eleve.matricule;
+          option.textContent = `${eleve.nom.toUpperCase()} ${eleve.postnom.toUpperCase()} ${eleve.prenom} (${eleve.classe} - ${eleve.matricule})`;
+          select.appendChild(option);
+        });
+      }
+    });
+  }
+
+  function synchroniserEleveSelectionne() {
+    const matricule = document.getElementById('select-eleve-global').value;
+    document.getElementById('note-matricule').value = matricule;
+    document.getElementById('decision-matricule').value = matricule;
+    document.getElementById('absence-matricule').value = matricule;
+  }
+
+  // Publication d'un cours avec code unique automatique
+  function publierCours(e) {
+    e.preventDefault();
+    const titre = document.getElementById('cours-titre').value.trim();
+    const matiere = document.getElementById('cours-matiere').value.trim();
+    const fichier_url = document.getElementById('cours-url').value.trim();
+
+    const coursRef = db.ref('cours');
+    const nouveauCoursRef = coursRef.push();
+
+    nouveauCoursRef.set({
+      id_unique: nouveauCoursRef.key,
+      titre,
+      matiere,
+      fichier_url,
+      date: new Date().toLocaleDateString('fr-FR')
+    }, err => {
+      if (!err) {
+        alert(`Leçon publiée avec succès !\nCode unique : ${nouveauCoursRef.key}`);
+        e.target.reset();
+      }
+    });
+  }
+
+  // Chargement des leçons en temps réel pour les élèves
+  db.ref('cours').on('value', snapshot => {
+    const container = document.getElementById('liste-cours-eleve');
+    container.innerHTML = '';
+    const data = snapshot.val();
+
+    if (data) {
+      Object.keys(data).forEach(key => {
+        const cours = data[key];
+        const div = document.createElement('div');
+        div.style.cssText = "background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;";
+        
+        div.innerHTML = `
+          <div>
+            <strong>${cours.titre}</strong> <span class="badge" style="background:var(--primary); color:white; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${cours.matiere}</span>
+            <br><small style="color:var(--text-muted);">Publié le ${cours.date} | Code : <code style="color:var(--primary);">${cours.id_unique || key}</code></small>
+          </div>
+          <a href="${cours.fichier_url}" target="_blank" download class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 0.85rem;">
+            <i class="fa-solid fa-download"></i> PDF
+          </a>
+        `;
+        container.appendChild(div);
+      });
+    } else {
+      container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 10px;">Aucune leçon disponible pour le moment.</p>';
+    }
+  });
+
+  function ajouterNote(e) {
+    e.preventDefault();
+    const matricule = document.getElementById('note-matricule').value;
+    const matiere = document.getElementById('note-matiere').value.trim();
+    const note = parseFloat(document.getElementById('note-valeur').value);
+
+    if(!matricule) {
+      alert("Veuillez sélectionner un élève.");
+      return;
+    }
+
+    db.ref('notes').push({ matricule, matiere, note }, () => {
+      alert(`Note enregistrée !`);
+      document.getElementById('note-matiere').value = '';
+      document.getElementById('note-valeur').value = '';
+    });
+  }
+
+  function enregistrerDecision(e) {
+    e.preventDefault();
+    const matricule = document.getElementById('decision-matricule').value;
+    const conduite = document.getElementById('decision-conduite').value;
+    const decision = document.getElementById('decision-statut').value;
+
+    if(!matricule) {
+      alert("Veuillez sélectionner un élève.");
+      return;
+    }
+
+    db.ref('eleves/' + matricule).update({ conduite, decision }, (err) => {
+      if(!err) alert("Enregistré avec succès !");
+    });
+  }
+
+  function ajouterAbsence(e) {
+    e.preventDefault();
+    const matricule = document.getElementById('absence-matricule').value;
+    const date = document.getElementById('absence-date').value;
+
+    if(!matricule) {
+      alert("Veuillez sélectionner un élève.");
+      return;
+    }
+
+    db.ref('absences').push({ matricule, date }, () => {
+      alert(`Absence enregistrée pour le ${date}`);
+      document.getElementById('absence-date').value = '';
+    });
+  }
+
+  function afficherBulletin() {
+    const queryMatricule = document.getElementById('search-student').value.trim().toUpperCase();
+    if (!queryMatricule) return;
+
+    db.ref('eleves/' + queryMatricule).get().then(eleveSnap => {
+      if (!eleveSnap.exists()) {
+        alert("Aucun élève trouvé sous ce matricule.");
+        document.getElementById('bulletin-zone').style.display = 'none';
+        return;
+      }
+
+      const eleve = eleveSnap.val();
+      document.getElementById('st-fullname').innerText = `${eleve.nom.toUpperCase()} ${eleve.postnom.toUpperCase()} ${eleve.prenom}`;
+      document.getElementById('st-matricule').innerText = eleve.matricule;
+      document.getElementById('st-classe').innerText = eleve.classe;
+      document.getElementById('st-option').innerText = eleve.option || 'Général';
+      document.getElementById('st-conduite').innerText = eleve.conduite || 'Non renseignée';
+      
+      const elDecision = document.getElementById('st-decision');
+      elDecision.innerText = eleve.decision || "En cours d'évaluation";
+
+      document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR');
+
+      db.ref('notes').orderByChild('matricule').equalTo(queryMatricule).once('value', notesSnap => {
+        const tbody = document.getElementById('notes-list');
+        tbody.innerHTML = '';
+        let total = 0, count = 0;
+
+        if (notesSnap.exists()) {
+          notesSnap.forEach(child => {
+            const n = child.val();
+            total += parseFloat(n.note);
+            count++;
+            tbody.innerHTML += `
+              <tr>
+                <td class="left-align">${n.matiere}</td>
+                <td>${n.note}/20</td>
+                <td>-</td><td>-</td><td>-</td>
+                <td><strong>${n.note}/20</strong></td>
+              </tr>
+            `;
+          });
+          const moy = (total / count).toFixed(1);
+          tbody.innerHTML += `<tr style="background:#f8fafc; font-weight:bold;"><td class="left-align">MOYENNE</td><td colspan="4">---</td><td style="color:var(--primary);">${moy}/20</td></tr>`;
+        } else {
+          tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-muted); text-align:center;">Aucune note</td></tr>';
+        }
+      });
+
+      db.ref('absences').orderByChild('matricule').equalTo(queryMatricule).once('value', absSnap => {
+        document.getElementById('absence-count').innerText = `${absSnap.exists() ? absSnap.numChildren() : 0} jour(s)`;
+      });
+
+      document.getElementById('bulletin-zone').style.display = 'block';
+    });
+  }
+
+  function telechargerPDF() {
+    const element = document.getElementById('pdf-content');
+    html2pdf().set({
+      margin: 0.3,
+      filename: 'bulletin-scolaire-rdc.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    }).from(element).save();
+  }
+</script>
+
 </body>
 </html>
