@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portail Scolaire RDC — Sécurisé (Élèves, Enseignants, Parents)</title>
+  <title>Portail Scolaire RDC — Gestion Centralisée</title>
   
   <!-- Polices & FontAwesome -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -59,7 +59,7 @@
     .header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
 
     .nav-tabs { display: flex; background: #f8fafc; padding: 5px; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid var(--border); gap: 5px; flex-wrap: wrap; }
-    .tab-btn { flex: 1; min-width: 120px; padding: 10px 12px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; }
+    .tab-btn { flex: 1; min-width: 110px; padding: 10px 8px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.8rem; }
     .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
 
     .section { display: none; }
@@ -68,7 +68,6 @@
     form { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
     .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
     .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 
     label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); }
     input, select { padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; background: #f9fafb; width: 100%; }
@@ -85,7 +84,7 @@
     .card { background: #ffffff; border: 1px solid var(--border); padding: 1.25rem; border-radius: 10px; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
     .card h3 { font-size: 1.05rem; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
 
-    .matricule-badge { font-weight: 700; color: var(--primary); background: #eff6ff; padding: 4px 10px; border-radius: 6px; font-size: 0.95rem; display: inline-block; }
+    .badge { font-weight: 700; color: var(--primary); background: #eff6ff; padding: 4px 10px; border-radius: 6px; font-size: 0.95rem; display: inline-block; border: 1px solid #bfdbfe; }
     .alert-success { background: #ecfdf5; color: #065f46; padding: 1rem; border-radius: 8px; border: 1px solid #a7f3d0; margin-top: 1rem; }
     .info-box { background: #eff6ff; border-left: 4px solid var(--primary); padding: 10px; font-size: 0.85rem; color: #1e40af; border-radius: 4px; margin-bottom: 10px; }
 
@@ -131,14 +130,8 @@
       padding: 5px;
       text-align: center;
     }
-    .table-bulletin th {
-      background-color: #f1f5f9;
-      font-weight: bold;
-    }
-    .table-bulletin td.left-align {
-      text-align: left;
-      font-weight: 600;
-    }
+    .table-bulletin th { background-color: #f1f5f9; font-weight: bold; }
+    .table-bulletin td.left-align { text-align: left; font-weight: 600; }
 
     .rdc-footer {
       margin-top: 20px;
@@ -156,42 +149,19 @@
   
   <div class="header">
     <h1><i class="fa-solid fa-graduation-cap"></i> Portail Scolaire RDC</h1>
-    <p>Version Sécurisée (Contrôle d'accès & Chiffrement logique)</p>
+    <p>Gestion Centralisée & Sécurisée par le Gérant</p>
   </div>
 
   <!-- Navigation -->
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('eleve')"><i class="fa-solid fa-user-graduate"></i> Élève / Bulletin</button>
-    <button class="tab-btn" onclick="switchTab('parent')"><i class="fa-solid fa-user-shield"></i> Espace Parent</button>
-    <button class="tab-btn" onclick="switchTab('prof')"><i class="fa-solid fa-user-tie"></i> Espace Enseignant</button>
+    <button class="tab-btn active" onclick="switchTab('eleve')"><i class="fa-solid fa-user-graduate"></i> Élève</button>
+    <button class="tab-btn" onclick="switchTab('parent')"><i class="fa-solid fa-user-shield"></i> Parent</button>
+    <button class="tab-btn" onclick="switchTab('prof')"><i class="fa-solid fa-user-tie"></i> Enseignant</button>
+    <button class="tab-btn" onclick="switchTab('gerant')"><i class="fa-solid fa-user-gear"></i> Gérant / Admin</button>
   </div>
 
-  <!-- 1. ESPACE ÉLÈVE & INSCRIPTION -->
+  <!-- 1. ESPACE ÉLÈVE -->
   <div id="sec-eleve" class="section active">
-    <div class="card">
-      <h3><i class="fa-solid fa-id-card" style="color: var(--primary);"></i> Enregistrer un Nouvel Élève</h3>
-      <form onsubmit="creerCompteEleve(event)">
-        <div class="grid-2">
-          <input type="text" id="reg-eleve-nom" placeholder="Nom (Ex: KABAMBA)" required>
-          <input type="text" id="reg-eleve-postnom" placeholder="Post-nom (Ex: MUTOMBO)" required>
-        </div>
-        <div class="grid-2">
-          <input type="text" id="reg-eleve-prenom" placeholder="Prénom (Ex: Jean-Luc)" required>
-          <input type="text" id="reg-eleve-classe" placeholder="Classe (Ex: 8ème EB)" required>
-        </div>
-        <input type="text" id="reg-eleve-option" placeholder="Option (Ex: Scientifique / Pédagogie)" required>
-        <button type="submit" class="btn btn-secondary">
-          <i class="fa-solid fa-plus-circle"></i> Générer le Matricule & Initialiser le Bulletin
-        </button>
-      </form>
-
-      <div id="registration-result" style="display: none;" class="alert-success">
-        <p style="font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Inscription réussie !</p>
-        <p style="margin-top: 6px;">Matricule officiel : <span id="new-matricule-display" class="matricule-badge"></span></p>
-      </div>
-    </div>
-
-    <!-- Consultation Bulletin -->
     <div class="card">
       <h3><i class="fa-solid fa-file-invoice" style="color: var(--primary);"></i> Consulter le Bulletin Officiel</h3>
       <div style="display: flex; gap: 8px; margin-top: 1rem;">
@@ -280,11 +250,11 @@
   <div id="sec-parent" class="section">
     <div class="card">
       <h3><i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Suivi Parental à Distance</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Entrez le matricule de votre enfant pour consulter ses notes, ses absences et l'état de ses frais.</p>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Entrez le matricule de votre enfant pour consulter son dossier.</p>
       <div style="display: flex; gap: 8px; margin-top: 1rem;">
         <input type="text" id="parent-search-matricule" placeholder="Matricule de l'élève (Ex: MAT-4821)" style="flex: 1;">
         <button class="btn btn-warning" style="width: auto;" onclick="verifierEspaceParent()">
-          <i class="fa-solid fa-search"></i> Accéder au Suivi
+          <i class="fa-solid fa-search"></i> Accéder
         </button>
       </div>
     </div>
@@ -305,19 +275,16 @@
 
   <!-- 3. ESPACE ENSEIGNANT -->
   <div id="sec-prof" class="section">
-    <div id="login-form" class="card">
+    <div id="login-form-prof" class="card">
       <h3><i class="fa-solid fa-lock" style="color: var(--primary);"></i> Connexion Enseignant</h3>
-      <div class="info-box" style="margin-top: 10px;">
-        <i class="fa-solid fa-shield"></i> La création publique de comptes est désactivée pour des raisons de sécurité. Contactez l'administrateur pour obtenir vos accès.
-      </div>
-      <form onsubmit="login(event)">
+      <form onsubmit="loginProf(event)">
         <div class="form-group">
-          <label>Identifiant</label>
-          <input type="text" id="login-user" required placeholder="Identifiant">
+          <label>Identifiant Enseignant (Attribué par le gérant)</label>
+          <input type="text" id="login-prof-user" required placeholder="Ex: PROF-7382">
         </div>
         <div class="form-group">
           <label>Mot de passe</label>
-          <input type="password" id="login-pass" required placeholder="••••••••">
+          <input type="password" id="login-prof-pass" required placeholder="••••••••">
         </div>
         <button type="submit" class="btn"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</button>
       </form>
@@ -326,8 +293,8 @@
     <!-- Dashboard Enseignant -->
     <div id="prof-dashboard" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-        <h2 id="welcome-msg" style="font-size: 1.1rem; color: var(--primary);"></h2>
-        <button onclick="logout()" class="btn btn-danger" style="width: auto; padding: 6px 12px; font-size: 0.8rem;">
+        <h2 id="welcome-msg-prof" style="font-size: 1.1rem; color: var(--primary);"></h2>
+        <button onclick="logoutProf()" class="btn btn-danger" style="width: auto; padding: 6px 12px; font-size: 0.8rem;">
           <i class="fa-solid fa-power-off"></i> Déconnexion
         </button>
       </div>
@@ -344,13 +311,13 @@
 
       <!-- Saisie des notes par période -->
       <div class="card">
-        <h3><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Saisie des Notes par Période / Examen</h3>
+        <h3><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Saisie des Notes par Période</h3>
         <form onsubmit="enregistrerNotePeriode(event)">
           <div class="form-group">
             <label>Matricule actif</label>
             <input type="text" id="note-matricule" readonly style="background:#e2e8f0;" required>
           </div>
-          <input type="text" id="note-matiere" placeholder="Matière (Ex: Mathématiques, Français...)" required>
+          <input type="text" id="note-matiere" placeholder="Matière (Ex: Mathématiques)" required>
           <div class="form-group">
             <label>Période d'évaluation</label>
             <select id="note-periode" required>
@@ -391,7 +358,7 @@
       <div class="card" style="border-left: 4px solid var(--secondary);">
         <h3><i class="fa-solid fa-cloud-arrow-up" style="color: var(--secondary);"></i> Publier une Leçon PDF</h3>
         <form onsubmit="publierCours(event)">
-          <input type="text" id="cours-titre" placeholder="Titre du cours (Ex: Algèbre linéaire)" required>
+          <input type="text" id="cours-titre" placeholder="Titre du cours" required>
           <input type="text" id="cours-matiere" placeholder="Matière" required>
           <input type="url" id="cours-url" placeholder="Lien direct PDF (Google Drive...)" required>
           <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-upload"></i> Publier le cours</button>
@@ -443,7 +410,68 @@
           <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-check"></i> Enregistrer la décision</button>
         </form>
       </div>
+    </div>
+  </div>
 
+  <!-- 4. ESPACE GÉRANT / ADMIN -->
+  <div id="sec-gerant" class="section">
+    <div id="login-form-gerant" class="card">
+      <h3><i class="fa-solid fa-user-shield" style="color: var(--primary);"></i> Accès Espace Gérant</h3>
+      <div class="info-box" style="margin-top: 10px;">
+        Entrez le mot de passe maître de l'établissement pour accéder aux outils de création de comptes.
+      </div>
+      <form onsubmit="loginGerant(event)">
+        <div class="form-group">
+          <label>Mot de passe Gérant</label>
+          <input type="password" id="master-pass" required placeholder="Mot de passe administrateur">
+        </div>
+        <button type="submit" class="btn"><i class="fa-solid fa-key"></i> Déverrouiller l'administration</button>
+      </form>
+    </div>
+
+    <div id="gerant-dashboard" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <h2 style="font-size: 1.1rem; color: var(--primary);"><i class="fa-solid fa-sliders"></i> Tableau de bord - Gérant</h2>
+        <button onclick="logoutGerant()" class="btn btn-danger" style="width: auto; padding: 6px 12px; font-size: 0.8rem;">
+          <i class="fa-solid fa-power-off"></i> Verrouiller
+        </button>
+      </div>
+
+      <!-- Création de Compte Enseignant -->
+      <div class="card" style="border-left: 4px solid var(--secondary);">
+        <h3><i class="fa-solid fa-user-plus" style="color: var(--secondary);"></i> Créer un Compte Enseignant</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Le site va générer un identifiant unique pour le professeur.</p>
+        <form onsubmit="gerantCreerProf(event)">
+          <input type="text" id="g-prof-nom" placeholder="Nom et Prénom du Professeur (Ex: Jean Paul)" required>
+          <input type="text" id="g-prof-pass" placeholder="Mot de passe provisoire" required>
+          <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-id-badge"></i> Générer l'accès Enseignant</button>
+        </form>
+        <div id="prof-created-result" style="display: none;" class="alert-success">
+          <p style="font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Enseignant enregistré avec succès !</p>
+          <p style="margin-top: 6px;">Identifiant d'accès : <span id="new-prof-id" class="badge"></span></p>
+        </div>
+      </div>
+
+      <!-- Création de Compte Élève -->
+      <div class="card" style="border-left: 4px solid var(--primary);">
+        <h3><i class="fa-solid fa-user-graduate" style="color: var(--primary);"></i> Inscrire un Élève & Générer son Matricule</h3>
+        <form onsubmit="gerantCreerEleve(event)">
+          <div class="grid-2">
+            <input type="text" id="g-eleve-nom" placeholder="Nom (Ex: KABAMBA)" required>
+            <input type="text" id="g-eleve-postnom" placeholder="Post-nom (Ex: MUTOMBO)" required>
+          </div>
+          <div class="grid-2">
+            <input type="text" id="g-eleve-prenom" placeholder="Prénom" required>
+            <input type="text" id="g-eleve-classe" placeholder="Classe (Ex: 8ème EB)" required>
+          </div>
+          <input type="text" id="g-eleve-option" placeholder="Option (Ex: Scientifique / Pédagogie)" required>
+          <button type="submit" class="btn"><i class="fa-solid fa-plus-circle"></i> Générer le Matricule de l'Élève</button>
+        </form>
+        <div id="eleve-created-result" style="display: none;" class="alert-success">
+          <p style="font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Inscription de l'élève réussie !</p>
+          <p style="margin-top: 6px;">Matricule officiel : <span id="new-eleve-matricule" class="badge"></span></p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -463,9 +491,8 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // Variable de session locale sécurisée pour l'enseignant connecté
-  let sessionActive = false;
-  let utilisateurConnecte = "";
+  let sessionProfActive = false;
+  let sessionGerantActive = false;
 
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -476,23 +503,26 @@
     } else if(tab === 'parent') {
       document.querySelectorAll('.tab-btn')[1].classList.add('active');
       document.getElementById('sec-parent').classList.add('active');
-    } else {
+    } else if(tab === 'prof') {
       document.querySelectorAll('.tab-btn')[2].classList.add('active');
       document.getElementById('sec-prof').classList.add('active');
+    } else {
+      document.querySelectorAll('.tab-btn')[3].classList.add('active');
+      document.getElementById('sec-gerant').classList.add('active');
     }
   }
 
-  function login(e) {
+  // CONNEXION PROF
+  function loginProf(e) {
     e.preventDefault();
-    const user = document.getElementById('login-user').value.trim().toLowerCase();
-    const pass = document.getElementById('login-pass').value.trim();
+    const user = document.getElementById('login-prof-user').value.trim().toLowerCase();
+    const pass = document.getElementById('login-prof-pass').value.trim();
     
     db.ref('users/' + user).get().then(snapshot => {
       if (snapshot.exists() && snapshot.val().pass === pass) {
-        sessionActive = true;
-        utilisateurConnecte = user;
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('welcome-msg').innerText = `Connecté : ${snapshot.val().user}`;
+        sessionProfActive = true;
+        document.getElementById('login-form-prof').style.display = 'none';
+        document.getElementById('welcome-msg-prof').innerText = `Enseignant connecté : ${snapshot.val().nom}`;
         document.getElementById('prof-dashboard').style.display = 'block';
         chargerListeElevesProf();
       } else {
@@ -501,27 +531,61 @@
     });
   }
 
-  function logout() {
-    sessionActive = false;
-    utilisateurConnecte = "";
+  function logoutProf() {
+    sessionProfActive = false;
     document.getElementById('prof-dashboard').style.display = 'none';
-    document.getElementById('login-form').style.display = 'block';
-    document.getElementById('login-user').value = '';
-    document.getElementById('login-pass').value = '';
+    document.getElementById('login-form-prof').style.display = 'block';
+    document.getElementById('login-prof-user').value = '';
+    document.getElementById('login-prof-pass').value = '';
   }
 
-  function genererMatricule() {
-    return 'MAT-' + Math.floor(1000 + Math.random() * 9000);
-  }
-
-  function creerCompteEleve(e) {
+  // CONNEXION GÉRANT (Mot de passe maître défini sur "gestion2026")
+  function loginGerant(e) {
     e.preventDefault();
-    const nom = document.getElementById('reg-eleve-nom').value.trim();
-    const postnom = document.getElementById('reg-eleve-postnom').value.trim();
-    const prenom = document.getElementById('reg-eleve-prenom').value.trim();
-    const classe = document.getElementById('reg-eleve-classe').value.trim();
-    const option = document.getElementById('reg-eleve-option').value.trim();
-    const matricule = genererMatricule();
+    const master = document.getElementById('master-pass').value.trim();
+    if (master === "gestion2026") {
+      sessionGerantActive = true;
+      document.getElementById('login-form-gerant').style.display = 'none';
+      document.getElementById('gerant-dashboard').style.display = 'block';
+    } else {
+      alert("Mot de passe maître incorrect.");
+    }
+  }
+
+  function logoutGerant() {
+    sessionGerantActive = false;
+    document.getElementById('gerant-dashboard').style.display = 'none';
+    document.getElementById('login-form-gerant').style.display = 'block';
+    document.getElementById('master-pass').value = '';
+  }
+
+  // LE GÉRANT CRÉE UN PROFESSEUR
+  function gerantCreerProf(e) {
+    e.preventDefault();
+    if(!sessionGerantActive) return;
+    const nom = document.getElementById('g-prof-nom').value.trim();
+    const pass = document.getElementById('g-prof-pass').value.trim();
+    const profId = 'PROF-' + Math.floor(1000 + Math.random() * 9000);
+
+    db.ref('users/' + profId.toLowerCase()).set({ nom, pass }, err => {
+      if (!err) {
+        document.getElementById('new-prof-id').innerText = profId;
+        document.getElementById('prof-created-result').style.display = 'block';
+        e.target.reset();
+      }
+    });
+  }
+
+  // LE GÉRANT CRÉE UN ÉLÈVE
+  function gerantCreerEleve(e) {
+    e.preventDefault();
+    if(!sessionGerantActive) return;
+    const nom = document.getElementById('g-eleve-nom').value.trim();
+    const postnom = document.getElementById('g-eleve-postnom').value.trim();
+    const prenom = document.getElementById('g-eleve-prenom').value.trim();
+    const classe = document.getElementById('g-eleve-classe').value.trim();
+    const option = document.getElementById('g-eleve-option').value.trim();
+    const matricule = 'MAT-' + Math.floor(1000 + Math.random() * 9000);
 
     db.ref('eleves/' + matricule).set({ 
       matricule, nom, postnom, prenom, classe, option, frais: "Non Payé (En retard)" 
@@ -542,9 +606,8 @@
           });
         });
 
-        document.getElementById('new-matricule-display').innerText = matricule;
-        document.getElementById('registration-result').style.display = 'block';
-        document.getElementById('search-student').value = matricule;
+        document.getElementById('new-eleve-matricule').innerText = matricule;
+        document.getElementById('eleve-created-result').style.display = 'block';
         e.target.reset();
       }
     });
@@ -576,7 +639,7 @@
 
   function enregistrerNotePeriode(e) {
     e.preventDefault();
-    if(!sessionActive) { alert("Accès refusé. Veuillez vous connecter."); return; }
+    if(!sessionProfActive) { alert("Accès refusé."); return; }
 
     const matricule = document.getElementById('note-matricule').value;
     const matiereNom = document.getElementById('note-matiere').value.trim();
@@ -606,7 +669,7 @@
 
   function mettreAJourFrais(e) {
     e.preventDefault();
-    if(!sessionActive) { alert("Accès refusé."); return; }
+    if(!sessionProfActive) { alert("Accès refusé."); return; }
     const matricule = document.getElementById('frais-matricule').value;
     const frais = document.getElementById('frais-statut').value;
     if(!matricule) return;
@@ -618,7 +681,7 @@
 
   function publierCours(e) {
     e.preventDefault();
-    if(!sessionActive) { alert("Accès refusé."); return; }
+    if(!sessionProfActive) { alert("Accès refusé."); return; }
     const titre = document.getElementById('cours-titre').value.trim();
     const matiere = document.getElementById('cours-matiere').value.trim();
     const fichier_url = document.getElementById('cours-url').value.trim();
@@ -659,7 +722,7 @@
 
   function ajouterAbsence(e) {
     e.preventDefault();
-    if(!sessionActive) { alert("Accès refusé."); return; }
+    if(!sessionProfActive) { alert("Accès refusé."); return; }
     const matricule = document.getElementById('absence-matricule').value;
     const date = document.getElementById('absence-date').value;
     if(!matricule) return;
@@ -672,7 +735,7 @@
 
   function enregistrerDecision(e) {
     e.preventDefault();
-    if(!sessionActive) { alert("Accès refusé."); return; }
+    if(!sessionProfActive) { alert("Accès refusé."); return; }
     const matricule = document.getElementById('decision-matricule').value;
     const conduite = document.getElementById('decision-conduite').value;
     const decision = document.getElementById('decision-statut').value;
@@ -710,7 +773,6 @@
       db.ref('notes/' + queryMatricule).once('value', notesSnap => {
         const tbody = document.getElementById('notes-list');
         tbody.innerHTML = '';
-        let totalGeneral = 0;
 
         if (notesSnap.exists()) {
           notesSnap.forEach(child => {
@@ -723,7 +785,6 @@
             const ex2 = parseFloat(n.ex2) || 0;
 
             const totMatiere = p1 + p2 + ex1 + p3 + p4 + ex2;
-            totalGeneral += totMatiere;
 
             tbody.innerHTML += `
               <tr>
