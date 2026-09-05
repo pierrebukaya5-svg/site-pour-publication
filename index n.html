@@ -3,360 +3,310 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portail Scolaire — Élèves & Professeurs</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>Portail Scolaire — Gestion des Notes</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #2563eb;
-      --primary-hover: #1d4ed8;
       --bg-color: #f8fafc;
       --card-bg: #ffffff;
       --text-main: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
       --danger: #ef4444;
+      --success: #10b981;
       --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-    
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      min-height: 100vh;
-      padding: 24px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 550px;
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-    }
-
-    /* Onglets de Navigation */
-    .nav-tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 24px;
-      background: #f1f5f9;
-      padding: 6px;
-      border-radius: 12px;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.875rem;
-      cursor: pointer;
-      background: transparent;
-      color: var(--text-muted);
-      transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-      background: white;
-      color: var(--primary);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-
+    body { background-color: var(--bg-color); color: var(--text-main); padding: 24px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 650px; background: var(--card-bg); border-radius: 16px; padding: 32px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: #f1f5f9; padding: 6px; border-radius: 12px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; background: transparent; color: var(--text-muted); }
+    .tab-btn.active { background: white; color: var(--primary); }
     .header { text-align: center; margin-bottom: 20px; }
-    .header h2 { font-size: 1.35rem; font-weight: 700; }
-    .header p { font-size: 0.875rem; color: var(--text-muted); margin-top: 4px; }
-
-    .user-badge {
-      background: #f1f5f9;
-      padding: 12px 16px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
     .form-group { margin-bottom: 16px; }
-    .form-group label {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      font-size: 0.95rem;
-      outline: none;
-      background: #fafafa;
-    }
-
+    label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; }
+    input { width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 10px; outline: none; background: #fafafa; }
     input:focus { border-color: var(--primary); background: #fff; }
-
-    button.btn-main {
-      width: 100%;
-      padding: 13px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    button.btn-logout {
-      background: var(--danger);
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
-
-    /* Tableau des résultats élèves */
+    button.btn-main { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+    button.btn-danger { background: var(--danger); }
+    button.btn-sm { padding: 6px 10px; font-size: 0.75rem; border-radius: 6px; border: none; cursor: pointer; color: white; }
+    button.btn-edit { background: #f59e0b; margin-right: 4px; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; font-size: 0.9rem; }
-    th { background-color: #f8fafc; font-weight: 600; }
-
-    .status-msg {
-      margin-top: 16px;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      text-align: center;
-      display: none;
-    }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; font-size: 0.88rem; }
+    th { background: #f8fafc; }
+    .status-msg { margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 0.875rem; text-align: center; display: none; }
     .status-msg.success { display: block; background: #ecfdf5; color: #065f46; }
     .status-msg.error { display: block; background: #fef2f2; color: #991b1b; }
+    .badge { display: inline-block; padding: 4px 8px; background: #e0e7ff; color: #3730a3; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    
-    <!-- MENU DE NAVIGATION (ÉLÈVE / PROFESSEUR) -->
     <div class="nav-tabs">
-      <button class="tab-btn active" id="tab-eleve-btn" onclick="afficherOnglet('eleve')">🔍 Consultation Élève</button>
-      <button class="tab-btn" id="tab-prof-btn" onclick="afficherOnglet('prof')">🔐 Espace Professeur</button>
+      <button class="tab-btn active" id="btn-eleve" onclick="changerOnglet('eleve')">🔍 Espace Élèves</button>
+      <button class="tab-btn" id="btn-login" onclick="changerOnglet('login')">🔑 Connexion Prof</button>
+      <button class="tab-btn" id="btn-register" onclick="changerOnglet('register')">📝 Inscription Prof</button>
     </div>
 
-    <!-- SECTION 1 : CONSULTATION ÉLÈVE -->
-    <div id="onglet-eleve">
+    <!-- 1. CONSULTATION ÉLÈVE -->
+    <div id="section-eleve">
       <div class="header">
-        <h2>Consultation des Résultats</h2>
-        <p>Saisissez votre matricule pour voir vos notes</p>
+        <h2>Consultation par Matricule</h2>
       </div>
-
       <div class="form-group">
-        <label>Votre Matricule</label>
+        <label>Matricule Élève</label>
         <input type="text" id="search-matricule" placeholder="Ex: MAT-0001">
       </div>
-      <button class="btn-main" onclick="chercherResultat()">Rechercher mes notes</button>
-
-      <div id="zone-resultats" style="margin-top: 20px;"></div>
+      <button class="btn-main" onclick="chercherNotes()">Voir mes notes</button>
+      <div id="resultats-table"></div>
     </div>
 
-    <!-- SECTION 2 : ESPACE PROFESSEUR -->
-    <div id="onglet-prof" style="display: none;">
-      
-      <!-- Connexion Professeur -->
-      <div id="prof-login-box">
-        <div class="header">
-          <h2>Connexion Enseignant</h2>
-          <p>Connectez-vous pour enregistrer des notes</p>
+    <!-- 2. CONNEXION PROF -->
+    <div id="section-login" style="display: none;">
+      <div class="header">
+        <h2>Connexion Professeur</h2>
+      </div>
+      <form onsubmit="seConnecter(event)">
+        <div class="form-group">
+          <label>Identifiant</label>
+          <input type="text" id="login-id" required>
         </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="login-pass" required>
+        </div>
+        <button type="submit" class="btn-main">Connexion</button>
+      </form>
+    </div>
 
-        <form onsubmit="seConnecter(event)">
-          <div class="form-group">
-            <label>Identifiant</label>
-            <input type="text" id="login-id" placeholder="Ex: bukaya" required>
-          </div>
-          <div class="form-group">
-            <label>Mot de passe</label>
-            <input type="password" id="login-pass" placeholder="••••••••" required>
-          </div>
-          <button type="submit" class="btn-main">Se connecter</button>
-        </form>
+    <!-- 3. INSCRIPTION PROF -->
+    <div id="section-register" style="display: none;">
+      <div class="header">
+        <h2>Nouveau Compte Enseignant</h2>
+      </div>
+      <form onsubmit="sInscrire(event)">
+        <div class="form-group">
+          <label>Identifiant</label>
+          <input type="text" id="reg-id" required>
+        </div>
+        <div class="form-group">
+          <label>Matière d'enseignement</label>
+          <input type="text" id="reg-matiere" placeholder="Ex: Physique" required>
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="reg-pass" required>
+        </div>
+        <button type="submit" class="btn-main">Créer mon compte</button>
+      </form>
+    </div>
+
+    <!-- 4. FENÊTRE DÉDIÉE AU PROFESSEUR CONNECTÉ -->
+    <div id="section-saisie" style="display: none;">
+      <div class="header">
+        <h2>Espace Professeur</h2>
+        <p id="prof-info" style="color: var(--primary); font-weight: 600; margin-top: 4px;"></p>
       </div>
 
-      <!-- Saisie des notes (après connexion) -->
-      <div id="prof-saisie-box" style="display: none;">
-        <div class="user-badge">
-          <div>
-            <strong id="prof-nom">Professeur</strong><br>
-            <span id="prof-matiere" style="color: var(--text-muted); font-size: 0.8rem;">Matière</span>
-          </div>
-          <button class="btn-logout" onclick="seDeconnecter()">Déconnexion</button>
+      <!-- Formulaire d'ajout de note par matricule -->
+      <form onsubmit="enregistrerNote(event)">
+        <div class="form-group">
+          <label>Code Matricule de l'Élève</label>
+          <input type="text" id="note-matricule" placeholder="Ex: MAT-0001" required>
         </div>
+        <div class="form-group">
+          <label>Nom complet de l'Élève</label>
+          <input type="text" id="note-nom" placeholder="Ex: Paul Kabamba" required>
+        </div>
+        <div class="form-group">
+          <label>Note attribuée (/20)</label>
+          <input type="number" id="note-valeur" step="0.5" min="0" max="20" placeholder="Ex: 16" required>
+        </div>
+        <button type="submit" class="btn-main">➕ Enregistrer la note pour ce matricule</button>
+      </form>
 
-        <form onsubmit="enregistrerCote(event)">
-          <div class="form-group">
-            <label>Matricule Élève</label>
-            <input type="text" id="matricule" placeholder="Ex: MAT-0001" required>
-          </div>
-          <div class="form-group">
-            <label>Nom de l'élève</label>
-            <input type="text" id="nom-eleve" placeholder="Ex: Alice Martin" required>
-          </div>
-          <div class="form-group">
-            <label>Note (/20)</label>
-            <input type="number" id="note" step="0.5" min="0" max="20" placeholder="Ex: 15.5" required>
-          </div>
-          <button type="submit" class="btn-main">Enregistrer la note</button>
-        </form>
-      </div>
+      <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--border);">
 
+      <!-- Liste des cotes saisies par le prof -->
+      <h3 style="font-size: 1rem; margin-bottom: 12px;">Notes attribuées par vous :</h3>
+      <div id="liste-notes-prof"></div>
+
+      <br>
+      <button class="btn-main btn-danger" onclick="deconnexion()">Déconnexion</button>
     </div>
 
     <div id="status" class="status-msg"></div>
-
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://ikrrlozqyodhfliphpzm.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_NliLgAaEx3H3nh-CWGFaxg_9OIfqiru';
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let profConnecte = null;
 
-    let professeurConnecte = null;
-
-    // Gestion des Onglets (Élève / Professeur)
-    function afficherOnglet(nom) {
-      document.getElementById('status').style.display = 'none';
-      if (nom === 'eleve') {
-        document.getElementById('onglet-eleve').style.display = 'block';
-        document.getElementById('onglet-prof').style.display = 'none';
-        document.getElementById('tab-eleve-btn').classList.add('active');
-        document.getElementById('tab-prof-btn').classList.remove('active');
-      } else {
-        document.getElementById('onglet-eleve').style.display = 'none';
-        document.getElementById('onglet-prof').style.display = 'block';
-        document.getElementById('tab-eleve-btn').classList.remove('active');
-        document.getElementById('tab-prof-btn').classList.add('active');
-      }
-    }
-
-    // 1. FONCTION ÉLÈVE : Recherche de résultats
-    async function chercherResultat() {
-      const matricule = document.getElementById('search-matricule').value.trim();
-      const zone = document.getElementById('zone-resultats');
-
-      if (!matricule) {
-        alert("Veuillez entrer un matricule.");
-        return;
-      }
-
-      zone.innerHTML = "<p>Recherche en cours...</p>";
-
-      const { data, error } = await _supabase
-        .from('resultats')
-        .select('*')
-        .eq('matricule', matricule);
-
-      if (error || !data || data.length === 0) {
-        zone.innerHTML = `<p style="color:var(--danger)">❌ Aucun résultat trouvé pour le matricule "${matricule}".</p>`;
-        return;
-      }
-
-      let html = `<h3>Élève : ${data[0].nom}</h3>`;
-      html += `<table>
-        <thead>
-          <tr>
-            <th>Matière</th>
-            <th>Note</th>
-            <th>Professeur</th>
-          </tr>
-        </thead>
-        <tbody>`;
-
-      data.forEach(item => {
-        html += `<tr>
-          <td>${item.matiere || 'N/A'}</td>
-          <td><strong>${item.note}/20</strong></td>
-          <td>${item.professeur || 'N/A'}</td>
-        </tr>`;
+    function changerOnglet(nom) {
+      afficherMessage('', '');
+      ['eleve', 'login', 'register', 'saisie'].forEach(id => {
+        document.getElementById('section-' + id).style.display = (id === nom) ? 'block' : 'none';
       });
 
-      html += `</tbody></table>`;
-      zone.innerHTML = html;
+      ['eleve', 'login', 'register'].forEach(id => {
+        const btn = document.getElementById('btn-' + id);
+        if (btn) btn.classList.toggle('active', id === nom);
+      });
     }
 
-    // 2. FONCTIONS PROFESSEUR : Connexion & Saisie
+    function afficherMessage(texte, type) {
+      const status = document.getElementById('status');
+      if (!texte) { status.style.display = 'none'; return; }
+      status.className = 'status-msg ' + type;
+      status.textContent = texte;
+    }
+
+    // Élève : Rechercher par matricule
+    async function chercherNotes() {
+      const mat = document.getElementById('search-matricule').value.trim();
+      if (!mat) return alert("Veuillez saisir un matricule.");
+
+      const res = await fetch('/api/notes/eleve/' + encodeURIComponent(mat));
+      const result = await res.json();
+      const div = document.getElementById('resultats-table');
+
+      if (!result.data || result.data.length === 0) {
+        div.innerHTML = "<p style='margin-top:15px; color:var(--danger);'>Aucune note associée à ce matricule.</p>";
+        return;
+      }
+
+      let html = `<table><thead><tr><th>Matricule</th><th>Élève</th><th>Matière</th><th>Note</th><th>Professeur</th></tr></thead><tbody>`;
+      result.data.forEach(item => {
+        html += `<tr>
+          <td><span class="badge">${item.matricule}</span></td>
+          <td>${item.nom}</td>
+          <td>${item.matiere}</td>
+          <td><strong>${item.note}/20</strong></td>
+          <td>${item.professeur}</td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+      div.innerHTML = html;
+    }
+
+    // Professeur : Connexion
     async function seConnecter(e) {
       e.preventDefault();
-      const statusDiv = document.getElementById('status');
       const identifiant = document.getElementById('login-id').value.trim();
-      const mdp = document.getElementById('login-pass').value.trim();
+      const mot_de_passe = document.getElementById('login-pass').value.trim();
 
-      statusDiv.style.display = 'none';
+      const res = await fetch('/api/login-prof', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifiant, mot_de_passe })
+      });
+      const data = await res.json();
 
-      const { data, error } = await _supabase
-        .from('professeurs')
-        .select('*')
-        .eq('identifiant', identifiant)
-        .eq('mot_de_passe', mdp)
-        .single();
-
-      if (error || !data) {
-        statusDiv.className = 'status-msg error';
-        statusDiv.textContent = "❌ Identifiant ou mot de passe incorrect.";
+      if (data.success) {
+        profConnecte = data.prof;
+        document.getElementById('prof-info').textContent = `Enseignant : ${profConnecte.identifiant} | Matière : ${profConnecte.matiere}`;
+        changerOnglet('saisie');
+        chargerNotesProfesseur();
       } else {
-        professeurConnecte = data;
-        document.getElementById('prof-nom').textContent = data.identifiant;
-        document.getElementById('prof-matiere').textContent = "Matière : " + (data.matiere || "Non renseignée");
-        
-        document.getElementById('prof-login-box').style.display = 'none';
-        document.getElementById('prof-saisie-box').style.display = 'block';
+        afficherMessage("❌ " + data.message, 'error');
       }
     }
 
-    async function enregistrerCote(e) {
+    // Professeur : Inscription
+    async function sInscrire(e) {
       e.preventDefault();
-      const statusDiv = document.getElementById('status');
-      const matricule = document.getElementById('matricule').value.trim();
-      const nom = document.getElementById('nom-eleve').value.trim();
-      const note = document.getElementById('note').value.trim();
+      const identifiant = document.getElementById('reg-id').value.trim();
+      const matiere = document.getElementById('reg-matiere').value.trim();
+      const mot_de_passe = document.getElementById('reg-pass').value.trim();
 
-      const { error } = await _supabase
-        .from('resultats')
-        .insert([{ 
-          matricule, 
-          nom, 
-          note: parseFloat(note),
-          matiere: professeurConnecte.matiere,
-          professeur: professeurConnecte.identifiant
-        }]);
+      const res = await fetch('/api/register-prof', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifiant, matiere, mot_de_passe })
+      });
+      const data = await res.json();
 
-      if (error) {
-        statusDiv.className = 'status-msg error';
-        statusDiv.textContent = "❌ Erreur : " + error.message;
+      if (data.success) {
+        afficherMessage("✅ Compte créé avec succès ! Connectez-vous.", 'success');
+        changerOnglet('login');
       } else {
-        statusDiv.className = 'status-msg success';
-        statusDiv.textContent = "✅ Note enregistrée pour " + nom + " !";
-        document.getElementById('matricule').value = '';
-        document.getElementById('nom-eleve').value = '';
-        document.getElementById('note').value = '';
+        afficherMessage("❌ " + data.message, 'error');
       }
     }
 
-    function seDeconnecter() {
-      professeurConnecte = null;
-      document.getElementById('prof-saisie-box').style.display = 'none';
-      document.getElementById('prof-login-box').style.display = 'block';
-      document.getElementById('status').style.display = 'none';
+    // Professeur : Ajouter une note liée au matricule
+    async function enregistrerNote(e) {
+      e.preventDefault();
+      const matricule = document.getElementById('note-matricule').value.trim();
+      const nom = document.getElementById('note-nom').value.trim();
+      const note = document.getElementById('note-valeur').value;
+
+      const res = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          matricule,
+          nom,
+          note: parseFloat(note),
+          matiere: profConnecte.matiere,
+          professeur: profConnecte.identifiant
+        })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        afficherMessage("✅ Note enregistrée pour le matricule " + matricule, 'success');
+        document.getElementById('note-matricule').value = '';
+        document.getElementById('note-nom').value = '';
+        document.getElementById('note-valeur').value = '';
+        chargerNotesProfesseur();
+      } else {
+        afficherMessage("❌ Erreur lors de l'enregistrement.", 'error');
+      }
+    }
+
+    // Professeur : Charger la liste de ses notes saisies
+    async function chargerNotesProfesseur() {
+      if (!profConnecte) return;
+      const res = await fetch('/api/notes/prof/' + encodeURIComponent(profConnecte.identifiant));
+      const result = await res.json();
+      const div = document.getElementById('liste-notes-prof');
+
+      if (!result.data || result.data.length === 0) {
+        div.innerHTML = "<p style='color:var(--text-muted); font-size:0.85rem;'>Aucune note enregistrée pour le moment.</p>";
+        return;
+      }
+
+      let html = `<table><thead><tr><th>Matricule</th><th>Élève</th><th>Note</th><th>Action</th></tr></thead><tbody>`;
+      result.data.forEach(item => {
+        html += `<tr>
+          <td><span class="badge">${item.matricule}</span></td>
+          <td>${item.nom}</td>
+          <td><strong>${item.note}/20</strong></td>
+          <td>
+            <button class="btn-sm btn-danger" onclick="supprimerNote(${item.id})">Supprimer</button>
+          </td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+      div.innerHTML = html;
+    }
+
+    // Professeur : Supprimer une note
+    async function supprimerNote(id) {
+      if (!confirm("Voulez-vous vraiment supprimer cette note ?")) return;
+      const res = await fetch('/api/notes/' + id, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        afficherMessage("Note supprimée.", 'success');
+        chargerNotesProfesseur();
+      }
+    }
+
+    function deconnexion() {
+      profConnecte = null;
+      changerOnglet('login');
     }
   </script>
 
