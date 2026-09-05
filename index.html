@@ -43,6 +43,8 @@
     .toggle-link { color: var(--primary); text-align: center; cursor: pointer; margin-top: 1rem; text-decoration: underline; font-size: 0.9rem; }
     .student-info p { margin-bottom: 0.5rem; font-weight: 500; }
     .matricule-badge { font-weight: bold; color: var(--primary); font-size: 1.1rem; }
+    
+    .alert-success { background: #dcfce7; color: #15803d; padding: 1rem; border-radius: 6px; border: 1px solid #bbf7d0; margin-top: 1rem; }
   </style>
 </head>
 <body>
@@ -50,19 +52,40 @@
 <div class="container">
   <!-- Navigation -->
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('eleve')">🔍 Consultation Élève</button>
+    <button class="tab-btn active" onclick="switchTab('eleve')">🎓 Espace Élève</button>
     <button class="tab-btn" onclick="switchTab('prof')">🔐 Espace Professeur</button>
   </div>
 
   <!-- Espace Élève -->
   <div id="sec-eleve" class="section active">
     <h2>Espace Élève</h2>
-    <p>Saisissez votre matricule pour consulter votre bulletin.</p>
+    <p>Créez votre compte pour obtenir votre matricule ou consultez votre bulletin.</p>
     
+    <!-- Inscription Élève -->
     <div class="card">
-      <label>Matricule de l'élève</label>
-      <input type="text" id="search-student" placeholder="Ex: MAT-4821">
-      <button class="btn" style="margin-top: 10px;" onclick="afficherBulletin()">Accéder à mes notes</button>
+      <h3>1. Créer mon profil élève (Obtenir un matricule)</h3>
+      <form onsubmit="creerCompteEleve(event)">
+        <input type="text" id="reg-eleve-nom" placeholder="Nom" required>
+        <input type="text" id="reg-eleve-postnom" placeholder="Post-nom" required>
+        <input type="text" id="reg-eleve-prenom" placeholder="Prénom" required>
+        <input type="text" id="reg-eleve-classe" placeholder="Classe (Ex: 6ème A, 4ème)" required>
+        <input type="text" id="reg-eleve-option" placeholder="Option (Ex: Scientifique, Littéraire, Gestion...)" required>
+        <button type="submit" class="btn btn-secondary">Créer mon compte & Générer mon matricule</button>
+      </form>
+      <div id="registration-result" style="display: none;" class="alert-success">
+        <p><strong>Compte créé avec succès !</strong></p>
+        <p>Votre matricule est : <span id="new-matricule-display" class="matricule-badge"></span></p>
+        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #166534;">⚠️ Conservez bien ce matricule, donnez-le à vos enseignants pour recevoir vos notes.</p>
+      </div>
+    </div>
+
+    <!-- Consultation du Bulletin -->
+    <div class="card" style="margin-top: 2rem;">
+      <h3>2. Consulter mon bulletin</h3>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <input type="text" id="search-student" placeholder="Ex: MAT-4821" style="flex: 1;">
+        <button class="btn" onclick="afficherBulletin()">Accéder</button>
+      </div>
     </div>
 
     <div id="bulletin-zone" class="card" style="display:none;">
@@ -95,7 +118,7 @@
     <!-- Formulaire de Connexion -->
     <div id="login-form">
       <h2>Connexion Enseignant</h2>
-      <p>Connectez-vous pour enregistrer des élèves, notes et absences</p>
+      <p>Connectez-vous pour enregistrer des notes et absences</p>
       <form onsubmit="login(event)">
         <label>Identifiant</label>
         <input type="text" id="login-user" required placeholder="Ex: bukaya">
@@ -106,7 +129,7 @@
       <div class="toggle-link" onclick="toggleAuthForm('register')">Pas encore de compte ? Créer un identifiant</div>
     </div>
 
-    <!-- Formulaire d'Inscription -->
+    <!-- Formulaire d'Inscription Professeur -->
     <div id="register-form" style="display: none;">
       <h2>Créer un compte Enseignant</h2>
       <p>Choisissez un identifiant et un mot de passe</p>
@@ -120,30 +143,17 @@
       <div class="toggle-link" onclick="toggleAuthForm('login')">Déjà un compte ? Se connecter</div>
     </div>
 
-    <!-- Tableau de bord après connexion -->
+    <!-- Tableau de bord Enseignant -->
     <div id="prof-dashboard" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 id="welcome-msg">Gestion de la classe</h2>
+        <h2 id="welcome-msg">Espace Enseignant</h2>
         <button onclick="logout()" style="padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Déconnexion</button>
-      </div>
-      
-      <!-- Inscription d'un élève -->
-      <div class="card">
-        <h3>Enregistrer un nouvel élève</h3>
-        <p style="font-size: 0.85rem; color: #64748b;">Le matricule sera généré automatiquement lors de la création.</p>
-        <form onsubmit="enregistrerEleve(event)">
-          <input type="text" id="eleve-nom" placeholder="Nom" required>
-          <input type="text" id="eleve-postnom" placeholder="Post-nom" required>
-          <input type="text" id="eleve-prenom" placeholder="Prénom" required>
-          <input type="text" id="eleve-classe" placeholder="Classe (Ex: 6ème A, 4ème)" required>
-          <input type="text" id="eleve-option" placeholder="Option (Ex: Scientifique, Littéraire, Gestion...)" required>
-          <button type="submit" class="btn" style="background: #059669;">Créer l'élève & Générer le matricule</button>
-        </form>
       </div>
 
       <!-- Saisie des Notes -->
       <div class="card">
         <h3>Ajouter une note</h3>
+        <p style="font-size: 0.85rem; color: #64748b;">Entrez le matricule fourni par l'élève.</p>
         <form onsubmit="ajouterNote(event)">
           <input type="text" id="note-matricule" placeholder="Matricule de l'élève (Ex: MAT-1001)" required>
           <input type="text" id="note-matiere" placeholder="Matière (ex: Mathématiques)" required>
@@ -258,20 +268,24 @@
     return matricule;
   }
 
-  function enregistrerEleve(e) {
+  // Création du compte par l'élève lui-même
+  function creerCompteEleve(e) {
     e.preventDefault();
-    const nom = document.getElementById('eleve-nom').value.trim();
-    const postnom = document.getElementById('eleve-postnom').value.trim();
-    const prenom = document.getElementById('eleve-prenom').value.trim();
-    const classe = document.getElementById('eleve-classe').value.trim();
-    const option = document.getElementById('eleve-option').value.trim();
+    const nom = document.getElementById('reg-eleve-nom').value.trim();
+    const postnom = document.getElementById('reg-eleve-postnom').value.trim();
+    const prenom = document.getElementById('reg-eleve-prenom').value.trim();
+    const classe = document.getElementById('reg-eleve-classe').value.trim();
+    const option = document.getElementById('reg-eleve-option').value.trim();
 
     const matricule = genererMatricule();
 
     db.eleves.push({ matricule, nom, postnom, prenom, classe, option });
     saveData();
 
-    alert(`Élève ${prenom} ${nom} créé avec succès !\nSon matricule attribué est : ${matricule}`);
+    document.getElementById('new-matricule-display').innerText = matricule;
+    document.getElementById('registration-result').style.display = 'block';
+    document.getElementById('search-student').value = matricule;
+    
     e.target.reset();
   }
 
@@ -282,7 +296,7 @@
     const note = document.getElementById('note-valeur').value;
     
     if (!db.eleves.find(e => e.matricule === matricule)) {
-      alert("Ce matricule n'existe pas. Veuillez d'abord créer l'élève.");
+      alert("Ce matricule n'existe pas. Veuillez vérifier le matricule fourni par l'élève.");
       return;
     }
 
@@ -333,7 +347,7 @@
     const tbody = document.getElementById('notes-list');
     tbody.innerHTML = notes.length 
       ? notes.map(n => `<tr><td>${n.matiere}</td><td>${n.note}/20</td></tr>`).join('')
-      : '<tr><td colspan="2">Aucune note enregistrée</td></tr>';
+      : '<tr><td colspan="2">Aucune note enregistrée pour le moment</td></tr>';
 
     document.getElementById('absence-count').innerText = `${absences.length} absence(s) enregistrée(s)`;
     document.getElementById('bulletin-zone').style.display = 'block';
