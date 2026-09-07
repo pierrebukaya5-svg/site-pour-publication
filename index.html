@@ -178,12 +178,13 @@
             </div>
         </div>
 
-        <!-- ZONE DE CONNEXION GÉRANT (Discrète et sécurisée) -->
+        <!-- ZONE DE CONNEXION GÉRANT -->
         <div class="card" style="max-width: 450px; margin: 20px auto; text-align: center;">
             <h2>🔒 Accès Gérant (Administration)</h2>
             <div id="login-section">
-                <input type="email" id="admin-email" placeholder="Email du gérant">
-                <input type="password" id="admin-password" placeholder="Mot de passe">
+                <!-- Désactivation de l'autocomplétion agressive -->
+                <input type="email" id="admin-email" placeholder="Email du gérant" autocomplete="off">
+                <input type="password" id="admin-password" placeholder="Mot de passe" autocomplete="new-password">
                 <button onclick="connecterAdmin()">Se connecter</button>
             </div>
             <div id="admin-info-connecte" style="display: none;">
@@ -305,6 +306,12 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
+        // Nettoyage automatique des champs de connexion au chargement pour éviter la persistance du mot de passe
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('admin-email').value = '';
+            document.getElementById('admin-password').value = '';
+        });
+
         // Chargement en direct des actualités pour tous
         db.ref('articles').on('value', (snapshot) => {
             const container = document.getElementById('liste-articles-public');
@@ -363,7 +370,7 @@
                 status.style.color = "#4ade80";
                 loginSection.style.display = 'none';
                 infoConnecte.style.display = 'block';
-                dashboard.style.display = 'block'; // Le panneau de gestion s'affiche
+                dashboard.style.display = 'block'; 
             } else {
                 // Utilisateur standard (Parent / Élève / Visiteur)
                 status.innerText = "Espace Parent & Élève";
@@ -371,7 +378,11 @@
                 status.style.color = "#818cf8";
                 loginSection.style.display = 'block';
                 infoConnecte.style.display = 'none';
-                dashboard.style.display = 'none'; // Le panneau de gestion est totalement masqué
+                dashboard.style.display = 'none'; 
+                
+                // Force le nettoyage des champs de connexion en cas de déconnexion
+                document.getElementById('admin-email').value = '';
+                document.getElementById('admin-password').value = '';
             }
         });
 
