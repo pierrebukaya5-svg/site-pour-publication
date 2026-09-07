@@ -3,76 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion et Inscription - Firebase</title>
+    <title>Mon Site - Connexion et Données</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 50px;
-            background-color: #f4f4f9;
-        }
-        .container {
-            max-width: 400px;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #1557b0;
-        }
-        h2 {
-            font-size: 20px;
-            color: #333;
-        }
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin-bottom: 20px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        input, button { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #1a73e8; color: white; border: none; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #1557b0; }
+        #app-content { display: none; } /* Caché tant que l'utilisateur n'est pas connecté */
     </style>
 </head>
 <body>
 
-    <!-- Formulaire d'Inscription -->
-    <div class="container">
-        <h2>Créer un compte</h2>
-        <input type="email" id="signup-email" placeholder="Votre email">
-        <input type="password" id="signup-password" placeholder="Votre mot de passe">
-        <button id="signup-btn">S'inscrire</button>
+    <!-- ÉCRAN DE CONNEXION / INSCRIPTION -->
+    <div id="auth-screen">
+        <div class="box">
+            <h2>Créer un compte</h2>
+            <input type="email" id="signup-email" placeholder="Votre email">
+            <input type="password" id="signup-password" placeholder="Votre mot de passe">
+            <button id="signup-btn">S'inscrire</button>
+        </div>
+
+        <div class="box">
+            <h2>Se connecter</h2>
+            <input type="email" id="login-email" placeholder="Votre email">
+            <input type="password" id="login-password" placeholder="Votre mot de passe">
+            <button id="login-btn">Se connecter</button>
+        </div>
     </div>
 
-    <!-- Formulaire de Connexion -->
-    <div class="container">
-        <h2>Se connecter</h2>
-        <input type="email" id="login-email" placeholder="Votre email">
-        <input type="password" id="login-password" placeholder="Votre mot de passe">
-        <button id="login-btn">Se connecter</button>
+    <!-- ÉCRAN PRINCIPAL (Visible une fois connecté) -->
+    <div id="app-content" class="box">
+        <h2>Bienvenue !</h2>
+        <p id="user-info"></p>
+        <button id="save-data-btn" style="background-color: #28a745;">Enregistrer mes données</button>
+        <button id="logout-btn" style="background-color: #dc3545;">Se déconnecter</button>
     </div>
 
-    <!-- Script Firebase et logique -->
+    <!-- SCRIPT FIREBASE -->
     <script type="module">
-        // Importez les fonctions Firebase nécessaires depuis les CDN officiels
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
             getAuth, 
             createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword 
+            signInWithEmailAndPassword, 
+            signOut,
+            onAuthStateChanged 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { 
+            getDatabase, 
+            ref, 
+            set, 
+            get, 
+            child 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Vos identifiants de configuration Firebase (récupérez-les dans les paramètres de votre projet Firebase)
+        // Votre configuration Firebase (récupérée depuis votre console)
         const firebaseConfig = {
             apiKey: "VOTRE_API_KEY",
             authDomain: "site-publication.firebaseapp.com",
@@ -83,38 +69,75 @@
             appId: "VOTRE_APP_ID"
         };
 
-        // Initialisation de Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getDatabase(app);
 
-        // --- GESTION DE L'INSCRIPTION ---
+        // Éléments de l'interface
+        const authScreen = document.getElementById("auth-screen");
+        const appContent = document.getElementById("app-content");
+        const userInfo = document.getElementById("user-info");
+
+        // Écouter si l'utilisateur est connecté ou non
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // L'utilisateur est connecté
+                authScreen.style.display = "none";
+                appContent.style.display = "block";
+                userInfo.innerText = "Connecté avec : " + user.email;
+            } else {
+                // L'utilisateur est déconnecté
+                authScreen.style.display = "block";
+                appContent.style.display = "none";
+            }
+        });
+
+        // Inscription
         document.getElementById("signup-btn").addEventListener("click", () => {
             const email = document.getElementById("signup-email").value;
             const password = document.getElementById("signup-password").value;
 
             createUserWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
-                    const user = userCredential.user;
-                    alert("Compte créé avec succès ! Bienvenue " + user.email);
+                    alert("Compte créé avec succès !");
                 })
                 .catch((error) => {
-                    alert("Erreur lors de l'inscription : " + error.message);
+                    alert("Erreur : " + error.message);
                 });
         });
 
-        // --- GESTION DE LA CONNEXION ---
+        // Connexion
         document.getElementById("login-btn").addEventListener("click", () => {
             const email = document.getElementById("login-email").value;
             const password = document.getElementById("login-password").value;
 
             signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    alert("Connexion réussie ! Bon retour " + user.email);
-                })
                 .catch((error) => {
                     alert("Erreur de connexion : " + error.message);
                 });
+        });
+
+        // Enregistrer des données dans la base de données sous l'ID sécurisé de l'utilisateur
+        document.getElementById("save-data-btn").addEventListener("click", () => {
+            const user = auth.currentUser;
+            if (user) {
+                // On stocke les données sous le nœud "users" -> "ID_UNIQUE_DE_L_UTILISATEUR"
+                const userRef = ref(db, 'users/' + user.uid);
+                set(userRef, {
+                    email: user.email,
+                    derniereConnexion: new Date().toISOString(),
+                    statut: "actif"
+                }).then(() => {
+                    alert("Données enregistrées avec succès dans votre espace !");
+                }).catch((error) => {
+                    alert("Erreur d'enregistrement : " + error.message);
+                });
+            }
+        });
+
+        // Déconnexion
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            signOut(auth);
         });
     </script>
 
