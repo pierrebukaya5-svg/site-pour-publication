@@ -3,151 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC — Connexion</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <title>Mon Site - Connexion et Données</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin-bottom: 20px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        input, button { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #1a73e8; color: white; border: none; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #1557b0; }
+        #app-content { display: none; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-800 min-h-screen flex flex-col justify-between antialiased">
+<body>
 
-    <!-- En-tête épuré -->
-    <header class="w-full py-6 px-6">
-        <div class="max-w-5xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-indigo-600 text-white p-2.5 rounded-2xl shadow-lg shadow-indigo-500/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold text-white tracking-wide">Portail Scolaire RDC</h1>
-                    <p class="text-xs text-indigo-300 font-medium">Authentification & Gestion Centralisée</p>
-                </div>
-            </div>
+    <!-- ÉCRAN DE CONNEXION / INSCRIPTION -->
+    <div id="auth-screen">
+        <div class="box">
+            <h2>Créer un compte</h2>
+            <input type="email" id="signup-email" placeholder="Votre email">
+            <input type="password" id="signup-password" placeholder="Votre mot de passe">
+            <button id="signup-btn">S'inscrire</button>
         </div>
-    </header>
 
-    <!-- Conteneur Principal -->
-    <main id="main-container" class="max-w-4xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            
-            <!-- Carte Inscription -->
-            <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 transition-all duration-300 hover:shadow-indigo-500/10">
-                <div class="mb-6">
-                    <span class="inline-block p-2 bg-indigo-50 text-indigo-600 rounded-xl mb-3 font-semibold text-xs tracking-wider uppercase">Nouveau compte</span>
-                    <h2 class="text-2xl font-bold text-slate-900">Créer un compte</h2>
-                    <p class="text-sm text-slate-500 mt-1">Rejoignez la plateforme dès maintenant.</p>
-                </div>
-                
-                <form onsubmit="inscrireUtilisateur(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Votre email</label>
-                        <input type="email" id="signup-email" required placeholder="nom@exemple.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Votre mot de passe</label>
-                        <input type="password" id="signup-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
-                    </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">S'inscrire</button>
-                </form>
-            </div>
-
-            <!-- Carte Connexion -->
-            <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 transition-all duration-300 hover:shadow-indigo-500/10">
-                <div class="mb-6">
-                    <span class="inline-block p-2 bg-emerald-50 text-emerald-600 rounded-xl mb-3 font-semibold text-xs tracking-wider uppercase">Espace sécurisé</span>
-                    <h2 class="text-2xl font-bold text-slate-900">Se connecter</h2>
-                    <p class="text-sm text-slate-500 mt-1">Accédez à votre espace personnel.</p>
-                </div>
-
-                <form onsubmit="connecterUtilisateur(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Votre email</label>
-                        <input type="email" id="login-email" required placeholder="nom@exemple.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-600 focus:outline-none transition text-sm bg-slate-50/50">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Votre mot de passe</label>
-                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-600 focus:outline-none transition text-sm bg-slate-50/50">
-                    </div>
-                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-slate-900/20 text-sm">Se connecter</button>
-                </form>
-            </div>
-
+        <div class="box">
+            <h2>Se connecter</h2>
+            <input type="email" id="login-email" placeholder="Votre email">
+            <input type="password" id="login-password" placeholder="Votre mot de passe">
+            <button id="login-btn">Se connecter</button>
         </div>
-    </main>
+    </div>
 
-    <!-- Pied de page -->
-    <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-800/50">
-        Portail Scolaire RDC &copy; 2026 — Tous droits réservés
-    </footer>
+    <!-- ÉCRAN PRINCIPAL -->
+    <div id="app-content" class="box">
+        <h2>Bienvenue !</h2>
+        <p id="user-info"></p>
+        <button id="save-data-btn" style="background-color: #28a745;">Enregistrer mes données</button>
+        <button id="logout-btn" style="background-color: #dc3545;">Se déconnecter</button>
+    </div>
 
-    <!-- Script Firebase Auth & Logique -->
-    <script>
+    <!-- SCRIPT FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            signOut,
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { 
+            getDatabase, 
+            ref, 
+            set 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Vos identifiants officiels récupérés depuis votre console Firebase
         const firebaseConfig = {
-            databaseURL: "https://site-publication-default-rtdb.firebaseio.com/"
+            apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
+            authDomain: "site-publication.firebaseapp.com",
+            databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
+            projectId: "site-publication",
+            storageBucket: "site-publication.firebasestorage.app",
+            messagingSenderId: "934019778891",
+            appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
         };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
 
-        function inscrireUtilisateur(e) {
-            e.preventDefault();
-            const email = document.getElementById('signup-email').value;
-            const pass = document.getElementById('signup-password').value;
-            
-            auth.createUserWithEmailAndPassword(email, pass)
-                .then(userCredential => {
-                    alert("Compte créé avec succès !");
-                    afficherInterfaceConnectee(userCredential.user.email);
-                })
-                .catch(error => {
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const authScreen = document.getElementById("auth-screen");
+        const appContent = document.getElementById("app-content");
+        const userInfo = document.getElementById("user-info");
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authScreen.style.display = "none";
+                appContent.style.display = "block";
+                userInfo.innerText = "Connecté avec : " + user.email;
+            } else {
+                authScreen.style.display = "block";
+                appContent.style.display = "none";
+            }
+        });
+
+        document.getElementById("signup-btn").addEventListener("click", () => {
+            const email = document.getElementById("signup-email").value;
+            const password = document.getElementById("signup-password").value;
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then(() => alert("Compte créé avec succès !"))
+                .catch((error) => alert("Erreur : " + error.message));
+        });
+
+        document.getElementById("login-btn").addEventListener("click", () => {
+            const email = document.getElementById("login-email").value;
+            const password = document.getElementById("login-password").value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .catch((error) => alert("Erreur de connexion : " + error.message));
+        });
+
+        document.getElementById("save-data-btn").addEventListener("click", () => {
+            const user = auth.currentUser;
+            if (user) {
+                const userRef = ref(db, 'users/' + user.uid);
+                set(userRef, {
+                    email: user.email,
+                    derniereConnexion: new Date().toISOString()
+                }).then(() => {
+                    alert("Données enregistrées sous votre ID sécurisé !");
+                }).catch((error) => {
                     alert("Erreur : " + error.message);
                 });
-        }
+            }
+        });
 
-        function connecterUtilisateur(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-password').value;
-
-            auth.signInWithEmailAndPassword(email, pass)
-                .then(userCredential => {
-                    alert("Connexion réussie !");
-                    afficherInterfaceConnectee(userCredential.user.email);
-                })
-                .catch(error => {
-                    alert("Erreur de connexion : " + error.message);
-                });
-        }
-
-        function afficherInterfaceConnectee(email) {
-            const container = document.getElementById('main-container');
-            container.innerHTML = `
-                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/25 max-w-xl mx-auto text-center">
-                    <div class="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                    </div>
-                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Bienvenue sur votre portail</h2>
-                    <p class="text-sm text-slate-600 mb-6">Connecté en tant que : <span class="font-semibold text-indigo-600">${email}</span></p>
-                    <button onclick="deconnexion()" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-3.5 rounded-xl transition text-sm">Se déconnecter</button>
-                </div>
-            `;
-        }
-
-        function deconnexion() {
-            auth.signOut().then(() => {
-                location.reload();
-            }).catch(error => {
-                alert("Erreur lors de la déconnexion : " + error.message);
-            });
-        }
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            signOut(auth);
+        });
     </script>
+
 </body>
 </html>
