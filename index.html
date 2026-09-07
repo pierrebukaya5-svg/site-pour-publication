@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC — Connexion</title>
+    <title>Mon Site - Connexion et Données</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase App & Auth SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -15,7 +15,7 @@
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-800 min-h-screen flex flex-col justify-between antialiased">
 
-    <!-- En-tête épuré -->
+    <!-- En-tête -->
     <header class="w-full py-6 px-6">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -27,138 +27,167 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-white tracking-wide">Portail Scolaire RDC</h1>
-                    <p class="text-xs text-indigo-300 font-medium">Authentification & Gestion Centralisée</p>
+                    <p class="text-xs text-indigo-300 font-medium">Tableau de Bord & Gestion</p>
                 </div>
             </div>
         </div>
     </header>
 
     <!-- Conteneur Principal -->
-    <main id="main-container" class="max-w-4xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
+    <main id="main-container" class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            
-            <!-- Carte Inscription -->
-            <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 transition-all duration-300">
-                <div class="mb-6">
-                    <span class="inline-block p-2 bg-indigo-50 text-indigo-600 rounded-xl mb-3 font-semibold text-xs tracking-wider uppercase">Nouveau compte</span>
-                    <h2 class="text-2xl font-bold text-slate-900">Créer un compte</h2>
-                    <p class="text-sm text-slate-500 mt-1">Rejoignez la plateforme dès maintenant.</p>
-                </div>
-                
-                <form id="form-signup" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Votre email</label>
-                        <input type="email" id="signup-email" required placeholder="nom@exemple.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Votre mot de passe</label>
-                        <input type="password" id="signup-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
-                    </div>
-                    <div id="signup-error" class="text-xs text-rose-500 font-medium hidden"></div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">S'inscrire</button>
-                </form>
+        <!-- Vue par défaut : Connexion / Inscription simple -->
+        <div id="auth-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
+            <div class="mb-6 text-center">
+                <h2 class="text-2xl font-bold text-slate-900">Espace d'authentification</h2>
+                <p class="text-sm text-slate-500 mt-1">Connectez-vous pour accéder à vos données scolaires.</p>
             </div>
 
-            <!-- Carte Connexion -->
-            <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 transition-all duration-300">
-                <div class="mb-6">
-                    <span class="inline-block p-2 bg-emerald-50 text-emerald-600 rounded-xl mb-3 font-semibold text-xs tracking-wider uppercase">Espace sécurisé</span>
-                    <h2 class="text-2xl font-bold text-slate-900">Se connecter</h2>
-                    <p class="text-sm text-slate-500 mt-1">Accédez à votre espace personnel.</p>
+            <form id="auth-form" onsubmit="gererConnexionInscription(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Adresse email</label>
+                    <input type="email" id="user-email" required placeholder="nom@exemple.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
                 </div>
-
-                <form id="form-login" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Votre email</label>
-                        <input type="email" id="login-email" required placeholder="nom@exemple.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-600 focus:outline-none transition text-sm bg-slate-50/50">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Votre mot de passe</label>
-                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-600 focus:outline-none transition text-sm bg-slate-50/50">
-                    </div>
-                    <div id="login-error" class="text-xs text-rose-500 font-medium hidden"></div>
-                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-slate-900/20 text-sm">Se connecter</button>
-                </form>
-            </div>
-
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Mot de passe</label>
+                    <input type="password" id="user-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
+                </div>
+                <div id="auth-error" class="text-xs text-rose-500 font-medium hidden"></div>
+                <div class="grid grid-cols-2 gap-4 pt-2">
+                    <button type="button" onclick="inscrire()" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold py-3.5 rounded-xl transition text-sm">S'inscrire</button>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">Se connecter</button>
+                </div>
+            </form>
         </div>
+
     </main>
 
     <!-- Pied de page -->
     <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-800/50">
-        Portail Scolaire RDC &copy; 2026 — Tous droits réservés
+        Mon Site - Connexion et Données &copy; 2026 — Tous droits réservés
     </footer>
 
-    <!-- Script de gestion avec écouteurs d'événements stricts -->
+    <!-- Logique JavaScript Firebase -->
     <script>
         const firebaseConfig = {
             databaseURL: "https://site-publication-default-rtdb.firebaseio.com/"
         };
         
-        // Initialisation sécurisée
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const auth = firebase.auth();
+        const db = firebase.database();
 
-        // Gestion de l'inscription
-        document.getElementById('form-signup').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('signup-email').value.trim();
-            const pass = document.getElementById('signup-password').value;
-            const errBox = document.getElementById('signup-error');
+        // Écouteur d'état d'authentification
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                afficherTableauDeBord(user);
+            }
+        });
+
+        function inscrire() {
+            const email = document.getElementById('user-email').value.trim();
+            const pass = document.getElementById('user-password').value;
+            const errBox = document.getElementById('auth-error');
             errBox.classList.add('hidden');
 
             auth.createUserWithEmailAndPassword(email, pass)
-                .then(userCredential => {
-                    afficherInterfaceConnectee(userCredential.user.email);
-                })
                 .catch(error => {
-                    errBox.innerText = "Erreur : " + error.message;
+                    errBox.innerText = "Erreur d'inscription : " + error.message;
                     errBox.classList.remove('hidden');
                 });
-        });
+        }
 
-        // Gestion de la connexion
-        document.getElementById('form-login').addEventListener('submit', function(e) {
+        function gererConnexionInscription(e) {
             e.preventDefault();
-            const email = document.getElementById('login-email').value.trim();
-            const pass = document.getElementById('login-password').value;
-            const errBox = document.getElementById('login-error');
+            const email = document.getElementById('user-email').value.trim();
+            const pass = document.getElementById('user-password').value;
+            const errBox = document.getElementById('auth-error');
             errBox.classList.add('hidden');
 
             auth.signInWithEmailAndPassword(email, pass)
-                .then(userCredential => {
-                    afficherInterfaceConnectee(userCredential.user.email);
-                })
                 .catch(error => {
-                    errBox.innerText = "Erreur : " + error.message;
+                    errBox.innerText = "Erreur de connexion : " + error.message;
                     errBox.classList.remove('hidden');
                 });
-        });
+        }
 
-        function afficherInterfaceConnectee(email) {
+        function afficherTableauDeBord(user) {
             const container = document.getElementById('main-container');
             container.innerHTML = `
-                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/25 max-w-xl mx-auto text-center">
-                    <div class="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/25">
+                    <div class="flex justify-between items-center mb-6 border-b pb-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900">Bienvenue !</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Connecté avec : <span class="font-semibold text-indigo-600">${user.email}</span></p>
+                        </div>
+                        <button onclick="deconnexion()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-4 py-2 rounded-xl transition text-xs">Se déconnecter</button>
                     </div>
-                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Bienvenue sur votre portail</h2>
-                    <p class="text-sm text-slate-600 mb-6">Connecté en tant que : <span class="font-semibold text-indigo-600">${email}</span></p>
-                    <button onclick="deconnexion()" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-3.5 rounded-xl transition text-sm">Se déconnecter</button>
+
+                    <!-- Formulaire d'enregistrement des données -->
+                    <div class="space-y-4 mb-6">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">Enregistrer mes données scolaires</h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Votre Rôle</label>
+                            <select id="user-role" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50">
+                                <option value="Élève">Élève</option>
+                                <option value="Enseignant">Enseignant</option>
+                                <option value="Gérant">Gérant</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Informations / Notes / Classe</label>
+                            <input type="text" id="user-info" placeholder="Ex: 5ème Année Humanités - Mathématiques" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50">
+                        </div>
+                        <button onclick="sauvegarderDonnees('${user.uid}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 text-sm">Enregistrer mes données</button>
+                    </div>
+
+                    <!-- Zone d'affichage des données enregistrées -->
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Données enregistrées :</h4>
+                        <div id="display-data" class="text-xs text-slate-700 space-y-1">Chargement de vos informations...</div>
+                    </div>
                 </div>
             `;
+            chargerDonnees(user.uid);
+        }
+
+        function sauvegarderDonnees(uid) {
+            const role = document.getElementById('user-role').value;
+            const info = document.getElementById('user-info').value;
+
+            db.ref('utilisateurs/' + uid).set({
+                role: role,
+                info: info,
+                derniereMiseAJour: new Date().toLocaleString()
+            }).then(() => {
+                alert("Données enregistrées avec succès !");
+                chargerDonnees(uid);
+            }).catch(error => {
+                alert("Erreur lors de l'enregistrement : " + error.message);
+            });
+        }
+
+        function chargerDonnees(uid) {
+            db.ref('utilisateurs/' + uid).once('value').then(snapshot => {
+                const data = snapshot.val();
+                const displayDiv = document.getElementById('display-data');
+                if (data) {
+                    displayDiv.innerHTML = `
+                        <p><strong>Rôle :</strong> ${data.role}</p>
+                        <p><strong>Détails :</strong> ${data.info}</p>
+                        <p class="text-slate-400 text-[11px] mt-1">Dernière modification : ${data.derniereMiseAJour}</p>
+                    `;
+                } else {
+                    displayDiv.innerHTML = `<p class="italic text-slate-400">Aucune donnée enregistrée pour le moment.</p>`;
+                }
+            });
         }
 
         function deconnexion() {
             auth.signOut().then(() => {
                 location.reload();
-            }).catch(error => {
-                alert("Erreur lors de la déconnexion : " + error.message);
             });
         }
     </script>
