@@ -211,13 +211,16 @@
 
             <hr style="border-color: #334155; margin: 20px 0;">
 
-            <h3>📊 Clôture & Bilan Annuel</h3>
-            <p style="color: var(--warning); font-size: 13px;">⚠️ <strong>Attention :</strong> Indiquez l'année concernée pour l'inscrire sur le rapport officiel. Le téléchargement entraînera la suppression définitive des données actuelles.</p>
+            <h3>📊 Bilan & Clôture Annuelle</h3>
             
-            <label for="input-annee-scolaire" style="font-size: 14px; color: var(--text-muted);">Année scolaire (ex: 2025-2026) :</label>
+            <label for="input-annee-scolaire" style="font-size: 14px; color: var(--text-muted);">Année scolaire concernée (ex: 2025-2026) :</label>
             <input type="text" id="input-annee-scolaire" placeholder="Ex: 2025-2026">
-            
-            <button class="btn-danger" onclick="cloturerAnneeScolaire()">📥 Télécharger le Bilan & 🧹 Réinitialiser l'Année</button>
+
+            <!-- Étape 1 : Télécharger le PDF en toute sécurité -->
+            <button class="btn-success" onclick="telechargerBilanPDF()">📥 1. Télécharger le Bilan PDF</button>
+
+            <!-- Étape 2 : Vider la base une fois le PDF bien en main -->
+            <button class="btn-danger" onclick="reinitialiserBaseDeDonnees()" style="margin-top: 15px;">🧹 2. Vider la base pour la nouvelle année</button>
         </div>
     </section>
 
@@ -226,7 +229,7 @@
         <h1 style="text-align: center;">RAPPORT ANNUEL DE FIN D'ANNÉE SCOLAIRE</h1>
         <p style="text-align: center; font-size: 14px; color: #555;">Établissement Scolaire - République Démocratique du Congo</p>
         <p style="text-align: center; font-size: 15px; font-weight: bold; color: #4f46e5;">Année Scolaire : <span id="pdf-annee-scolaire-affichee"></span></p>
-        <p><strong>Date de clôture :</strong> <span id="pdf-date-generation"></span></p>
+        <p><strong>Date de génération :</strong> <span id="pdf-date-generation"></span></p>
 
         <div class="pdf-section">
             <h2>1. Registre des Élèves</h2>
@@ -368,30 +371,19 @@
             db.ref('parametres/urgence').set(message || null).then(() => alert("Alerte mise à jour !"));
         }
 
-        // --- CLÔTURE ANNUELLE : PDF PERSONNALISÉ + SUPPRESSION ---
-        async function cloturerAnneeScolaire() {
+        // --- ÉTAPE 1 : TÉLÉCHARGEMENT DU BILAN PDF ---
+        async function telechargerBilanPDF() {
             const anneeScolaire = document.getElementById('input-annee-scolaire').value.trim();
             if (!anneeScolaire) {
-                alert("Veuillez d'abord inscrire l'année scolaire (ex: 2025-2026) dans le champ prévu à cet effet.");
+                alert("Veuillez d'abord indiquer l'année scolaire (ex: 2025-2026) dans le champ prévu.");
                 return;
             }
 
-            const confirmation1 = confirm(`⚠️ ATTENTION : Vous allez clôturer l'année ${anneeScolaire}. Le rapport PDF sera généré et toutes les données de la base seront supprimées. Continuer ?`);
-            if (!confirmation1) return;
+            alert("Génération du rapport PDF en cours, veuillez patienter...");
 
-            const confirmation2 = prompt("Pour confirmer la suppression définitive, écrivez le mot : SUPPRIMER");
-            if (confirmation2 !== "SUPPRIMER") {
-                alert("Opération annulée.");
-                return;
-            }
-
-            alert("Génération du rapport en cours...");
-            
-            // Inscription de l'année saisie et de la date du jour dans le PDF
             document.getElementById('pdf-annee-scolaire-affichee').innerText = anneeScolaire;
             document.getElementById('pdf-date-generation').innerText = new Date().toLocaleDateString('fr-FR');
 
-            // 1. Récupération des données Firebase
             const snapshot = await db.ref().once('value');
             const data = snapshot.val() || {};
 
@@ -411,22 +403,34 @@
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // 2. Téléchargement du PDF puis purge de la base de données
-            html2pdf().from(elementPDF).set(options).save().then(async () => {
+            html2pdf().from(elementPDF).set(options).save().then(() => {
                 elementPDF.style.display = 'none';
-
-                try {
-                    await db.ref('eleves').remove();
-                    await db.ref('professeurs').remove();
-                    await db.ref('evenements').remove();
-                    await db.ref('frais').remove();
-
-                    alert(`✅ Le rapport pour l'année ${anneeScolaire} a été téléchargé et la base de données a été réinitialisée avec succès !`);
-                    document.getElementById('input-annee-scolaire').value = '';
-                } catch (error) {
-                    alert("Erreur lors de la réinitialisation de la base : " + error.message);
-                }
+                alert("✅ Bilan PDF téléchargé avec succès ! Vous pouvez maintenant procéder à l'étape 2 si vous souhaitez réinitialiser la base.");
             });
+        }
+
+        // --- ÉTAPE 2 : NETTOYAGE DE LA BASE DE DONNÉES ---
+        async function reinitialiserBaseDeDonnees() {
+            const confirmation1 = confirm("⚠️ ATTENTION : Vous êtes sur le point de vider complètement la base de données (élèves, profs, événements, frais). Avez-vous bien téléchargé et vérifié le PDF du Bilan avant de faire cela ?");
+            if (!confirmation1) return;
+
+            const confirmation2 = prompt("Pour confirmer définitivement la suppression, écrivez le mot : SUPPRIMER");
+            if (confirmation2 !== "SUPPRIMER") {
+                alert("Opération annulée par sécurité.");
+                return;
+            }
+
+            try {
+                await db.ref('eleves').remove();
+                await db.ref('professeurs').remove();
+                await db.ref('evenements').remove();
+                await db.ref('frais').remove();
+
+                alert("🧹 La base de données a été entièrement réinitialisée pour la nouvelle année scolaire !");
+                document.getElementById('input-annee-scolaire').value = '';
+            } catch (error) {
+                alert("Erreur lors de la réinitialisation : " + error.message);
+            }
         }
 
         function remplirTableauPDF(elementId, objetData, champs, colSpan) {
