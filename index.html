@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Site - Connexion et Données</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -53,12 +50,11 @@
                     <input type="password" id="user-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
                 </div>
                 
-                <!-- Zone d'erreur bien visible -->
                 <div id="auth-error" class="text-xs text-rose-600 font-bold bg-rose-50 p-3 rounded-xl border border-rose-200 hidden"></div>
 
                 <div class="grid grid-cols-2 gap-4 pt-2">
-                    <button type="button" onclick="inscrireFirebase()" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold py-3.5 rounded-xl transition text-sm">S'inscrire</button>
-                    <button type="button" onclick="connecterFirebase()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">Se connecter</button>
+                    <button type="button" id="btn-signup" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold py-3.5 rounded-xl transition text-sm">S'inscrire</button>
+                    <button type="button" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">Se connecter</button>
                 </div>
             </div>
         </div>
@@ -70,35 +66,44 @@
         Mon Site - Connexion et Données &copy; 2026 — Tous droits réservés
     </footer>
 
-    <!-- Logique Firebase Cloud Corrigée -->
-    <script>
-        const firebaseConfig = {
-            databaseURL: "https://site-publication-default-rtdb.firebaseio.com/"
-        };
-        
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const auth = firebase.auth();
-        const db = firebase.database();
+    <!-- Logique Firebase Module Moderne -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
 
-        auth.onAuthStateChanged(user => {
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
+            authDomain: "site-publication.firebaseapp.com",
+            databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
+            projectId: "site-publication",
+            storageBucket: "site-publication.firebasestorage.app",
+            messagingSenderId: "934019778891",
+            appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const errBox = document.getElementById('auth-error');
+
+        function afficherErreur(message) {
+            if (errBox) {
+                errBox.innerText = message;
+                errBox.classList.remove('hidden');
+            }
+        }
+
+        // Surveillance de l'état de connexion
+        onAuthStateChanged(auth, user => {
             if (user) {
                 afficherTableauDeBord(user);
             }
         });
 
-        function afficherErreur(message) {
-            const errBox = document.getElementById('auth-error');
-            if (errBox) {
-                errBox.innerText = message;
-                errBox.classList.remove('hidden');
-            } else {
-                alert(message);
-            }
-        }
-
-        function inscrireFirebase() {
+        // Inscription
+        document.getElementById('btn-signup').addEventListener('click', () => {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-password').value;
 
@@ -107,16 +112,14 @@
                 return;
             }
 
-            auth.createUserWithEmailAndPassword(email, pass)
-                .then(userCredential => {
-                    afficherTableauDeBord(userCredential.user);
-                })
+            createUserWithEmailAndPassword(auth, email, pass)
                 .catch(error => {
                     afficherErreur("Erreur d'inscription : " + error.message);
                 });
-        }
+        });
 
-        function connecterFirebase() {
+        // Connexion
+        document.getElementById('btn-login').addEventListener('click', () => {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-password').value;
 
@@ -125,14 +128,11 @@
                 return;
             }
 
-            auth.signInWithEmailAndPassword(email, pass)
-                .then(userCredential => {
-                    afficherTableauDeBord(userCredential.user);
-                })
+            signInWithEmailAndPassword(auth, email, pass)
                 .catch(error => {
                     afficherErreur("Erreur de connexion : " + error.message);
                 });
-        }
+        });
 
         function afficherTableauDeBord(user) {
             const container = document.getElementById('main-container');
@@ -143,7 +143,7 @@
                             <h2 class="text-xl font-bold text-slate-900">Bienvenue !</h2>
                             <p class="text-xs text-slate-500 mt-0.5">Connecté (Cloud) : <span class="font-semibold text-indigo-600">${user.email}</span></p>
                         </div>
-                        <button onclick="deconnexion()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-4 py-2 rounded-xl transition text-xs">Se déconnecter</button>
+                        <button id="btn-logout" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-4 py-2 rounded-xl transition text-xs">Se déconnecter</button>
                     </div>
 
                     <div class="space-y-4 mb-6">
@@ -160,7 +160,7 @@
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Informations / Notes / Classe</label>
                             <input type="text" id="user-info" placeholder="Ex: 5ème Année Humanités - Mathématiques" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50">
                         </div>
-                        <button onclick="sauvegarderDonneesCloud('${user.uid}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 text-sm">Enregistrer dans le Cloud</button>
+                        <button id="btn-save" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 text-sm">Enregistrer dans le Cloud</button>
                     </div>
 
                     <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
@@ -169,28 +169,33 @@
                     </div>
                 </div>
             `;
-            chargerDonneesCloud(user.uid);
-        }
 
-        function sauvegarderDonneesCloud(uid) {
-            const role = document.getElementById('user-role').value;
-            const info = document.getElementById('user-info').value;
-            const dateStr = new Date().toLocaleString();
+            // Gestion de la sauvegarde
+            document.getElementById('btn-save').addEventListener('click', () => {
+                const role = document.getElementById('user-role').value;
+                const info = document.getElementById('user-info').value;
+                const dateStr = new Date().toLocaleString();
 
-            db.ref('utilisateurs/' + uid).set({
-                role: role,
-                info: info,
-                derniereMiseAJour: dateStr
-            }).then(() => {
-                alert("Données enregistrées et synchronisées dans le Cloud !");
-                chargerDonneesCloud(uid);
-            }).catch(error => {
-                alert("Erreur d'enregistrement : " + error.message);
+                set(ref(db, 'utilisateurs/' + user.uid), {
+                    role: role,
+                    info: info,
+                    derniereMiseAJour: dateStr
+                }).then(() => {
+                    alert("Données enregistrées et synchronisées dans le Cloud !");
+                }).catch(error => {
+                    alert("Erreur d'enregistrement : " + error.message);
+                });
             });
-        }
 
-        function chargerDonneesCloud(uid) {
-            db.ref('utilisateurs/' + uid).on('value', snapshot => {
+            // Gestion de la déconnexion
+            document.getElementById('btn-logout').addEventListener('click', () => {
+                signOut(auth).then(() => {
+                    location.reload();
+                });
+            });
+
+            // Chargement et écoute en temps réel des données
+            onValue(ref(db, 'utilisateurs/' + user.uid), snapshot => {
                 const data = snapshot.val();
                 const displayDiv = document.getElementById('display-data');
                 if (data) {
@@ -206,12 +211,6 @@
                 } else {
                     displayDiv.innerHTML = `<p class="italic text-slate-400">Aucune donnée enregistrée pour le moment.</p>`;
                 }
-            });
-        }
-
-        function deconnexion() {
-            auth.signOut().then(() => {
-                location.reload();
             });
         }
     </script>
