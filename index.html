@@ -33,23 +33,25 @@
     <!-- Conteneur Principal -->
     <main id="main-container" class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
 
-        <!-- Étape 1 : Authentification / Choix du Rôle -->
+        <!-- Étape 1 : Authentification / Choix du Rôle par Onglets -->
         <div id="auth-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
             <div class="mb-6 text-center">
                 <h2 class="text-2xl font-bold text-slate-900">Connexion au Portail</h2>
-                <p class="text-sm text-slate-500 mt-1">Choisissez votre profil et identifiez-vous.</p>
+                <p class="text-sm text-slate-500 mt-1">Sélectionnez votre profil via les onglets et identifiez-vous.</p>
             </div>
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Votre Rôle</label>
-                    <select id="login-role" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50 font-semibold text-indigo-600">
-                        <option value="Gérant">Gérant (Administration)</option>
-                        <option value="Enseignant">Enseignant</option>
-                        <option value="Élève">Élève</option>
-                        <option value="Parent">Parent</option>
-                    </select>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Choisissez votre rôle</label>
+                    <!-- Vrais Onglets Visuels -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-100 p-1.5 rounded-2xl" id="tab-container">
+                        <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition shadow-sm bg-indigo-600 text-white" data-role="Gérant">Gérant</button>
+                        <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition text-slate-600 hover:bg-white/60" data-role="Enseignant">Enseignant</button>
+                        <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition text-slate-600 hover:bg-white/60" data-role="Élève">Élève</button>
+                        <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition text-slate-600 hover:bg-white/60" data-role="Parent">Parent</button>
+                    </div>
                 </div>
+
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Adresse email</label>
                     <input type="email" id="user-email" required placeholder="nom@exemple.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
@@ -79,7 +81,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, push, update } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+        import { getDatabase, ref, set, get, push } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
@@ -96,6 +98,21 @@
         const db = getDatabase(app);
 
         const errBox = document.getElementById('auth-error');
+        let selectedRole = "Gérant";
+
+        // Gestion des clics sur les onglets de rôle
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabButtons.forEach(b => {
+                    b.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+                    b.classList.add('text-slate-600', 'hover:bg-white/60');
+                });
+                btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+                btn.classList.remove('text-slate-600', 'hover:bg-white/60');
+                selectedRole = btn.getAttribute('data-role');
+            });
+        });
 
         function afficherErreur(message) {
             if (errBox) {
@@ -106,10 +123,9 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Récupérer le rôle enregistré de l'utilisateur
                 const userSnap = await get(ref(db, 'comptes/' + user.uid));
                 const userData = userSnap.val();
-                const role = userData ? userData.role : "Élève";
+                const role = userData ? userData.role : selectedRole;
                 afficherTableauDeBord(user, role);
             }
         });
@@ -117,7 +133,6 @@
         document.getElementById('btn-signup').addEventListener('click', async () => {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-password').value;
-            const role = document.getElementById('login-role').value;
 
             if (!email || !pass) {
                 afficherErreur("Veuillez remplir tous les champs.");
@@ -126,8 +141,7 @@
 
             try {
                 const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                // Enregistrer le rôle du compte
-                await set(ref(db, 'comptes/' + cred.user.uid), { email, role });
+                await set(ref(db, 'comptes/' + cred.user.uid), { email, role: selectedRole });
             } catch (error) {
                 afficherErreur("Erreur d'inscription : " + error.message);
             }
@@ -149,7 +163,6 @@
             }
         });
 
-        // Affichage dynamique selon le rôle
         async function afficherTableauDeBord(user, role) {
             const container = document.getElementById('main-container');
 
@@ -164,7 +177,6 @@
                     </div>
             `;
 
-            // 1. ESPACE GÉRANT
             if (role === "Gérant") {
                 contenuHtml += `
                     <div class="space-y-6">
@@ -186,9 +198,7 @@
                         </div>
                     </div>
                 `;
-            } 
-            // 2. ESPACE ENSEIGNANT
-            else if (role === "Enseignant") {
+            } else if (role === "Enseignant") {
                 contenuHtml += `
                     <div class="space-y-6">
                         <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100">
@@ -201,15 +211,13 @@
                         </div>
                     </div>
                 `;
-            } 
-            // 3. ESPACE ÉLÈVE OU PARENT
-            else {
+            } else {
                 contenuHtml += `
                     <div class="space-y-6">
                         <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 mb-3">Consulter les résultats scolaires</h3>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 mb-3">Consulter les résultats scolaires (${role})</h3>
                             <div class="flex gap-2 mb-4">
-                                <input type="text" id="consult-matricule" placeholder="Entrez votre matricule (ou celui de votre enfant)" class="flex-grow px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white font-mono">
+                                <input type="text" id="consult-matricule" placeholder="Entrez le matricule de l'enfant" class="flex-grow px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white font-mono">
                                 <button id="btn-chercher-notes" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm">Rechercher</button>
                             </div>
                             <div id="resultats-affichage" class="p-4 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 min-h-[80px]">
@@ -223,12 +231,10 @@
             contenuHtml += `</div>`;
             container.innerHTML = contenuHtml;
 
-            // Déconnexion commune
             document.getElementById('btn-logout').addEventListener('click', () => {
                 signOut(auth).then(() => { location.reload(); });
             });
 
-            // LOGIQUE SPÉCIFIQUE GÉRANT
             if (role === "Gérant") {
                 const chargerEleves = async () => {
                     const snap = await get(ref(db, 'eleves'));
@@ -259,7 +265,6 @@
                         return;
                     }
 
-                    // Génération d'un matricule unique intégrant nom, post-nom et classe
                     const randomCode = Math.floor(1000 + Math.random() * 9000);
                     const matriculeNettoye = `${nom.substring(0,3).toUpperCase()}-${postnom.substring(0,3).toUpperCase()}-${classe.substring(0,3).toUpperCase()}-${randomCode}`;
 
@@ -277,7 +282,6 @@
                 });
             }
 
-            // LOGIQUE SPÉCIFIQUE ENSEIGNANT
             if (role === "Enseignant") {
                 document.getElementById('btn-publier-note').addEventListener('click', async () => {
                     const matricule = document.getElementById('note-matricule').value.trim();
@@ -289,7 +293,6 @@
                     }
 
                     try {
-                        // Enregistrer les résultats sous la référence du matricule
                         await set(ref(db, 'resultats/' + matricule), {
                             details: details,
                             dateMiseAJour: new Date().toLocaleString()
@@ -303,7 +306,6 @@
                 });
             }
 
-            // LOGIQUE SPÉCIFIQUE ÉLÈVE / PARENT
             if (role === "Élève" || role === "Parent") {
                 document.getElementById('btn-chercher-notes').addEventListener('click', async () => {
                     const matricule = document.getElementById('consult-matricule').value.trim();
@@ -321,10 +323,10 @@
                             resultatDiv.innerHTML = `
                                 <p class="font-bold text-indigo-600 mb-1">Matricule : ${matricule}</p>
                                 <p class="whitespace-pre-line mb-2">${data.details}</p>
-                                <p class="text-slate-400 text-[10px]">Dernière mise à jour par l'enseignant : ${data.dateMiseAJour}</p>
+                                <p class="text-slate-400 text-[10px]">Dernière mise à jour : ${data.dateMiseAJour}</p>
                             `;
                         } else {
-                            resultatDiv.innerHTML = `<span class="text-amber-600 italic">Aucun résultat trouvé pour ce matricule. Vérifiez le code fourni par le gérant.</span>`;
+                            resultatDiv.innerHTML = `<span class="text-amber-600 italic">Aucun résultat trouvé pour ce matricule.</span>`;
                         }
                     } catch (err) {
                         resultatDiv.innerHTML = `<span class="text-rose-500">Erreur lors de la recherche.</span>`;
