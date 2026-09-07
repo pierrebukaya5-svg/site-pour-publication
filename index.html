@@ -52,7 +52,10 @@
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Mot de passe</label>
                     <input type="password" id="user-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
                 </div>
-                <div id="auth-error" class="text-xs text-rose-500 font-medium hidden p-3 bg-rose-50 rounded-xl"></div>
+                
+                <!-- Zone d'erreur bien visible -->
+                <div id="auth-error" class="text-xs text-rose-600 font-bold bg-rose-50 p-3 rounded-xl border border-rose-200 hidden"></div>
+
                 <div class="grid grid-cols-2 gap-4 pt-2">
                     <button type="button" onclick="inscrireFirebase()" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold py-3.5 rounded-xl transition text-sm">S'inscrire</button>
                     <button type="button" onclick="connecterFirebase()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">Se connecter</button>
@@ -67,10 +70,8 @@
         Mon Site - Connexion et Données &copy; 2026 — Tous droits réservés
     </footer>
 
-    <!-- Logique Firebase Cloud -->
+    <!-- Logique Firebase Cloud Corrigée -->
     <script>
-        // Remplacez les valeurs ci-dessous par les vôtres si vous utilisez un autre projet Firebase, 
-        // ou laissez celles de votre base de données Realtime actuelle.
         const firebaseConfig = {
             databaseURL: "https://site-publication-default-rtdb.firebaseio.com/"
         };
@@ -81,7 +82,6 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // Vérifier si l'utilisateur est déjà connecté en mémoire
         auth.onAuthStateChanged(user => {
             if (user) {
                 afficherTableauDeBord(user);
@@ -93,6 +93,8 @@
             if (errBox) {
                 errBox.innerText = message;
                 errBox.classList.remove('hidden');
+            } else {
+                alert(message);
             }
         }
 
@@ -101,7 +103,7 @@
             const pass = document.getElementById('user-password').value;
 
             if (!email || !pass) {
-                afficherErreur("Veuillez remplir tous les champs.");
+                afficherErreur("Veuillez remplir l'email et le mot de passe.");
                 return;
             }
 
@@ -119,7 +121,7 @@
             const pass = document.getElementById('user-password').value;
 
             if (!email || !pass) {
-                afficherErreur("Veuillez remplir tous les champs.");
+                afficherErreur("Veuillez remplir l'email et le mot de passe.");
                 return;
             }
 
@@ -144,7 +146,6 @@
                         <button onclick="deconnexion()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-4 py-2 rounded-xl transition text-xs">Se déconnecter</button>
                     </div>
 
-                    <!-- Formulaire d'enregistrement des données -->
                     <div class="space-y-4 mb-6">
                         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">Enregistrer mes données (Synchronisées)</h3>
                         <div>
@@ -162,7 +163,6 @@
                         <button onclick="sauvegarderDonneesCloud('${user.uid}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 text-sm">Enregistrer dans le Cloud</button>
                     </div>
 
-                    <!-- Zone d'affichage des données en ligne -->
                     <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Données en ligne actuelles :</h4>
                         <div id="display-data" class="text-xs text-slate-700 space-y-1">Chargement depuis Firebase...</div>
@@ -199,7 +199,6 @@
                         <p><strong>Détails :</strong> ${data.info || 'Aucune information saisie'}</p>
                         <p class="text-slate-400 text-[11px] mt-1">Dernière modification : ${data.derniereMiseAJour}</p>
                     `;
-                    // Pré-remplir le sélecteur si les données existent déjà
                     const roleSelect = document.getElementById('user-role');
                     const infoInput = document.getElementById('user-info');
                     if (roleSelect) roleSelect.value = data.role;
