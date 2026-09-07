@@ -124,14 +124,12 @@
                 const userSnap = await get(ref(db, 'comptes/' + user.uid));
                 if (userSnap.exists()) {
                     const userData = userSnap.val();
-                    // On récupère la liste des rôles de l'utilisateur
                     const rolesAutorises = userData.roles || [userData.role];
                     choisirOuAfficherEspace(user, rolesAutorises);
                 }
             }
         });
 
-        // Bouton d'inscription ou d'ajout de rôle
         document.getElementById('btn-signup').addEventListener('click', async () => {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-password').value;
@@ -144,15 +142,12 @@
             try {
                 let user;
                 try {
-                    // Tente de créer un nouveau compte
                     const cred = await createUserWithEmailAndPassword(auth, email, pass);
                     user = cred.user;
-                    // Enregistre le premier rôle
                     await set(ref(db, 'comptes/' + user.uid), { email, roles: { [selectedRole]: true } });
                     alert("Compte créé avec succès avec le rôle : " + selectedRole);
                 } catch (err) {
                     if (err.code === 'auth/email-already-in-use') {
-                        // Si le mail existe déjà, on connecte l'utilisateur et on lui ajoute le nouveau rôle choisi !
                         const cred = await signInWithEmailAndPassword(auth, email, pass);
                         user = cred.user;
                         await update(ref(db, 'comptes/' + user.uid + '/roles'), { [selectedRole]: true });
@@ -183,13 +178,10 @@
             }
         });
 
-        // Fonction pour laisser l'utilisateur choisir parmi ses rôles s'il en a plusieurs
         function choisirOuAfficherEspace(user, rolesObj) {
             const listeRoles = Object.keys(rolesObj);
             
-            // Si l'utilisateur a plusieurs rôles, on lui propose de basculer facilement de l'un à l'autre
             if (listeRoles.length > 1) {
-                // S'il y a un choix en mémoire, on l'utilise, sinon on prend le premier
                 let roleActif = localStorage.getItem('role_actif_' + user.uid) || listeRoles[0];
                 if (!rolesObj[roleActif]) roleActif = listeRoles[0];
                 
@@ -232,7 +224,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                                 <input type="text" id="eleve-nom" placeholder="Nom" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
                                 <input type="text" id="eleve-postnom" placeholder="Post-nom" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
-                                <input type="text" id="eleve-classe" placeholder="Classe (ex: 5ème Math)" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                                <input type="text" id="eleve-classe" placeholder="Classe & Option (ex: 5ème Math)" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
                             </div>
                             <button id="btn-creer-eleve" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition shadow-md text-sm">Générer le Matricule & Enregistrer</button>
                         </div>
@@ -249,12 +241,17 @@
                 contenuHtml += `
                     <div class="space-y-6">
                         <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100">
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-900 mb-3">Saisir ou Mettre à jour les résultats d'un élève</h3>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-900 mb-3">Saisir les résultats par identité (Reconnaissance auto)</h3>
                             <div class="space-y-3 mb-3">
-                                <input type="text" id="note-matricule" placeholder="Entrer le matricule exact de l'élève" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white font-mono">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <input type="text" id="note-nom" placeholder="Nom de l'élève" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                                    <input type="text" id="note-postnom" placeholder="Post-nom de l'élève" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                                    <input type="text" id="note-classe" placeholder="Classe & Option (ex: 5ème Math)" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                                </div>
+                                <div id="info-reconnaissance" class="text-xs text-indigo-700 font-semibold bg-indigo-50 p-2.5 rounded-xl border border-indigo-200 hidden"></div>
                                 <textarea id="note-details" placeholder="Saisir les résultats (ex: Math: 16/20, Physique: 14/20 - Trimestre 1)" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"></textarea>
                             </div>
-                            <button id="btn-publier-note" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-md text-sm">Publier les résultats</button>
+                            <button id="btn-publier-note" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-md text-sm">Reconnaître l'élève & Publier</button>
                         </div>
                     </div>
                 `;
@@ -309,7 +306,7 @@
                     const classe = document.getElementById('eleve-classe').value.trim();
 
                     if (!nom || !postnom || !classe) {
-                        alert("Veuillez remplir le nom, post-nom et la classe.");
+                        alert("Veuillez remplir le nom, post-nom et la classe/option.");
                         return;
                     }
 
@@ -331,23 +328,77 @@
             }
 
             if (roleActif === "Enseignant") {
+                const inputNom = document.getElementById('note-nom');
+                const inputPostnom = document.getElementById('note-postnom');
+                const inputClasse = document.getElementById('note-classe');
+                const infoBox = document.getElementById('info-reconnaissance');
+
+                // Fonction de reconnaissance automatique basée sur Nom, Post-nom et Classe/Option
+                const verifierIdentite = async () => {
+                    const nomRecherche = inputNom.value.trim().toLowerCase();
+                    const postnomRecherche = inputPostnom.value.trim().toLowerCase();
+                    const classeRecherche = inputClasse.value.trim().toLowerCase();
+
+                    if (nomRecherche.length < 2 || postnomRecherche.length < 2 || classeRecherche.length < 2) {
+                        infoBox.classList.add('hidden');
+                        return;
+                    }
+
+                    const snap = await get(ref(db, 'eleves'));
+                    let trouve = null;
+
+                    if (snap.exists()) {
+                        snap.forEach(child => {
+                            const e = child.val();
+                            if (
+                                e.nom.toLowerCase() === nomRecherche && 
+                                e.postnom.toLowerCase() === postnomRecherche && 
+                                e.classe.toLowerCase().includes(classeRecherche)
+                            ) {
+                                trouve = e;
+                            }
+                        });
+                    }
+
+                    if (trouve) {
+                        infoBox.innerHTML = `✅ Élève reconnu ! <strong>Matricule : ${trouve.matricule}</strong> (${trouve.classe})`;
+                        infoBox.classList.remove('hidden');
+                        infoBox.dataset.matriculeTrouve = trouve.matricule;
+                    } else {
+                        infoBox.innerHTML = `⚠️ Aucun élève trouvé avec ces critères précis (Nom, Post-nom et Classe). Vérifiez les informations.`;
+                        infoBox.classList.remove('hidden');
+                        infoBox.dataset.matriculeTrouve = "";
+                    }
+                };
+
+                inputNom.addEventListener('input', verifierIdentite);
+                inputPostnom.addEventListener('input', verifierIdentite);
+                inputClasse.addEventListener('input', verifierIdentite);
+
                 document.getElementById('btn-publier-note').addEventListener('click', async () => {
-                    const matricule = document.getElementById('note-matricule').value.trim();
+                    const matriculeAssocie = infoBox.dataset.matriculeTrouve;
                     const details = document.getElementById('note-details').value.trim();
 
-                    if (!matricule || !details) {
-                        alert("Veuillez remplir le matricule et les détails des résultats.");
+                    if (!matriculeAssocie) {
+                        alert("Veuillez renseigner correctement le nom, le post-nom et la classe pour valider la reconnaissance de l'élève.");
+                        return;
+                    }
+                    if (!details) {
+                        alert("Veuillez saisir les résultats de l'élève.");
                         return;
                     }
 
                     try {
-                        await set(ref(db, 'resultats/' + matricule), {
+                        await set(ref(db, 'resultats/' + matriculeAssocie), {
                             details: details,
                             dateMiseAJour: new Date().toLocaleString()
                         });
-                        alert("Résultats publiés avec succès pour le matricule " + matricule);
-                        document.getElementById('note-matricule').value = "";
+                        alert("Résultats publiés avec succès pour l'élève (Matricule : " + matriculeAssocie + ")");
+                        document.getElementById('note-nom').value = "";
+                        document.getElementById('note-postnom').value = "";
+                        document.getElementById('note-classe').value = "";
                         document.getElementById('note-details').value = "";
+                        infoBox.classList.add('hidden');
                     } catch (err) {
                         alert("Erreur : " + err.message);
                     }
