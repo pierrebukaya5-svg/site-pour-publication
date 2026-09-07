@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portail Scolaire RDC — Gestion Centralisée</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
@@ -16,7 +14,6 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
 
-    <!-- En-tête -->
     <header class="bg-white border-b border-slate-200 shadow-sm">
         <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
@@ -28,7 +25,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-slate-900">Portail Scolaire RDC</h1>
-                    <p class="text-xs text-slate-500">Gestion Centralisée & Sécurisée par le Gérant</p>
+                    <p class="text-xs text-slate-500">Gestion Centralisée & Sécurisée</p>
                 </div>
             </div>
             <div id="user-status" class="hidden flex items-center gap-3">
@@ -38,10 +35,7 @@
         </div>
     </header>
 
-    <!-- Contenu Principal -->
     <main class="max-w-4xl w-full mx-auto px-4 py-8 flex-grow">
-
-        <!-- Navigation des Rôles -->
         <div id="role-selector" class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-wrap gap-2 justify-center">
             <button onclick="switchTab('eleve')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium transition bg-blue-600 text-white shadow-sm" data-target="eleve">🎓 Élève</button>
             <button onclick="switchTab('parent')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-100" data-target="parent">👨‍👩‍👧 Parent</button>
@@ -49,10 +43,7 @@
             <button onclick="switchTab('gerant')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-100" data-target="gerant">🔐 Gérant / Admin</button>
         </div>
 
-        <!-- FORMULAIRES DE CONNEXION -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
-
-            <!-- ESPACE ÉLÈVE -->
             <div id="section-eleve" class="auth-section">
                 <h2 class="text-lg font-bold text-slate-900 mb-1">Espace Élève</h2>
                 <p class="text-sm text-slate-500 mb-6">Consultez vos notes et votre parcours scolaire avec votre matricule (ex: MAT-1001).</p>
@@ -65,7 +56,6 @@
                 </form>
             </div>
 
-            <!-- ESPACE PARENT -->
             <div id="section-parent" class="auth-section hidden">
                 <h2 class="text-lg font-bold text-slate-900 mb-1">Espace Parent</h2>
                 <p class="text-sm text-slate-500 mb-6">Suivez les résultats scolaires de votre enfant en renseignant son matricule.</p>
@@ -78,7 +68,6 @@
                 </form>
             </div>
 
-            <!-- ESPACE ENSEIGNANT -->
             <div id="section-enseignant" class="auth-section hidden">
                 <h2 class="text-lg font-bold text-slate-900 mb-1">Espace Enseignant</h2>
                 <p class="text-sm text-slate-500 mb-6">Connectez-vous avec votre identifiant professionnel (ex: PROF-201).</p>
@@ -91,7 +80,6 @@
                 </form>
             </div>
 
-            <!-- ESPACE GÉRANT -->
             <div id="section-gerant" class="auth-section hidden">
                 <h2 class="text-lg font-bold text-slate-900 mb-1">Accès Espace Gérant</h2>
                 <p class="text-sm text-slate-500 mb-6">Entrez le mot de passe maître de l'établissement pour accéder aux outils d'administration.</p>
@@ -104,27 +92,26 @@
                 </form>
             </div>
 
-            <!-- TABLEAU DE BORD -->
             <div id="dashboard-container" class="hidden"></div>
-
         </div>
     </main>
 
-    <!-- Pied de page -->
     <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-200 mt-auto">
         Portail Scolaire RDC &copy; 2026 — Tous droits réservés
     </footer>
 
-    <!-- Script -->
     <script>
         const firebaseConfig = {
             databaseURL: "https://site-publication-default-rtdb.firebaseio.com/"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
-        // Mot de passe par défaut si non modifié dans la base de données
         const DEFAULT_MASTER = "gestion2026";
+
+        // Fonction utilitaire pour échapper les caractères spéciaux et bloquer les XSS
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
 
         function switchTab(role) {
             document.querySelectorAll('.auth-section').forEach(el => el.classList.add('hidden'));
@@ -143,8 +130,6 @@
         function connexionGerant(e) {
             e.preventDefault();
             const mdp = document.getElementById('gerant-mdp').value;
-            
-            // Vérifie dans Firebase si un mot de passe personnalisé existe, sinon utilise la valeur par défaut
             db.ref('config/masterPassword').once('value').then(snapshot => {
                 const currentMaster = snapshot.exists() ? snapshot.val() : DEFAULT_MASTER;
                 if(mdp === currentMaster) {
@@ -235,7 +220,6 @@
                         </form>
                     </div>
                 </div>
-                <!-- Section Modification Mot de Passe -->
                 <div class="p-5 border border-slate-200 rounded-xl bg-amber-50/50">
                     <h3 class="font-semibold text-slate-800 mb-2">Sécurité : Modifier le Mot de Passe Maître</h3>
                     <p class="text-xs text-slate-500 mb-4">Changez le mot de passe requis pour accéder à cet espace d'administration.</p>
@@ -250,8 +234,8 @@
         function modifierMotDePasse(e) {
             e.preventDefault();
             const nouveauMdp = document.getElementById('new-master-mdp').value.trim();
-            if(nouveauMdp.length < 4) {
-                alert("Le mot de passe doit contenir au moins 4 caractères.");
+            if(nouveauMdp.length < 6) {
+                alert("Le mot de passe doit contenir au moins 6 caractères.");
                 return;
             }
             db.ref('config/masterPassword').set(nouveauMdp).then(() => {
@@ -263,8 +247,8 @@
         function ajouterEleve(e) {
             e.preventDefault();
             const mat = document.getElementById('new-mat').value.trim();
-            const nom = document.getElementById('new-nom').value.trim();
-            const classe = document.getElementById('new-classe').value.trim();
+            const nom = escapeHtml(document.getElementById('new-nom').value.trim());
+            const classe = escapeHtml(document.getElementById('new-classe').value.trim());
 
             db.ref('eleves/' + mat).set({
                 nom: nom,
@@ -281,8 +265,8 @@
         function ajouterEnseignant(e) {
             e.preventDefault();
             const id = document.getElementById('new-prof-id').value.trim();
-            const nom = document.getElementById('new-prof-nom').value.trim();
-            const cours = document.getElementById('new-prof-cours').value.trim();
+            const nom = escapeHtml(document.getElementById('new-prof-nom').value.trim());
+            const cours = escapeHtml(document.getElementById('new-prof-cours').value.trim());
 
             db.ref('enseignants/' + id).set({
                 nom: nom,
@@ -307,7 +291,7 @@
             let notesHtml = '<ul class="divide-y divide-slate-100">';
             if(data.notes) {
                 for(let matiere in data.notes) {
-                    notesHtml += `<li class="py-2.5 flex justify-between text-sm"><span class="font-medium text-slate-700">${matiere}</span> <span class="text-blue-600 font-bold">${data.notes[matiere]} / 20</span></li>`;
+                    notesHtml += `<li class="py-2.5 flex justify-between text-sm"><span class="font-medium text-slate-700">${escapeHtml(matiere)}</span> <span class="text-blue-600 font-bold">${escapeHtml(String(data.notes[matiere]))} / 20</span></li>`;
                 }
             } else {
                 notesHtml += '<p class="text-sm text-slate-500 py-2">Aucune note enregistrée pour le moment.</p>';
@@ -316,7 +300,7 @@
 
             dash.innerHTML = `
                 <h2 class="text-xl font-bold text-slate-900 mb-1">Dossier Scolaire</h2>
-                <p class="text-sm text-slate-500 mb-6">Classe : <span class="font-medium text-slate-800">${data.classe}</span></p>
+                <p class="text-sm text-slate-500 mb-6">Classe : <span class="font-medium text-slate-800">${escapeHtml(data.classe)}</span></p>
                 <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm">
                     <h3 class="font-semibold text-slate-800 mb-3">Relevé de notes</h3>
                     ${notesHtml}
@@ -339,7 +323,7 @@
             dash.classList.remove('hidden');
             dash.innerHTML = `
                 <h2 class="text-xl font-bold text-slate-900 mb-1">Espace Pédagogique</h2>
-                <p class="text-sm text-slate-500 mb-6">Matière dispensée : <span class="font-medium text-slate-800">${data.cours}</span></p>
+                <p class="text-sm text-slate-500 mb-6">Matière dispensée : <span class="font-medium text-slate-800">${escapeHtml(data.cours)}</span></p>
                 <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm">
                     <h3 class="font-semibold text-slate-800 mb-3">Attribuer ou modifier une note</h3>
                     <form onsubmit="attribuerNote(event)" class="space-y-3">
@@ -354,9 +338,14 @@
         function attribuerNote(e) {
             e.preventDefault();
             const mat = document.getElementById('note-mat').value.trim();
-            const noteVal = document.getElementById('note-val').value;
-            const profCours = sessionStorage.getItem('userProf');
+            const noteVal = parseFloat(document.getElementById('note-val').value);
+            
+            if(isNaN(noteVal) || noteVal < 0 || noteVal > 20) {
+                alert("Veuillez entrer une note valide comprise entre 0 et 20.");
+                return;
+            }
 
+            const profCours = sessionStorage.getItem('userProf');
             db.ref('enseignants/' + profCours).once('value').then(snapshot => {
                 if(snapshot.exists()) {
                     const matiere = snapshot.val().cours;
