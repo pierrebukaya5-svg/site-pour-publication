@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC - Administration & Synthèse</title>
+    <title>Portail Scolaire RDC - Gestion Globale</title>
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -13,19 +13,20 @@
 
     <style>
         :root {
-            --primary: #4f46e5;
-            --bg-dark: #0f172a;
-            --card-bg: #1e293b;
+            --bg-main: #090d16;
+            --card-bg: #131c31;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --danger: #ef4444;
             --success: #22c55e;
-            --border: #334155;
+            --border: #1e293b;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-dark);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main);
             color: var(--text-main);
             margin: 0;
             padding: 20px;
@@ -37,92 +38,73 @@
         }
 
         header {
+            background: linear-gradient(135deg, #1e1b4b 0%, #131c31 100%);
+            border: 1px solid var(--border);
+            padding: 20px 25px;
+            border-radius: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        header h1 { margin: 0; font-size: 22px; color: #fff; }
+        header p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 13px; }
+
+        .card {
             background: var(--card-bg);
-            border-radius: 12px;
-            margin-bottom: 20px;
             border: 1px solid var(--border);
-        }
-
-        h1, h2, h3 { margin: 0 0 15px 0; }
-
-        #bandeau-urgence {
-            background-color: var(--danger);
-            color: white;
-            padding: 12px;
-            text-align: center;
-            font-weight: bold;
-            border-radius: 8px;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
-            display: none;
         }
 
-        .container {
+        h2 { margin-top: 0; font-size: 16px; border-bottom: 2px solid var(--primary); padding-bottom: 6px; display: inline-block; color: #fff; }
+        h3 { font-size: 14px; margin-top: 15px; color: #cbd5e1; }
+
+        input, textarea, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0b0f19;
+            color: white;
+            box-sizing: border-box;
+            font-size: 13px;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            background: var(--primary);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #16a34a; }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #dc2626; }
+
+        .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
 
         @media (max-width: 768px) {
-            .container { grid-template-columns: 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
         }
-
-        .card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            margin-bottom: 20px;
-            border: 1px solid var(--border);
-        }
-
-        input, textarea, button, select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 8px;
-            margin-bottom: 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: #0f172a;
-            color: white;
-            box-sizing: border-box;
-        }
-
-        button {
-            background: var(--primary);
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        button:hover { background: #4338ca; }
-        .btn-success { background: var(--success); }
-        .btn-success:hover { background: #16a34a; }
-        .btn-danger { background: var(--danger); }
-        .btn-danger:hover { background: #dc2626; }
-
-        .grille-photos {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .grille-photos img {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 6px;
-        }
-
-        ul { padding-left: 20px; }
-        li { margin-bottom: 8px; }
-        a { color: #818cf8; text-decoration: none; }
-        a:hover { text-decoration: underline; }
 
         .user-pill {
             background: rgba(99, 102, 241, 0.1);
@@ -137,24 +119,24 @@
         #rapport-pdf-container {
             background: #ffffff;
             color: #000000;
-            padding: 30px;
+            padding: 40px;
             font-family: Arial, sans-serif;
             display: none;
         }
         #rapport-pdf-container h1, #rapport-pdf-container h2 {
-            color: #1e293b;
-            border-bottom: 2px solid #4f46e5;
+            color: #0f172a;
+            border-bottom: 2px solid var(--primary);
             padding-bottom: 5px;
         }
-        .pdf-section { margin-bottom: 20px; }
+        .pdf-section { margin-bottom: 25px; }
         .pdf-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 12px;
         }
         .pdf-table th, .pdf-table td {
             border: 1px solid #cbd5e1;
-            padding: 8px;
+            padding: 10px;
             text-align: left;
             font-size: 12px;
         }
@@ -164,85 +146,85 @@
 <body>
 
     <div class="wrapper">
-        <div id="bandeau-urgence">
-            ⚠️ <span id="texte-urgence"></span>
-        </div>
-
         <header>
             <div>
                 <h1>Portail Scolaire RDC</h1>
-                <p style="color: var(--text-muted); margin:0;">Espace Public & Administration</p>
+                <p>Espace Élèves, Parents & Administration</p>
             </div>
             <div id="auth-status" class="user-pill">Vérification...</div>
         </header>
 
-        <!-- PARTIE PUBLIQUE (Visible par les parents et visiteurs) -->
-        <div class="container">
-            <div>
-                <section class="card">
-                    <h2>📢 Actualités & Communiqués</h2>
-                    <div id="liste-articles">Chargement...</div>
-                </section>
-
-                <section class="card">
-                    <h2>📅 Calendrier & Événements</h2>
-                    <div id="liste-evenements">Chargement...</div>
-                </section>
-            </div>
-
-            <div>
-                <section class="card">
-                    <h2>🖼️ Galerie Photos</h2>
-                    <div class="grille-photos" id="grille-galerie">
-                        <p style="color: var(--text-muted);">Aucune photo.</p>
-                    </div>
-                </section>
-
-                <section class="card">
-                    <h2>📂 Documents Utiles</h2>
-                    <ul id="liste-documents">
-                        <li>Aucun document.</li>
-                    </ul>
-                </section>
-            </div>
+        <!-- ZONE DE CONNEXION GÉRANT -->
+        <div id="login-section" class="card" style="max-width: 400px; margin: 0 auto 20px auto; text-align: center;">
+            <h2>Connexion Administration</h2>
+            <input type="email" id="admin-email" placeholder="Email du gérant">
+            <input type="password" id="admin-password" placeholder="Mot de passe">
+            <button onclick="connecterAdmin()">Se connecter</button>
         </div>
 
-        <!-- ESPACE ADMINISTRATION (Sécurisé par Connexion) -->
-        <section class="card" id="admin-panel">
-            <h2>🔒 Espace Gérant & Administration</h2>
+        <!-- TABLEAU DE BORD COMPLET (Visible une fois connecté) -->
+        <div id="admin-dashboard" style="display: none;">
             
-            <div id="login-form">
-                <input type="email" id="admin-email" placeholder="Email du gérant">
-                <input type="password" id="admin-password" placeholder="Mot de passe">
-                <button onclick="connecterAdmin()">Se connecter</button>
+            <div class="grid-2">
+                <!-- Gestion des Élèves -->
+                <div class="card">
+                    <h2>👨‍🎓 Enregistrer un Élève</h2>
+                    <input type="text" id="eleve-matricule" placeholder="Matricule (ex: MAT-001)">
+                    <input type="text" id="eleve-nom" placeholder="Nom complet de l'élève">
+                    <input type="text" id="eleve-classe" placeholder="Classe (ex: 5ème Math)">
+                    <button onclick="ajouterEleve()">Enregistrer l'élève</button>
+                </div>
+
+                <!-- Gestion des Professeurs -->
+                <div class="card">
+                    <h2>👨‍🏫 Enregistrer un Professeur</h2>
+                    <input type="text" id="prof-nom" placeholder="Nom complet du professeur">
+                    <input type="text" id="prof-cours" placeholder="Cours dispensé (ex: Mathématiques)">
+                    <button onclick="ajouterProf()">Enregistrer le professeur</button>
+                </div>
             </div>
 
-            <div id="formulaire-pub" style="display: none;">
-                <p style="color: var(--success); font-weight: bold; margin-bottom: 15px;">Connecté en tant que Gérant ✅</p>
-                
-                <h3>Publier un article</h3>
-                <input type="text" id="titre-article" placeholder="Titre de l'actualité">
-                <textarea id="corps-article" placeholder="Contenu du communiqué..." rows="3"></textarea>
-                <button onclick="publierArticle()">Publier l'article</button>
+            <div class="grid-2">
+                <!-- Actualités & Alertes -->
+                <div class="card">
+                    <h2>📢 Actualités & Alertes</h2>
+                    <input type="text" id="titre-article" placeholder="Titre de l'actualité">
+                    <textarea id="corps-article" placeholder="Contenu du communiqué..." rows="2"></textarea>
+                    <button onclick="publierArticle()">Publier l'actualité</button>
 
-                <h3>Mettre à jour l'Alerte Urgence</h3>
-                <input type="text" id="input-urgence" placeholder="Message d'urgence (laisser vide pour masquer)">
-                <button onclick="publierUrgence()">Mettre à jour l'alerte</button>
+                    <h3 style="margin-top:20px;">Bandeau d'Urgence</h3>
+                    <input type="text" id="input-urgence" placeholder="Message d'alerte (laisser vide pour masquer)">
+                    <button onclick="publierUrgence()">Mettre à jour l'alerte</button>
+                </div>
 
-                <hr style="border-color: var(--border); margin: 20px 0;">
+                <!-- Finances & Frais -->
+                <div class="card">
+                    <h2>💰 Suivi des Frais & Paiements</h2>
+                    <input type="text" id="frais-desc" placeholder="Libellé (ex: Frais scolaires T1)">
+                    <input type="text" id="frais-montant" placeholder="Montant (ex: 50 USD)">
+                    <button onclick="ajouterFrais()">Ajouter l'entrée financière</button>
+                </div>
+            </div>
 
-                <h3>📊 Bilan & Clôture Annuelle</h3>
-                <label for="input-annee-scolaire" style="font-size: 13px; color: var(--text-muted);">Année scolaire concernée (ex: 2025-2026) :</label>
+            <!-- Clôture et Bilan Annuel -->
+            <div class="card" style="border-color: #3730a3;">
+                <h2>📊 Clôture & Bilan Annuel (PDF & Reset)</h2>
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 12px;">
+                    Générez le PDF officiel de fin d'année et nettoyez la base de données en toute sécurité.
+                </p>
+
+                <label for="input-annee-scolaire" style="font-size: 12px; color: var(--text-muted);">Année scolaire (ex: 2025-2026) :</label>
                 <input type="text" id="input-annee-scolaire" placeholder="Ex: 2025-2026">
 
                 <button class="btn-success" onclick="telechargerBilanPDF()">📥 1. Télécharger le Bilan PDF</button>
-                <button class="btn-danger" onclick="reinitialiserBaseDeDonnees()" style="margin-top: 10px;">🧹 2. Vider la base pour la nouvelle année</button>
-
-                <div style="text-align: center; margin-top: 20px;">
-                    <button onclick="deconnecterAdmin()" style="background: transparent; border: 1px solid var(--border); width: auto; padding: 8px 20px;">Se déconnecter</button>
+                <button class="btn-danger" onclick="reinitialiserBaseDeDonnees()" style="margin-top: 8px;">🧹 2. Vider la base pour la nouvelle année</button>
+                
+                <div style="text-align: center; margin-top: 15px;">
+                    <button onclick="deconnecterAdmin()" style="background: transparent; border: 1px solid #334155; width: auto; padding: 6px 16px;">Se déconnecter</button>
                 </div>
             </div>
-        </section>
+
+        </div>
     </div>
 
     <!-- ZONE PDF CACHÉE -->
@@ -286,7 +268,7 @@
     </div>
 
     <script>
-        // Vos clés Firebase authentiques
+        // Configuration Firebase authentique
         const firebaseConfig = {
             apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
             authDomain: "site-publication.firebaseapp.com",
@@ -301,78 +283,24 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
-        // Écoutes en temps réel (Partie Publique pour les parents)
-        db.ref('articles').on('value', (snapshot) => {
-            const container = document.getElementById('liste-articles');
-            container.innerHTML = '';
-            if (!snapshot.exists()) { container.innerHTML = '<p style="color: var(--text-muted);">Aucune actualité pour le moment.</p>'; return; }
-            snapshot.forEach((child) => {
-                const art = child.val();
-                container.innerHTML += `<div style="margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
-                    <strong>${art.titre}</strong>
-                    <p style="margin:5px 0 0 0; color: var(--text-muted);">${art.contenu}</p>
-                </div>`;
-            });
-        });
-
-        db.ref('evenements').on('value', (snapshot) => {
-            const container = document.getElementById('liste-evenements');
-            container.innerHTML = '';
-            if (!snapshot.exists()) { container.innerHTML = '<p style="color: var(--text-muted);">Aucun événement prévu.</p>'; return; }
-            snapshot.forEach((child) => {
-                const ev = child.val();
-                container.innerHTML += `<div style="margin-bottom: 10px;">• <strong>${ev.titre}</strong> (${ev.date})</div>`;
-            });
-        });
-
-        db.ref('parametres/urgence').on('value', (snapshot) => {
-            const message = snapshot.val();
-            const banniere = document.getElementById('bandeau-urgence');
-            if (message) {
-                document.getElementById('texte-urgence').innerText = message;
-                banniere.style.display = 'block';
-            } else {
-                banniere.style.display = 'none';
-            }
-        });
-
-        db.ref('galerie').on('value', (snapshot) => {
-            const grille = document.getElementById('grille-galerie');
-            grille.innerHTML = '';
-            if (!snapshot.exists()) { grille.innerHTML = '<p style="color: var(--text-muted);">Aucune photo.</p>'; return; }
-            snapshot.forEach((child) => {
-                grille.innerHTML += `<img src="${child.val().url}" alt="Photo de l'école">`;
-            });
-        });
-
-        db.ref('documents').on('value', (snapshot) => {
-            const liste = document.getElementById('liste-documents');
-            liste.innerHTML = '';
-            if (!snapshot.exists()) { liste.innerHTML = '<li>Aucun document disponible.</li>'; return; }
-            snapshot.forEach((child) => {
-                const doc = child.val();
-                liste.innerHTML += `<li><a href="${doc.url}" target="_blank">📄 ${doc.nom}</a></li>`;
-            });
-        });
-
-        // Gestion de l'authentification Admin
+        // Gestion de l'authentification
         auth.onAuthStateChanged((user) => {
-            const loginForm = document.getElementById('login-form');
-            const pubForm = document.getElementById('formulaire-pub');
+            const loginSection = document.getElementById('login-section');
+            const dashboard = document.getElementById('admin-dashboard');
             const status = document.getElementById('auth-status');
 
             if (user) {
                 status.innerText = "Connecté : " + user.email;
                 status.style.background = "rgba(34, 197, 94, 0.1)";
                 status.style.color = "#4ade80";
-                loginForm.style.display = 'none';
-                pubForm.style.display = 'block';
+                loginSection.style.display = 'none';
+                dashboard.style.display = 'block';
             } else {
                 status.innerText = "Non connecté";
                 status.style.background = "rgba(239, 68, 68, 0.1)";
                 status.style.color = "#f87171";
-                loginForm.style.display = 'block';
-                pubForm.style.display = 'none';
+                loginSection.style.display = 'block';
+                dashboard.style.display = 'none';
             }
         });
 
@@ -386,12 +314,37 @@
             auth.signOut();
         }
 
+        // Fonctions d'ajout dans la base de données
+        function ajouterEleve() {
+            const matricule = document.getElementById('eleve-matricule').value;
+            const nom = document.getElementById('eleve-nom').value;
+            const classe = document.getElementById('eleve-classe').value;
+            if (!matricule || !nom || !classe) return alert("Remplissez tous les champs élève !");
+            db.ref('eleves').push({ matricule, nom, classe }).then(() => {
+                alert("Élève enregistré avec succès !");
+                document.getElementById('eleve-matricule').value = '';
+                document.getElementById('eleve-nom').value = '';
+                document.getElementById('eleve-classe').value = '';
+            });
+        }
+
+        function ajouterProf() {
+            const nom = document.getElementById('prof-nom').value;
+            const cours = document.getElementById('prof-cours').value;
+            if (!nom || !cours) return alert("Remplissez tous les champs professeur !");
+            db.ref('professeurs').push({ nom, cours }).then(() => {
+                alert("Professeur enregistré avec succès !");
+                document.getElementById('prof-nom').value = '';
+                document.getElementById('prof-cours').value = '';
+            });
+        }
+
         function publierArticle() {
             const titre = document.getElementById('titre-article').value;
             const contenu = document.getElementById('corps-article').value;
             if (!titre || !contenu) return alert("Remplissez tous les champs !");
             db.ref('articles').push({ titre, contenu, date: Date.now() }).then(() => {
-                alert("Article publié avec succès !");
+                alert("Article publié !");
                 document.getElementById('titre-article').value = '';
                 document.getElementById('corps-article').value = '';
             });
@@ -402,7 +355,18 @@
             db.ref('parametres/urgence').set(message || null).then(() => alert("Alerte mise à jour !"));
         }
 
-        // Téléchargement du Bilan PDF
+        function ajouterFrais() {
+            const description = document.getElementById('frais-desc').value;
+            const montant = document.getElementById('frais-montant').value;
+            if (!description || !montant) return alert("Remplissez les champs financiers !");
+            db.ref('frais').push({ description, montant }).then(() => {
+                alert("Entrée financière enregistrée !");
+                document.getElementById('frais-desc').value = '';
+                document.getElementById('frais-montant').value = '';
+            });
+        }
+
+        // --- TÉLÉCHARGEMENT DU BILAN PDF ---
         async function telechargerBilanPDF() {
             const anneeScolaire = document.getElementById('input-annee-scolaire').value.trim();
             if (!anneeScolaire) {
@@ -440,9 +404,9 @@
             });
         }
 
-        // Nettoyage de la base de données
+        // --- NETTOYAGE DE LA BASE DE DONNÉES ---
         async function reinitialiserBaseDeDonnees() {
-            const confirmation1 = confirm("⚠️ ATTENTION : Voulez-vous vraiment vider la base de données (élèves, profs, événements, frais) ? Vérifiez bien d'avoir téléchargé le PDF avant.");
+            const confirmation1 = confirm("⚠️ ATTENTION : Voulez-vous vraiment vider la base de données (élèves, profs, événements, frais) ? Assurez-vous d'avoir téléchargé le PDF avant.");
             if (!confirmation1) return;
 
             const confirmation2 = prompt("Écrivez le mot SUPPRIMER pour confirmer :");
