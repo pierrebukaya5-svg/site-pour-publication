@@ -3,130 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Site Firebase</title>
+    <title>Portail Scolaire RDC - Administration</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <!-- html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
-        .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin-bottom: 20px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
-        input, button { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
-        button { background-color: #1a73e8; color: white; border: none; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #1557b0; }
-        #app-content { display: none; }
+        :root {
+            --bg-main: #090d16;
+            --card-bg: #131c31;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --border: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e1b4b 0%, #131c31 100%);
+            border: 1px solid var(--border);
+            padding: 25px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        header h1 { margin: 0; font-size: 24px; color: #fff; }
+        header p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px; }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            margin-bottom: 25px;
+        }
+
+        h2 { margin-top: 0; font-size: 18px; border-bottom: 2px solid var(--primary); padding-bottom: 8px; display: inline-block; }
+        h3 { font-size: 16px; margin-top: 20px; color: #cbd5e1; }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0b0f19;
+            color: white;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            background: var(--primary);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #16a34a; }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #dc2626; }
+
+        .auth-box {
+            text-align: center;
+            max-width: 450px;
+            margin: 50px auto;
+        }
+
+        .user-pill {
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Style PDF masqué */
+        #rapport-pdf-container {
+            background: #ffffff;
+            color: #000000;
+            padding: 40px;
+            font-family: Arial, sans-serif;
+            display: none;
+        }
+        #rapport-pdf-container h1, #rapport-pdf-container h2 {
+            color: #0f172a;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 5px;
+        }
+        .pdf-section { margin-bottom: 25px; }
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+        .pdf-table th, .pdf-table td {
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            text-align: left;
+            font-size: 12px;
+        }
+        .pdf-table th { background-color: #f1f5f9; }
     </style>
 </head>
 <body>
 
-    <!-- ÉCRAN DE CONNEXION / INSCRIPTION -->
-    <div id="auth-screen">
-        <div class="box">
-            <h2>Créer un compte</h2>
-            <input type="email" id="signup-email" placeholder="Votre email">
-            <input type="password" id="signup-password" placeholder="Votre mot de passe">
-            <button id="signup-btn">S'inscrire</button>
+    <div class="wrapper">
+        <header>
+            <div>
+                <h1>Portail Scolaire RDC</h1>
+                <p>Espace de Gestion et de Synthèse Administrative</p>
+            </div>
+            <div id="auth-status" class="user-pill">Vérification...</div>
+        </header>
+
+        <!-- Formulaire de Connexion -->
+        <div id="login-section" class="card auth-box">
+            <h2>Connexion Gérant</h2>
+            <input type="email" id="admin-email" placeholder="Adresse email">
+            <input type="password" id="admin-password" placeholder="Mot de passe">
+            <button onclick="connecterAdmin()">Se connecter</button>
         </div>
 
-        <div class="box">
-            <h2>Se connecter</h2>
-            <input type="email" id="login-email" placeholder="Votre email">
-            <input type="password" id="login-password" placeholder="Votre mot de passe">
-            <button id="login-btn">Se connecter</button>
+        <!-- Tableau de Bord Gérant (Masqué par défaut tant que non connecté) -->
+        <div id="admin-dashboard" style="display: none;">
+            
+            <div class="card">
+                <h2>📢 Publication & Paramètres</h2>
+                
+                <h3>Publier une actualité</h3>
+                <input type="text" id="titre-article" placeholder="Titre de l'actualité">
+                <textarea id="corps-article" placeholder="Contenu du communiqué..." rows="3"></textarea>
+                <button onclick="publierArticle()">Publier l'article</button>
+
+                <h3>Bandeau d'Alerte Urgente</h3>
+                <input type="text" id="input-urgence" placeholder="Message d'alerte (laisser vide pour masquer)">
+                <button onclick="publierUrgence()">Mettre à jour l'alerte</button>
+            </div>
+
+            <div class="card" style="border-color: #3730a3;">
+                <h2>📊 Clôture & Bilan Annuel</h2>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">
+                    Générez le PDF officiel de l'année scolaire et nettoyez la base de données en toute sécurité.
+                </p>
+
+                <label for="input-annee-scolaire" style="font-size: 13px; color: var(--text-muted);">Année scolaire (ex: 2025-2026) :</label>
+                <input type="text" id="input-annee-scolaire" placeholder="Ex: 2025-2026">
+
+                <button class="btn-success" onclick="telechargerBilanPDF()">📥 1. Télécharger le Bilan PDF</button>
+                <button class="btn-danger" onclick="reinitialiserBaseDeDonnees()" style="margin-top: 10px;">🧹 2. Vider la base pour la nouvelle année</button>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="deconnecterAdmin()" style="background: transparent; border: 1px solid #334155; width: auto; padding: 8px 20px;">Se déconnecter</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- ÉCRAN PRINCIPAL (Une fois connecté) -->
-    <div id="app-content" class="box">
-        <h2>Bienvenue !</h2>
-        <p id="user-info"></p>
-        <button id="save-data-btn" style="background-color: #28a745;">Enregistrer mes données</button>
-        <button id="logout-btn" style="background-color: #dc3545;">Se déconnecter</button>
+    <!-- ZONE PDF CACHÉE -->
+    <div id="rapport-pdf-container">
+        <h1 style="text-align: center;">RAPPORT ANNUEL DE FIN D'ANNÉE SCOLAIRE</h1>
+        <p style="text-align: center; font-size: 14px; color: #555;">Établissement Scolaire - République Démocratique du Congo</p>
+        <p style="text-align: center; font-size: 15px; font-weight: bold; color: #4f46e5;">Année Scolaire : <span id="pdf-annee-scolaire-affichee"></span></p>
+        <p><strong>Date de génération :</strong> <span id="pdf-date-generation"></span></p>
+
+        <div class="pdf-section">
+            <h2>1. Registre des Élèves</h2>
+            <table class="pdf-table">
+                <thead><tr><th>Matricule</th><th>Nom complet</th><th>Classe</th></tr></thead>
+                <tbody id="pdf-table-eleves"></tbody>
+            </table>
+        </div>
+
+        <div class="pdf-section">
+            <h2>2. Corps Professoral</h2>
+            <table class="pdf-table">
+                <thead><tr><th>Nom du Professeur</th><th>Cours / Matière</th></tr></thead>
+                <tbody id="pdf-table-profs"></tbody>
+            </table>
+        </div>
+
+        <div class="pdf-section">
+            <h2>3. Événements de l'Année</h2>
+            <table class="pdf-table">
+                <thead><tr><th>Titre de l'événement</th><th>Date</th></tr></thead>
+                <tbody id="pdf-table-evenements"></tbody>
+            </table>
+        </div>
+
+        <div class="pdf-section">
+            <h2>4. Synthèse des Frais & Finances</h2>
+            <table class="pdf-table">
+                <thead><tr><th>Libellé / Description</th><th>Montant Perçu</th></tr></thead>
+                <tbody id="pdf-table-frais"></tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- SCRIPT FIREBASE -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signOut,
-            onAuthStateChanged 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { 
-            getDatabase, 
-            ref, 
-            set 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        // Vos identifiants officiels Firebase
+    <script>
+        // --- 1. CONFIGURATION FIREBASE (Pensez à insérer vos vraies clés ici) ---
         const firebaseConfig = {
-          apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
-          authDomain: "site-publication.firebaseapp.com",
-          databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
-          projectId: "site-publication",
-          storageBucket: "site-publication.firebasestorage.app",
-          messagingSenderId: "934019778891",
-          appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
+            apiKey: "VOTRE_API_KEY",
+            authDomain: "VOTRE_AUTH_DOMAIN",
+            databaseURL: "VOTRE_DATABASE_URL",
+            projectId: "VOTRE_PROJECT_ID",
+            storageBucket: "VOTRE_STORAGE_BUCKET",
+            messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
+            appId: "VOTRE_APP_ID"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
 
-        const authScreen = document.getElementById("auth-screen");
-        const appContent = document.getElementById("app-content");
-        const userInfo = document.getElementById("user-info");
+        // --- 2. GESTION DE L'AUTHENTIFICATION ---
+        auth.onAuthStateChanged((user) => {
+            const loginSection = document.getElementById('login-section');
+            const dashboard = document.getElementById('admin-dashboard');
+            const status = document.getElementById('auth-status');
 
-        // Gérer l'affichage selon si l'utilisateur est connecté ou non
-        onAuthStateChanged(auth, (user) => {
             if (user) {
-                authScreen.style.display = "none";
-                appContent.style.display = "block";
-                userInfo.innerText = "Connecté avec : " + user.email;
+                status.innerText = "Connecté : " + user.email;
+                status.style.background = "rgba(34, 197, 94, 0.1)";
+                status.style.color = "#4ade80";
+                loginSection.style.display = 'none';
+                dashboard.style.display = 'block';
             } else {
-                authScreen.style.display = "block";
-                appContent.style.display = "none";
+                status.innerText = "Non connecté";
+                status.style.background = "rgba(239, 68, 68, 0.1)";
+                status.style.color = "#f87171";
+                loginSection.style.display = 'block';
+                dashboard.style.display = 'none';
             }
         });
 
-        // Inscription
-        document.getElementById("signup-btn").addEventListener("click", () => {
-            const email = document.getElementById("signup-email").value;
-            const password = document.getElementById("signup-password").value;
+        function connecterAdmin() {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Erreur de connexion : " + err.message));
+        }
 
-            createUserWithEmailAndPassword(auth, email, password)
-                .then(() => alert("Compte créé avec succès !"))
-                .catch((error) => alert("Erreur : " + error.message));
-        });
+        function deconnecterAdmin() {
+            auth.signOut();
+        }
 
-        // Connexion
-        document.getElementById("login-btn").addEventListener("click", () => {
-            const email = document.getElementById("login-email").value;
-            const password = document.getElementById("login-password").value;
+        function publierArticle() {
+            const titre = document.getElementById('titre-article').value;
+            const contenu = document.getElementById('corps-article').value;
+            if (!titre || !contenu) return alert("Remplissez tous les champs !");
+            db.ref('articles').push({ titre, contenu, date: Date.now() }).then(() => {
+                alert("Article publié !");
+                document.getElementById('titre-article').value = '';
+                document.getElementById('corps-article').value = '';
+            });
+        }
 
-            signInWithEmailAndPassword(auth, email, password)
-                .catch((error) => alert("Erreur de connexion : " + error.message));
-        });
+        function publierUrgence() {
+            const message = document.getElementById('input-urgence').value;
+            db.ref('parametres/urgence').set(message || null).then(() => alert("Alerte mise à jour !"));
+        }
 
-        // Enregistrer des données dans la base sous l'ID sécurisé de l'utilisateur
-        document.getElementById("save-data-btn").addEventListener("click", () => {
-            const user = auth.currentUser;
-            if (user) {
-                const userRef = ref(db, 'users/' + user.uid);
-                set(userRef, {
-                    email: user.email,
-                    derniereConnexion: new Date().toISOString()
-                }).then(() => {
-                    alert("Données enregistrées dans votre espace !");
-                }).catch((error) => {
-                    alert("Erreur : " + error.message);
+        // --- 3. TÉLÉCHARGEMENT DU BILAN PDF ---
+        async function telechargerBilanPDF() {
+            const anneeScolaire = document.getElementById('input-annee-scolaire').value.trim();
+            if (!anneeScolaire) {
+                alert("Veuillez d'abord indiquer l'année scolaire (ex: 2025-2026).");
+                return;
+            }
+
+            alert("Génération du rapport PDF en cours...");
+
+            document.getElementById('pdf-annee-scolaire-affichee').innerText = anneeScolaire;
+            document.getElementById('pdf-date-generation').innerText = new Date().toLocaleDateString('fr-FR');
+
+            const snapshot = await db.ref().once('value');
+            const data = snapshot.val() || {};
+
+            remplirTableauPDF('pdf-table-eleves', data.eleves, ['matricule', 'nom', 'classe'], 3);
+            remplirTableauPDF('pdf-table-profs', data.professeurs, ['nom', 'cours'], 2);
+            remplirTableauPDF('pdf-table-evenements', data.evenements, ['titre', 'date'], 2);
+            remplirTableauPDF('pdf-table-frais', data.frais, ['description', 'montant'], 2);
+
+            const elementPDF = document.getElementById('rapport-pdf-container');
+            elementPDF.style.display = 'block';
+
+            const options = {
+                margin: 10,
+                filename: `Rapport_Annuel_${anneeScolaire.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().from(elementPDF).set(options).save().then(() => {
+                elementPDF.style.display = 'none';
+                alert("✅ Bilan PDF téléchargé avec succès !");
+            });
+        }
+
+        // --- 4. NETTOYAGE DE LA BASE DE DONNÉES ---
+        async function reinitialiserBaseDeDonnees() {
+            const confirmation1 = confirm("⚠️ ATTENTION : Voulez-vous vraiment vider la base de données (élèves, profs, événements, frais) ? Assurez-vous d'avoir téléchargé le PDF avant.");
+            if (!confirmation1) return;
+
+            const confirmation2 = prompt("Écrivez le mot SUPPRIMER pour confirmer :");
+            if (confirmation2 !== "SUPPRIMER") {
+                alert("Action annulée.");
+                return;
+            }
+
+            try {
+                await db.ref('eleves').remove();
+                await db.ref('professeurs').remove();
+                await db.ref('evenements').remove();
+                await db.ref('frais').remove();
+
+                alert("🧹 Base de données réinitialisée pour la nouvelle année !");
+                document.getElementById('input-annee-scolaire').value = '';
+            } catch (error) {
+                alert("Erreur : " + error.message);
+            }
+        }
+
+        function remplirTableauPDF(elementId, objetData, champs, colSpan) {
+            const tbody = document.getElementById(elementId);
+            tbody.innerHTML = '';
+            if (!objetData || Object.keys(objetData).length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;">Aucune donnée enregistrée</td></tr>`;
+                return;
+            }
+            for (let key in objetData) {
+                let rowHTML = '<tr>';
+                champs.forEach(champ => {
+                    rowHTML += `<td>${objetData[key][champ] || 'N/A'}</td>`;
                 });
+                rowHTML += '</tr>';
+                tbody.innerHTML += rowHTML;
             }
-        });
-
-        // Déconnexion
-        document.getElementById("logout-btn").addEventListener("click", () => {
-            signOut(auth);
-        });
+        }
     </script>
-
 </body>
 </html>
