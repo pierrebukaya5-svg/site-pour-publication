@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portail Scolaire RDC - Administration Totale</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inclusion de jsPDF et autoTable pour l'export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         body {
@@ -64,7 +67,7 @@
 
                 <button type="button" class="role-card p-5 rounded-2xl border-2 border-slate-100 hover:border-purple-600 bg-slate-50 hover:bg-purple-50/30 transition text-left group w-full" data-role="Gérant">
                     <div class="font-bold text-slate-800 group-hover:text-purple-600 text-base mb-1">🔐 Gérant (Administration)</div>
-                    <div class="text-xs text-slate-500">Gérez les élèves, les enseignants et l'identité de l'école.</div>
+                    <div class="text-xs text-slate-500">Gérez les élèves, les enseignants, les frais et l'école.</div>
                 </button>
             </div>
         </div>
@@ -161,7 +164,6 @@
                 }
 
                 try {
-                    // Récupérer d'abord les infos de l'élève
                     const snapEleves = await get(ref(db, 'eleves'));
                     let infoEleve = null;
                     if (snapEleves.exists()) {
@@ -183,7 +185,6 @@
 
                         if (data.cours) {
                             for (let [coursNom, info] of Object.entries(data.cours)) {
-                                // Extraction d'une note numérique si possible (ex: "16/20" -> 16)
                                 let valeurNumerique = parseFloat(info.note);
                                 if (!isNaN(valeurNumerique)) {
                                     sommeNotes += valeurNumerique;
@@ -200,13 +201,17 @@
                         }
 
                         let moyenne = nombreCours > 0 ? (sommeNotes / nombreCours).toFixed(2) : "N/A";
+                        let statutFrais = infoEleve && infoEleve.frais === "en_ordre" 
+                            ? `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full">Frais : En ordre 🟢</span>`
+                            : `<span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2.5 py-1 rounded-full">Frais : Non en ordre 🔴</span>`;
 
                         resultatDiv.className = "p-5 bg-white rounded-2xl border border-slate-200 text-xs text-slate-700 space-y-4";
                         resultatDiv.innerHTML = `
-                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                 <div>
                                     <h4 class="font-bold text-indigo-900 text-sm">${infoEleve ? infoEleve.nom + ' ' + infoEleve.postnom : 'Élève'}</h4>
-                                    <p class="text-xs text-indigo-600">Classe : ${infoEleve ? infoEleve.classe : 'Non spécifiée'} | Matricule : <span class="font-mono">${matricule}</span></p>
+                                    <p class="text-xs text-indigo-600 mt-0.5">Classe : ${infoEleve ? infoEleve.classe : 'Non spécifiée'} | Matricule : <span class="font-mono">${matricule}</span></p>
+                                    <div class="mt-2">${statutFrais}</div>
                                 </div>
                                 <div class="bg-indigo-600 text-white px-3 py-2 rounded-xl text-center">
                                     <div class="text-[10px] uppercase tracking-wider opacity-80">Moyenne Indicative</div>
@@ -522,7 +527,7 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4">
                         <div>
                             <h2 class="text-xl font-bold text-slate-900">Espace Gérant - Administration</h2>
-                            <p class="text-xs text-slate-500">Gérez l'école, les élèves et les enseignants.</p>
+                            <p class="text-xs text-slate-500">Gérez l'école, les élèves, les frais et les enseignants.</p>
                         </div>
                         <button onclick="location.reload()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-3 py-2 rounded-xl transition text-xs">Déconnexion</button>
                     </div>
@@ -537,7 +542,7 @@
                             </div>
                         </div>
 
-                        <!-- Enregistrement Élève -->
+                        <!-- Enregistrement Élève avec Frais -->
                         <div class="bg-purple-50/50 p-4 sm:p-5 rounded-2xl border border-purple-100">
                             <h3 class="text-sm font-bold uppercase tracking-wider text-purple-900 mb-3">Enregistrer un nouvel élève</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
@@ -545,14 +550,42 @@
                                 <input type="text" id="eleve-postnom" placeholder="Post-nom" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white w-full">
                                 <input type="text" id="eleve-classe" placeholder="Classe & Option (ex: 5ème Math)" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white w-full">
                             </div>
+                            <div class="mb-3">
+                                <label class="block text-xs font-semibold text-purple-900 mb-1">Statut des Frais Scolaires à l'inscription :</label>
+                                <select id="eleve-frais" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                                    <option value="en_ordre">🟢 En ordre avec les frais</option>
+                                    <option value="non_en_ordre">🔴 Non en ordre (Retard)</option>
+                                </select>
+                            </div>
                             <button id="btn-creer-eleve" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-xl transition shadow text-sm">Générer le Matricule & Enregistrer</button>
                         </div>
 
-                        <!-- Liste des Élèves avec Suppression -->
-                        <div>
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3">Gestion des Élèves</h3>
-                            <div id="liste-eleves" class="bg-slate-50 rounded-2xl p-4 border border-slate-200 max-h-48 overflow-y-auto space-y-2 text-xs">
-                                Chargement...
+                        <!-- Liste complète et filtrable des Élèves -->
+                        <div class="bg-slate-50/80 p-4 sm:p-5 rounded-2xl border border-slate-200">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
+                                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800">
+                                    📋 Liste Globale & Frais 
+                                    <span id="compte-eleves-badge" class="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full ml-1">0</span>
+                                </h3>
+                                <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                    <select id="filtre-frais" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white">
+                                        <option value="tous">Tous les élèves</option>
+                                        <option value="en_ordre">🟢 En ordre</option>
+                                        <option value="non_en_ordre">🔴 Non en ordre</option>
+                                    </select>
+                                    <input type="text" id="recherche-eleve-admin" placeholder="Rechercher nom/matricule..." class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white w-full sm:w-48">
+                                </div>
+                            </div>
+
+                            <!-- Bouton d'exportation PDF -->
+                            <div class="mb-3">
+                                <button id="btn-export-pdf" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-xl transition text-xs shadow flex items-center justify-center gap-2">
+                                    <span>📄 Télécharger la liste en PDF (Imprimable)</span>
+                                </button>
+                            </div>
+
+                            <div id="liste-eleves" class="bg-white rounded-2xl p-3 border border-slate-200 max-h-64 overflow-y-auto space-y-2 text-xs divide-y divide-slate-100">
+                                <p class="text-slate-400 italic text-center py-4">Chargement de la liste des élèves...</p>
                             </div>
                         </div>
 
@@ -590,24 +623,166 @@
                 }
             });
 
-            const chargerDonneesAdmin = async () => {
-                const snapEleves = await get(ref(db, 'eleves'));
+            let tousLesEleves = [];
+
+            const obtenirElevesFiltres = () => {
+                const terme = document.getElementById('recherche-eleve-admin').value.toLowerCase();
+                const filtreFraisVal = document.getElementById('filtre-frais').value;
+                
+                return tousLesEleves.filter(e => {
+                    const correspondTexte = e.nom.toLowerCase().includes(terme) || 
+                                          e.postnom.toLowerCase().includes(terme) || 
+                                          e.matricule.toLowerCase().includes(terme) || 
+                                          e.classe.toLowerCase().includes(terme);
+                    
+                    const fraisStatut = e.frais || "non_en_ordre";
+                    const correspondFrais = (filtreFraisVal === "tous") || (fraisStatut === filtreFraisVal);
+
+                    return correspondTexte && correspondFrais;
+                });
+            };
+
+            const afficherListeFiltree = () => {
                 const listeElevesDiv = document.getElementById('liste-eleves');
-                if (snapEleves.exists()) {
+                const badge = document.getElementById('compte-eleves-badge');
+                const elevesFiltres = obtenirElevesFiltres();
+
+                badge.innerText = tousLesEleves.length;
+
+                if (elevesFiltres.length > 0) {
                     let htmlEleves = "";
-                    snapEleves.forEach(child => {
-                        const key = child.key;
-                        const e = child.val();
+                    elevesFiltres.forEach(e => {
+                        const enOrdre = (e.frais === "en_ordre");
                         htmlEleves += `
-                            <div class="p-2.5 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                                <div class="break-words"><strong>${e.nom} ${e.postnom}</strong> - <span class="text-purple-600">${e.classe}</span> <br><span class="font-mono text-indigo-600 break-all">${e.matricule}</span></div>
-                                <button class="btn-supprimer-eleve bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-3 py-1.5 rounded-lg transition font-semibold w-full sm:w-auto text-center" data-key="${key}" data-matricule="${e.matricule}">Supprimer</button>
+                            <div class="pt-2.5 pb-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 hover:bg-slate-50 px-2 rounded-xl transition">
+                                <div class="break-words">
+                                    <strong class="text-slate-900 text-sm">${e.nom} ${e.postnom}</strong> 
+                                    <span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded ml-1">${e.classe}</span>
+                                    <br>
+                                    <span class="font-mono text-indigo-600 font-semibold text-[11px]">${e.matricule}</span>
+                                </div>
+                                <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                                    <button class="btn-toggle-frais px-2.5 py-1 rounded-lg text-[10px] font-bold transition shadow-sm ${enOrdre ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-rose-100 text-rose-800 hover:bg-rose-200'}" data-key="${e.key}" data-frais="${e.frais || 'non_en_ordre'}">
+                                        ${enOrdre ? '🟢 En ordre' : '🔴 Non en ordre'}
+                                    </button>
+                                    <button class="btn-supprimer-eleve bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-2.5 py-1 rounded-lg transition font-semibold text-xs shadow-sm" data-key="${e.key}" data-matricule="${e.matricule}">Supprimer</button>
+                                </div>
                             </div>`;
                     });
                     listeElevesDiv.innerHTML = htmlEleves;
                 } else {
-                    listeElevesDiv.innerHTML = `<p class="text-slate-400 italic">Aucun élève enregistré.</p>`;
+                    listeElevesDiv.innerHTML = `<p class="text-slate-400 italic text-center py-4">Aucun élève trouvé avec ces critères.</p>`;
                 }
+
+                // Gérer le clic pour changer le statut des frais
+                document.querySelectorAll('.btn-toggle-frais').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const key = btn.getAttribute('data-key');
+                        const ancienStatut = btn.getAttribute('data-frais');
+                        const nouveauStatut = (ancienStatut === 'en_ordre') ? 'non_en_ordre' : 'en_ordre';
+                        try {
+                            await update(ref(db, 'eleves/' + key), { frais: nouveauStatut });
+                            chargerDonneesAdmin();
+                        } catch (err) {
+                            alert("Erreur lors de la mise à jour des frais : " + err.message);
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.btn-supprimer-eleve').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const key = btn.getAttribute('data-key');
+                        const matricule = btn.getAttribute('data-matricule');
+                        if (confirm(`Voulez-vous vraiment supprimer cet élève et tous ses résultats associés ?`)) {
+                            try {
+                                await remove(ref(db, 'eleves/' + key));
+                                await remove(ref(db, 'resultats/' + matricule));
+                                alert("Élève supprimé avec succès !");
+                                chargerDonneesAdmin();
+                            } catch (err) {
+                                alert("Erreur lors de la suppression : " + err.message);
+                            }
+                        }
+                    });
+                });
+            };
+
+            // Fonction d'exportation en PDF non modifiable
+            document.getElementById('btn-export-pdf').addEventListener('click', async () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Récupérer le nom actuel de l'école
+                let nomEcole = "PORTAIL SCOLAIRE";
+                try {
+                    const snapNom = await get(ref(db, 'parametres/nomEcole'));
+                    if (snapNom.exists()) nomEcole = snapNom.val();
+                } catch(e) {}
+
+                const elevesData = obtenirElevesFiltres();
+                const filtreFraisVal = document.getElementById('filtre-frais').value;
+                let titreFiltre = "Liste de tous les élèves";
+                if (filtreFraisVal === "en_ordre") titreFiltre = "Liste des élèves en ordre avec les frais";
+                if (filtreFraisVal === "non_en_ordre") titreFiltre = "Liste des élèves non en ordre (Retard)";
+
+                // En-tête du PDF
+                doc.setFontSize(18);
+                doc.setTextColor(15, 23, 42);
+                doc.text(nomEcole.toUpperCase(), 14, 20);
+
+                doc.setFontSize(11);
+                doc.setTextColor(100, 116, 139);
+                doc.text(titreFiltre, 14, 27);
+                doc.text(`Date d'édition : ${new Date().toLocaleDateString()} à ${new Date().toLocaleTimeString()}`, 14, 33);
+
+                // Préparation des données pour le tableau PDF
+                const tableRows = [];
+                elevesData.forEach((el, index) => {
+                    const statutTexte = el.frais === "en_ordre" ? "En ordre" : "Non en ordre";
+                    tableRows.push([
+                        index + 1,
+                        `${el.nom} ${el.postnom}`,
+                        el.classe,
+                        el.matricule,
+                        statutTexte
+                    ]);
+                });
+
+                // Génération du tableau avec autoTable
+                doc.autoTable({
+                    startY: 40,
+                    head: [['N°', 'Nom et Post-nom', 'Classe / Option', 'Matricule', 'Statut Frais']],
+                    body: tableRows,
+                    theme: 'grid',
+                    headStyles: { fillColor: [79, 70, 229] }, // Couleur Indigo
+                    styles: { fontSize: 9, cellPadding: 4 },
+                    didParseCell: function(data) {
+                        // Colorer le texte du statut dans le PDF
+                        if (data.section === 'body' && data.column.index === 4) {
+                            if (data.cell.text[0] === 'En ordre') {
+                                data.cell.styles.textColor = [16, 185, 129]; // Vert
+                                data.cell.styles.fontStyle = 'bold';
+                            } else {
+                                data.cell.styles.textColor = [225, 29, 72]; // Rouge
+                                data.cell.styles.fontStyle = 'bold';
+                            }
+                        }
+                    }
+                });
+
+                // Téléchargement du fichier PDF sécurisé/non modifiable
+                doc.save(`Liste_Eleves_${new Date().toISOString().slice(0,10)}.pdf`);
+            });
+
+            const chargerDonneesAdmin = async () => {
+                const snapEleves = await get(ref(db, 'eleves'));
+                tousLesEleves = [];
+                if (snapEleves.exists()) {
+                    snapEleves.forEach(child => {
+                        tousLesEleves.push({ key: child.key, ...child.val() });
+                    });
+                }
+                afficherListeFiltree();
 
                 const snapComptes = await get(ref(db, 'comptes'));
                 const listeEnsDiv = document.getElementById('liste-enseignants');
@@ -629,23 +804,6 @@
                     listeEnsDiv.innerHTML = `<p class="text-slate-400 italic">Aucun compte enseignant trouvé.</p>`;
                 }
 
-                document.querySelectorAll('.btn-supprimer-eleve').forEach(btn => {
-                    btn.addEventListener('click', async () => {
-                        const key = btn.getAttribute('data-key');
-                        const matricule = btn.getAttribute('data-matricule');
-                        if (confirm(`Voulez-vous vraiment supprimer cet élève et ses résultats ?`)) {
-                            try {
-                                await remove(ref(db, 'eleves/' + key));
-                                await remove(ref(db, 'resultats/' + matricule));
-                                alert("Élève supprimé avec succès !");
-                                chargerDonneesAdmin();
-                            } catch (err) {
-                                alert("Erreur lors de la suppression : " + err.message);
-                            }
-                        }
-                    });
-                });
-
                 document.querySelectorAll('.btn-supprimer-ens').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const key = btn.getAttribute('data-key');
@@ -664,10 +822,14 @@
 
             chargerDonneesAdmin();
 
+            document.getElementById('recherche-eleve-admin').addEventListener('input', () => afficherListeFiltree());
+            document.getElementById('filtre-frais').addEventListener('change', () => afficherListeFiltree());
+
             document.getElementById('btn-creer-eleve').addEventListener('click', async () => {
                 const nom = document.getElementById('eleve-nom').value.trim();
                 const postnom = document.getElementById('eleve-postnom').value.trim();
                 const classe = document.getElementById('eleve-classe').value.trim();
+                const frais = document.getElementById('eleve-frais').value;
 
                 if (!nom || !postnom || !classe) {
                     alert("Veuillez remplir tous les champs.");
@@ -678,7 +840,7 @@
                 const matriculeNettoye = `${nom.substring(0,3).toUpperCase()}-${postnom.substring(0,3).toUpperCase()}-${classe.substring(0,3).toUpperCase()}-${randomCode}`;
 
                 try {
-                    await set(push(ref(db, 'eleves')), { nom, postnom, classe, matricule: matriculeNettoye });
+                    await set(push(ref(db, 'eleves')), { nom, postnom, classe, matricule: matriculeNettoye, frais });
                     alert("Élève enregistré avec succès ! Matricule : " + matriculeNettoye);
                     document.getElementById('eleve-nom').value = "";
                     document.getElementById('eleve-postnom').value = "";
