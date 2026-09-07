@@ -20,8 +20,8 @@
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col justify-between antialiased p-3 sm:p-6">
 
-    <!-- En-tête (Titre masqué) -->
-    <header class="w-full py-4 px-2 hidden">
+    <!-- En-tête : Réservé pour le nom de l'école -->
+    <header class="w-full py-4 px-2">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="bg-indigo-600 text-white p-2.5 rounded-2xl shadow-lg shadow-indigo-500/30">
@@ -31,8 +31,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold text-white tracking-wide">Portail Scolaire RDC</h1>
-                    <p class="text-xs text-indigo-300 font-medium">Contrôle Gérant & Accès Direct</p>
+                    <h1 id="nom-ecole-display" class="text-lg font-bold text-white tracking-wide">Nom de l'École</h1>
+                    <p class="text-xs text-indigo-300 font-medium">Portail Scolaire Officiel</p>
                 </div>
             </div>
         </div>
@@ -43,7 +43,7 @@
 
         <!-- Écran d'accueil : Choix du rôle -->
         <div id="welcome-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 text-center w-full max-w-full">
-            <h2 class="text-2xl font-bold text-slate-900 mb-2">Bienvenue sur le Portail Scolaire</h2>
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">Bienvenue sur le Portail</h2>
             <p class="text-sm text-slate-500 mb-6">Veuillez sélectionner votre profil pour accéder à votre espace :</p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -64,7 +64,7 @@
 
                 <button type="button" class="role-card p-5 rounded-2xl border-2 border-slate-100 hover:border-purple-600 bg-slate-50 hover:bg-purple-50/30 transition text-left group w-full" data-role="Gérant">
                     <div class="font-bold text-slate-800 group-hover:text-purple-600 text-base mb-1">🔐 Gérant (Administration)</div>
-                    <div class="text-xs text-slate-500">Gérez les élèves, enseignants et comptes du système.</div>
+                    <div class="text-xs text-slate-500">Gérez les élèves, enseignants et paramètres de l'école.</div>
                 </button>
             </div>
         </div>
@@ -73,7 +73,7 @@
 
     <!-- Pied de page -->
     <footer class="text-center py-6 text-xs text-slate-300 border-t border-slate-800/50">
-        Portail Scolaire RDC &copy; 2026 — Tous droits réservés
+        <span id="nom-ecole-footer">Portail Scolaire</span> &copy; 2026 — Tous droits réservés
     </footer>
 
     <!-- Logique Firebase & Application -->
@@ -97,6 +97,23 @@
         const db = getDatabase(app);
 
         const container = document.getElementById('main-container');
+        const displayHeader = document.getElementById('nom-ecole-display');
+        const displayFooter = document.getElementById('nom-ecole-footer');
+
+        // Charger le nom de l'école enregistré au démarrage
+        async function chargerNomEcole() {
+            try {
+                const snap = await get(ref(db, 'parametres/nomEcole'));
+                if (snap.exists()) {
+                    const nom = snap.val();
+                    displayHeader.innerText = nom;
+                    displayFooter.innerText = nom;
+                }
+            } catch (err) {
+                console.error("Erreur de chargement du nom de l'école", err);
+            }
+        }
+        chargerNomEcole();
 
         document.querySelectorAll('.role-card').forEach(card => {
             card.addEventListener('click', () => {
@@ -443,19 +460,28 @@
             });
         }
 
-        // Tableau de bord Gérant avec option de suppression d'élèves et d'enseignants
+        // Tableau de bord Gérant avec option de personnalisation du nom de l'école
         async function chargerTableauDeBordGerant(user) {
             container.innerHTML = `
                 <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 w-full max-w-full">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4">
                         <div>
-                            <h2 class="text-xl font-bold text-slate-900">Espace Gérant - Administration Totale</h2>
-                            <p class="text-xs text-slate-500">Contrôlez les élèves et les enseignants de l'école.</p>
+                            <h2 class="text-xl font-bold text-slate-900">Espace Gérant - Administration</h2>
+                            <p class="text-xs text-slate-500">Gérez l'école, les élèves et les enseignants.</p>
                         </div>
                         <button onclick="location.reload()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-3 py-2 rounded-xl transition text-xs">Déconnexion</button>
                     </div>
 
                     <div class="space-y-6">
+                        <!-- Configuration du nom de l'école -->
+                        <div class="bg-indigo-50/50 p-4 sm:p-5 rounded-2xl border border-indigo-100">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-900 mb-3">Nom de l'École dans l'En-tête</h3>
+                            <div class="flex flex-col sm:flex-row gap-2 mb-2">
+                                <input type="text" id="input-nom-ecole" placeholder="Entrez le nom officiel de l'école" class="flex-grow px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                                <button id="btn-save-nom-ecole" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-xs shadow w-full sm:w-auto">Mettre à jour</button>
+                            </div>
+                        </div>
+
                         <!-- Enregistrement Élève -->
                         <div class="bg-purple-50/50 p-4 sm:p-5 rounded-2xl border border-purple-100">
                             <h3 class="text-sm font-bold uppercase tracking-wider text-purple-900 mb-3">Enregistrer un nouvel élève</h3>
@@ -486,8 +512,31 @@
                 </div>
             `;
 
+            // Pré-remplir l'input du nom d'école avec la valeur actuelle
+            try {
+                const snapNom = await get(ref(db, 'parametres/nomEcole'));
+                if (snapNom.exists()) {
+                    document.getElementById('input-nom-ecole').value = snapNom.val();
+                }
+            } catch(e) {}
+
+            document.getElementById('btn-save-nom-ecole').addEventListener('click', async () => {
+                const nouveauNom = document.getElementById('input-nom-ecole').value.trim();
+                if (!nouveauNom) {
+                    alert("Veuillez entrer un nom valide.");
+                    return;
+                }
+                try {
+                    await set(ref(db, 'parametres/nomEcole'), nouveauNom);
+                    displayHeader.innerText = nouveauNom;
+                    displayFooter.innerText = nouveauNom;
+                    alert("Nom de l'école mis à jour avec succès !");
+                } catch (err) {
+                    alert("Erreur : " + err.message);
+                }
+            });
+
             const chargerDonneesAdmin = async () => {
-                // Charger les élèves
                 const snapEleves = await get(ref(db, 'eleves'));
                 const listeElevesDiv = document.getElementById('liste-eleves');
                 if (snapEleves.exists()) {
@@ -506,7 +555,6 @@
                     listeElevesDiv.innerHTML = `<p class="text-slate-400 italic">Aucun élève enregistré.</p>`;
                 }
 
-                // Charger les enseignants (comptes)
                 const snapComptes = await get(ref(db, 'comptes'));
                 const listeEnsDiv = document.getElementById('liste-enseignants');
                 if (snapComptes.exists()) {
@@ -527,9 +575,8 @@
                     listeEnsDiv.innerHTML = `<p class="text-slate-400 italic">Aucun compte enseignant trouvé.</p>`;
                 }
 
-                // Écouteurs de suppression d'élèves
                 document.querySelectorAll('.btn-supprimer-eleve').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
+                    btn.addEventListener('click', async () => {
                         const key = btn.getAttribute('data-key');
                         const matricule = btn.getAttribute('data-matricule');
                         if (confirm(`Voulez-vous vraiment supprimer cet élève et ses résultats ?`)) {
@@ -545,9 +592,8 @@
                     });
                 });
 
-                // Écouteurs de suppression d'enseignants
                 document.querySelectorAll('.btn-supprimer-ens').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
+                    btn.addEventListener('click', async () => {
                         const key = btn.getAttribute('data-key');
                         if (confirm(`Voulez-vous vraiment supprimer cet enseignant du système ?`)) {
                             try {
