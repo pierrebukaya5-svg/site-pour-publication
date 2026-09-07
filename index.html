@@ -219,6 +219,13 @@
                                 </div>
                             </div>
 
+                            <!-- Bouton pour télécharger le bulletin officiel en PDF -->
+                            <div>
+                                <button id="btn-download-bulletin-pdf" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition shadow text-xs flex items-center justify-center gap-2">
+                                    <span>📄 Télécharger le Bulletin Officiel (PDF)</span>
+                                </button>
+                            </div>
+
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
                                     <thead>
@@ -234,6 +241,61 @@
                                 </table>
                             </div>
                         `;
+
+                        // Écouteur pour générer le PDF du bulletin de l'élève
+                        document.getElementById('btn-download-bulletin-pdf').addEventListener('click', async () => {
+                            const { jsPDF } = window.jspdf;
+                            const doc = new jsPDF();
+                            
+                            let nomEcole = "PORTAIL SCOLAIRE RDC";
+                            try {
+                                const snapNom = await get(ref(db, 'parametres/nomEcole'));
+                                if (snapNom.exists()) nomEcole = snapNom.val();
+                            } catch(e) {}
+
+                            // En-tête du bulletin PDF
+                            doc.setFontSize(18);
+                            doc.setTextColor(15, 23, 42);
+                            doc.text(nomEcole.toUpperCase(), 14, 20);
+
+                            doc.setFontSize(12);
+                            doc.setTextColor(79, 70, 229);
+                            doc.text("BULLETIN SCOLAIRE OFFICIEL", 14, 28);
+
+                            doc.setFontSize(10);
+                            doc.setTextColor(100, 116, 139);
+                            doc.text(`Nom de l'élève : ${infoEleve ? infoEleve.nom + ' ' + infoEleve.postnom : 'Inconnu'}`, 14, 38);
+                            doc.text(`Classe : ${infoEleve ? infoEleve.classe : 'N/A'} | Matricule : ${matricule}`, 14, 44);
+                            doc.text(`Statut Frais : ${infoEleve && infoEleve.frais === 'en_ordre' ? 'En ordre (Payé)' : 'Non en ordre (Retard)'}`, 14, 50);
+                            doc.text(`Moyenne Générale : ${moyenne} / 20`, 14, 56);
+                            doc.text(`Date d'édition : ${new Date().toLocaleDateString()}`, 14, 62);
+
+                            // Préparation des lignes du tableau de notes
+                            const tableRows = [];
+                            if (data.cours) {
+                                let index = 1;
+                                for (let [coursNom, info] of Object.entries(data.cours)) {
+                                    tableRows.push([
+                                        index++,
+                                        coursNom,
+                                        info.note,
+                                        info.dateMiseAJour || 'N/A'
+                                    ]);
+                                }
+                            }
+
+                            doc.autoTable({
+                                startY: 70,
+                                head: [['N°', 'Matière / Cours', 'Note obtenue', 'Mise à jour']],
+                                body: tableRows,
+                                theme: 'grid',
+                                headStyles: { fillColor: [79, 70, 229] },
+                                styles: { fontSize: 9, cellPadding: 4 }
+                            });
+
+                            doc.save(`Bulletin_${matricule}.pdf`);
+                        });
+
                     } else {
                         resultatDiv.className = "p-5 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-700 flex items-center justify-center text-amber-600 italic";
                         resultatDiv.innerHTML = `Aucun dossier trouvé pour le matricule : ${matricule}`;
@@ -674,7 +736,6 @@
                     listeElevesDiv.innerHTML = `<p class="text-slate-400 italic text-center py-4">Aucun élève trouvé avec ces critères.</p>`;
                 }
 
-                // Gérer le clic pour changer le statut des frais
                 document.querySelectorAll('.btn-toggle-frais').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const key = btn.getAttribute('data-key');
@@ -707,12 +768,10 @@
                 });
             };
 
-            // Fonction d'exportation en PDF non modifiable
             document.getElementById('btn-export-pdf').addEventListener('click', async () => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Récupérer le nom actuel de l'école
                 let nomEcole = "PORTAIL SCOLAIRE";
                 try {
                     const snapNom = await get(ref(db, 'parametres/nomEcole'));
@@ -725,7 +784,6 @@
                 if (filtreFraisVal === "en_ordre") titreFiltre = "Liste des élèves en ordre avec les frais";
                 if (filtreFraisVal === "non_en_ordre") titreFiltre = "Liste des élèves non en ordre (Retard)";
 
-                // En-tête du PDF
                 doc.setFontSize(18);
                 doc.setTextColor(15, 23, 42);
                 doc.text(nomEcole.toUpperCase(), 14, 20);
@@ -735,7 +793,6 @@
                 doc.text(titreFiltre, 14, 27);
                 doc.text(`Date d'édition : ${new Date().toLocaleDateString()} à ${new Date().toLocaleTimeString()}`, 14, 33);
 
-                // Préparation des données pour le tableau PDF
                 const tableRows = [];
                 elevesData.forEach((el, index) => {
                     const statutTexte = el.frais === "en_ordre" ? "En ordre" : "Non en ordre";
@@ -748,29 +805,26 @@
                     ]);
                 });
 
-                // Génération du tableau avec autoTable
                 doc.autoTable({
                     startY: 40,
                     head: [['N°', 'Nom et Post-nom', 'Classe / Option', 'Matricule', 'Statut Frais']],
                     body: tableRows,
                     theme: 'grid',
-                    headStyles: { fillColor: [79, 70, 229] }, // Couleur Indigo
+                    headStyles: { fillColor: [79, 70, 229] },
                     styles: { fontSize: 9, cellPadding: 4 },
                     didParseCell: function(data) {
-                        // Colorer le texte du statut dans le PDF
                         if (data.section === 'body' && data.column.index === 4) {
                             if (data.cell.text[0] === 'En ordre') {
-                                data.cell.styles.textColor = [16, 185, 129]; // Vert
+                                data.cell.styles.textColor = [16, 185, 129];
                                 data.cell.styles.fontStyle = 'bold';
                             } else {
-                                data.cell.styles.textColor = [225, 29, 72]; // Rouge
+                                data.cell.styles.textColor = [225, 29, 72];
                                 data.cell.styles.fontStyle = 'bold';
                             }
                         }
                     }
                 });
 
-                // Téléchargement du fichier PDF sécurisé/non modifiable
                 doc.save(`Liste_Eleves_${new Date().toISOString().slice(0,10)}.pdf`);
             });
 
