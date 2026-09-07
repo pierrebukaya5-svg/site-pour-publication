@@ -27,7 +27,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-white tracking-wide">Portail Scolaire RDC</h1>
-                    <p class="text-xs text-indigo-300 font-medium">Tableau de Bord & Gestion</p>
+                    <p class="text-xs text-indigo-300 font-medium">Tableau de Bord Cloud & Gestion</p>
                 </div>
             </div>
         </div>
@@ -36,11 +36,11 @@
     <!-- Conteneur Principal -->
     <main id="main-container" class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
 
-        <!-- Vue par défaut : Connexion / Inscription -->
+        <!-- Vue Connexion / Inscription -->
         <div id="auth-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
             <div class="mb-6 text-center">
                 <h2 class="text-2xl font-bold text-slate-900">Espace d'authentification</h2>
-                <p class="text-sm text-slate-500 mt-1">Connectez-vous pour accéder à vos données scolaires.</p>
+                <p class="text-sm text-slate-500 mt-1">Connectez-vous pour synchroniser vos données scolaires.</p>
             </div>
 
             <div class="space-y-4">
@@ -52,10 +52,10 @@
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Mot de passe</label>
                     <input type="password" id="user-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
                 </div>
-                <div id="auth-error" class="text-xs text-rose-500 font-medium hidden"></div>
+                <div id="auth-error" class="text-xs text-rose-500 font-medium hidden p-3 bg-rose-50 rounded-xl"></div>
                 <div class="grid grid-cols-2 gap-4 pt-2">
-                    <button type="button" onclick="inscrire()" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold py-3.5 rounded-xl transition text-sm">S'inscrire</button>
-                    <button type="button" onclick="connecter()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">Se connecter</button>
+                    <button type="button" onclick="inscrireFirebase()" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold py-3.5 rounded-xl transition text-sm">S'inscrire</button>
+                    <button type="button" onclick="connecterFirebase()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">Se connecter</button>
                 </div>
             </div>
         </div>
@@ -67,8 +67,10 @@
         Mon Site - Connexion et Données &copy; 2026 — Tous droits réservés
     </footer>
 
-    <!-- Logique JavaScript Firebase Directe -->
+    <!-- Logique Firebase Cloud -->
     <script>
+        // Remplacez les valeurs ci-dessous par les vôtres si vous utilisez un autre projet Firebase, 
+        // ou laissez celles de votre base de données Realtime actuelle.
         const firebaseConfig = {
             databaseURL: "https://site-publication-default-rtdb.firebaseio.com/"
         };
@@ -79,20 +81,25 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
+        // Vérifier si l'utilisateur est déjà connecté en mémoire
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                afficherTableauDeBord(user);
+            }
+        });
+
         function afficherErreur(message) {
             const errBox = document.getElementById('auth-error');
             if (errBox) {
                 errBox.innerText = message;
                 errBox.classList.remove('hidden');
-            } else {
-                alert(message);
             }
         }
 
-        function inscrire() {
+        function inscrireFirebase() {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-password').value;
-            
+
             if (!email || !pass) {
                 afficherErreur("Veuillez remplir tous les champs.");
                 return;
@@ -107,7 +114,7 @@
                 });
         }
 
-        function connecter() {
+        function connecterFirebase() {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-password').value;
 
@@ -132,14 +139,14 @@
                     <div class="flex justify-between items-center mb-6 border-b pb-4">
                         <div>
                             <h2 class="text-xl font-bold text-slate-900">Bienvenue !</h2>
-                            <p class="text-xs text-slate-500 mt-0.5">Connecté avec : <span class="font-semibold text-indigo-600">${user.email}</span></p>
+                            <p class="text-xs text-slate-500 mt-0.5">Connecté (Cloud) : <span class="font-semibold text-indigo-600">${user.email}</span></p>
                         </div>
                         <button onclick="deconnexion()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-4 py-2 rounded-xl transition text-xs">Se déconnecter</button>
                     </div>
 
                     <!-- Formulaire d'enregistrement des données -->
                     <div class="space-y-4 mb-6">
-                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">Enregistrer mes données scolaires</h3>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">Enregistrer mes données (Synchronisées)</h3>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Votre Rôle</label>
                             <select id="user-role" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50">
@@ -152,45 +159,51 @@
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Informations / Notes / Classe</label>
                             <input type="text" id="user-info" placeholder="Ex: 5ème Année Humanités - Mathématiques" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50">
                         </div>
-                        <button onclick="sauvegarderDonnees('${user.uid}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 text-sm">Enregistrer mes données</button>
+                        <button onclick="sauvegarderDonneesCloud('${user.uid}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 text-sm">Enregistrer dans le Cloud</button>
                     </div>
 
-                    <!-- Zone d'affichage des données enregistrées -->
+                    <!-- Zone d'affichage des données en ligne -->
                     <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Données enregistrées :</h4>
-                        <div id="display-data" class="text-xs text-slate-700 space-y-1">Chargement de vos informations...</div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Données en ligne actuelles :</h4>
+                        <div id="display-data" class="text-xs text-slate-700 space-y-1">Chargement depuis Firebase...</div>
                     </div>
                 </div>
             `;
-            chargerDonnees(user.uid);
+            chargerDonneesCloud(user.uid);
         }
 
-        function sauvegarderDonnees(uid) {
+        function sauvegarderDonneesCloud(uid) {
             const role = document.getElementById('user-role').value;
             const info = document.getElementById('user-info').value;
+            const dateStr = new Date().toLocaleString();
 
             db.ref('utilisateurs/' + uid).set({
                 role: role,
                 info: info,
-                derniereMiseAJour: new Date().toLocaleString()
+                derniereMiseAJour: dateStr
             }).then(() => {
-                alert("Données enregistrées avec succès !");
-                chargerDonnees(uid);
+                alert("Données enregistrées et synchronisées dans le Cloud !");
+                chargerDonneesCloud(uid);
             }).catch(error => {
-                alert("Erreur lors de l'enregistrement : " + error.message);
+                alert("Erreur d'enregistrement : " + error.message);
             });
         }
 
-        function chargerDonnees(uid) {
-            db.ref('utilisateurs/' + uid).once('value').then(snapshot => {
+        function chargerDonneesCloud(uid) {
+            db.ref('utilisateurs/' + uid).on('value', snapshot => {
                 const data = snapshot.val();
                 const displayDiv = document.getElementById('display-data');
                 if (data) {
                     displayDiv.innerHTML = `
                         <p><strong>Rôle :</strong> ${data.role}</p>
-                        <p><strong>Détails :</strong> ${data.info}</p>
+                        <p><strong>Détails :</strong> ${data.info || 'Aucune information saisie'}</p>
                         <p class="text-slate-400 text-[11px] mt-1">Dernière modification : ${data.derniereMiseAJour}</p>
                     `;
+                    // Pré-remplir le sélecteur si les données existent déjà
+                    const roleSelect = document.getElementById('user-role');
+                    const infoInput = document.getElementById('user-info');
+                    if (roleSelect) roleSelect.value = data.role;
+                    if (infoInput && data.info) infoInput.value = data.info;
                 } else {
                     displayDiv.innerHTML = `<p class="italic text-slate-400">Aucune donnée enregistrée pour le moment.</p>`;
                 }
