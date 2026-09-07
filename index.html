@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC - Administration & Synthèse Annuelle</title>
+    <title>Portail Scolaire RDC - Administration & Synthèse</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <!-- Bibliothèque html2pdf pour l'exportation PDF -->
+    <!-- html2pdf -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -20,6 +20,7 @@
             --text-muted: #94a3b8;
             --danger: #ef4444;
             --success: #22c55e;
+            --warning: #f59e0b;
         }
 
         body {
@@ -40,9 +41,7 @@
             margin-bottom: 20px;
         }
 
-        h1, h2, h3 {
-            margin: 0 0 15px 0;
-        }
+        h1, h2, h3 { margin: 0 0 15px 0; }
 
         #bandeau-urgence {
             background-color: var(--danger);
@@ -62,9 +61,7 @@
         }
 
         @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
+            .container { grid-template-columns: 1fr; }
         }
 
         .card {
@@ -95,16 +92,11 @@
             transition: background 0.2s;
         }
 
-        button:hover {
-            background: #4338ca;
-        }
-
-        .btn-success {
-            background: var(--success);
-        }
-        .btn-success:hover {
-            background: #16a34a;
-        }
+        button:hover { background: #4338ca; }
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #16a34a; }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #dc2626; }
 
         .grille-photos {
             display: grid;
@@ -125,22 +117,20 @@
         a { color: #818cf8; text-decoration: none; }
         a:hover { text-decoration: underline; }
 
-        /* Style spécifique pour le rapport PDF (Invisible à l'écran, capturé au moment du téléchargement) */
+        /* Style PDF masqué */
         #rapport-pdf-container {
             background: #ffffff;
             color: #000000;
             padding: 30px;
             font-family: Arial, sans-serif;
-            display: none; /* Masqué par défaut sur la page */
+            display: none;
         }
         #rapport-pdf-container h1, #rapport-pdf-container h2 {
             color: #1e293b;
             border-bottom: 2px solid #4f46e5;
             padding-bottom: 5px;
         }
-        .pdf-section {
-            margin-bottom: 20px;
-        }
+        .pdf-section { margin-bottom: 20px; }
         .pdf-table {
             width: 100%;
             border-collapse: collapse;
@@ -152,14 +142,11 @@
             text-align: left;
             font-size: 12px;
         }
-        .pdf-table th {
-            background-color: #f1f5f9;
-        }
+        .pdf-table th { background-color: #f1f5f9; }
     </style>
 </head>
 <body>
 
-    <!-- Bandeau d'urgence dynamique -->
     <div id="bandeau-urgence">
         ⚠️ <span id="texte-urgence"></span>
     </div>
@@ -202,7 +189,6 @@
         </div>
     </div>
 
-    <!-- Section de Publication & Synthèse Réservée au Gérant -->
     <section class="card" id="admin-panel">
         <h2>🔒 Espace Gérant & Administration</h2>
         <div id="login-form">
@@ -220,74 +206,57 @@
             <button onclick="publierArticle()">Publier l'article</button>
 
             <h3>Mettre à jour l'Alerte Urgence</h3>
-            <input type="text" id="input-urgence" placeholder="Message d'urgence (laisser vide pour masquer)">
+            <input type="text" id="input-urgence" placeholder="Message d'urgence">
             <button onclick="publierUrgence()">Mettre à jour l'alerte</button>
 
             <hr style="border-color: #334155; margin: 20px 0;">
 
-            <h3>📊 Bilan & Synthèse Annuelle</h3>
-            <p style="color: var(--text-muted); font-size: 14px;">Générez et téléchargez le rapport complet de toute l'année scolaire (Élèves, Professeurs, Événements et Frais/Finances) au format PDF.</p>
-            <button class="btn-success" onclick="genererRapportPDF()">📥 Télécharger le Bilan Annuel (PDF)</button>
+            <h3>📊 Clôture & Bilan Annuel</h3>
+            <p style="color: var(--warning); font-size: 13px;">⚠️ <strong>Attention :</strong> En cliquant sur ce bouton, le PDF de synthèse de toute l'année sera téléchargé, et <u>tous les enregistrements</u> (élèves, profs, événements, frais) seront <strong>définitivement effacés</strong> de la base de données pour préparer la nouvelle année.</p>
+            <button class="btn-danger" onclick="cloturerAnneeScolaire()">📥 Télécharger le Bilan & 🧹 Réinitialiser l'Année</button>
         </div>
     </section>
 
-    <!-- ZONE CACHÉE UTILISÉE POUR CONSTRUIRE LE PDF -->
+    <!-- ZONE PDF CACHÉE -->
     <div id="rapport-pdf-container">
         <h1 style="text-align: center;">RAPPORT ANNUEL DE FIN D'ANNÉE SCOLAIRE</h1>
         <p style="text-align: center; font-size: 14px; color: #555;">Établissement Scolaire - République Démocratique du Congo</p>
-        <p><strong>Date de génération :</strong> <span id="pdf-date-generation"></span></p>
+        <p><strong>Date de clôture :</strong> <span id="pdf-date-generation"></span></p>
 
         <div class="pdf-section">
             <h2>1. Registre des Élèves</h2>
             <table class="pdf-table">
-                <thead>
-                    <tr><th>Matricule</th><th>Nom complet</th><th>Classe</th></tr>
-                </thead>
-                <tbody id="pdf-table-eleves">
-                    <!-- Rempli dynamiquement -->
-                </tbody>
+                <thead><tr><th>Matricule</th><th>Nom complet</th><th>Classe</th></tr></thead>
+                <tbody id="pdf-table-eleves"></tbody>
             </table>
         </div>
 
         <div class="pdf-section">
             <h2>2. Corps Professoral</h2>
             <table class="pdf-table">
-                <thead>
-                    <tr><th>Nom du Professeur</th><th>Cours / Matière</th></tr>
-                </thead>
-                <tbody id="pdf-table-profs">
-                    <!-- Rempli dynamiquement -->
-                </tbody>
+                <thead><tr><th>Nom du Professeur</th><th>Cours / Matière</th></tr></thead>
+                <tbody id="pdf-table-profs"></tbody>
             </table>
         </div>
 
         <div class="pdf-section">
             <h2>3. Événements de l'Année</h2>
             <table class="pdf-table">
-                <thead>
-                    <tr><th>Titre de l'événement</th><th>Date</th></tr>
-                </thead>
-                <tbody id="pdf-table-evenements">
-                    <!-- Rempli dynamiquement -->
-                </tbody>
+                <thead><tr><th>Titre de l'événement</th><th>Date</th></tr></thead>
+                <tbody id="pdf-table-evenements"></tbody>
             </table>
         </div>
 
         <div class="pdf-section">
-            <h2>4. Synthèse des Frais Scolaires & Finances</h2>
+            <h2>4. Synthèse des Frais & Finances</h2>
             <table class="pdf-table">
-                <thead>
-                    <tr><th>Libellé / Description</th><th>Montant Perçu</th></tr>
-                </thead>
-                <tbody id="pdf-table-frais">
-                    <!-- Rempli dynamiquement -->
-                </tbody>
+                <thead><tr><th>Libellé / Description</th><th>Montant Perçu</th></tr></thead>
+                <tbody id="pdf-table-frais"></tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // --- 1. CONFIGURATION FIREBASE ---
         const firebaseConfig = {
             apiKey: "VOTRE_API_KEY",
             authDomain: "VOTRE_AUTH_DOMAIN",
@@ -302,7 +271,7 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
-        // --- 2. CHARGEMENT EN TEMPS RÉEL (INTERFACE) ---
+        // Lectures en temps réel pour l'interface publique
         db.ref('articles').on('value', (snapshot) => {
             const container = document.getElementById('liste-articles');
             container.innerHTML = '';
@@ -330,7 +299,7 @@
             const message = snapshot.val();
             const banniere = document.getElementById('bandeau-urgence');
             if (message) {
-                document.getElementById('texte-urgence তাপমাত্রা').innerText = message;
+                document.getElementById('texte-urgence').innerText = message;
                 banniere.style.display = 'block';
             } else {
                 banniere.style.display = 'none';
@@ -356,12 +325,11 @@
             });
         });
 
-        // --- 3. AUTHENTIFICATION ---
+        // Auth
         auth.onAuthStateChanged((user) => {
             const loginForm = document.getElementById('login-form');
             const pubForm = document.getElementById('formulaire-pub');
             const status = document.getElementById('auth-status');
-
             if (user) {
                 status.innerText = "Connecté (Gérant)";
                 loginForm.style.display = 'none';
@@ -384,7 +352,7 @@
             const contenu = document.getElementById('corps-article').value;
             if (!titre || !contenu) return alert("Remplissez tous les champs !");
             db.ref('articles').push({ titre, contenu, date: Date.now() }).then(() => {
-                alert("Publié avec succès !");
+                alert("Publié !");
                 document.getElementById('titre-article').value = '';
                 document.getElementById('corps-article').value = '';
             });
@@ -395,86 +363,77 @@
             db.ref('parametres/urgence').set(message || null).then(() => alert("Alerte mise à jour !"));
         }
 
-        // --- 4. SYSTEME DE SYNTHÈSE ANNUELLE & EXPORT PDF ---
-        async function genererRapportPDF() {
-            alert("Génération du rapport annuel en cours, veuillez patienter quelques secondes...");
-            
+        // --- CLÔTURE ANNUELLE : PDF + SUPPRESSION AUTOMATIQUE ---
+        async function cloturerAnneeScolaire() {
+            // Double confirmation de sécurité
+            const confirmation1 = confirm("⚠️ ATTENTION : Vous êtes sur le point de clôturer l'année. Voulez-vous générer le rapport PDF et EFFACER TOUTES LES DONNÉES de la base ?");
+            if (!confirmation1) return;
+
+            const confirmation2 = prompt("Pour confirmer définitivement la suppression totale des données de l'année, tapez le mot : SUPPRIMER");
+            if (confirmation2 !== "SUPPRIMER") {
+                alert("Opération annulée par sécurité.");
+                return;
+            }
+
+            alert("Génération du rapport et nettoyage en cours... Veuillez patienter.");
             document.getElementById('pdf-date-generation').innerText = new Date().toLocaleDateString('fr-FR');
 
-            // Récupération synchrone des données depuis Firebase pour les tableaux du PDF
+            // 1. Récupération des données actuelles
             const snapshot = await db.ref().once('value');
             const data = snapshot.val() || {};
 
-            // 1. Remplissage Élèves
-            const tbodyEleves = document.getElementById('pdf-table-eleves');
-            tbodyEleves.innerHTML = '';
-            const eleves = data.eleves || {};
-            if (Object.keys(eleves).length === 0) {
-                tbodyEleves.innerHTML = `<tr><td colspan="3" style="text-align:center;">Aucun élève enregistré</td></tr>`;
-            } else {
-                for (let key in eleves) {
-                    const e = eleves[key];
-                    tbodyEleves.innerHTML += `<tr><td>${e.matricule || key}</td><td>${e.nom || 'N/A'}</td><td>${e.classe || 'N/A'}</td></tr>`;
-                }
-            }
+            // Remplissage des tableaux du PDF caché
+            remplirTableauPDF('pdf-table-eleves', data.eleves, ['matricule', 'nom', 'classe'], 3);
+            remplirTableauPDF('pdf-table-profs', data.professeurs, ['nom', 'cours'], 2);
+            remplirTableauPDF('pdf-table-evenements', data.evenements, ['titre', 'date'], 2);
+            remplirTableauPDF('pdf-table-frais', data.frais, ['description', 'montant'], 2);
 
-            // 2. Remplissage Professeurs
-            const tbodyProfs = document.getElementById('pdf-table-profs');
-            tbodyProfs.innerHTML = '';
-            const profs = data.professeurs || {};
-            if (Object.keys(profs).length === 0) {
-                tbodyProfs.innerHTML = `<tr><td colspan="2" style="text-align:center;">Aucun professeur enregistré</td></tr>`;
-            } else {
-                for (let key in profs) {
-                    const p = profs[key];
-                    tbodyProfs.innerHTML += `<tr><td>${p.nom || 'N/A'}</td><td>${p.cours || 'N/A'}</td></tr>`;
-                }
-            }
-
-            // 3. Remplissage Événements
-            const tbodyEvents = document.getElementById('pdf-table-evenements');
-            tbodyEvents.innerHTML = '';
-            const events = data.evenements || {};
-            if (Object.keys(events).length === 0) {
-                tbodyEvents.innerHTML = `<tr><td colspan="2" style="text-align:center;">Aucun événement enregistré</td></tr>`;
-            } else {
-                for (let key in events) {
-                    const ev = events[key];
-                    tbodyEvents.innerHTML += `<tr><td>${ev.titre || 'N/A'}</td><td>${ev.date || 'N/A'}</td></tr>`;
-                }
-            }
-
-            // 4. Remplissage Frais / Finances
-            const tbodyFrais = document.getElementById('pdf-table-frais');
-            tbodyFrais.innerHTML = '';
-            const frais = data.frais || {};
-            if (Object.keys(frais).length === 0) {
-                tbodyFrais.innerHTML = `<tr><td colspan="2" style="text-align:center;">Aucune donnée financière enregistrée</td></tr>`;
-            } else {
-                for (let key in frais) {
-                    const f = frais[key];
-                    tbodyFrais.innerHTML += `<tr><td>${f.description || 'Frais scolarité'}</td><td>${f.montant || 0} USD</td></tr>`;
-                }
-            }
-
-            // Rendre le conteneur visible temporairement pour que la bibliothèque puisse le capturer
             const elementPDF = document.getElementById('rapport-pdf-container');
             elementPDF.style.display = 'block';
 
-            // Options de configuration pour le PDF
             const options = {
-                margin:       10,
-                filename:     'Rapport_Annuel_Scolaire_' + new Date().getFullYear() + '.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                margin: 10,
+                filename: 'Rapport_Cloture_Annuel_' + new Date().getFullYear() + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // Lancer la conversion et le téléchargement PDF
-            html2pdf().from(elementPDF).set(options).save().then(() => {
-                // Masquer à nouveau le conteneur après export
+            // 2. Génération du PDF, puis suppression après téléchargement réussi
+            html2pdf().from(elementPDF).set(options).save().then(async () => {
                 elementPDF.style.display = 'none';
+
+                // 3. Suppression des nœuds dans Firebase
+                try {
+                    await db.ref('eleves').remove();
+                    await db.ref('professeurs').remove();
+                    await db.ref('evenements').remove();
+                    await db.ref('frais').remove();
+                    // On peut aussi nettoyer les articles/galerie si désiré, ou les garder.
+
+                    alert("✅ Rapport PDF téléchargé avec succès et base de données réinitialisée pour la nouvelle année scolaire !");
+                } catch (error) {
+                    alert("Erreur lors de la suppression dans Firebase : " + error.message);
+                }
             });
+        }
+
+        // Fonction utilitaire pour remplir proprement les tableaux du PDF
+        function remplirTableauPDF(elementId, objetData, champs, colSpan) {
+            const tbody = document.getElementById(elementId);
+            tbody.innerHTML = '';
+            if (!objetData || Object.keys(objetData).length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;">Aucune donnée enregistrée</td></tr>`;
+                return;
+            }
+            for (let key in objetData) {
+                let rowHTML = '<tr>';
+                champs.forEach(champ => {
+                    rowHTML += `<td>${objetData[key][champ] || 'N/A'}</td>`;
+                });
+                rowHTML += '</tr>';
+                tbody.innerHTML += rowHTML;
+            }
         }
     </script>
 </body>
