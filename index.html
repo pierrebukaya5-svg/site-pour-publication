@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC - Administration Totale</title>
-    <!-- Firebase SDK (Version compatible Realtime Database) -->
+    <title>Portail Scolaire RDC - Administration & Synthèse Annuelle</title>
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <!-- Bibliothèque html2pdf pour l'exportation PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         :root {
@@ -17,6 +19,7 @@
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --danger: #ef4444;
+            --success: #22c55e;
         }
 
         body {
@@ -37,11 +40,10 @@
             margin-bottom: 20px;
         }
 
-        h1, h2 {
+        h1, h2, h3 {
             margin: 0 0 15px 0;
         }
 
-        /* Bandeau d'alerte */
         #bandeau-urgence {
             background-color: var(--danger);
             color: white;
@@ -73,7 +75,7 @@
             margin-bottom: 20px;
         }
 
-        input, textarea, button {
+        input, textarea, button, select {
             width: 100%;
             padding: 10px;
             margin-top: 8px;
@@ -97,6 +99,13 @@
             background: #4338ca;
         }
 
+        .btn-success {
+            background: var(--success);
+        }
+        .btn-success:hover {
+            background: #16a34a;
+        }
+
         .grille-photos {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -111,21 +120,40 @@
             border-radius: 6px;
         }
 
-        ul {
-            padding-left: 20px;
-        }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 8px; }
+        a { color: #818cf8; text-decoration: none; }
+        a:hover { text-decoration: underline; }
 
-        li {
-            margin-bottom: 8px;
+        /* Style spécifique pour le rapport PDF (Invisible à l'écran, capturé au moment du téléchargement) */
+        #rapport-pdf-container {
+            background: #ffffff;
+            color: #000000;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            display: none; /* Masqué par défaut sur la page */
         }
-
-        a {
-            color: #818cf8;
-            text-decoration: none;
+        #rapport-pdf-container h1, #rapport-pdf-container h2 {
+            color: #1e293b;
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 5px;
         }
-
-        a:hover {
-            text-decoration: underline;
+        .pdf-section {
+            margin-bottom: 20px;
+        }
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .pdf-table th, .pdf-table td {
+            border: 1px solid #cbd5e1;
+            padding: 8px;
+            text-align: left;
+            font-size: 12px;
+        }
+        .pdf-table th {
+            background-color: #f1f5f9;
         }
     </style>
 </head>
@@ -139,46 +167,44 @@
     <header>
         <div>
             <h1>Nom de l'École</h1>
-            <p style="color: var(--text-muted); margin:0;">Portail Scolaire Officiel</p>
+            <p style="color: var(--text-muted); margin:0;">Portail Scolaire Officiel - RDC</p>
         </div>
         <div id="auth-status">Non connecté</div>
     </header>
 
     <div class="container">
-        <!-- Colonne de gauche : Consultation (Public) -->
         <div>
             <section class="card">
                 <h2>📢 Actualités & Communiqués</h2>
-                <div id="liste-articles">Chargement des actualités...</div>
+                <div id="liste-articles">Chargement...</div>
             </section>
 
             <section class="card">
                 <h2>📅 Calendrier & Événements</h2>
-                <div id="liste-evenements">Chargement du calendrier...</div>
+                <div id="liste-evenements">Chargement...</div>
             </section>
         </div>
 
-        <!-- Colonne de droite : Médias & Documents -->
         <div>
             <section class="card">
                 <h2>🖼️ Galerie Photos</h2>
                 <div class="grille-photos" id="grille-galerie">
-                    <p style="color: var(--text-muted);">Aucune photo pour l'instant.</p>
+                    <p style="color: var(--text-muted);">Aucune photo.</p>
                 </div>
             </section>
 
             <section class="card">
                 <h2>📂 Documents Utiles</h2>
                 <ul id="liste-documents">
-                    <li>Aucun document disponible.</li>
+                    <li>Aucun document.</li>
                 </ul>
             </section>
         </div>
     </div>
 
-    <!-- Section de Publication Réservée au Gérant -->
+    <!-- Section de Publication & Synthèse Réservée au Gérant -->
     <section class="card" id="admin-panel">
-        <h2>🔒 Espace Gérant (Publication)</h2>
+        <h2>🔒 Espace Gérant & Administration</h2>
         <div id="login-form">
             <input type="email" id="admin-email" placeholder="Email du gérant">
             <input type="password" id="admin-password" placeholder="Mot de passe">
@@ -186,21 +212,82 @@
         </div>
 
         <div id="formulaire-pub" style="display: none;">
-            <p style="color: #22c55e;">Connecté en tant que Gérant ✅</p>
+            <p style="color: var(--success);">Connecté en tant que Gérant ✅</p>
             
             <h3>Publier un article</h3>
             <input type="text" id="titre-article" placeholder="Titre de l'actualité">
             <textarea id="corps-article" placeholder="Contenu du communiqué..."></textarea>
             <button onclick="publierArticle()">Publier l'article</button>
 
-            <h3>Mettre à jour l'Alerte Urgente</h3>
+            <h3>Mettre à jour l'Alerte Urgence</h3>
             <input type="text" id="input-urgence" placeholder="Message d'urgence (laisser vide pour masquer)">
             <button onclick="publierUrgence()">Mettre à jour l'alerte</button>
+
+            <hr style="border-color: #334155; margin: 20px 0;">
+
+            <h3>📊 Bilan & Synthèse Annuelle</h3>
+            <p style="color: var(--text-muted); font-size: 14px;">Générez et téléchargez le rapport complet de toute l'année scolaire (Élèves, Professeurs, Événements et Frais/Finances) au format PDF.</p>
+            <button class="btn-success" onclick="genererRapportPDF()">📥 Télécharger le Bilan Annuel (PDF)</button>
         </div>
     </section>
 
+    <!-- ZONE CACHÉE UTILISÉE POUR CONSTRUIRE LE PDF -->
+    <div id="rapport-pdf-container">
+        <h1 style="text-align: center;">RAPPORT ANNUEL DE FIN D'ANNÉE SCOLAIRE</h1>
+        <p style="text-align: center; font-size: 14px; color: #555;">Établissement Scolaire - République Démocratique du Congo</p>
+        <p><strong>Date de génération :</strong> <span id="pdf-date-generation"></span></p>
+
+        <div class="pdf-section">
+            <h2>1. Registre des Élèves</h2>
+            <table class="pdf-table">
+                <thead>
+                    <tr><th>Matricule</th><th>Nom complet</th><th>Classe</th></tr>
+                </thead>
+                <tbody id="pdf-table-eleves">
+                    <!-- Rempli dynamiquement -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pdf-section">
+            <h2>2. Corps Professoral</h2>
+            <table class="pdf-table">
+                <thead>
+                    <tr><th>Nom du Professeur</th><th>Cours / Matière</th></tr>
+                </thead>
+                <tbody id="pdf-table-profs">
+                    <!-- Rempli dynamiquement -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pdf-section">
+            <h2>3. Événements de l'Année</h2>
+            <table class="pdf-table">
+                <thead>
+                    <tr><th>Titre de l'événement</th><th>Date</th></tr>
+                </thead>
+                <tbody id="pdf-table-evenements">
+                    <!-- Rempli dynamiquement -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pdf-section">
+            <h2>4. Synthèse des Frais Scolaires & Finances</h2>
+            <table class="pdf-table">
+                <thead>
+                    <tr><th>Libellé / Description</th><th>Montant Perçu</th></tr>
+                </thead>
+                <tbody id="pdf-table-frais">
+                    <!-- Rempli dynamiquement -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <script>
-        // --- 1. CONFIGURATION FIREBASE (Remplacez par vos propres identifiants Firebase) ---
+        // --- 1. CONFIGURATION FIREBASE ---
         const firebaseConfig = {
             apiKey: "VOTRE_API_KEY",
             authDomain: "VOTRE_AUTH_DOMAIN",
@@ -215,16 +302,11 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
-        // --- 2. CHARGEMENT DES DONNÉES EN TEMPS RÉEL ---
-
-        // Actualités
+        // --- 2. CHARGEMENT EN TEMPS RÉEL (INTERFACE) ---
         db.ref('articles').on('value', (snapshot) => {
             const container = document.getElementById('liste-articles');
             container.innerHTML = '';
-            if (!snapshot.exists()) {
-                container.innerHTML = '<p style="color: var(--text-muted);">Aucune actualité publiée.</p>';
-                return;
-            }
+            if (!snapshot.exists()) { container.innerHTML = '<p style="color: var(--text-muted);">Aucune actualité.</p>'; return; }
             snapshot.forEach((child) => {
                 const art = child.val();
                 container.innerHTML += `<div style="margin-bottom:15px; border-bottom:1px solid #334155; padding-bottom:10px;">
@@ -234,62 +316,47 @@
             });
         });
 
-        // Événements
         db.ref('evenements').on('value', (snapshot) => {
             const container = document.getElementById('liste-evenements');
             container.innerHTML = '';
-            if (!snapshot.exists()) {
-                container.innerHTML = '<p style="color: var(--text-muted);">Aucun événement prévu.</p>';
-                return;
-            }
+            if (!snapshot.exists()) { container.innerHTML = '<p style="color: var(--text-muted);">Aucun événement.</p>'; return; }
             snapshot.forEach((child) => {
                 const ev = child.val();
                 container.innerHTML += `<div style="margin-bottom: 10px;">• <strong>${ev.titre}</strong> (${ev.date})</div>`;
             });
         });
 
-        // Alerte Urgence
         db.ref('parametres/urgence').on('value', (snapshot) => {
             const message = snapshot.val();
             const banniere = document.getElementById('bandeau-urgence');
             if (message) {
-                document.getElementById('texte-urgence').innerText = message;
+                document.getElementById('texte-urgence তাপমাত্রা').innerText = message;
                 banniere.style.display = 'block';
             } else {
                 banniere.style.display = 'none';
             }
         });
 
-        // Galerie Photos
         db.ref('galerie').on('value', (snapshot) => {
             const grille = document.getElementById('grille-galerie');
             grille.innerHTML = '';
-            if (!snapshot.exists()) {
-                grille.innerHTML = '<p style="color: var(--text-muted);">Aucune photo.</p>';
-                return;
-            }
+            if (!snapshot.exists()) { grille.innerHTML = '<p style="color: var(--text-muted);">Aucune photo.</p>'; return; }
             snapshot.forEach((child) => {
-                const photo = child.val();
-                grille.innerHTML += `<img src="${photo.url}" alt="Photo">`;
+                grille.innerHTML += `<img src="${child.val().url}" alt="Photo">`;
             });
         });
 
-        // Documents
         db.ref('documents').on('value', (snapshot) => {
             const liste = document.getElementById('liste-documents');
             liste.innerHTML = '';
-            if (!snapshot.exists()) {
-                liste.innerHTML = '<li>Aucun document disponible.</li>';
-                return;
-            }
+            if (!snapshot.exists()) { liste.innerHTML = '<li>Aucun document.</li>'; return; }
             snapshot.forEach((child) => {
                 const doc = child.val();
                 liste.innerHTML += `<li><a href="${doc.url}" target="_blank">📄 ${doc.nom}</a></li>`;
             });
         });
 
-        // --- 3. GESTION DE LA CONNEXION ET DES PUBLICATIONS ---
-
+        // --- 3. AUTHENTIFICATION ---
         auth.onAuthStateChanged((user) => {
             const loginForm = document.getElementById('login-form');
             const pubForm = document.getElementById('formulaire-pub');
@@ -309,37 +376,104 @@
         function connecterAdmin() {
             const email = document.getElementById('admin-email').value;
             const pass = document.getElementById('admin-password').value;
-            auth.signInWithEmailAndPassword(email, pass)
-                .catch((error) => {
-                    alert("Erreur de connexion : " + error.message);
-                });
+            auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Erreur : " + err.message));
         }
 
         function publierArticle() {
             const titre = document.getElementById('titre-article').value;
             const contenu = document.getElementById('corps-article').value;
-            if (!titre || !contenu) {
-                alert("Veuillez remplir tous les champs !");
-                return;
-            }
-            db.ref('articles').push({
-                titre: titre,
-                contenu: contenu,
-                date: Date.now()
-            }).then(() => {
-                alert("Article publié avec succès !");
+            if (!titre || !contenu) return alert("Remplissez tous les champs !");
+            db.ref('articles').push({ titre, contenu, date: Date.now() }).then(() => {
+                alert("Publié avec succès !");
                 document.getElementById('titre-article').value = '';
                 document.getElementById('corps-article').value = '';
-            }).catch((error) => {
-                alert("Erreur de publication (Vérifiez vos règles Firebase) : " + error.message);
             });
         }
 
         function publierUrgence() {
             const message = document.getElementById('input-urgence').value;
-            db.ref('parametres/urgence').set(message || null).then(() => {
-                alert("Bandeau d'alerte mis à jour !");
-                document.getElementById('input-urgence').value = '';
+            db.ref('parametres/urgence').set(message || null).then(() => alert("Alerte mise à jour !"));
+        }
+
+        // --- 4. SYSTEME DE SYNTHÈSE ANNUELLE & EXPORT PDF ---
+        async function genererRapportPDF() {
+            alert("Génération du rapport annuel en cours, veuillez patienter quelques secondes...");
+            
+            document.getElementById('pdf-date-generation').innerText = new Date().toLocaleDateString('fr-FR');
+
+            // Récupération synchrone des données depuis Firebase pour les tableaux du PDF
+            const snapshot = await db.ref().once('value');
+            const data = snapshot.val() || {};
+
+            // 1. Remplissage Élèves
+            const tbodyEleves = document.getElementById('pdf-table-eleves');
+            tbodyEleves.innerHTML = '';
+            const eleves = data.eleves || {};
+            if (Object.keys(eleves).length === 0) {
+                tbodyEleves.innerHTML = `<tr><td colspan="3" style="text-align:center;">Aucun élève enregistré</td></tr>`;
+            } else {
+                for (let key in eleves) {
+                    const e = eleves[key];
+                    tbodyEleves.innerHTML += `<tr><td>${e.matricule || key}</td><td>${e.nom || 'N/A'}</td><td>${e.classe || 'N/A'}</td></tr>`;
+                }
+            }
+
+            // 2. Remplissage Professeurs
+            const tbodyProfs = document.getElementById('pdf-table-profs');
+            tbodyProfs.innerHTML = '';
+            const profs = data.professeurs || {};
+            if (Object.keys(profs).length === 0) {
+                tbodyProfs.innerHTML = `<tr><td colspan="2" style="text-align:center;">Aucun professeur enregistré</td></tr>`;
+            } else {
+                for (let key in profs) {
+                    const p = profs[key];
+                    tbodyProfs.innerHTML += `<tr><td>${p.nom || 'N/A'}</td><td>${p.cours || 'N/A'}</td></tr>`;
+                }
+            }
+
+            // 3. Remplissage Événements
+            const tbodyEvents = document.getElementById('pdf-table-evenements');
+            tbodyEvents.innerHTML = '';
+            const events = data.evenements || {};
+            if (Object.keys(events).length === 0) {
+                tbodyEvents.innerHTML = `<tr><td colspan="2" style="text-align:center;">Aucun événement enregistré</td></tr>`;
+            } else {
+                for (let key in events) {
+                    const ev = events[key];
+                    tbodyEvents.innerHTML += `<tr><td>${ev.titre || 'N/A'}</td><td>${ev.date || 'N/A'}</td></tr>`;
+                }
+            }
+
+            // 4. Remplissage Frais / Finances
+            const tbodyFrais = document.getElementById('pdf-table-frais');
+            tbodyFrais.innerHTML = '';
+            const frais = data.frais || {};
+            if (Object.keys(frais).length === 0) {
+                tbodyFrais.innerHTML = `<tr><td colspan="2" style="text-align:center;">Aucune donnée financière enregistrée</td></tr>`;
+            } else {
+                for (let key in frais) {
+                    const f = frais[key];
+                    tbodyFrais.innerHTML += `<tr><td>${f.description || 'Frais scolarité'}</td><td>${f.montant || 0} USD</td></tr>`;
+                }
+            }
+
+            // Rendre le conteneur visible temporairement pour que la bibliothèque puisse le capturer
+            const elementPDF = document.getElementById('rapport-pdf-container');
+            elementPDF.style.display = 'block';
+
+            // Options de configuration pour le PDF
+            const options = {
+                margin:       10,
+                filename:     'Rapport_Annuel_Scolaire_' + new Date().getFullYear() + '.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Lancer la conversion et le téléchargement PDF
+            html2pdf().from(elementPDF).set(options).save().then(() => {
+                // Masquer à nouveau le conteneur après export
+                elementPDF.style.display = 'none';
             });
         }
     </script>
