@@ -33,17 +33,16 @@
     <!-- Conteneur Principal -->
     <main id="main-container" class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
 
-        <!-- Étape 1 : Authentification / Choix du Rôle par Onglets -->
+        <!-- Étape 1 : Authentification / Choix du Rôle (uniquement pour l'inscription) -->
         <div id="auth-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
             <div class="mb-6 text-center">
                 <h2 class="text-2xl font-bold text-slate-900">Connexion au Portail</h2>
-                <p class="text-sm text-slate-500 mt-1">Sélectionnez votre profil via les onglets et identifiez-vous.</p>
+                <p class="text-sm text-slate-500 mt-1">Sélectionnez votre rôle pour l'inscription ou connectez-vous simplement.</p>
             </div>
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Choisissez votre rôle</label>
-                    <!-- Vrais Onglets Visuels -->
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Rôle (Utile uniquement lors de la création d'un compte)</label>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-100 p-1.5 rounded-2xl" id="tab-container">
                         <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition shadow-sm bg-indigo-600 text-white" data-role="Gérant">Gérant</button>
                         <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition text-slate-600 hover:bg-white/60" data-role="Enseignant">Enseignant</button>
@@ -100,7 +99,6 @@
         const errBox = document.getElementById('auth-error');
         let selectedRole = "Gérant";
 
-        // Gestion des clics sur les onglets de rôle
         const tabButtons = document.querySelectorAll('.tab-btn');
         tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -121,12 +119,19 @@
             }
         }
 
+        // Sécurité renforcée : Lecture du rôle exact stocké dans Firebase
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userSnap = await get(ref(db, 'comptes/' + user.uid));
-                const userData = userSnap.val();
-                const role = userData ? userData.role : selectedRole;
-                afficherTableauDeBord(user, role);
+                if (userSnap.exists()) {
+                    const userData = userSnap.val();
+                    const roleReel = userData.role; // Rôle récupéré de la base de données (infalsifiable)
+                    afficherTableauDeBord(user, roleReel);
+                } else {
+                    // Si le compte n'a pas de rôle enregistré, on le bloque ou déconnecte
+                    signOut(auth);
+                    afficherErreur("Erreur : Aucun profil associé à ce compte dans la base de données.");
+                }
             }
         });
 
@@ -141,6 +146,7 @@
 
             try {
                 const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                // Enregistrement définitif et sécurisé du rôle dans la base de données
                 await set(ref(db, 'comptes/' + cred.user.uid), { email, role: selectedRole });
             } catch (error) {
                 afficherErreur("Erreur d'inscription : " + error.message);
