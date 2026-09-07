@@ -97,6 +97,8 @@
         .btn-success:hover { background: #16a34a; }
         .btn-danger { background: var(--danger); }
         .btn-danger:hover { background: #dc2626; }
+        .btn-secondary { background: #64748b; }
+        .btn-secondary:hover { background: #475569; }
 
         .grid-2 {
             display: grid;
@@ -115,6 +117,23 @@
             border-radius: 20px;
             font-size: 13px;
             font-weight: 500;
+        }
+
+        .table-admin {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .table-admin th, .table-admin td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            text-align: left;
+        }
+
+        .table-admin th {
+            background-color: #f8fafc;
         }
 
         #rapport-pdf-container {
@@ -161,7 +180,7 @@
                 <h2>🔍 Espace Consultation (Élève)</h2>
                 <p style="color: var(--text-muted); font-size: 13px;">Entrez votre matricule sécurisé unique.</p>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="recherche-matricule" placeholder="Ex: KAB-5M-9A8F2" style="margin: 0; text-transform: uppercase;">
+                    <input type="text" id="recherche-matricule" placeholder="Ex: KAB5M9A8F2" style="margin: 0; text-transform: uppercase;">
                     <button onclick="rechercherParMatricule()" style="width: 130px; margin: 0;">Consulter</button>
                 </div>
                 <div id="resultat-recherche-parent" style="margin-top: 15px; font-size: 14px;"></div>
@@ -172,7 +191,7 @@
                 <h2>👨‍🏫 Espace Professeur</h2>
                 <p style="color: var(--text-muted); font-size: 13px;">Entrez votre matricule professeur sécurisé.</p>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="recherche-prof-matricule" placeholder="Ex: MUK-PROF-4B7C1" style="margin: 0; text-transform: uppercase;">
+                    <input type="text" id="recherche-prof-matricule" placeholder="Ex: PROFMUKAB4B7C1" style="margin: 0; text-transform: uppercase;">
                     <button onclick="rechercherProfesseurParMatricule()" style="width: 130px; margin: 0; background: #0ea5e9;">Consulter</button>
                 </div>
                 <div id="resultat-recherche-prof" style="margin-top: 15px; font-size: 14px;"></div>
@@ -215,7 +234,7 @@
                     <input type="text" id="eleve-postnom" placeholder="Post-nom">
                     <input type="text" id="eleve-prenom" placeholder="Prénom">
                     <input type="text" id="eleve-classe" placeholder="Classe (ex: 5Math)">
-                    <button onclick="ajouterEleve()">Générer le matricule complexe & Enregistrer</button>
+                    <button onclick="ajouterEleve()">Générer le matricule & Enregistrer</button>
                 </div>
 
                 <!-- Enregistrement Professeur -->
@@ -225,7 +244,53 @@
                     <input type="text" id="prof-postnom" placeholder="Post-nom">
                     <input type="text" id="prof-prenom" placeholder="Prénom">
                     <input type="text" id="prof-cours" placeholder="Cours dispensé (ex: Mathématiques)">
-                    <button onclick="ajouterProf()">Générer le matricule complexe & Enregistrer</button>
+                    <button onclick="ajouterProf()">Générer le matricule & Enregistrer</button>
+                </div>
+            </div>
+
+            <!-- NOUVELLE SECTION : LISTE DES ENREGISTREMENTS & MATRICULES POUR PARTAGE -->
+            <div class="card">
+                <h2>📋 Gestion & Partage des Matricules</h2>
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">
+                    Consultez la liste de tous les enregistrements actifs et copiez leurs matricules pour les transmettre aux concernés.
+                </p>
+
+                <div class="grid-2">
+                    <div>
+                        <h3 style="font-size: 14px; color: var(--primary);">Élèves enregistrés</h3>
+                        <div style="max-height: 250px; overflow-y: auto;">
+                            <table class="table-admin">
+                                <thead>
+                                    <tr>
+                                        <th>Nom complet</th>
+                                        <th>Classe</th>
+                                        <th>Matricule</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-table-eleves">
+                                    <tr><td colspan="3" style="text-align:center;">Chargement...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="font-size: 14px; color: #0ea5e9;">Professeurs enregistrés</h3>
+                        <div style="max-height: 250px; overflow-y: auto;">
+                            <table class="table-admin">
+                                <thead>
+                                    <tr>
+                                        <th>Nom complet</th>
+                                        <th>Cours</th>
+                                        <th>Matricule</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-table-profs">
+                                    <tr><td colspan="3" style="text-align:center;">Chargement...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -334,7 +399,59 @@
             });
         });
 
-        // Fonction utilitaire pour générer une chaîne aléatoire complexe anti-copie (sans tiret)
+        // Écouteurs en temps réel pour alimenter les listes du gérant
+        db.ref('eleves').on('value', (snapshot) => {
+            const tbody = document.getElementById('admin-table-eleves');
+            tbody.innerHTML = '';
+            if (!snapshot.exists()) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--text-muted);">Aucun élève enregistré.</td></tr>`;
+                return;
+            }
+            snapshot.forEach((child) => {
+                const e = child.val();
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${e.nom} ${e.postnom} ${e.prenom}</td>
+                        <td>${e.classe}</td>
+                        <td>
+                            <code style="background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-weight:bold;">${e.matricule}</code>
+                            <button onclick="copierMatricule('${e.matricule}')" style="margin: 4px 0 0 0; padding: 2px 6px; font-size: 10px; width: auto;">📋 Copier</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+
+        db.ref('professeurs').on('value', (snapshot) => {
+            const tbody = document.getElementById('admin-table-profs');
+            tbody.innerHTML = '';
+            if (!snapshot.exists()) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--text-muted);">Aucun professeur enregistré.</td></tr>`;
+                return;
+            }
+            snapshot.forEach((child) => {
+                const p = child.val();
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${p.nom} ${p.postnom} ${p.prenom}</td>
+                        <td>${p.cours}</td>
+                        <td>
+                            <code style="background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-weight:bold;">${p.matricule}</code>
+                            <button onclick="copierMatricule('${p.matricule}')" style="margin: 4px 0 0 0; padding: 2px 6px; font-size: 10px; width: auto; background: #0ea5e9;">📋 Copier</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+
+        function copierMatricule(matricule) {
+            navigator.clipboard.writeText(matricule).then(() => {
+                alert(`Matricule copié dans le presse-papier :\n${matricule}`);
+            }).catch(err => {
+                alert("Erreur lors de la copie : " + err);
+            });
+        }
+
         function genererCodeAleatoire(longueur = 6) {
             const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let resultat = '';
@@ -344,7 +461,6 @@
             return resultat;
         }
 
-        // Recherche élève
         async function rechercherParMatricule() {
             const matriculeSaisi = document.getElementById('recherche-matricule').value.trim().toUpperCase();
             const resultatDiv = document.getElementById('resultat-recherche-parent');
@@ -374,7 +490,6 @@
             }
         }
 
-        // Recherche prof
         async function rechercherProfesseurParMatricule() {
             const matriculeSaisi = document.getElementById('recherche-prof-matricule').value.trim().toUpperCase();
             const resultatDiv = document.getElementById('resultat-recherche-prof');
@@ -438,7 +553,6 @@
             auth.signOut();
         }
 
-        // Ajout Élève avec matricule complexe (SANS tirets)
         function ajouterEleve() {
             if (!auth.currentUser) return alert("Accès refusé.");
             const nom = document.getElementById('eleve-nom').value.trim();
@@ -457,7 +571,6 @@
             const codeClasse = classe.toUpperCase().replace(/\s+/g, '');
             const randSuffix = genererCodeAleatoire(6);
 
-            // Matricule assemblé sans AUCUN tiret
             const matricule = `${codeNom}${codePost}${codePre}${codeClasse}${randSuffix}`;
 
             db.ref('eleves').push({ matricule, nom, postnom, prenom, classe }).then(() => {
@@ -469,7 +582,6 @@
             });
         }
 
-        // Ajout Professeur avec matricule complexe (SANS tirets)
         function ajouterProf() {
             if (!auth.currentUser) return alert("Accès refusé.");
             const nom = document.getElementById('prof-nom').value.trim();
@@ -486,7 +598,6 @@
             const codePost = postnom.substring(0, 2).toUpperCase();
             const randSuffix = genererCodeAleatoire(6);
 
-            // Matricule assemblé sans AUCUN tiret
             const matricule = `PROF${codeNom}${codePost}${randSuffix}`;
 
             db.ref('professeurs').push({ matricule, nom, postnom, prenom, cours }).then(() => {
