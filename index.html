@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC - Accès Direct</title>
+    <title>Portail Scolaire RDC - Administration Totale</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
@@ -24,7 +24,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-white tracking-wide">Portail Scolaire RDC</h1>
-                    <p class="text-xs text-indigo-300 font-medium">Accès Direct & Sécurisé</p>
+                    <p class="text-xs text-indigo-300 font-medium">Contrôle Gérant & Accès Direct</p>
                 </div>
             </div>
         </div>
@@ -56,7 +56,7 @@
 
                 <button type="button" class="role-card p-5 rounded-2xl border-2 border-slate-100 hover:border-purple-600 bg-slate-50 hover:bg-purple-50/30 transition text-left group" data-role="Gérant">
                     <div class="font-bold text-slate-800 group-hover:text-purple-600 text-base mb-1">🔐 Gérant (Administration)</div>
-                    <div class="text-xs text-slate-500">Espace réservé à l'administration de l'école.</div>
+                    <div class="text-xs text-slate-500">Gérez les élèves, enseignants et comptes du système.</div>
                 </button>
             </div>
         </div>
@@ -71,8 +71,8 @@
     <!-- Logique Firebase & Application -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, push, update } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, push, update, remove } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
@@ -90,7 +90,6 @@
 
         const container = document.getElementById('main-container');
 
-        // Gestion du clic sur les cartes de rôle de l'accueil
         document.querySelectorAll('.role-card').forEach(card => {
             card.addEventListener('click', () => {
                 const role = card.getAttribute('data-role');
@@ -104,7 +103,7 @@
             });
         });
 
-        // 1. Interface de Consultation directe pour Élève et Parent (Par Matricule sans email)
+        // 1. Consultation Élève / Parent
         function afficherInterfaceConsultationDirecte(role) {
             container.innerHTML = `
                 <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
@@ -146,15 +145,9 @@
                             for (let [coursNom, info] of Object.entries(data.cours)) {
                                 htmlCours += `<div class="p-3 mb-2 bg-white rounded-xl border shadow-sm"><strong>📚 ${coursNom}</strong> : <span class="text-indigo-600 font-bold">${info.note}</span> <span class="text-[10px] text-slate-400 block mt-1">Mise à jour : ${info.dateMiseAJour}</span></div>`;
                             }
-                        } else if (data.details) {
-                            htmlCours = `<p class="whitespace-pre-line mb-2 p-3 bg-white rounded-xl border">${data.details}</p>`;
                         }
-
                         resultatDiv.className = "p-5 bg-white rounded-2xl border border-slate-200 text-xs text-slate-700";
-                        resultatDiv.innerHTML = `
-                            <p class="font-bold text-indigo-600 text-sm mb-3">Matricule : ${matricule}</p>
-                            <div class="space-y-1">${htmlCours}</div>
-                        `;
+                        resultatDiv.innerHTML = `<p class="font-bold text-indigo-600 text-sm mb-3">Matricule : ${matricule}</p><div class="space-y-1">${htmlCours}</div>`;
                     } else {
                         resultatDiv.className = "p-5 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-700 flex items-center justify-center text-amber-600 italic";
                         resultatDiv.innerHTML = `Aucun résultat trouvé pour le matricule : ${matricule}`;
@@ -165,7 +158,7 @@
             });
         }
 
-        // 2. Interface Connexion Enseignant
+        // 2. Connexion Enseignant
         function afficherInterfaceEnseignantLogin() {
             container.innerHTML = `
                 <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
@@ -251,7 +244,6 @@
             });
         }
 
-        // Tableau de bord Enseignant avec onglets par classe
         async function chargerTableauDeBordEnseignant(user, coursProf) {
             container.innerHTML = `
                 <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
@@ -291,13 +283,12 @@
             const inputMatriculeCache = document.getElementById('selected-matricule');
 
             let elevesParClasse = {};
-
             if (snapEleves.exists()) {
                 snapEleves.forEach(child => {
                     const e = child.val();
                     const cls = e.classe || "Non classé";
                     if (!elevesParClasse[cls]) elevesParClasse[cls] = [];
-                    elevesParClasse[cls].push(e);
+                    elevesParClasse[cls].push({ id: child.key, ...e });
                 });
 
                 const classes = Object.keys(elevesParClasse);
@@ -370,13 +361,13 @@
             });
         }
 
-        // 3. Interface Gérant (Administration avec mot de passe)
+        // 3. Connexion Gérant
         function afficherInterfaceGerantLogin() {
             container.innerHTML = `
                 <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
                     <div class="flex justify-between items-center mb-6 border-b pb-4">
                         <div>
-                            <h2 class="text-xl font-bold text-slate-900">Espace Gérant - Administration</h2>
+                            <h2 class="text-xl font-bold text-slate-900">Espace Gérant - Connexion</h2>
                             <p class="text-xs text-slate-500">Réservé à l'administration de l'école.</p>
                         </div>
                         <button onclick="location.reload()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold px-3 py-1.5 rounded-xl transition text-xs">Retour</button>
@@ -444,19 +435,20 @@
             });
         }
 
-        // Tableau de bord Gérant (Enregistrement des élèves)
+        // Tableau de bord Gérant avec option de suppression d'élèves et d'enseignants
         async function chargerTableauDeBordGerant(user) {
             container.innerHTML = `
                 <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4">
                         <div>
-                            <h2 class="text-xl font-bold text-slate-900">Espace Gérant - Gestion des Élèves</h2>
-                            <p class="text-xs text-slate-500">Générez les matricules officiels par classe et option.</p>
+                            <h2 class="text-xl font-bold text-slate-900">Espace Gérant - Administration Totale</h2>
+                            <p class="text-xs text-slate-500">Contrôlez les élèves et les enseignants de l'école.</p>
                         </div>
                         <button onclick="location.reload()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-3 py-2 rounded-xl transition text-xs">Déconnexion</button>
                     </div>
 
                     <div class="space-y-6">
+                        <!-- Enregistrement Élève -->
                         <div class="bg-purple-50/50 p-5 rounded-2xl border border-purple-100">
                             <h3 class="text-sm font-bold uppercase tracking-wider text-purple-900 mb-3">Enregistrer un nouvel élève</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
@@ -467,9 +459,18 @@
                             <button id="btn-creer-eleve" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-xl transition shadow text-sm">Générer le Matricule & Enregistrer</button>
                         </div>
 
+                        <!-- Liste des Élèves avec Suppression -->
                         <div>
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3">Liste des élèves et leurs matricules</h3>
-                            <div id="liste-eleves" class="bg-slate-50 rounded-2xl p-4 border border-slate-200 max-h-60 overflow-y-auto space-y-2 text-xs">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3">Gestion des Élèves</h3>
+                            <div id="liste-eleves" class="bg-slate-50 rounded-2xl p-4 border border-slate-200 max-h-48 overflow-y-auto space-y-2 text-xs">
+                                Chargement...
+                            </div>
+                        </div>
+
+                        <!-- Liste des Enseignants avec Suppression -->
+                        <div>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3">Gestion des Enseignants</h3>
+                            <div id="liste-enseignants" class="bg-slate-50 rounded-2xl p-4 border border-slate-200 max-h-48 overflow-y-auto space-y-2 text-xs">
                                 Chargement...
                             </div>
                         </div>
@@ -477,24 +478,83 @@
                 </div>
             `;
 
-            const chargerEleves = async () => {
-                const snap = await get(ref(db, 'eleves'));
-                const listeDiv = document.getElementById('liste-eleves');
-                if (snap.exists()) {
-                    let html = "";
-                    snap.forEach(child => {
+            const chargerDonneesAdmin = async () => {
+                // Charger les élèves
+                const snapEleves = await get(ref(db, 'eleves'));
+                const listeElevesDiv = document.getElementById('liste-eleves');
+                if (snapEleves.exists()) {
+                    let htmlEleves = "";
+                    snapEleves.forEach(child => {
+                        const key = child.key;
                         const e = child.val();
-                        html += `<div class="p-2.5 bg-white rounded-xl border border-slate-200 flex justify-between items-center">
-                            <div><strong>${e.nom} ${e.postnom}</strong> - <span class="text-purple-600">${e.classe}</span></div>
-                            <div class="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg font-mono font-bold">${e.matricule}</div>
-                        </div>`;
+                        htmlEleves += `
+                            <div class="p-2.5 bg-white rounded-xl border border-slate-200 flex justify-between items-center">
+                                <div><strong>${e.nom} ${e.postnom}</strong> - <span class="text-purple-600">${e.classe}</span> <br><span class="font-mono text-indigo-600">${e.matricule}</span></div>
+                                <button class="btn-supprimer-eleve bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-3 py-1.5 rounded-lg transition font-semibold" data-key="${key}" data-matricule="${e.matricule}">Supprimer</button>
+                            </div>`;
                     });
-                    listeDiv.innerHTML = html;
+                    listeElevesDiv.innerHTML = htmlEleves;
                 } else {
-                    listeDiv.innerHTML = `<p class="text-slate-400 italic">Aucun élève enregistré.</p>`;
+                    listeElevesDiv.innerHTML = `<p class="text-slate-400 italic">Aucun élève enregistré.</p>`;
                 }
+
+                // Charger les enseignants (comptes)
+                const snapComptes = await get(ref(db, 'comptes'));
+                const listeEnsDiv = document.getElementById('liste-enseignants');
+                if (snapComptes.exists()) {
+                    let htmlEns = "";
+                    snapComptes.forEach(child => {
+                        const key = child.key;
+                        const compte = child.val();
+                        if (compte.role === 'Enseignant') {
+                            htmlEns += `
+                                <div class="p-2.5 bg-white rounded-xl border border-slate-200 flex justify-between items-center">
+                                    <div><strong>${compte.email}</strong> - <span class="text-emerald-600 font-bold">Cours : ${compte.cours || 'Non défini'}</span></div>
+                                    <button class="btn-supprimer-ens bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-3 py-1.5 rounded-lg transition font-semibold" data-key="${key}">Supprimer</button>
+                                </div>`;
+                        }
+                    });
+                    listeEnsDiv.innerHTML = htmlEns || `<p class="text-slate-400 italic">Aucun enseignant enregistré.</p>`;
+                } else {
+                    listeEnsDiv.innerHTML = `<p class="text-slate-400 italic">Aucun compte enseignant trouvé.</p>`;
+                }
+
+                // Écouteurs de suppression d'élèves
+                document.querySelectorAll('.btn-supprimer-eleve').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const key = btn.getAttribute('data-key');
+                        const matricule = btn.getAttribute('data-matricule');
+                        if (confirm(`Voulez-vous vraiment supprimer cet élève et ses résultats ?`)) {
+                            try {
+                                await remove(ref(db, 'eleves/' + key));
+                                await remove(ref(db, 'resultats/' + matricule));
+                                alert("Élève supprimé avec succès !");
+                                chargerDonneesAdmin();
+                            } catch (err) {
+                                alert("Erreur lors de la suppression : " + err.message);
+                            }
+                        }
+                    });
+                });
+
+                // Écouteurs de suppression d'enseignants
+                document.querySelectorAll('.btn-supprimer-ens').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const key = btn.getAttribute('data-key');
+                        if (confirm(`Voulez-vous vraiment supprimer cet enseignant du système ?`)) {
+                            try {
+                                await remove(ref(db, 'comptes/' + key));
+                                alert("Enseignant supprimé avec succès !");
+                                chargerDonneesAdmin();
+                            } catch (err) {
+                                alert("Erreur lors de la suppression : " + err.message);
+                            }
+                        }
+                    });
+                });
             };
-            chargerEleves();
+
+            chargerDonneesAdmin();
 
             document.getElementById('btn-creer-eleve').addEventListener('click', async () => {
                 const nom = document.getElementById('eleve-nom').value.trim();
@@ -515,7 +575,7 @@
                     document.getElementById('eleve-nom').value = "";
                     document.getElementById('eleve-postnom').value = "";
                     document.getElementById('eleve-classe').value = "";
-                    chargerEleves();
+                    chargerDonneesAdmin();
                 } catch (err) {
                     alert("Erreur : " + err.message);
                 }
