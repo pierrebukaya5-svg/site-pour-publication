@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portail Scolaire RDC - Administration Totale</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inclusion de jsPDF et autoTable pour l'export PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -42,10 +41,10 @@
     </header>
 
     <!-- Conteneur Principal -->
-    <main id="main-container" class="max-w-3xl w-full mx-auto px-2 py-4 flex-grow flex flex-col justify-center">
+    <main id="main-container" class="max-w-3xl w-full mx-auto px-2 py-4 flex-grow flex flex-col justify-center space-y-6">
 
         <!-- Écran d'accueil : Choix du rôle -->
-        <div id="welcome-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 text-center w-full max-w-full">
+        <div id="welcome-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 text-center w-full">
             <h2 class="text-2xl font-bold text-slate-900 mb-2">Bienvenue sur le Portail</h2>
             <p class="text-sm text-slate-500 mb-6">Veuillez sélectionner votre profil pour accéder à votre espace :</p>
 
@@ -69,6 +68,17 @@
                     <div class="font-bold text-slate-800 group-hover:text-purple-600 text-base mb-1">🔐 Gérant (Administration)</div>
                     <div class="text-xs text-slate-500">Gérez les élèves, les enseignants, les frais et l'école.</div>
                 </button>
+            </div>
+        </div>
+
+        <!-- Section publique : Journal des Annonces et Actualités de l'école -->
+        <div id="flux-articles-accueil" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 w-full">
+            <h3 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
+                <span>📢 Journal & Actualités de l'École</span>
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Restez informés des derniers communiqués officiels de la direction.</p>
+            <div id="liste-articles-public" class="space-y-3">
+                <p class="text-xs text-slate-400 italic text-center py-2">Chargement des actualités...</p>
             </div>
         </div>
 
@@ -112,10 +122,40 @@
                     displayFooter.innerText = nom;
                 }
             } catch (err) {
-                console.error("Erreur de chargement du nom de l'école", err);
+                console.error("Erreur", err);
             }
         }
         chargerNomEcole();
+
+        // Charger les articles sur la page d'accueil
+        async function chargerArticlesPublics() {
+            const divArticles = document.getElementById('liste-articles-public');
+            if (!divArticles) return;
+            try {
+                const snap = await get(ref(db, 'articles'));
+                if (snap.exists()) {
+                    let html = "";
+                    snap.forEach(child => {
+                        const art = child.val();
+                        html += `
+                            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                                <div class="flex justify-between items-start gap-2">
+                                    <h4 class="font-bold text-slate-900 text-sm">${art.titre}</h4>
+                                    <span class="text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded">${art.date || ''}</span>
+                                </div>
+                                <p class="text-xs text-slate-600 whitespace-pre-line">${art.contenu}</p>
+                            </div>
+                        `;
+                    });
+                    divArticles.innerHTML = html;
+                } else {
+                    divArticles.innerHTML = `<p class="text-xs text-slate-400 italic text-center py-2">Aucun communiqué publié pour le moment.</p>`;
+                }
+            } catch (err) {
+                divArticles.innerHTML = `<p class="text-xs text-rose-500 italic text-center py-2">Erreur de chargement des actualités.</p>`;
+            }
+        }
+        chargerArticlesPublics();
 
         document.querySelectorAll('.role-card').forEach(card => {
             card.addEventListener('click', () => {
@@ -219,7 +259,6 @@
                                 </div>
                             </div>
 
-                            <!-- Bouton pour télécharger le bulletin officiel en PDF -->
                             <div>
                                 <button id="btn-download-bulletin-pdf" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition shadow text-xs flex items-center justify-center gap-2">
                                     <span>📄 Télécharger le Bulletin Officiel (PDF)</span>
@@ -242,7 +281,6 @@
                             </div>
                         `;
 
-                        // Écouteur pour générer le PDF du bulletin de l'élève
                         document.getElementById('btn-download-bulletin-pdf').addEventListener('click', async () => {
                             const { jsPDF } = window.jspdf;
                             const doc = new jsPDF();
@@ -253,7 +291,6 @@
                                 if (snapNom.exists()) nomEcole = snapNom.val();
                             } catch(e) {}
 
-                            // En-tête du bulletin PDF
                             doc.setFontSize(18);
                             doc.setTextColor(15, 23, 42);
                             doc.text(nomEcole.toUpperCase(), 14, 20);
@@ -270,7 +307,6 @@
                             doc.text(`Moyenne Générale : ${moyenne} / 20`, 14, 56);
                             doc.text(`Date d'édition : ${new Date().toLocaleDateString()}`, 14, 62);
 
-                            // Préparation des lignes du tableau de notes
                             const tableRows = [];
                             if (data.cours) {
                                 let index = 1;
@@ -585,78 +621,92 @@
 
         async function chargerTableauDeBordGerant(user) {
             container.innerHTML = `
-                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 w-full max-w-full">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4">
+                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 w-full max-w-full space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-4">
                         <div>
                             <h2 class="text-xl font-bold text-slate-900">Espace Gérant - Administration</h2>
-                            <p class="text-xs text-slate-500">Gérez l'école, les élèves, les frais et les enseignants.</p>
+                            <p class="text-xs text-slate-500">Gérez l'école, les élèves, les actualités et les enseignants.</p>
                         </div>
                         <button onclick="location.reload()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-3 py-2 rounded-xl transition text-xs">Déconnexion</button>
                     </div>
 
-                    <div class="space-y-6">
-                        <!-- Configuration du nom de l'école -->
-                        <div class="bg-indigo-50/50 p-4 sm:p-5 rounded-2xl border border-indigo-100">
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-900 mb-3">Nom de l'École dans l'En-tête</h3>
-                            <div class="flex flex-col sm:flex-row gap-2 mb-2">
-                                <input type="text" id="input-nom-ecole" placeholder="Entrez le nom officiel de l'école" class="flex-grow px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
-                                <button id="btn-save-nom-ecole" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-xs shadow w-full sm:w-auto">Mettre à jour</button>
+                    <!-- Configuration du nom de l'école -->
+                    <div class="bg-indigo-50/50 p-4 sm:p-5 rounded-2xl border border-indigo-100">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-900 mb-3">Nom de l'École dans l'En-tête</h3>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="input-nom-ecole" placeholder="Entrez le nom officiel de l'école" class="flex-grow px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                            <button id="btn-save-nom-ecole" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-xs shadow w-full sm:w-auto">Mettre à jour</button>
+                        </div>
+                    </div>
+
+                    <!-- Publication d'un Article / Communiqué -->
+                    <div class="bg-amber-50/50 p-4 sm:p-5 rounded-2xl border border-amber-100">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-amber-900 mb-3">Publier un Communiqué / Article</h3>
+                        <div class="space-y-3">
+                            <input type="text" id="art-titre" placeholder="Titre de l'annonce (ex: Début des examens du premier trimestre)" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                            <textarea id="art-contenu" rows="3" placeholder="Contenu du communiqué..." class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"></textarea>
+                            <button id="btn-publier-article" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 rounded-xl transition shadow text-xs">Publier sur le portail</button>
+                        </div>
+                        <!-- Liste des articles existants pour suppression -->
+                        <div class="mt-4 pt-3 border-t border-amber-200">
+                            <p class="text-xs font-bold text-amber-900 mb-2">Annonces actuellement en ligne :</p>
+                            <div id="admin-liste-articles" class="space-y-2 max-h-36 overflow-y-auto">
+                                <span class="text-xs text-slate-400 italic">Chargement...</span>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Enregistrement Élève avec Frais -->
-                        <div class="bg-purple-50/50 p-4 sm:p-5 rounded-2xl border border-purple-100">
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-purple-900 mb-3">Enregistrer un nouvel élève</h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-                                <input type="text" id="eleve-nom" placeholder="Nom" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white w-full">
-                                <input type="text" id="eleve-postnom" placeholder="Post-nom" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white w-full">
-                                <input type="text" id="eleve-classe" placeholder="Classe & Option (ex: 5ème Math)" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white w-full">
-                            </div>
-                            <div class="mb-3">
-                                <label class="block text-xs font-semibold text-purple-900 mb-1">Statut des Frais Scolaires à l'inscription :</label>
-                                <select id="eleve-frais" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
-                                    <option value="en_ordre">🟢 En ordre avec les frais</option>
-                                    <option value="non_en_ordre">🔴 Non en ordre (Retard)</option>
+                    <!-- Enregistrement Élève avec Frais -->
+                    <div class="bg-purple-50/50 p-4 sm:p-5 rounded-2xl border border-purple-100">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-purple-900 mb-3">Enregistrer un nouvel élève</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                            <input type="text" id="eleve-nom" placeholder="Nom" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white w-full">
+                            <input type="text" id="eleve-postnom" placeholder="Post-nom" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white w-full">
+                            <input type="text" id="eleve-classe" placeholder="Classe & Option (ex: 5ème Math)" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white w-full">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-xs font-semibold text-purple-900 mb-1">Statut des Frais Scolaires à l'inscription :</label>
+                            <select id="eleve-frais" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                                <option value="en_ordre">🟢 En ordre avec les frais</option>
+                                <option value="non_en_ordre">🔴 Non en ordre (Retard)</option>
+                            </select>
+                        </div>
+                        <button id="btn-creer-eleve" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-xl transition shadow text-sm">Générer le Matricule & Enregistrer</button>
+                    </div>
+
+                    <!-- Liste complète et filtrable des Élèves -->
+                    <div class="bg-slate-50/80 p-4 sm:p-5 rounded-2xl border border-slate-200">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800">
+                                📋 Liste Globale & Frais 
+                                <span id="compte-eleves-badge" class="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full ml-1">0</span>
+                            </h3>
+                            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                <select id="filtre-frais" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white">
+                                    <option value="tous">Tous les élèves</option>
+                                    <option value="en_ordre">🟢 En ordre</option>
+                                    <option value="non_en_ordre">🔴 Non en ordre</option>
                                 </select>
-                            </div>
-                            <button id="btn-creer-eleve" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-xl transition shadow text-sm">Générer le Matricule & Enregistrer</button>
-                        </div>
-
-                        <!-- Liste complète et filtrable des Élèves -->
-                        <div class="bg-slate-50/80 p-4 sm:p-5 rounded-2xl border border-slate-200">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
-                                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800">
-                                    📋 Liste Globale & Frais 
-                                    <span id="compte-eleves-badge" class="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full ml-1">0</span>
-                                </h3>
-                                <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                                    <select id="filtre-frais" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white">
-                                        <option value="tous">Tous les élèves</option>
-                                        <option value="en_ordre">🟢 En ordre</option>
-                                        <option value="non_en_ordre">🔴 Non en ordre</option>
-                                    </select>
-                                    <input type="text" id="recherche-eleve-admin" placeholder="Rechercher nom/matricule..." class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white w-full sm:w-48">
-                                </div>
-                            </div>
-
-                            <!-- Bouton d'exportation PDF -->
-                            <div class="mb-3">
-                                <button id="btn-export-pdf" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-xl transition text-xs shadow flex items-center justify-center gap-2">
-                                    <span>📄 Télécharger la liste en PDF (Imprimable)</span>
-                                </button>
-                            </div>
-
-                            <div id="liste-eleves" class="bg-white rounded-2xl p-3 border border-slate-200 max-h-64 overflow-y-auto space-y-2 text-xs divide-y divide-slate-100">
-                                <p class="text-slate-400 italic text-center py-4">Chargement de la liste des élèves...</p>
+                                <input type="text" id="recherche-eleve-admin" placeholder="Rechercher nom/matricule..." class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white w-full sm:w-48">
                             </div>
                         </div>
 
-                        <!-- Liste des Enseignants avec Suppression -->
-                        <div>
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3">Gestion des Enseignants</h3>
-                            <div id="liste-enseignants" class="bg-slate-50 rounded-2xl p-4 border border-slate-200 max-h-48 overflow-y-auto space-y-2 text-xs">
-                                Chargement...
-                            </div>
+                        <div class="mb-3">
+                            <button id="btn-export-pdf" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-xl transition text-xs shadow flex items-center justify-center gap-2">
+                                <span>📄 Télécharger la liste en PDF (Imprimable)</span>
+                            </button>
+                        </div>
+
+                        <div id="liste-eleves" class="bg-white rounded-2xl p-3 border border-slate-200 max-h-64 overflow-y-auto space-y-2 text-xs divide-y divide-slate-100">
+                            <p class="text-slate-400 italic text-center py-4">Chargement de la liste des élèves...</p>
+                        </div>
+                    </div>
+
+                    <!-- Liste des Enseignants avec Suppression -->
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3">Gestion des Enseignants</h3>
+                        <div id="liste-enseignants" class="bg-slate-50 rounded-2xl p-4 border border-slate-200 max-h-48 overflow-y-auto space-y-2 text-xs">
+                            Chargement...
                         </div>
                     </div>
                 </div>
@@ -680,6 +730,31 @@
                     displayHeader.innerText = nouveauNom;
                     displayFooter.innerText = nouveauNom;
                     alert("Nom de l'école mis à jour avec succès !");
+                } catch (err) {
+                    alert("Erreur : " + err.message);
+                }
+            });
+
+            // Publication d'un article
+            document.getElementById('btn-publier-article').addEventListener('click', async () => {
+                const titre = document.getElementById('art-titre').value.trim();
+                const contenu = document.getElementById('art-contenu').value.trim();
+
+                if (!titre || !contenu) {
+                    alert("Veuillez remplir le titre et le contenu de l'annonce.");
+                    return;
+                }
+
+                try {
+                    await set(push(ref(db, 'articles')), {
+                        titre,
+                        contenu,
+                        date: new Date().toLocaleDateString() + ' à ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                    });
+                    alert("Annonce publiée avec succès !");
+                    document.getElementById('art-titre').value = "";
+                    document.getElementById('art-contenu').value = "";
+                    chargerDonneesAdmin();
                 } catch (err) {
                     alert("Erreur : " + err.message);
                 }
@@ -745,7 +820,7 @@
                             await update(ref(db, 'eleves/' + key), { frais: nouveauStatut });
                             chargerDonneesAdmin();
                         } catch (err) {
-                            alert("Erreur lors de la mise à jour des frais : " + err.message);
+                            alert("Erreur : " + err.message);
                         }
                     });
                 });
@@ -754,81 +829,51 @@
                     btn.addEventListener('click', async () => {
                         const key = btn.getAttribute('data-key');
                         const matricule = btn.getAttribute('data-matricule');
-                        if (confirm(`Voulez-vous vraiment supprimer cet élève et tous ses résultats associés ?`)) {
+                        if (confirm(`Voulez-vous vraiment supprimer cet élève ?`)) {
                             try {
                                 await remove(ref(db, 'eleves/' + key));
                                 await remove(ref(db, 'resultats/' + matricule));
-                                alert("Élève supprimé avec succès !");
+                                alert("Élève supprimé !");
                                 chargerDonneesAdmin();
                             } catch (err) {
-                                alert("Erreur lors de la suppression : " + err.message);
+                                alert("Erreur : " + err.message);
                             }
                         }
                     });
                 });
             };
 
-            document.getElementById('btn-export-pdf').addEventListener('click', async () => {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                let nomEcole = "PORTAIL SCOLAIRE";
-                try {
-                    const snapNom = await get(ref(db, 'parametres/nomEcole'));
-                    if (snapNom.exists()) nomEcole = snapNom.val();
-                } catch(e) {}
-
-                const elevesData = obtenirElevesFiltres();
-                const filtreFraisVal = document.getElementById('filtre-frais').value;
-                let titreFiltre = "Liste de tous les élèves";
-                if (filtreFraisVal === "en_ordre") titreFiltre = "Liste des élèves en ordre avec les frais";
-                if (filtreFraisVal === "non_en_ordre") titreFiltre = "Liste des élèves non en ordre (Retard)";
-
-                doc.setFontSize(18);
-                doc.setTextColor(15, 23, 42);
-                doc.text(nomEcole.toUpperCase(), 14, 20);
-
-                doc.setFontSize(11);
-                doc.setTextColor(100, 116, 139);
-                doc.text(titreFiltre, 14, 27);
-                doc.text(`Date d'édition : ${new Date().toLocaleDateString()} à ${new Date().toLocaleTimeString()}`, 14, 33);
-
-                const tableRows = [];
-                elevesData.forEach((el, index) => {
-                    const statutTexte = el.frais === "en_ordre" ? "En ordre" : "Non en ordre";
-                    tableRows.push([
-                        index + 1,
-                        `${el.nom} ${el.postnom}`,
-                        el.classe,
-                        el.matricule,
-                        statutTexte
-                    ]);
-                });
-
-                doc.autoTable({
-                    startY: 40,
-                    head: [['N°', 'Nom et Post-nom', 'Classe / Option', 'Matricule', 'Statut Frais']],
-                    body: tableRows,
-                    theme: 'grid',
-                    headStyles: { fillColor: [79, 70, 229] },
-                    styles: { fontSize: 9, cellPadding: 4 },
-                    didParseCell: function(data) {
-                        if (data.section === 'body' && data.column.index === 4) {
-                            if (data.cell.text[0] === 'En ordre') {
-                                data.cell.styles.textColor = [16, 185, 129];
-                                data.cell.styles.fontStyle = 'bold';
-                            } else {
-                                data.cell.styles.textColor = [225, 29, 72];
-                                data.cell.styles.fontStyle = 'bold';
-                            }
-                        }
-                    }
-                });
-
-                doc.save(`Liste_Eleves_${new Date().toISOString().slice(0,10)}.pdf`);
-            });
-
             const chargerDonneesAdmin = async () => {
+                // Charger les articles dans le panneau admin pour suppression
+                const snapArticles = await get(ref(db, 'articles'));
+                const adminArticlesDiv = document.getElementById('admin-liste-articles');
+                if (snapArticles.exists()) {
+                    let htmlArt = "";
+                    snapArticles.forEach(child => {
+                        const artKey = child.key;
+                        const artVal = child.val();
+                        htmlArt += `
+                            <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-amber-200">
+                                <div class="truncate mr-2"><strong class="text-slate-800">${artVal.titre}</strong></div>
+                                <button class="btn-suppr-art bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-2 py-1 rounded text-[10px] font-bold transition shrink-0" data-key="${artKey}">Supprimer</button>
+                            </div>
+                        `;
+                    });
+                    adminArticlesDiv.innerHTML = htmlArt;
+
+                    document.querySelectorAll('.btn-suppr-art').forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            const artKey = btn.getAttribute('data-key');
+                            if (confirm("Voulez-vous supprimer cette annonce ?")) {
+                                await remove(ref(db, 'articles/' + artKey));
+                                chargerDonneesAdmin();
+                            }
+                        });
+                    });
+                } else {
+                    adminArticlesDiv.innerHTML = `<span class="text-slate-400 italic">Aucune annonce publiée.</span>`;
+                }
+
                 const snapEleves = await get(ref(db, 'eleves'));
                 tousLesEleves = [];
                 if (snapEleves.exists()) {
@@ -855,20 +900,15 @@
                     });
                     listeEnsDiv.innerHTML = htmlEns || `<p class="text-slate-400 italic">Aucun enseignant enregistré.</p>`;
                 } else {
-                    listeEnsDiv.innerHTML = `<p class="text-slate-400 italic">Aucun compte enseignant trouvé.</p>`;
+                    listeEnsDiv.innerHTML = `<p class="text-slate-400 italic">Aucun compte enseignant.</p>`;
                 }
 
                 document.querySelectorAll('.btn-supprimer-ens').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const key = btn.getAttribute('data-key');
-                        if (confirm(`Voulez-vous vraiment supprimer cet enseignant du système ?`)) {
-                            try {
-                                await remove(ref(db, 'comptes/' + key));
-                                alert("Enseignant supprimé avec succès !");
-                                chargerDonneesAdmin();
-                            } catch (err) {
-                                alert("Erreur lors de la suppression : " + err.message);
-                            }
+                        if (confirm(`Supprimer cet enseignant ?`)) {
+                            await remove(ref(db, 'comptes/' + key));
+                            chargerDonneesAdmin();
                         }
                     });
                 });
