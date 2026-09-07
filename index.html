@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Site - Connexion et Données</title>
+    <title>Portail Scolaire RDC - Gestion par Matricules</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
@@ -14,7 +14,7 @@
 
     <!-- En-tête -->
     <header class="w-full py-6 px-6">
-        <div class="max-w-5xl mx-auto flex items-center justify-between">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="bg-indigo-600 text-white p-2.5 rounded-2xl shadow-lg shadow-indigo-500/30">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -24,7 +24,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-white tracking-wide">Portail Scolaire RDC</h1>
-                    <p class="text-xs text-indigo-300 font-medium">Tableau de Bord Cloud & Gestion</p>
+                    <p class="text-xs text-indigo-300 font-medium">Système Sécurisé par Matricules</p>
                 </div>
             </div>
         </div>
@@ -33,14 +33,23 @@
     <!-- Conteneur Principal -->
     <main id="main-container" class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
 
-        <!-- Vue Connexion / Inscription -->
+        <!-- Étape 1 : Authentification / Choix du Rôle -->
         <div id="auth-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
             <div class="mb-6 text-center">
-                <h2 class="text-2xl font-bold text-slate-900">Espace d'authentification</h2>
-                <p class="text-sm text-slate-500 mt-1">Connectez-vous pour synchroniser vos données scolaires.</p>
+                <h2 class="text-2xl font-bold text-slate-900">Connexion au Portail</h2>
+                <p class="text-sm text-slate-500 mt-1">Choisissez votre profil et identifiez-vous.</p>
             </div>
 
             <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Votre Rôle</label>
+                    <select id="login-role" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50 font-semibold text-indigo-600">
+                        <option value="Gérant">Gérant (Administration)</option>
+                        <option value="Enseignant">Enseignant</option>
+                        <option value="Élève">Élève</option>
+                        <option value="Parent">Parent</option>
+                    </select>
+                </div>
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Adresse email</label>
                     <input type="email" id="user-email" required placeholder="nom@exemple.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
@@ -63,14 +72,14 @@
 
     <!-- Pied de page -->
     <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-800/50">
-        Mon Site - Connexion et Données &copy; 2026 — Tous droits réservés
+        Portail Scolaire RDC &copy; 2026 — Tous droits réservés
     </footer>
 
-    <!-- Logique Firebase Module Moderne avec Vrais Onglets -->
+    <!-- Logique Firebase & Application -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+        import { getDatabase, ref, set, get, push, update } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
@@ -95,158 +104,233 @@
             }
         }
 
-        onAuthStateChanged(auth, user => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
-                afficherTableauDeBord(user);
+                // Récupérer le rôle enregistré de l'utilisateur
+                const userSnap = await get(ref(db, 'comptes/' + user.uid));
+                const userData = userSnap.val();
+                const role = userData ? userData.role : "Élève";
+                afficherTableauDeBord(user, role);
             }
         });
 
-        document.getElementById('btn-signup').addEventListener('click', () => {
+        document.getElementById('btn-signup').addEventListener('click', async () => {
+            const email = document.getElementById('user-email').value.trim();
+            const pass = document.getElementById('user-password').value;
+            const role = document.getElementById('login-role').value;
+
+            if (!email || !pass) {
+                afficherErreur("Veuillez remplir tous les champs.");
+                return;
+            }
+
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                // Enregistrer le rôle du compte
+                await set(ref(db, 'comptes/' + cred.user.uid), { email, role });
+            } catch (error) {
+                afficherErreur("Erreur d'inscription : " + error.message);
+            }
+        });
+
+        document.getElementById('btn-login').addEventListener('click', async () => {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-password').value;
 
             if (!email || !pass) {
-                afficherErreur("Veuillez remplir l'email et le mot de passe.");
+                afficherErreur("Veuillez remplir tous les champs.");
                 return;
             }
 
-            createUserWithEmailAndPassword(auth, email, pass)
-                .catch(error => {
-                    afficherErreur("Erreur d'inscription : " + error.message);
-                });
-        });
-
-        document.getElementById('btn-login').addEventListener('click', () => {
-            const email = document.getElementById('user-email').value.trim();
-            const pass = document.getElementById('user-password').value;
-
-            if (!email || !pass) {
-                afficherErreur("Veuillez remplir l'email et le mot de passe.");
-                return;
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (error) {
+                afficherErreur("Erreur de connexion : " + error.message);
             }
-
-            signInWithEmailAndPassword(auth, email, pass)
-                .catch(error => {
-                    afficherErreur("Erreur de connexion : " + error.message);
-                });
         });
 
-        async function afficherTableauDeBord(user) {
+        // Affichage dynamique selon le rôle
+        async function afficherTableauDeBord(user, role) {
             const container = document.getElementById('main-container');
-            container.innerHTML = `
+
+            let contenuHtml = `
                 <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/25">
                     <div class="flex justify-between items-center mb-6 border-b pb-4">
                         <div>
-                            <h2 class="text-xl font-bold text-slate-900">Bienvenue !</h2>
-                            <p class="text-xs text-slate-500 mt-0.5">Connecté (Cloud) : <span class="font-semibold text-indigo-600">${user.email}</span></p>
+                            <h2 class="text-xl font-bold text-slate-900">Espace ${role}</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Connecté : <span class="font-semibold text-indigo-600">${user.email}</span></p>
                         </div>
                         <button id="btn-logout" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-4 py-2 rounded-xl transition text-xs">Se déconnecter</button>
                     </div>
-
-                    <div class="space-y-4 mb-6">
-                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">Choisissez votre profil (Onglets)</h3>
-                        
-                        <!-- Vrais Onglets Visuels -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-100 p-1.5 rounded-2xl">
-                            <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition shadow-sm bg-indigo-600 text-white" data-role="Élève">Élève</button>
-                            <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition text-slate-600 hover:bg-white/60" data-role="Enseignant">Enseignant</button>
-                            <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition text-slate-600 hover:bg-white/60" data-role="Parent">Parent</button>
-                            <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition text-slate-600 hover:bg-white/60" data-role="Gérant">Gérant</button>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4 mb-6">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Informations / Notes / Classe</label>
-                            <input type="text" id="user-info" placeholder="Ex: 5ème Année Humanités - Mathématiques" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50">
-                        </div>
-                        <button id="btn-save" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 text-sm">Enregistrer dans le Cloud</button>
-                    </div>
-
-                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Données en ligne actuelles :</h4>
-                        <div id="display-data" class="text-xs text-slate-700 space-y-1">Chargement des données...</div>
-                    </div>
-                </div>
             `;
 
-            let selectedRole = "Élève";
-            const infoInput = document.getElementById('user-info');
-            const displayDiv = document.getElementById('display-data');
-            const tabButtons = document.querySelectorAll('.tab-btn');
+            // 1. ESPACE GÉRANT
+            if (role === "Gérant") {
+                contenuHtml += `
+                    <div class="space-y-6">
+                        <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-900 mb-3">Enregistrer un nouvel élève (Générer un matricule)</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                                <input type="text" id="eleve-nom" placeholder="Nom" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                                <input type="text" id="eleve-postnom" placeholder="Post-nom" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                                <input type="text" id="eleve-classe" placeholder="Classe (ex: 5ème Math)" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                            </div>
+                            <button id="btn-creer-eleve" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition shadow-md text-sm">Générer le Matricule & Enregistrer</button>
+                        </div>
 
-            // Gestion du clic sur les onglets
-            tabButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    tabButtons.forEach(b => {
-                        b.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
-                        b.classList.add('text-slate-600', 'hover:bg-white/60');
-                    });
-                    btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
-                    btn.classList.remove('text-slate-600', 'hover:bg-white/60');
-                    selectedRole = btn.getAttribute('data-role');
-                });
-            });
-
-            // Charger les données existantes
-            try {
-                const snapshot = await get(ref(db, 'utilisateurs/' + user.uid));
-                const data = snapshot.val();
-                if (data) {
-                    if (data.role) {
-                        selectedRole = data.role;
-                        // Activer le bon onglet visuellement
-                        tabButtons.forEach(btn => {
-                            if (btn.getAttribute('data-role') === data.role) {
-                                btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
-                                btn.classList.remove('text-slate-600', 'hover:bg-white/60');
-                            } else {
-                                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
-                                btn.classList.add('text-slate-600', 'hover:bg-white/60');
-                            }
-                        });
-                    }
-                    if (data.info) infoInput.value = data.info;
-                    displayDiv.innerHTML = `
-                        <p><strong>Rôle :</strong> ${data.role}</p>
-                        <p><strong>Détails :</strong> ${data.info || 'Aucune information saisie'}</p>
-                        <p class="text-slate-400 text-[11px] mt-1">Dernière modification : ${data.derniereMiseAJour}</p>
-                    `;
-                } else {
-                    displayDiv.innerHTML = `<p class="italic text-slate-400">Aucune donnée enregistrée pour le moment.</p>`;
-                }
-            } catch (error) {
-                displayDiv.innerHTML = `<p class="text-rose-500">Erreur de chargement des données.</p>`;
+                        <div>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3">Liste des élèves enregistrés et leurs matricules</h3>
+                            <div id="liste-eleves" class="bg-slate-50 rounded-2xl p-4 border border-slate-200 max-h-60 overflow-y-auto space-y-2 text-xs">
+                                Chargement des élèves...
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } 
+            // 2. ESPACE ENSEIGNANT
+            else if (role === "Enseignant") {
+                contenuHtml += `
+                    <div class="space-y-6">
+                        <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-900 mb-3">Saisir ou Mettre à jour les résultats d'un élève</h3>
+                            <div class="space-y-3 mb-3">
+                                <input type="text" id="note-matricule" placeholder="Entrer le matricule exact de l'élève" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white font-mono">
+                                <textarea id="note-details" placeholder="Saisir les résultats (ex: Math: 16/20, Physique: 14/20 - Trimestre 1)" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"></textarea>
+                            </div>
+                            <button id="btn-publier-note" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-md text-sm">Publier les résultats</button>
+                        </div>
+                    </div>
+                `;
+            } 
+            // 3. ESPACE ÉLÈVE OU PARENT
+            else {
+                contenuHtml += `
+                    <div class="space-y-6">
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 mb-3">Consulter les résultats scolaires</h3>
+                            <div class="flex gap-2 mb-4">
+                                <input type="text" id="consult-matricule" placeholder="Entrez votre matricule (ou celui de votre enfant)" class="flex-grow px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white font-mono">
+                                <button id="btn-chercher-notes" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm">Rechercher</button>
+                            </div>
+                            <div id="resultats-affichage" class="p-4 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 min-h-[80px]">
+                                Entrez un matricule valide pour voir les résultats.
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
 
-            // Enregistrement
-            document.getElementById('btn-save').addEventListener('click', async () => {
-                const info = infoInput.value;
-                const dateStr = new Date().toLocaleString();
+            contenuHtml += `</div>`;
+            container.innerHTML = contenuHtml;
 
-                try {
-                    await set(ref(db, 'utilisateurs/' + user.uid), {
-                        role: selectedRole,
-                        info: info,
-                        derniereMiseAJour: dateStr
-                    });
-                    
-                    displayDiv.innerHTML = `
-                        <p><strong>Rôle :</strong> ${selectedRole}</p>
-                        <p><strong>Détails :</strong> ${info || 'Aucune information saisie'}</p>
-                        <p class="text-slate-400 text-[11px] mt-1">Dernière modification : ${dateStr}</p>
-                    `;
-                    alert("Données enregistrées et synchronisées avec succès !");
-                } catch (error) {
-                    alert("Erreur d'enregistrement : " + error.message);
-                }
-            });
-
+            // Déconnexion commune
             document.getElementById('btn-logout').addEventListener('click', () => {
-                signOut(auth).then(() => {
-                    location.reload();
-                });
+                signOut(auth).then(() => { location.reload(); });
             });
+
+            // LOGIQUE SPÉCIFIQUE GÉRANT
+            if (role === "Gérant") {
+                const chargerEleves = async () => {
+                    const snap = await get(ref(db, 'eleves'));
+                    const listeDiv = document.getElementById('liste-eleves');
+                    if (snap.exists()) {
+                        let html = "";
+                        snap.forEach(child => {
+                            const e = child.val();
+                            html += `<div class="p-2.5 bg-white rounded-xl border border-slate-200 flex justify-between items-center">
+                                <div><strong>${e.nom} ${e.postnom}</strong> - <span class="text-indigo-600">${e.classe}</span></div>
+                                <div class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg font-mono font-bold">${e.matricule}</div>
+                            </div>`;
+                        });
+                        listeDiv.innerHTML = html;
+                    } else {
+                        listeDiv.innerHTML = `<p class="text-slate-400 italic">Aucun élève enregistré.</p>`;
+                    }
+                };
+                chargerEleves();
+
+                document.getElementById('btn-creer-eleve').addEventListener('click', async () => {
+                    const nom = document.getElementById('eleve-nom').value.trim();
+                    const postnom = document.getElementById('eleve-postnom').value.trim();
+                    const classe = document.getElementById('eleve-classe').value.trim();
+
+                    if (!nom || !postnom || !classe) {
+                        alert("Veuillez remplir le nom, post-nom et la classe.");
+                        return;
+                    }
+
+                    // Génération d'un matricule unique intégrant nom, post-nom et classe
+                    const randomCode = Math.floor(1000 + Math.random() * 9000);
+                    const matriculeNettoye = `${nom.substring(0,3).toUpperCase()}-${postnom.substring(0,3).toUpperCase()}-${classe.substring(0,3).toUpperCase()}-${randomCode}`;
+
+                    try {
+                        const newRef = push(ref(db, 'eleves'));
+                        await set(newRef, { nom, postnom, classe, matricule: matriculeNettoye });
+                        alert("Élève enregistré avec succès ! Matricule généré : " + matriculeNettoye);
+                        document.getElementById('eleve-nom').value = "";
+                        document.getElementById('eleve-postnom').value = "";
+                        document.getElementById('eleve-classe').value = "";
+                        chargerEleves();
+                    } catch (err) {
+                        alert("Erreur : " + err.message);
+                    }
+                });
+            }
+
+            // LOGIQUE SPÉCIFIQUE ENSEIGNANT
+            if (role === "Enseignant") {
+                document.getElementById('btn-publier-note').addEventListener('click', async () => {
+                    const matricule = document.getElementById('note-matricule').value.trim();
+                    const details = document.getElementById('note-details').value.trim();
+
+                    if (!matricule || !details) {
+                        alert("Veuillez remplir le matricule et les détails des résultats.");
+                        return;
+                    }
+
+                    try {
+                        // Enregistrer les résultats sous la référence du matricule
+                        await set(ref(db, 'resultats/' + matricule), {
+                            details: details,
+                            dateMiseAJour: new Date().toLocaleString()
+                        });
+                        alert("Résultats publiés avec succès pour le matricule " + matricule);
+                        document.getElementById('note-matricule').value = "";
+                        document.getElementById('note-details').value = "";
+                    } catch (err) {
+                        alert("Erreur : " + err.message);
+                    }
+                });
+            }
+
+            // LOGIQUE SPÉCIFIQUE ÉLÈVE / PARENT
+            if (role === "Élève" || role === "Parent") {
+                document.getElementById('btn-chercher-notes').addEventListener('click', async () => {
+                    const matricule = document.getElementById('consult-matricule').value.trim();
+                    const resultatDiv = document.getElementById('resultats-affichage');
+
+                    if (!matricule) {
+                        resultatDiv.innerHTML = `<span class="text-rose-500">Veuillez entrer un matricule.</span>`;
+                        return;
+                    }
+
+                    try {
+                        const snap = await get(ref(db, 'resultats/' + matricule));
+                        if (snap.exists()) {
+                            const data = snap.val();
+                            resultatDiv.innerHTML = `
+                                <p class="font-bold text-indigo-600 mb-1">Matricule : ${matricule}</p>
+                                <p class="whitespace-pre-line mb-2">${data.details}</p>
+                                <p class="text-slate-400 text-[10px]">Dernière mise à jour par l'enseignant : ${data.dateMiseAJour}</p>
+                            `;
+                        } else {
+                            resultatDiv.innerHTML = `<span class="text-amber-600 italic">Aucun résultat trouvé pour ce matricule. Vérifiez le code fourni par le gérant.</span>`;
+                        }
+                    } catch (err) {
+                        resultatDiv.innerHTML = `<span class="text-rose-500">Erreur lors de la recherche.</span>`;
+                    }
+                });
+            }
         }
     </script>
 </body>
