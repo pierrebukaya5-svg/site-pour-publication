@@ -4,945 +4,342 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portail Scolaire RDC - Administration Totale</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- Firebase SDK (Version compatible Realtime Database) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.92)), 
-                        url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
-            background-size: cover;
+        :root {
+            --primary: #4f46e5;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
         }
-        *, *::before, *::after {
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            margin: 0 0 15px 0;
+        }
+
+        /* Bandeau d'alerte */
+        #bandeau-urgence {
+            background-color: var(--danger);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
             box-sizing: border-box;
+        }
+
+        button {
+            background: var(--primary);
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #4338ca;
+        }
+
+        .grille-photos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .grille-photos img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        a {
+            color: #818cf8;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
-<body class="text-slate-800 min-h-screen flex flex-col justify-between antialiased p-3 sm:p-6">
+<body>
 
-    <!-- En-tête : Nom de l'école dynamique -->
-    <header class="w-full py-4 px-2">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-indigo-600 text-white p-2.5 rounded-2xl shadow-lg shadow-indigo-500/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                    </svg>
-                </div>
-                <div>
-                    <h1 id="nom-ecole-display" class="text-lg font-bold text-white tracking-wide">Nom de l'École</h1>
-                    <p class="text-xs text-indigo-300 font-medium">Portail Scolaire Officiel</p>
-                </div>
-            </div>
+    <!-- Bandeau d'urgence dynamique -->
+    <div id="bandeau-urgence">
+        ⚠️ <span id="texte-urgence"></span>
+    </div>
+
+    <header>
+        <div>
+            <h1>Nom de l'École</h1>
+            <p style="color: var(--text-muted); margin:0;">Portail Scolaire Officiel</p>
         </div>
+        <div id="auth-status">Non connecté</div>
     </header>
 
-    <!-- Conteneur Principal -->
-    <main id="main-container" class="max-w-3xl w-full mx-auto px-2 py-4 flex-grow flex flex-col justify-center space-y-6">
+    <div class="container">
+        <!-- Colonne de gauche : Consultation (Public) -->
+        <div>
+            <section class="card">
+                <h2>📢 Actualités & Communiqués</h2>
+                <div id="liste-articles">Chargement des actualités...</div>
+            </section>
 
-        <!-- Écran d'accueil : Choix du rôle -->
-        <div id="welcome-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 text-center w-full">
-            <h2 class="text-2xl font-bold text-slate-900 mb-2">Bienvenue sur le Portail</h2>
-            <p class="text-sm text-slate-500 mb-6">Veuillez sélectionner votre profil pour accéder à votre espace :</p>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button type="button" class="role-card p-5 rounded-2xl border-2 border-slate-100 hover:border-indigo-600 bg-slate-50 hover:bg-indigo-50/30 transition text-left group w-full" data-role="Élève">
-                    <div class="font-bold text-slate-800 group-hover:text-indigo-600 text-base mb-1">👨‍🎓 Élève</div>
-                    <div class="text-xs text-slate-500">Consultez votre bulletin complet et notes par matricule.</div>
-                </button>
-
-                <button type="button" class="role-card p-5 rounded-2xl border-2 border-slate-100 hover:border-indigo-600 bg-slate-50 hover:bg-indigo-50/30 transition text-left group w-full" data-role="Parent">
-                    <div class="font-bold text-slate-800 group-hover:text-indigo-600 text-base mb-1">👪 Parent</div>
-                    <div class="text-xs text-slate-500">Suivez le bulletin et le parcours de votre enfant.</div>
-                </button>
-
-                <button type="button" class="role-card p-5 rounded-2xl border-2 border-slate-100 hover:border-emerald-600 bg-slate-50 hover:bg-emerald-50/30 transition text-left group w-full" data-role="Enseignant">
-                    <div class="font-bold text-slate-800 group-hover:text-emerald-600 text-base mb-1">👨‍🏫 Enseignant</div>
-                    <div class="text-xs text-slate-500">Gérez et publiez les notes de vos cours par classe.</div>
-                </button>
-
-                <button type="button" class="role-card p-5 rounded-2xl border-2 border-slate-100 hover:border-purple-600 bg-slate-50 hover:bg-purple-50/30 transition text-left group w-full" data-role="Gérant">
-                    <div class="font-bold text-slate-800 group-hover:text-purple-600 text-base mb-1">🔐 Gérant (Administration)</div>
-                    <div class="text-xs text-slate-500">Gérez les élèves, les enseignants, les frais et l'école.</div>
-                </button>
-            </div>
+            <section class="card">
+                <h2>📅 Calendrier & Événements</h2>
+                <div id="liste-evenements">Chargement du calendrier...</div>
+            </section>
         </div>
 
-        <!-- Section publique : Journal des Annonces et Actualités de l'école -->
-        <div id="flux-articles-accueil" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 w-full">
-            <h3 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-                <span>📢 Journal & Actualités de l'École</span>
-            </h3>
-            <p class="text-xs text-slate-500 mb-4">Restez informés des derniers communiqués officiels de la direction.</p>
-            <div id="liste-articles-public" class="space-y-3">
-                <p class="text-xs text-slate-400 italic text-center py-2">Chargement des actualités...</p>
-            </div>
+        <!-- Colonne de droite : Médias & Documents -->
+        <div>
+            <section class="card">
+                <h2>🖼️ Galerie Photos</h2>
+                <div class="grille-photos" id="grille-galerie">
+                    <p style="color: var(--text-muted);">Aucune photo pour l'instant.</p>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>📂 Documents Utiles</h2>
+                <ul id="liste-documents">
+                    <li>Aucun document disponible.</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+    <!-- Section de Publication Réservée au Gérant -->
+    <section class="card" id="admin-panel">
+        <h2>🔒 Espace Gérant (Publication)</h2>
+        <div id="login-form">
+            <input type="email" id="admin-email" placeholder="Email du gérant">
+            <input type="password" id="admin-password" placeholder="Mot de passe">
+            <button onclick="connecterAdmin()">Se connecter</button>
         </div>
 
-    </main>
+        <div id="formulaire-pub" style="display: none;">
+            <p style="color: #22c55e;">Connecté en tant que Gérant ✅</p>
+            
+            <h3>Publier un article</h3>
+            <input type="text" id="titre-article" placeholder="Titre de l'actualité">
+            <textarea id="corps-article" placeholder="Contenu du communiqué..."></textarea>
+            <button onclick="publierArticle()">Publier l'article</button>
 
-    <!-- Pied de page -->
-    <footer class="text-center py-6 text-xs text-slate-300 border-t border-slate-800/50">
-        <span id="nom-ecole-footer">Portail Scolaire</span> &copy; 2026 — Tous droits réservés
-    </footer>
+            <h3>Mettre à jour l'Alerte Urgente</h3>
+            <input type="text" id="input-urgence" placeholder="Message d'urgence (laisser vide pour masquer)">
+            <button onclick="publierUrgence()">Mettre à jour l'alerte</button>
+        </div>
+    </section>
 
-    <!-- Logique Firebase & Application -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, push, update, remove } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
-
+    <script>
+        // --- 1. CONFIGURATION FIREBASE (Remplacez par vos propres identifiants Firebase) ---
         const firebaseConfig = {
-            apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
-            authDomain: "site-publication.firebaseapp.com",
-            databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
-            projectId: "site-publication",
-            storageBucket: "site-publication.firebasestorage.app",
-            messagingSenderId: "934019778891",
-            appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
+            apiKey: "VOTRE_API_KEY",
+            authDomain: "VOTRE_AUTH_DOMAIN",
+            databaseURL: "VOTRE_DATABASE_URL",
+            projectId: "VOTRE_PROJECT_ID",
+            storageBucket: "VOTRE_STORAGE_BUCKET",
+            messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
+            appId: "VOTRE_APP_ID"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
 
-        const container = document.getElementById('main-container');
-        const displayHeader = document.getElementById('nom-ecole-display');
-        const displayFooter = document.getElementById('nom-ecole-footer');
+        // --- 2. CHARGEMENT DES DONNÉES EN TEMPS RÉEL ---
 
-        async function chargerNomEcole() {
-            try {
-                const snap = await get(ref(db, 'parametres/nomEcole'));
-                if (snap.exists()) {
-                    const nom = snap.val();
-                    displayHeader.innerText = nom;
-                    displayFooter.innerText = nom;
-                }
-            } catch (err) {
-                console.error("Erreur", err);
+        // Actualités
+        db.ref('articles').on('value', (snapshot) => {
+            const container = document.getElementById('liste-articles');
+            container.innerHTML = '';
+            if (!snapshot.exists()) {
+                container.innerHTML = '<p style="color: var(--text-muted);">Aucune actualité publiée.</p>';
+                return;
             }
-        }
-        chargerNomEcole();
-
-        // Charger les articles sur la page d'accueil
-        async function chargerArticlesPublics() {
-            const divArticles = document.getElementById('liste-articles-public');
-            if (!divArticles) return;
-            try {
-                const snap = await get(ref(db, 'articles'));
-                if (snap.exists()) {
-                    let html = "";
-                    snap.forEach(child => {
-                        const art = child.val();
-                        html += `
-                            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
-                                <div class="flex justify-between items-start gap-2">
-                                    <h4 class="font-bold text-slate-900 text-sm">${art.titre}</h4>
-                                    <span class="text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded">${art.date || ''}</span>
-                                </div>
-                                <p class="text-xs text-slate-600 whitespace-pre-line">${art.contenu}</p>
-                            </div>
-                        `;
-                    });
-                    divArticles.innerHTML = html;
-                } else {
-                    divArticles.innerHTML = `<p class="text-xs text-slate-400 italic text-center py-2">Aucun communiqué publié pour le moment.</p>`;
-                }
-            } catch (err) {
-                divArticles.innerHTML = `<p class="text-xs text-rose-500 italic text-center py-2">Erreur de chargement des actualités.</p>`;
-            }
-        }
-        chargerArticlesPublics();
-
-        document.querySelectorAll('.role-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const role = card.getAttribute('data-role');
-                if (role === "Élève" || role === "Parent") {
-                    afficherInterfaceConsultationDirecte(role);
-                } else if (role === "Enseignant") {
-                    afficherInterfaceEnseignantLogin();
-                } else if (role === "Gérant") {
-                    afficherInterfaceGerantLogin();
-                }
+            snapshot.forEach((child) => {
+                const art = child.val();
+                container.innerHTML += `<div style="margin-bottom:15px; border-bottom:1px solid #334155; padding-bottom:10px;">
+                    <strong>${art.titre}</strong>
+                    <p style="margin:5px 0 0 0; color: var(--text-muted);">${art.contenu}</p>
+                </div>`;
             });
         });
 
-        // 1. Consultation Bulletin Élève / Parent
-        function afficherInterfaceConsultationDirecte(role) {
-            container.innerHTML = `
-                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 w-full max-w-full">
-                    <div class="flex justify-between items-center mb-6 border-b pb-4">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-900">Espace ${role} - Bulletin Scolaire</h2>
-                            <p class="text-xs text-slate-500">Entrez le matricule de l'élève pour consulter ses notes officielles.</p>
-                        </div>
-                        <button onclick="location.reload()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold px-3 py-1.5 rounded-xl transition text-xs">Retour</button>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="text" id="consult-matricule" placeholder="Entrez le matricule (ex: KAN-MAT-5TH-1234)" class="flex-grow px-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50 font-mono w-full">
-                            <button id="btn-chercher-notes" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition text-sm shadow w-full sm:w-auto">Afficher le Bulletin</button>
-                        </div>
-                        <div id="resultats-affichage" class="p-5 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-700 min-h-[140px] flex items-center justify-center text-slate-400 italic">
-                            En attente de la saisie d'un matricule...
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('btn-chercher-notes').addEventListener('click', async () => {
-                const matricule = document.getElementById('consult-matricule').value.trim();
-                const resultatDiv = document.getElementById('resultats-affichage');
-
-                if (!matricule) {
-                    resultatDiv.innerHTML = `<span class="text-rose-500 not-italic">Veuillez entrer un matricule valide.</span>`;
-                    return;
-                }
-
-                try {
-                    const snapEleves = await get(ref(db, 'eleves'));
-                    let infoEleve = null;
-                    if (snapEleves.exists()) {
-                        snapEleves.forEach(child => {
-                            const val = child.val();
-                            if (val.matricule === matricule) {
-                                infoEleve = val;
-                            }
-                        });
-                    }
-
-                    const snapResultats = await get(ref(db, 'resultats/' + matricule));
-                    
-                    if (snapResultats.exists() || infoEleve) {
-                        const data = snapResultats.exists() ? snapResultats.val() : {};
-                        let htmlCours = "";
-                        let sommeNotes = 0;
-                        let nombreCours = 0;
-
-                        if (data.cours) {
-                            for (let [coursNom, info] of Object.entries(data.cours)) {
-                                let valeurNumerique = parseFloat(info.note);
-                                if (!isNaN(valeurNumerique)) {
-                                    sommeNotes += valeurNumerique;
-                                    nombreCours++;
-                                }
-
-                                htmlCours += `
-                                    <tr class="border-b border-slate-100 hover:bg-slate-50">
-                                        <td class="p-3 font-semibold text-slate-800">${coursNom}</td>
-                                        <td class="p-3 text-indigo-600 font-bold">${info.note}</td>
-                                        <td class="p-3 text-[10px] text-slate-400">${info.dateMiseAJour || 'N/A'}</td>
-                                    </tr>`;
-                            }
-                        }
-
-                        let moyenne = nombreCours > 0 ? (sommeNotes / nombreCours).toFixed(2) : "N/A";
-                        let statutFrais = infoEleve && infoEleve.frais === "en_ordre" 
-                            ? `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full">Frais : En ordre 🟢</span>`
-                            : `<span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2.5 py-1 rounded-full">Frais : Non en ordre 🔴</span>`;
-
-                        resultatDiv.className = "p-5 bg-white rounded-2xl border border-slate-200 text-xs text-slate-700 space-y-4";
-                        resultatDiv.innerHTML = `
-                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                <div>
-                                    <h4 class="font-bold text-indigo-900 text-sm">${infoEleve ? infoEleve.nom + ' ' + infoEleve.postnom : 'Élève'}</h4>
-                                    <p class="text-xs text-indigo-600 mt-0.5">Classe : ${infoEleve ? infoEleve.classe : 'Non spécifiée'} | Matricule : <span class="font-mono">${matricule}</span></p>
-                                    <div class="mt-2">${statutFrais}</div>
-                                </div>
-                                <div class="bg-indigo-600 text-white px-3 py-2 rounded-xl text-center">
-                                    <div class="text-[10px] uppercase tracking-wider opacity-80">Moyenne Indicative</div>
-                                    <div class="font-bold text-sm">${moyenne} / 20</div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <button id="btn-download-bulletin-pdf" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition shadow text-xs flex items-center justify-center gap-2">
-                                    <span>📄 Télécharger le Bulletin Officiel (PDF)</span>
-                                </button>
-                            </div>
-
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr class="border-b border-slate-200 text-slate-400 font-semibold uppercase text-[10px]">
-                                            <th class="p-3">Cours</th>
-                                            <th class="p-3">Note / Appréciation</th>
-                                            <th class="p-3">Dernière mise à jour</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${htmlCours || `<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">Aucune note enregistrée pour le moment.</td></tr>`}
-                                    </tbody>
-                                </table>
-                            </div>
-                        `;
-
-                        document.getElementById('btn-download-bulletin-pdf').addEventListener('click', async () => {
-                            const { jsPDF } = window.jspdf;
-                            const doc = new jsPDF();
-                            
-                            let nomEcole = "PORTAIL SCOLAIRE RDC";
-                            try {
-                                const snapNom = await get(ref(db, 'parametres/nomEcole'));
-                                if (snapNom.exists()) nomEcole = snapNom.val();
-                            } catch(e) {}
-
-                            doc.setFontSize(18);
-                            doc.setTextColor(15, 23, 42);
-                            doc.text(nomEcole.toUpperCase(), 14, 20);
-
-                            doc.setFontSize(12);
-                            doc.setTextColor(79, 70, 229);
-                            doc.text("BULLETIN SCOLAIRE OFFICIEL", 14, 28);
-
-                            doc.setFontSize(10);
-                            doc.setTextColor(100, 116, 139);
-                            doc.text(`Nom de l'élève : ${infoEleve ? infoEleve.nom + ' ' + infoEleve.postnom : 'Inconnu'}`, 14, 38);
-                            doc.text(`Classe : ${infoEleve ? infoEleve.classe : 'N/A'} | Matricule : ${matricule}`, 14, 44);
-                            doc.text(`Statut Frais : ${infoEleve && infoEleve.frais === 'en_ordre' ? 'En ordre (Payé)' : 'Non en ordre (Retard)'}`, 14, 50);
-                            doc.text(`Moyenne Générale : ${moyenne} / 20`, 14, 56);
-                            doc.text(`Date d'édition : ${new Date().toLocaleDateString()}`, 14, 62);
-
-                            const tableRows = [];
-                            if (data.cours) {
-                                let index = 1;
-                                for (let [coursNom, info] of Object.entries(data.cours)) {
-                                    tableRows.push([
-                                        index++,
-                                        coursNom,
-                                        info.note,
-                                        info.dateMiseAJour || 'N/A'
-                                    ]);
-                                }
-                            }
-
-                            doc.autoTable({
-                                startY: 70,
-                                head: [['N°', 'Matière / Cours', 'Note obtenue', 'Mise à jour']],
-                                body: tableRows,
-                                theme: 'grid',
-                                headStyles: { fillColor: [79, 70, 229] },
-                                styles: { fontSize: 9, cellPadding: 4 }
-                            });
-
-                            doc.save(`Bulletin_${matricule}.pdf`);
-                        });
-
-                    } else {
-                        resultatDiv.className = "p-5 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-700 flex items-center justify-center text-amber-600 italic";
-                        resultatDiv.innerHTML = `Aucun dossier trouvé pour le matricule : ${matricule}`;
-                    }
-                } catch (err) {
-                    resultatDiv.innerHTML = `<span class="text-rose-500 not-italic">Erreur lors de la recherche.</span>`;
-                }
-            });
-        }
-
-        // 2. Connexion Enseignant
-        function afficherInterfaceEnseignantLogin() {
-            container.innerHTML = `
-                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 w-full max-w-full">
-                    <div class="flex justify-between items-center mb-6 border-b pb-4">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-900">Espace Enseignant - Connexion</h2>
-                            <p class="text-xs text-slate-500">Connectez-vous pour accéder à vos classes et saisir les notes.</p>
-                        </div>
-                        <button onclick="location.reload()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold px-3 py-1.5 rounded-xl transition text-xs">Retour</button>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Votre Cours Affilié (ex: Mathématiques)</label>
-                            <input type="text" id="ens-cours" placeholder="Nom de votre cours" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Email</label>
-                            <input type="email" id="ens-email" placeholder="prof@ecole.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Mot de passe</label>
-                            <input type="password" id="ens-pass" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50">
-                        </div>
-                        <div id="ens-error" class="text-xs text-rose-600 font-bold bg-rose-50 p-3 rounded-xl border border-rose-200 hidden"></div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                            <button id="btn-ens-signup" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold py-3 rounded-xl transition text-xs">Créer mon compte</button>
-                            <button id="btn-ens-login" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow text-xs">Se connecter</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const errBox = document.getElementById('ens-error');
-
-            document.getElementById('btn-ens-signup').addEventListener('click', async () => {
-                const cours = document.getElementById('ens-cours').value.trim();
-                const email = document.getElementById('ens-email').value.trim();
-                const pass = document.getElementById('ens-pass').value;
-
-                if (!cours || !email || !pass) {
-                    errBox.innerText = "Veuillez remplir tous les champs.";
-                    errBox.classList.remove('hidden');
-                    return;
-                }
-
-                try {
-                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                    await set(ref(db, 'comptes/' + cred.user.uid), { role: 'Enseignant', cours, email });
-                    alert("Compte enseignant créé avec succès !");
-                    chargerTableauDeBordEnseignant(cred.user, cours);
-                } catch (err) {
-                    errBox.innerText = "Erreur : " + err.message;
-                    errBox.classList.remove('hidden');
-                }
-            });
-
-            document.getElementById('btn-ens-login').addEventListener('click', async () => {
-                const email = document.getElementById('ens-email').value.trim();
-                const pass = document.getElementById('ens-pass').value;
-
-                if (!email || !pass) {
-                    errBox.innerText = "Veuillez remplir l'email et le mot de passe.";
-                    errBox.classList.remove('hidden');
-                    return;
-                }
-
-                try {
-                    const cred = await signInWithEmailAndPassword(auth, email, pass);
-                    const snap = await get(ref(db, 'comptes/' + cred.user.uid));
-                    if (snap.exists() && snap.val().cours) {
-                        chargerTableauDeBordEnseignant(cred.user, snap.val().cours);
-                    } else {
-                        const coursRemplacement = document.getElementById('ens-cours').value.trim() || "Mon Cours";
-                        await update(ref(db, 'comptes/' + cred.user.uid), { role: 'Enseignant', cours: coursRemplacement });
-                        chargerTableauDeBordEnseignant(cred.user, coursRemplacement);
-                    }
-                } catch (err) {
-                    errBox.innerText = "Erreur de connexion : " + err.message;
-                    errBox.classList.remove('hidden');
-                }
-            });
-        }
-
-        async function chargerTableauDeBordEnseignant(user, coursProf) {
-            container.innerHTML = `
-                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 w-full max-w-full">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-900">Espace Enseignant</h2>
-                            <p class="text-xs text-slate-500">Cours affilié : <span class="font-bold text-emerald-600">${coursProf}</span></p>
-                        </div>
-                        <button onclick="location.reload()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-3 py-2 rounded-xl transition text-xs">Déconnexion</button>
-                    </div>
-
-                    <div class="space-y-4">
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-600">Sélectionnez une classe :</p>
-                        <div id="onglets-classes" class="flex flex-wrap gap-2 pb-2 border-b border-slate-100">
-                            <span class="text-xs text-slate-400 italic">Chargement des classes...</span>
-                        </div>
-
-                        <div id="zone-eleves-classe" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 max-h-50 overflow-y-auto space-y-2">
-                            <p class="text-xs text-slate-400 italic">Veuillez sélectionner une classe ci-dessus.</p>
-                        </div>
-
-                        <div id="form-saisie-note" class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-200 hidden space-y-3">
-                            <div class="text-xs font-bold text-emerald-900 break-words" id="selection-eleve-info">Élève sélectionné : Aucun</div>
-                            <input type="hidden" id="selected-matricule">
-                            <input type="text" id="note-valeur" placeholder="Saisir la note (ex: 16/20 - Interro 1)" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
-                            <button id="btn-publier-note" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl transition shadow text-xs">Enregistrer la note</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const snapEleves = await get(ref(db, 'eleves'));
-            const ongletsContainer = document.getElementById('onglets-classes');
-            const zoneEleves = document.getElementById('zone-eleves-classe');
-            const formSaisie = document.getElementById('form-saisie-note');
-            const infoSelection = document.getElementById('selection-eleve-info');
-            const inputMatriculeCache = document.getElementById('selected-matricule');
-
-            let elevesParClasse = {};
-            if (snapEleves.exists()) {
-                snapEleves.forEach(child => {
-                    const e = child.val();
-                    const cls = e.classe || "Non classé";
-                    if (!elevesParClasse[cls]) elevesParClasse[cls] = [];
-                    elevesParClasse[cls].push({ id: child.key, ...e });
-                });
-
-                const classes = Object.keys(elevesParClasse);
-                if (classes.length > 0) {
-                    let htmlOnglets = "";
-                    classes.forEach(cls => {
-                        htmlOnglets += `<button type="button" class="tab-classe px-3 py-1.5 rounded-xl font-semibold text-xs transition bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white shadow-sm" data-classe="${cls}">${cls}</button>`;
-                    });
-                    ongletsContainer.innerHTML = htmlOnglets;
-
-                    document.querySelectorAll('.tab-classe').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            document.querySelectorAll('.tab-classe').forEach(b => b.classList.remove('bg-emerald-600', 'text-white'));
-                            btn.classList.add('bg-emerald-600', 'text-white');
-
-                            const classeChoisie = btn.getAttribute('data-classe');
-                            const liste = elevesParClasse[classeChoisie];
-
-                            let htmlEleves = `<p class="text-xs font-bold text-slate-700 mb-2">Liste des élèves (${classeChoisie}) :</p><div class="space-y-1.5">`;
-                            liste.forEach(el => {
-                                htmlEleves += `
-                                    <div class="p-2.5 bg-white hover:bg-emerald-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 cursor-pointer transition select-eleve" data-matricule="${el.matricule}" data-nom="${el.nom} ${el.postnom}">
-                                        <div><strong>${el.nom} ${el.postnom}</strong></div>
-                                        <div class="text-[11px] text-indigo-600 font-mono font-bold bg-slate-50 px-2 py-0.5 rounded border break-all">${el.matricule}</div>
-                                    </div>
-                                `;
-                            });
-                            htmlEleves += `</div>`;
-                            zoneEleves.innerHTML = htmlEleves;
-                            formSaisie.classList.add('hidden');
-
-                            document.querySelectorAll('.select-eleve').forEach(item => {
-                                item.addEventListener('click', () => {
-                                    document.querySelectorAll('.select-eleve').forEach(i => i.classList.remove('border-emerald-600', 'bg-emerald-50'));
-                                    item.classList.add('border-emerald-600', 'bg-emerald-50');
-
-                                    inputMatriculeCache.value = item.getAttribute('data-matricule');
-                                    infoSelection.innerText = `Élève sélectionné : ${item.getAttribute('data-nom')} (Matricule : ${item.getAttribute('data-matricule')})`;
-                                    formSaisie.classList.remove('hidden');
-                                });
-                            });
-                        });
-                    });
-                } else {
-                    ongletsContainer.innerHTML = `<span class="text-slate-400 italic">Aucune classe enregistrée.</span>`;
-                }
-            } else {
-                ongletsContainer.innerHTML = `<span class="text-slate-400 italic">Aucun élève dans la base de données.</span>`;
+        // Événements
+        db.ref('evenements').on('value', (snapshot) => {
+            const container = document.getElementById('liste-evenements');
+            container.innerHTML = '';
+            if (!snapshot.exists()) {
+                container.innerHTML = '<p style="color: var(--text-muted);">Aucun événement prévu.</p>';
+                return;
             }
+            snapshot.forEach((child) => {
+                const ev = child.val();
+                container.innerHTML += `<div style="margin-bottom: 10px;">• <strong>${ev.titre}</strong> (${ev.date})</div>`;
+            });
+        });
 
-            document.getElementById('btn-publier-note').addEventListener('click', async () => {
-                const matricule = inputMatriculeCache.value;
-                const valeurNote = document.getElementById('note-valeur').value.trim();
+        // Alerte Urgence
+        db.ref('parametres/urgence').on('value', (snapshot) => {
+            const message = snapshot.val();
+            const banniere = document.getElementById('bandeau-urgence');
+            if (message) {
+                document.getElementById('texte-urgence').innerText = message;
+                banniere.style.display = 'block';
+            } else {
+                banniere.style.display = 'none';
+            }
+        });
 
-                if (!matricule || !valeurNote) {
-                    alert("Veuillez sélectionner un élève et saisir une note.");
-                    return;
-                }
+        // Galerie Photos
+        db.ref('galerie').on('value', (snapshot) => {
+            const grille = document.getElementById('grille-galerie');
+            grille.innerHTML = '';
+            if (!snapshot.exists()) {
+                grille.innerHTML = '<p style="color: var(--text-muted);">Aucune photo.</p>';
+                return;
+            }
+            snapshot.forEach((child) => {
+                const photo = child.val();
+                grille.innerHTML += `<img src="${photo.url}" alt="Photo">`;
+            });
+        });
 
-                try {
-                    await set(ref(db, `resultats/${matricule}/cours/${coursProf}`), {
-                        note: valeurNote,
-                        dateMiseAJour: new Date().toLocaleString()
-                    });
-                    alert("Note enregistrée avec succès !");
-                    document.getElementById('note-valeur').value = "";
-                } catch (err) {
-                    alert("Erreur : " + err.message);
-                }
+        // Documents
+        db.ref('documents').on('value', (snapshot) => {
+            const liste = document.getElementById('liste-documents');
+            liste.innerHTML = '';
+            if (!snapshot.exists()) {
+                liste.innerHTML = '<li>Aucun document disponible.</li>';
+                return;
+            }
+            snapshot.forEach((child) => {
+                const doc = child.val();
+                liste.innerHTML += `<li><a href="${doc.url}" target="_blank">📄 ${doc.nom}</a></li>`;
+            });
+        });
+
+        // --- 3. GESTION DE LA CONNEXION ET DES PUBLICATIONS ---
+
+        auth.onAuthStateChanged((user) => {
+            const loginForm = document.getElementById('login-form');
+            const pubForm = document.getElementById('formulaire-pub');
+            const status = document.getElementById('auth-status');
+
+            if (user) {
+                status.innerText = "Connecté (Gérant)";
+                loginForm.style.display = 'none';
+                pubForm.style.display = 'block';
+            } else {
+                status.innerText = "Non connecté";
+                loginForm.style.display = 'block';
+                pubForm.style.display = 'none';
+            }
+        });
+
+        function connecterAdmin() {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            auth.signInWithEmailAndPassword(email, pass)
+                .catch((error) => {
+                    alert("Erreur de connexion : " + error.message);
+                });
+        }
+
+        function publierArticle() {
+            const titre = document.getElementById('titre-article').value;
+            const contenu = document.getElementById('corps-article').value;
+            if (!titre || !contenu) {
+                alert("Veuillez remplir tous les champs !");
+                return;
+            }
+            db.ref('articles').push({
+                titre: titre,
+                contenu: contenu,
+                date: Date.now()
+            }).then(() => {
+                alert("Article publié avec succès !");
+                document.getElementById('titre-article').value = '';
+                document.getElementById('corps-article').value = '';
+            }).catch((error) => {
+                alert("Erreur de publication (Vérifiez vos règles Firebase) : " + error.message);
             });
         }
 
-        // 3. Connexion Gérant
-        function afficherInterfaceGerantLogin() {
-            container.innerHTML = `
-                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 w-full max-w-full">
-                    <div class="flex justify-between items-center mb-6 border-b pb-4">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-900">Espace Gérant - Connexion</h2>
-                            <p class="text-xs text-slate-500">Réservé à l'administration de l'école.</p>
-                        </div>
-                        <button onclick="location.reload()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold px-3 py-1.5 rounded-xl transition text-xs">Retour</button>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Email Administrateur</label>
-                            <input type="email" id="gerant-email" placeholder="gerant@ecole.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Mot de passe</label>
-                            <input type="password" id="gerant-pass" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50">
-                        </div>
-                        <div id="gerant-error" class="text-xs text-rose-600 font-bold bg-rose-50 p-3 rounded-xl border border-rose-200 hidden"></div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                            <button id="btn-gerant-signup" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold py-3 rounded-xl transition text-xs">Créer compte gérant</button>
-                            <button id="btn-gerant-login" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-xl transition shadow text-xs">Se connecter</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const errBox = document.getElementById('gerant-error');
-
-            document.getElementById('btn-gerant-signup').addEventListener('click', async () => {
-                const email = document.getElementById('gerant-email').value.trim();
-                const pass = document.getElementById('gerant-pass').value;
-
-                if (!email || !pass) {
-                    errBox.innerText = "Veuillez remplir tous les champs.";
-                    errBox.classList.remove('hidden');
-                    return;
-                }
-
-                try {
-                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                    await set(ref(db, 'comptes/' + cred.user.uid), { role: 'Gérant', email });
-                    alert("Compte gérant créé avec succès !");
-                    chargerTableauDeBordGerant(cred.user);
-                } catch (err) {
-                    errBox.innerText = "Erreur : " + err.message;
-                    errBox.classList.remove('hidden');
-                }
-            });
-
-            document.getElementById('btn-gerant-login').addEventListener('click', async () => {
-                const email = document.getElementById('gerant-email').value.trim();
-                const pass = document.getElementById('gerant-pass').value;
-
-                if (!email || !pass) {
-                    errBox.innerText = "Veuillez remplir tous les champs.";
-                    errBox.classList.remove('hidden');
-                    return;
-                }
-
-                try {
-                    const cred = await signInWithEmailAndPassword(auth, email, pass);
-                    chargerTableauDeBordGerant(cred.user);
-                } catch (err) {
-                    errBox.innerText = "Erreur de connexion : " + err.message;
-                    errBox.classList.remove('hidden');
-                }
-            });
-        }
-
-        async function chargerTableauDeBordGerant(user) {
-            container.innerHTML = `
-                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 w-full max-w-full space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-4">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-900">Espace Gérant - Administration</h2>
-                            <p class="text-xs text-slate-500">Gérez l'école, les élèves, les actualités et les enseignants.</p>
-                        </div>
-                        <button onclick="location.reload()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-3 py-2 rounded-xl transition text-xs">Déconnexion</button>
-                    </div>
-
-                    <!-- Configuration du nom de l'école -->
-                    <div class="bg-indigo-50/50 p-4 sm:p-5 rounded-2xl border border-indigo-100">
-                        <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-900 mb-3">Nom de l'École dans l'En-tête</h3>
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="text" id="input-nom-ecole" placeholder="Entrez le nom officiel de l'école" class="flex-grow px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
-                            <button id="btn-save-nom-ecole" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-xs shadow w-full sm:w-auto">Mettre à jour</button>
-                        </div>
-                    </div>
-
-                    <!-- Publication d'un Article / Communiqué -->
-                    <div class="bg-amber-50/50 p-4 sm:p-5 rounded-2xl border border-amber-100">
-                        <h3 class="text-sm font-bold uppercase tracking-wider text-amber-900 mb-3">Publier un Communiqué / Article</h3>
-                        <div class="space-y-3">
-                            <input type="text" id="art-titre" placeholder="Titre de l'annonce (ex: Début des examens du premier trimestre)" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
-                            <textarea id="art-contenu" rows="3" placeholder="Contenu du communiqué..." class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"></textarea>
-                            <button id="btn-publier-article" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 rounded-xl transition shadow text-xs">Publier sur le portail</button>
-                        </div>
-                        <!-- Liste des articles existants pour suppression -->
-                        <div class="mt-4 pt-3 border-t border-amber-200">
-                            <p class="text-xs font-bold text-amber-900 mb-2">Annonces actuellement en ligne :</p>
-                            <div id="admin-liste-articles" class="space-y-2 max-h-36 overflow-y-auto">
-                                <span class="text-xs text-slate-400 italic">Chargement...</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Enregistrement Élève avec Frais -->
-                    <div class="bg-purple-50/50 p-4 sm:p-5 rounded-2xl border border-purple-100">
-                        <h3 class="text-sm font-bold uppercase tracking-wider text-purple-900 mb-3">Enregistrer un nouvel élève</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-                            <input type="text" id="eleve-nom" placeholder="Nom" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white w-full">
-                            <input type="text" id="eleve-postnom" placeholder="Post-nom" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white w-full">
-                            <input type="text" id="eleve-classe" placeholder="Classe & Option (ex: 5ème Math)" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white w-full">
-                        </div>
-                        <div class="mb-3">
-                            <label class="block text-xs font-semibold text-purple-900 mb-1">Statut des Frais Scolaires à l'inscription :</label>
-                            <select id="eleve-frais" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
-                                <option value="en_ordre">🟢 En ordre avec les frais</option>
-                                <option value="non_en_ordre">🔴 Non en ordre (Retard)</option>
-                            </select>
-                        </div>
-                        <button id="btn-creer-eleve" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-xl transition shadow text-sm">Générer le Matricule & Enregistrer</button>
-                    </div>
-
-                    <!-- Liste complète et filtrable des Élèves -->
-                    <div class="bg-slate-50/80 p-4 sm:p-5 rounded-2xl border border-slate-200">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800">
-                                📋 Liste Globale & Frais 
-                                <span id="compte-eleves-badge" class="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full ml-1">0</span>
-                            </h3>
-                            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                                <select id="filtre-frais" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white">
-                                    <option value="tous">Tous les élèves</option>
-                                    <option value="en_ordre">🟢 En ordre</option>
-                                    <option value="non_en_ordre">🔴 Non en ordre</option>
-                                </select>
-                                <input type="text" id="recherche-eleve-admin" placeholder="Rechercher nom/matricule..." class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white w-full sm:w-48">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <button id="btn-export-pdf" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-xl transition text-xs shadow flex items-center justify-center gap-2">
-                                <span>📄 Télécharger la liste en PDF (Imprimable)</span>
-                            </button>
-                        </div>
-
-                        <div id="liste-eleves" class="bg-white rounded-2xl p-3 border border-slate-200 max-h-64 overflow-y-auto space-y-2 text-xs divide-y divide-slate-100">
-                            <p class="text-slate-400 italic text-center py-4">Chargement de la liste des élèves...</p>
-                        </div>
-                    </div>
-
-                    <!-- Liste des Enseignants avec Suppression -->
-                    <div>
-                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3">Gestion des Enseignants</h3>
-                        <div id="liste-enseignants" class="bg-slate-50 rounded-2xl p-4 border border-slate-200 max-h-48 overflow-y-auto space-y-2 text-xs">
-                            Chargement...
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            try {
-                const snapNom = await get(ref(db, 'parametres/nomEcole'));
-                if (snapNom.exists()) {
-                    document.getElementById('input-nom-ecole').value = snapNom.val();
-                }
-            } catch(e) {}
-
-            document.getElementById('btn-save-nom-ecole').addEventListener('click', async () => {
-                const nouveauNom = document.getElementById('input-nom-ecole').value.trim();
-                if (!nouveauNom) {
-                    alert("Veuillez entrer un nom valide.");
-                    return;
-                }
-                try {
-                    await set(ref(db, 'parametres/nomEcole'), nouveauNom);
-                    displayHeader.innerText = nouveauNom;
-                    displayFooter.innerText = nouveauNom;
-                    alert("Nom de l'école mis à jour avec succès !");
-                } catch (err) {
-                    alert("Erreur : " + err.message);
-                }
-            });
-
-            // Publication d'un article
-            document.getElementById('btn-publier-article').addEventListener('click', async () => {
-                const titre = document.getElementById('art-titre').value.trim();
-                const contenu = document.getElementById('art-contenu').value.trim();
-
-                if (!titre || !contenu) {
-                    alert("Veuillez remplir le titre et le contenu de l'annonce.");
-                    return;
-                }
-
-                try {
-                    await set(push(ref(db, 'articles')), {
-                        titre,
-                        contenu,
-                        date: new Date().toLocaleDateString() + ' à ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                    });
-                    alert("Annonce publiée avec succès !");
-                    document.getElementById('art-titre').value = "";
-                    document.getElementById('art-contenu').value = "";
-                    chargerDonneesAdmin();
-                } catch (err) {
-                    alert("Erreur : " + err.message);
-                }
-            });
-
-            let tousLesEleves = [];
-
-            const obtenirElevesFiltres = () => {
-                const terme = document.getElementById('recherche-eleve-admin').value.toLowerCase();
-                const filtreFraisVal = document.getElementById('filtre-frais').value;
-                
-                return tousLesEleves.filter(e => {
-                    const correspondTexte = e.nom.toLowerCase().includes(terme) || 
-                                          e.postnom.toLowerCase().includes(terme) || 
-                                          e.matricule.toLowerCase().includes(terme) || 
-                                          e.classe.toLowerCase().includes(terme);
-                    
-                    const fraisStatut = e.frais || "non_en_ordre";
-                    const correspondFrais = (filtreFraisVal === "tous") || (fraisStatut === filtreFraisVal);
-
-                    return correspondTexte && correspondFrais;
-                });
-            };
-
-            const afficherListeFiltree = () => {
-                const listeElevesDiv = document.getElementById('liste-eleves');
-                const badge = document.getElementById('compte-eleves-badge');
-                const elevesFiltres = obtenirElevesFiltres();
-
-                badge.innerText = tousLesEleves.length;
-
-                if (elevesFiltres.length > 0) {
-                    let htmlEleves = "";
-                    elevesFiltres.forEach(e => {
-                        const enOrdre = (e.frais === "en_ordre");
-                        htmlEleves += `
-                            <div class="pt-2.5 pb-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 hover:bg-slate-50 px-2 rounded-xl transition">
-                                <div class="break-words">
-                                    <strong class="text-slate-900 text-sm">${e.nom} ${e.postnom}</strong> 
-                                    <span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded ml-1">${e.classe}</span>
-                                    <br>
-                                    <span class="font-mono text-indigo-600 font-semibold text-[11px]">${e.matricule}</span>
-                                </div>
-                                <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-                                    <button class="btn-toggle-frais px-2.5 py-1 rounded-lg text-[10px] font-bold transition shadow-sm ${enOrdre ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-rose-100 text-rose-800 hover:bg-rose-200'}" data-key="${e.key}" data-frais="${e.frais || 'non_en_ordre'}">
-                                        ${enOrdre ? '🟢 En ordre' : '🔴 Non en ordre'}
-                                    </button>
-                                    <button class="btn-supprimer-eleve bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-2.5 py-1 rounded-lg transition font-semibold text-xs shadow-sm" data-key="${e.key}" data-matricule="${e.matricule}">Supprimer</button>
-                                </div>
-                            </div>`;
-                    });
-                    listeElevesDiv.innerHTML = htmlEleves;
-                } else {
-                    listeElevesDiv.innerHTML = `<p class="text-slate-400 italic text-center py-4">Aucun élève trouvé avec ces critères.</p>`;
-                }
-
-                document.querySelectorAll('.btn-toggle-frais').forEach(btn => {
-                    btn.addEventListener('click', async () => {
-                        const key = btn.getAttribute('data-key');
-                        const ancienStatut = btn.getAttribute('data-frais');
-                        const nouveauStatut = (ancienStatut === 'en_ordre') ? 'non_en_ordre' : 'en_ordre';
-                        try {
-                            await update(ref(db, 'eleves/' + key), { frais: nouveauStatut });
-                            chargerDonneesAdmin();
-                        } catch (err) {
-                            alert("Erreur : " + err.message);
-                        }
-                    });
-                });
-
-                document.querySelectorAll('.btn-supprimer-eleve').forEach(btn => {
-                    btn.addEventListener('click', async () => {
-                        const key = btn.getAttribute('data-key');
-                        const matricule = btn.getAttribute('data-matricule');
-                        if (confirm(`Voulez-vous vraiment supprimer cet élève ?`)) {
-                            try {
-                                await remove(ref(db, 'eleves/' + key));
-                                await remove(ref(db, 'resultats/' + matricule));
-                                alert("Élève supprimé !");
-                                chargerDonneesAdmin();
-                            } catch (err) {
-                                alert("Erreur : " + err.message);
-                            }
-                        }
-                    });
-                });
-            };
-
-            const chargerDonneesAdmin = async () => {
-                // Charger les articles dans le panneau admin pour suppression
-                const snapArticles = await get(ref(db, 'articles'));
-                const adminArticlesDiv = document.getElementById('admin-liste-articles');
-                if (snapArticles.exists()) {
-                    let htmlArt = "";
-                    snapArticles.forEach(child => {
-                        const artKey = child.key;
-                        const artVal = child.val();
-                        htmlArt += `
-                            <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-amber-200">
-                                <div class="truncate mr-2"><strong class="text-slate-800">${artVal.titre}</strong></div>
-                                <button class="btn-suppr-art bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-2 py-1 rounded text-[10px] font-bold transition shrink-0" data-key="${artKey}">Supprimer</button>
-                            </div>
-                        `;
-                    });
-                    adminArticlesDiv.innerHTML = htmlArt;
-
-                    document.querySelectorAll('.btn-suppr-art').forEach(btn => {
-                        btn.addEventListener('click', async () => {
-                            const artKey = btn.getAttribute('data-key');
-                            if (confirm("Voulez-vous supprimer cette annonce ?")) {
-                                await remove(ref(db, 'articles/' + artKey));
-                                chargerDonneesAdmin();
-                            }
-                        });
-                    });
-                } else {
-                    adminArticlesDiv.innerHTML = `<span class="text-slate-400 italic">Aucune annonce publiée.</span>`;
-                }
-
-                const snapEleves = await get(ref(db, 'eleves'));
-                tousLesEleves = [];
-                if (snapEleves.exists()) {
-                    snapEleves.forEach(child => {
-                        tousLesEleves.push({ key: child.key, ...child.val() });
-                    });
-                }
-                afficherListeFiltree();
-
-                const snapComptes = await get(ref(db, 'comptes'));
-                const listeEnsDiv = document.getElementById('liste-enseignants');
-                if (snapComptes.exists()) {
-                    let htmlEns = "";
-                    snapComptes.forEach(child => {
-                        const key = child.key;
-                        const compte = child.val();
-                        if (compte.role === 'Enseignant') {
-                            htmlEns += `
-                                <div class="p-2.5 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                                    <div class="break-words"><strong>${compte.email}</strong> - <span class="text-emerald-600 font-bold">Cours : ${compte.cours || 'Non défini'}</span></div>
-                                    <button class="btn-supprimer-ens bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-3 py-1.5 rounded-lg transition font-semibold w-full sm:w-auto text-center" data-key="${key}">Supprimer</button>
-                                </div>`;
-                        }
-                    });
-                    listeEnsDiv.innerHTML = htmlEns || `<p class="text-slate-400 italic">Aucun enseignant enregistré.</p>`;
-                } else {
-                    listeEnsDiv.innerHTML = `<p class="text-slate-400 italic">Aucun compte enseignant.</p>`;
-                }
-
-                document.querySelectorAll('.btn-supprimer-ens').forEach(btn => {
-                    btn.addEventListener('click', async () => {
-                        const key = btn.getAttribute('data-key');
-                        if (confirm(`Supprimer cet enseignant ?`)) {
-                            await remove(ref(db, 'comptes/' + key));
-                            chargerDonneesAdmin();
-                        }
-                    });
-                });
-            };
-
-            chargerDonneesAdmin();
-
-            document.getElementById('recherche-eleve-admin').addEventListener('input', () => afficherListeFiltree());
-            document.getElementById('filtre-frais').addEventListener('change', () => afficherListeFiltree());
-
-            document.getElementById('btn-creer-eleve').addEventListener('click', async () => {
-                const nom = document.getElementById('eleve-nom').value.trim();
-                const postnom = document.getElementById('eleve-postnom').value.trim();
-                const classe = document.getElementById('eleve-classe').value.trim();
-                const frais = document.getElementById('eleve-frais').value;
-
-                if (!nom || !postnom || !classe) {
-                    alert("Veuillez remplir tous les champs.");
-                    return;
-                }
-
-                const randomCode = Math.floor(1000 + Math.random() * 9000);
-                const matriculeNettoye = `${nom.substring(0,3).toUpperCase()}-${postnom.substring(0,3).toUpperCase()}-${classe.substring(0,3).toUpperCase()}-${randomCode}`;
-
-                try {
-                    await set(push(ref(db, 'eleves')), { nom, postnom, classe, matricule: matriculeNettoye, frais });
-                    alert("Élève enregistré avec succès ! Matricule : " + matriculeNettoye);
-                    document.getElementById('eleve-nom').value = "";
-                    document.getElementById('eleve-postnom').value = "";
-                    document.getElementById('eleve-classe').value = "";
-                    chargerDonneesAdmin();
-                } catch (err) {
-                    alert("Erreur : " + err.message);
-                }
+        function publierUrgence() {
+            const message = document.getElementById('input-urgence').value;
+            db.ref('parametres/urgence').set(message || null).then(() => {
+                alert("Bandeau d'alerte mis à jour !");
+                document.getElementById('input-urgence').value = '';
             });
         }
     </script>
