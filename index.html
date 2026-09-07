@@ -36,14 +36,14 @@
     <!-- Conteneur Principal -->
     <main id="main-container" class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
 
-        <!-- Vue par défaut : Connexion / Inscription simple -->
+        <!-- Vue par défaut : Connexion / Inscription -->
         <div id="auth-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
             <div class="mb-6 text-center">
                 <h2 class="text-2xl font-bold text-slate-900">Espace d'authentification</h2>
                 <p class="text-sm text-slate-500 mt-1">Connectez-vous pour accéder à vos données scolaires.</p>
             </div>
 
-            <form id="auth-form" onsubmit="gererConnexionInscription(event)" class="space-y-4">
+            <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Adresse email</label>
                     <input type="email" id="user-email" required placeholder="nom@exemple.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
@@ -55,9 +55,9 @@
                 <div id="auth-error" class="text-xs text-rose-500 font-medium hidden"></div>
                 <div class="grid grid-cols-2 gap-4 pt-2">
                     <button type="button" onclick="inscrire()" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold py-3.5 rounded-xl transition text-sm">S'inscrire</button>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">Se connecter</button>
+                    <button type="button" onclick="connecter()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">Se connecter</button>
                 </div>
-            </form>
+            </div>
         </div>
 
     </main>
@@ -67,7 +67,7 @@
         Mon Site - Connexion et Données &copy; 2026 — Tous droits réservés
     </footer>
 
-    <!-- Logique JavaScript Firebase -->
+    <!-- Logique JavaScript Firebase Directe -->
     <script>
         const firebaseConfig = {
             databaseURL: "https://site-publication-default-rtdb.firebaseio.com/"
@@ -79,37 +79,49 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // Écouteur d'état d'authentification
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                afficherTableauDeBord(user);
+        function afficherErreur(message) {
+            const errBox = document.getElementById('auth-error');
+            if (errBox) {
+                errBox.innerText = message;
+                errBox.classList.remove('hidden');
+            } else {
+                alert(message);
             }
-        });
+        }
 
         function inscrire() {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-password').value;
-            const errBox = document.getElementById('auth-error');
-            errBox.classList.add('hidden');
+            
+            if (!email || !pass) {
+                afficherErreur("Veuillez remplir tous les champs.");
+                return;
+            }
 
             auth.createUserWithEmailAndPassword(email, pass)
+                .then(userCredential => {
+                    afficherTableauDeBord(userCredential.user);
+                })
                 .catch(error => {
-                    errBox.innerText = "Erreur d'inscription : " + error.message;
-                    errBox.classList.remove('hidden');
+                    afficherErreur("Erreur d'inscription : " + error.message);
                 });
         }
 
-        function gererConnexionInscription(e) {
-            e.preventDefault();
+        function connecter() {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-password').value;
-            const errBox = document.getElementById('auth-error');
-            errBox.classList.add('hidden');
+
+            if (!email || !pass) {
+                afficherErreur("Veuillez remplir tous les champs.");
+                return;
+            }
 
             auth.signInWithEmailAndPassword(email, pass)
+                .then(userCredential => {
+                    afficherTableauDeBord(userCredential.user);
+                })
                 .catch(error => {
-                    errBox.innerText = "Erreur de connexion : " + error.message;
-                    errBox.classList.remove('hidden');
+                    afficherErreur("Erreur de connexion : " + error.message);
                 });
         }
 
