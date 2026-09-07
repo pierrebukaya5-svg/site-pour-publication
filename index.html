@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC - Gestion par Matricules</title>
+    <title>Portail Scolaire RDC - Gestion Multi-Rôles</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
@@ -24,7 +24,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-white tracking-wide">Portail Scolaire RDC</h1>
-                    <p class="text-xs text-indigo-300 font-medium">Système Sécurisé par Matricules</p>
+                    <p class="text-xs text-indigo-300 font-medium">Système Multi-Rôles par Matricules</p>
                 </div>
             </div>
         </div>
@@ -33,16 +33,16 @@
     <!-- Conteneur Principal -->
     <main id="main-container" class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
 
-        <!-- Étape 1 : Authentification / Choix du Rôle (uniquement pour l'inscription) -->
+        <!-- Étape 1 : Connexion ou Ajout de rôle -->
         <div id="auth-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
             <div class="mb-6 text-center">
                 <h2 class="text-2xl font-bold text-slate-900">Connexion au Portail</h2>
-                <p class="text-sm text-slate-500 mt-1">Sélectionnez votre rôle pour l'inscription ou connectez-vous simplement.</p>
+                <p class="text-sm text-slate-500 mt-1">Sélectionnez le rôle que vous souhaitez activer pour votre compte.</p>
             </div>
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Rôle (Utile uniquement lors de la création d'un compte)</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Rôles souhaités (Cochez ou sélectionnez)</label>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-100 p-1.5 rounded-2xl" id="tab-container">
                         <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition shadow-sm bg-indigo-600 text-white" data-role="Gérant">Gérant</button>
                         <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition text-slate-600 hover:bg-white/60" data-role="Enseignant">Enseignant</button>
@@ -63,7 +63,7 @@
                 <div id="auth-error" class="text-xs text-rose-600 font-bold bg-rose-50 p-3 rounded-xl border border-rose-200 hidden"></div>
 
                 <div class="grid grid-cols-2 gap-4 pt-2">
-                    <button type="button" id="btn-signup" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold py-3.5 rounded-xl transition text-sm">S'inscrire</button>
+                    <button type="button" id="btn-signup" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold py-3.5 rounded-xl transition text-sm">Créer / Ajouter ce rôle</button>
                     <button type="button" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">Se connecter</button>
                 </div>
             </div>
@@ -80,7 +80,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, push } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+        import { getDatabase, ref, set, get, push, update } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
@@ -119,22 +119,19 @@
             }
         }
 
-        // Sécurité renforcée : Lecture du rôle exact stocké dans Firebase
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userSnap = await get(ref(db, 'comptes/' + user.uid));
                 if (userSnap.exists()) {
                     const userData = userSnap.val();
-                    const roleReel = userData.role; // Rôle récupéré de la base de données (infalsifiable)
-                    afficherTableauDeBord(user, roleReel);
-                } else {
-                    // Si le compte n'a pas de rôle enregistré, on le bloque ou déconnecte
-                    signOut(auth);
-                    afficherErreur("Erreur : Aucun profil associé à ce compte dans la base de données.");
+                    // On récupère la liste des rôles de l'utilisateur
+                    const rolesAutorises = userData.roles || [userData.role];
+                    choisirOuAfficherEspace(user, rolesAutorises);
                 }
             }
         });
 
+        // Bouton d'inscription ou d'ajout de rôle
         document.getElementById('btn-signup').addEventListener('click', async () => {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-password').value;
@@ -145,11 +142,28 @@
             }
 
             try {
-                const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                // Enregistrement définitif et sécurisé du rôle dans la base de données
-                await set(ref(db, 'comptes/' + cred.user.uid), { email, role: selectedRole });
+                let user;
+                try {
+                    // Tente de créer un nouveau compte
+                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                    user = cred.user;
+                    // Enregistre le premier rôle
+                    await set(ref(db, 'comptes/' + user.uid), { email, roles: { [selectedRole]: true } });
+                    alert("Compte créé avec succès avec le rôle : " + selectedRole);
+                } catch (err) {
+                    if (err.code === 'auth/email-already-in-use') {
+                        // Si le mail existe déjà, on connecte l'utilisateur et on lui ajoute le nouveau rôle choisi !
+                        const cred = await signInWithEmailAndPassword(auth, email, pass);
+                        user = cred.user;
+                        await update(ref(db, 'comptes/' + user.uid + '/roles'), { [selectedRole]: true });
+                        alert("Le rôle '" + selectedRole + "' a été ajouté avec succès à votre compte existant !");
+                        location.reload();
+                    } else {
+                        throw err;
+                    }
+                }
             } catch (error) {
-                afficherErreur("Erreur d'inscription : " + error.message);
+                afficherErreur("Erreur : " + error.message);
             }
         });
 
@@ -169,21 +183,48 @@
             }
         });
 
-        async function afficherTableauDeBord(user, role) {
+        // Fonction pour laisser l'utilisateur choisir parmi ses rôles s'il en a plusieurs
+        function choisirOuAfficherEspace(user, rolesObj) {
+            const listeRoles = Object.keys(rolesObj);
+            
+            // Si l'utilisateur a plusieurs rôles, on lui propose de basculer facilement de l'un à l'autre
+            if (listeRoles.length > 1) {
+                // S'il y a un choix en mémoire, on l'utilise, sinon on prend le premier
+                let roleActif = localStorage.getItem('role_actif_' + user.uid) || listeRoles[0];
+                if (!rolesObj[roleActif]) roleActif = listeRoles[0];
+                
+                afficherTableauDeBordMulti(user, listeRoles, roleActif);
+            } else {
+                afficherTableauDeBordMulti(user, listeRoles, listeRoles[0]);
+            }
+        }
+
+        async function afficherTableauDeBordMulti(user, listeRoles, roleActif) {
             const container = document.getElementById('main-container');
+
+            let optionsHtml = "";
+            listeRoles.forEach(r => {
+                optionsHtml += `<button class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${r === roleActif ? 'bg-indigo-600 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" onclick="localStorage.setItem('role_actif_${user.uid}', '${r}'); location.reload();">${r}</button>`;
+            });
 
             let contenuHtml = `
                 <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/25">
-                    <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4">
                         <div>
-                            <h2 class="text-xl font-bold text-slate-900">Espace ${role}</h2>
+                            <h2 class="text-xl font-bold text-slate-900">Espace ${roleActif}</h2>
                             <p class="text-xs text-slate-500 mt-0.5">Connecté : <span class="font-semibold text-indigo-600">${user.email}</span></p>
                         </div>
-                        <button id="btn-logout" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-4 py-2 rounded-xl transition text-xs">Se déconnecter</button>
+                        <div class="flex items-center gap-3">
+                            <div class="flex gap-1.5 items-center bg-slate-50 p-1 rounded-xl border">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 pl-2">Vos rôles :</span>
+                                ${optionsHtml}
+                            </div>
+                            <button id="btn-logout" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-3 py-2 rounded-xl transition text-xs">Déconnexion</button>
+                        </div>
                     </div>
             `;
 
-            if (role === "Gérant") {
+            if (roleActif === "Gérant") {
                 contenuHtml += `
                     <div class="space-y-6">
                         <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100">
@@ -204,7 +245,7 @@
                         </div>
                     </div>
                 `;
-            } else if (role === "Enseignant") {
+            } else if (roleActif === "Enseignant") {
                 contenuHtml += `
                     <div class="space-y-6">
                         <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100">
@@ -221,7 +262,7 @@
                 contenuHtml += `
                     <div class="space-y-6">
                         <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 mb-3">Consulter les résultats scolaires (${role})</h3>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 mb-3">Consulter les résultats scolaires (${roleActif})</h3>
                             <div class="flex gap-2 mb-4">
                                 <input type="text" id="consult-matricule" placeholder="Entrez le matricule de l'enfant" class="flex-grow px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white font-mono">
                                 <button id="btn-chercher-notes" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm">Rechercher</button>
@@ -238,10 +279,11 @@
             container.innerHTML = contenuHtml;
 
             document.getElementById('btn-logout').addEventListener('click', () => {
+                localStorage.removeItem('role_actif_' + user.uid);
                 signOut(auth).then(() => { location.reload(); });
             });
 
-            if (role === "Gérant") {
+            if (roleActif === "Gérant") {
                 const chargerEleves = async () => {
                     const snap = await get(ref(db, 'eleves'));
                     const listeDiv = document.getElementById('liste-eleves');
@@ -288,7 +330,7 @@
                 });
             }
 
-            if (role === "Enseignant") {
+            if (roleActif === "Enseignant") {
                 document.getElementById('btn-publier-note').addEventListener('click', async () => {
                     const matricule = document.getElementById('note-matricule').value.trim();
                     const details = document.getElementById('note-details').value.trim();
@@ -312,7 +354,7 @@
                 });
             }
 
-            if (role === "Élève" || role === "Parent") {
+            if (roleActif === "Élève" || roleActif === "Parent") {
                 document.getElementById('btn-chercher-notes').addEventListener('click', async () => {
                     const matricule = document.getElementById('consult-matricule').value.trim();
                     const resultatDiv = document.getElementById('resultats-affichage');
