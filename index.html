@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC - Accès Matricule & Administration</title>
+    <title>Portail Scolaire RDC - Espace Sécurisé</title>
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -62,8 +62,7 @@
         }
 
         h2 { margin-top: 0; font-size: 16px; border-bottom: 2px solid var(--primary); padding-bottom: 6px; display: inline-block; color: #fff; }
-        h3 { font-size: 14px; margin-top: 15px; color: #cbd5e1; }
-
+        
         input, textarea, select, button {
             width: 100%;
             padding: 10px;
@@ -149,24 +148,24 @@
         <header>
             <div>
                 <h1>Portail Scolaire RDC</h1>
-                <p>Espace Parents (par Matricule) & Administration</p>
+                <p>Espace Parent & Élève / Administration</p>
             </div>
-            <div id="auth-status" class="user-pill">Visiteur / Parent</div>
+            <div id="auth-status" class="user-pill">Espace Public / Parent / Élève</div>
         </header>
 
-        <!-- ESPACE PARENT : CONSULTATION PAR MATRICULE -->
+        <!-- ESPACE PARENT / ÉLÈVE : CONSULTATION PAR MATRICULE -->
         <div class="card" style="border-color: #4f46e5;">
-            <h2>🔍 Espace Parent - Suivi par Matricule</h2>
-            <p style="color: var(--text-muted); font-size: 13px;">Entrez le matricule de l'élève pour consulter ses informations enregistrées par l'école.</p>
+            <h2>🔍 Espace Consultation (Parent / Élève)</h2>
+            <p style="color: var(--text-muted); font-size: 13px;">Entrez votre matricule fourni par l'administration pour consulter votre dossier scolaire.</p>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="recherche-matricule" placeholder="Ex: MAT-001" style="margin: 0;">
-                <button onclick="rechercherParMatricule()" style="width: 180px; margin: 0;">Rechercher</button>
+                <button onclick="rechercherParMatricule()" style="width: 180px; margin: 0;">Consulter</button>
             </div>
             <div id="resultat-recherche-parent" style="margin-top: 15px; font-size: 14px;"></div>
         </div>
 
         <div class="grid-2">
-            <!-- Actualités Publiques -->
+            <!-- Actualités Publiques (Visibles par tous) -->
             <div class="card">
                 <h2>📢 Actualités & Annonces</h2>
                 <div id="liste-articles-public">Chargement...</div>
@@ -181,25 +180,25 @@
 
         <!-- ZONE DE CONNEXION GÉRANT (Discrète et sécurisée) -->
         <div class="card" style="max-width: 450px; margin: 20px auto; text-align: center;">
-            <h2>🔒 Connexion Administration (Gérant)</h2>
+            <h2>🔒 Accès Gérant (Administration)</h2>
             <div id="login-section">
                 <input type="email" id="admin-email" placeholder="Email du gérant">
                 <input type="password" id="admin-password" placeholder="Mot de passe">
-                <button onclick="connecterAdmin()">Se connecter au panneau gérant</button>
+                <button onclick="connecterAdmin()">Se connecter</button>
             </div>
             <div id="admin-info-connecte" style="display: none;">
-                <p style="color: var(--success); font-weight: bold;">Connecté en tant qu'administrateur</p>
+                <p style="color: var(--success); font-weight: bold;">Connecté en tant que Gérant</p>
                 <button onclick="deconnecterAdmin()" style="background: transparent; border: 1px solid #334155; width: auto; padding: 6px 16px;">Se déconnecter</button>
             </div>
         </div>
 
-        <!-- TABLEAU DE BORD GÉRANT (Masqué tant que non connecté) -->
+        <!-- TABLEAU DE BORD GÉRANT (Totalement masqué pour les parents/élèves) -->
         <div id="admin-dashboard" style="display: none;">
             
             <div class="grid-2">
                 <!-- Enregistrement Élève -->
                 <div class="card">
-                    <h2>👨‍🎓 Enregistrer un Élève</h2>
+                    <h2>👨‍🎓 Enregistrer un Élève & Matricule</h2>
                     <input type="text" id="eleve-matricule" placeholder="Matricule (ex: MAT-001)">
                     <input type="text" id="eleve-nom" placeholder="Nom complet de l'élève">
                     <input type="text" id="eleve-classe" placeholder="Classe (ex: 5ème Math)">
@@ -306,7 +305,7 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
-        // Chargement en direct des actualités pour les parents / visiteurs
+        // Chargement en direct des actualités pour tous
         db.ref('articles').on('value', (snapshot) => {
             const container = document.getElementById('liste-articles-public');
             container.innerHTML = '';
@@ -320,7 +319,7 @@
             });
         });
 
-        // Recherche par matricule pour les parents
+        // Recherche par matricule (Espace Parent / Élève)
         async function rechercherParMatricule() {
             const matriculeSaisi = document.getElementById('recherche-matricule').value.trim();
             const resultatDiv = document.getElementById('resultat-recherche-parent');
@@ -334,13 +333,13 @@
             const snapshot = await db.ref('eleves').orderByChild('matricule').equalTo(matriculeSaisi).once('value');
 
             if (!snapshot.exists()) {
-                resultatDiv.innerHTML = `<span style="color: var(--danger);">Aucun élève trouvé avec le matricule "${matriculeSaisi}".</span>`;
+                resultatDiv.innerHTML = `<span style="color: var(--danger);">Aucun élève trouvé avec le matricule "${matriculeSaisi}". Vérifiez auprès de l'administration.</span>`;
             } else {
                 snapshot.forEach((child) => {
                     const eleve = child.val();
                     resultatDiv.innerHTML = `
                         <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); padding: 12px; border-radius: 8px;">
-                            <p style="margin: 0 0 5px 0; color: #4ade80; font-weight: bold;">Élève trouvé :</p>
+                            <p style="margin: 0 0 5px 0; color: #4ade80; font-weight: bold;">Dossier Élève Trouvé :</p>
                             <p style="margin: 3px 0;"><strong>Nom :</strong> ${eleve.nom}</p>
                             <p style="margin: 3px 0;"><strong>Classe :</strong> ${eleve.classe}</p>
                             <p style="margin: 3px 0;"><strong>Matricule :</strong> ${eleve.matricule}</p>
@@ -350,7 +349,7 @@
             }
         }
 
-        // Gestion de l'authentification Admin
+        // Sécurité et affichage conditionnel selon l'authentification du Gérant
         auth.onAuthStateChanged((user) => {
             const loginSection = document.getElementById('login-section');
             const infoConnecte = document.getElementById('admin-info-connecte');
@@ -358,40 +357,43 @@
             const status = document.getElementById('auth-status');
 
             if (user) {
-                status.innerText = "Connecté (Gérant)";
+                // Le gérant est connecté
+                status.innerText = "Connecté : Gérant";
                 status.style.background = "rgba(34, 197, 94, 0.1)";
                 status.style.color = "#4ade80";
                 loginSection.style.display = 'none';
                 infoConnecte.style.display = 'block';
-                dashboard.style.display = 'block';
+                dashboard.style.display = 'block'; // Le panneau de gestion s'affiche
             } else {
-                status.innerText = "Visiteur / Parent";
+                // Utilisateur standard (Parent / Élève / Visiteur)
+                status.innerText = "Espace Parent & Élève";
                 status.style.background = "rgba(99, 102, 241, 0.1)";
                 status.style.color = "#818cf8";
                 loginSection.style.display = 'block';
                 infoConnecte.style.display = 'none';
-                dashboard.style.display = 'none';
+                dashboard.style.display = 'none'; // Le panneau de gestion est totalement masqué
             }
         });
 
         function connecterAdmin() {
             const email = document.getElementById('admin-email').value;
             const pass = document.getElementById('admin-password').value;
-            auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Erreur : " + err.message));
+            auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Erreur d'authentification gérant : " + err.message));
         }
 
         function deconnecterAdmin() {
             auth.signOut();
         }
 
-        // Actions administrateur
+        // Actions réservées exclusivement au Gérant
         function ajouterEleve() {
+            if (!auth.currentUser) return alert("Accès refusé. Réservé au gérant.");
             const matricule = document.getElementById('eleve-matricule').value;
             const nom = document.getElementById('eleve-nom').value;
             const classe = document.getElementById('eleve-classe').value;
             if (!matricule || !nom || !classe) return alert("Remplissez tous les champs élève !");
             db.ref('eleves').push({ matricule, nom, classe }).then(() => {
-                alert("Élève enregistré !");
+                alert("Élève et matricule enregistrés avec succès !");
                 document.getElementById('eleve-matricule').value = '';
                 document.getElementById('eleve-nom').value = '';
                 document.getElementById('eleve-classe').value = '';
@@ -399,6 +401,7 @@
         }
 
         function ajouterProf() {
+            if (!auth.currentUser) return alert("Accès refusé.");
             const nom = document.getElementById('prof-nom').value;
             const cours = document.getElementById('prof-cours').value;
             if (!nom || !cours) return alert("Remplissez tous les champs professeur !");
@@ -410,17 +413,19 @@
         }
 
         function publierArticle() {
+            if (!auth.currentUser) return alert("Accès refusé.");
             const titre = document.getElementById('titre-article').value;
             const contenu = document.getElementById('corps-article').value;
             if (!titre || !contenu) return alert("Remplissez tous les champs !");
             db.ref('articles').push({ titre, contenu, date: Date.now() }).then(() => {
-                alert("Article publié !");
+                alert("Actualité publiée !");
                 document.getElementById('titre-article').value = '';
                 document.getElementById('corps-article').value = '';
             });
         }
 
         function ajouterFrais() {
+            if (!auth.currentUser) return alert("Accès refusé.");
             const description = document.getElementById('frais-desc').value;
             const montant = document.getElementById('frais-montant').value;
             if (!description || !montant) return alert("Remplissez les champs financiers !");
@@ -431,8 +436,9 @@
             });
         }
 
-        // Téléchargement du Bilan PDF
+        // Téléchargement du Bilan PDF (Gérant uniquement)
         async function telechargerBilanPDF() {
+            if (!auth.currentUser) return alert("Accès refusé.");
             const anneeScolaire = document.getElementById('input-annee-scolaire').value.trim();
             if (!anneeScolaire) {
                 alert("Veuillez d'abord indiquer l'année scolaire (ex: 2025-2026).");
@@ -469,8 +475,9 @@
             });
         }
 
-        // Nettoyage de la base de données
+        // Nettoyage de la base de données (Gérant uniquement)
         async function reinitialiserBaseDeDonnees() {
+            if (!auth.currentUser) return alert("Accès refusé.");
             const confirmation1 = confirm("⚠️ ATTENTION : Voulez-vous vraiment vider la base de données ? Assurez-vous d'avoir téléchargé le PDF avant.");
             if (!confirmation1) return;
 
