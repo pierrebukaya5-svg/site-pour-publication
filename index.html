@@ -148,9 +148,9 @@
         <header>
             <div>
                 <h1>Portail Scolaire RDC</h1>
-                <p>Espace Parent & Élève / Administration</p>
+                <p>Espace Parent, Élève & Professeur / Administration</p>
             </div>
-            <div id="auth-status" class="user-pill">Espace Public / Parent / Élève</div>
+            <div id="auth-status" class="user-pill">Espace Public / Visiteur</div>
         </header>
 
         <!-- ESPACE PARENT / ÉLÈVE : CONSULTATION PAR MATRICULE -->
@@ -162,6 +162,17 @@
                 <button onclick="rechercherParMatricule()" style="width: 180px; margin: 0;">Consulter</button>
             </div>
             <div id="resultat-recherche-parent" style="margin-top: 15px; font-size: 14px;"></div>
+        </div>
+
+        <!-- ESPACE PROFESSEUR -->
+        <div class="card" style="border-color: #0ea5e9;">
+            <h2>👨‍🏫 Espace Professeur</h2>
+            <p style="color: var(--text-muted); font-size: 13px;">Entrez votre nom enregistré par l'administration pour consulter vos cours et informations assignées.</p>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="recherche-prof" placeholder="Ex: M. Jean" style="margin: 0;">
+                <button onclick="rechercherProfesseur()" style="width: 180px; margin: 0; background: #0ea5e9;">Voir mon espace</button>
+            </div>
+            <div id="resultat-recherche-prof" style="margin-top: 15px; font-size: 14px;"></div>
         </div>
 
         <div class="grid-2">
@@ -182,7 +193,6 @@
         <div class="card" style="max-width: 450px; margin: 20px auto; text-align: center;">
             <h2>🔒 Accès Gérant (Administration)</h2>
             <div id="login-section">
-                <!-- Désactivation de l'autocomplétion agressive -->
                 <input type="email" id="admin-email" placeholder="Email du gérant" autocomplete="off">
                 <input type="password" id="admin-password" placeholder="Mot de passe" autocomplete="new-password">
                 <button onclick="connecterAdmin()">Se connecter</button>
@@ -193,7 +203,7 @@
             </div>
         </div>
 
-        <!-- TABLEAU DE BORD GÉRANT (Totalement masqué pour les parents/élèves) -->
+        <!-- TABLEAU DE BORD GÉRANT (Totalement masqué pour les autres rôles) -->
         <div id="admin-dashboard" style="display: none;">
             
             <div class="grid-2">
@@ -306,7 +316,7 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
-        // Nettoyage automatique des champs de connexion au chargement pour éviter la persistance du mot de passe
+        // Nettoyage automatique des champs de connexion au chargement
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('admin-email').value = '';
             document.getElementById('admin-password').value = '';
@@ -356,6 +366,46 @@
             }
         }
 
+        // Recherche par nom (Espace Professeur)
+        async function rechercherProfesseur() {
+            const nomSaisi = document.getElementById('recherche-prof').value.trim().toLowerCase();
+            const resultatDiv = document.getElementById('resultat-recherche-prof');
+            
+            if (!nomSaisi) {
+                resultatDiv.innerHTML = '<span style="color: var(--danger);">Veuillez entrer votre nom.</span>';
+                return;
+            }
+
+            resultatDiv.innerHTML = "Recherche en cours...";
+            const snapshot = await db.ref('professeurs').once('value');
+
+            if (!snapshot.exists()) {
+                resultatDiv.innerHTML = `<span style="color: var(--danger);">Aucun professeur enregistré pour le moment.</span>`;
+                return;
+            }
+
+            let trouve = false;
+            resultatDiv.innerHTML = "";
+
+            snapshot.forEach((child) => {
+                const prof = child.val();
+                if (prof.nom && prof.nom.toLowerCase().includes(nomSaisi)) {
+                    trouve = true;
+                    resultatDiv.innerHTML += `
+                        <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+                            <p style="margin: 0 0 5px 0; color: #38bdf8; font-weight: bold;">Espace Professeur Trouvé :</p>
+                            <p style="margin: 3px 0;"><strong>Nom :</strong> ${prof.nom}</p>
+                            <p style="margin: 3px 0;"><strong>Cours Dispensé :</strong> ${prof.cours}</p>
+                        </div>
+                    `;
+                }
+            });
+
+            if (!trouve) {
+                resultatDiv.innerHTML = `<span style="color: var(--danger);">Aucun professeur trouvé correspondant à "${nomSaisi}". Vérifiez auprès de l'administration.</span>`;
+            }
+        }
+
         // Sécurité et affichage conditionnel selon l'authentification du Gérant
         auth.onAuthStateChanged((user) => {
             const loginSection = document.getElementById('login-section');
@@ -364,7 +414,6 @@
             const status = document.getElementById('auth-status');
 
             if (user) {
-                // Le gérant est connecté
                 status.innerText = "Connecté : Gérant";
                 status.style.background = "rgba(34, 197, 94, 0.1)";
                 status.style.color = "#4ade80";
@@ -372,15 +421,13 @@
                 infoConnecte.style.display = 'block';
                 dashboard.style.display = 'block'; 
             } else {
-                // Utilisateur standard (Parent / Élève / Visiteur)
-                status.innerText = "Espace Parent & Élève";
+                status.innerText = "Espace Public / Visiteur";
                 status.style.background = "rgba(99, 102, 241, 0.1)";
                 status.style.color = "#818cf8";
                 loginSection.style.display = 'block';
                 infoConnecte.style.display = 'none';
                 dashboard.style.display = 'none'; 
                 
-                // Force le nettoyage des champs de connexion en cas de déconnexion
                 document.getElementById('admin-email').value = '';
                 document.getElementById('admin-password').value = '';
             }
