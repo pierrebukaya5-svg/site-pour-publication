@@ -31,7 +31,7 @@
     </header>
 
     <!-- Conteneur Principal -->
-    <main id="main-container" class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
+    <main id="main-container" class="max-w-4xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
 
         <!-- Étape 1 : Connexion ou Ajout de rôle -->
         <div id="auth-section" class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
@@ -42,13 +42,19 @@
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Rôles souhaités (Cochez ou sélectionnez)</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Rôles souhaités</label>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-100 p-1.5 rounded-2xl" id="tab-container">
                         <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition shadow-sm bg-indigo-600 text-white" data-role="Gérant">Gérant</button>
                         <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition text-slate-600 hover:bg-white/60" data-role="Enseignant">Enseignant</button>
                         <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition text-slate-600 hover:bg-white/60" data-role="Élève">Élève</button>
                         <button type="button" class="tab-btn py-2.5 px-3 rounded-xl font-semibold text-xs transition text-slate-600 hover:bg-white/60" data-role="Parent">Parent</button>
                     </div>
+                </div>
+
+                <!-- Champ dynamique pour le cours de l'enseignant -->
+                <div id="cours-field-container" class="hidden">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Votre Cours Affilié (ex: Mathématiques)</label>
+                    <input type="text" id="user-cours" placeholder="Nom de votre cours" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none transition text-sm bg-slate-50/50">
                 </div>
 
                 <div>
@@ -100,6 +106,8 @@
         let selectedRole = "Gérant";
 
         const tabButtons = document.querySelectorAll('.tab-btn');
+        const coursContainer = document.getElementById('cours-field-container');
+
         tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 tabButtons.forEach(b => {
@@ -109,6 +117,13 @@
                 btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
                 btn.classList.remove('text-slate-600', 'hover:bg-white/60');
                 selectedRole = btn.getAttribute('data-role');
+
+                // Afficher le champ "Cours" uniquement si le rôle Enseignant est sélectionné
+                if (selectedRole === "Enseignant") {
+                    coursContainer.classList.remove('hidden');
+                } else {
+                    coursContainer.classList.add('hidden');
+                }
             });
         });
 
@@ -124,8 +139,8 @@
                 const userSnap = await get(ref(db, 'comptes/' + user.uid));
                 if (userSnap.exists()) {
                     const userData = userSnap.val();
-                    const rolesAutorises = userData.roles || [userData.role];
-                    choisirOuAfficherEspace(user, rolesAutorises);
+                    const rolesAutorises = userData.roles || { [userData.role]: true };
+                    choisirOuAfficherEspace(user, rolesAutorises, userData);
                 }
             }
         });
@@ -133,9 +148,15 @@
         document.getElementById('btn-signup').addEventListener('click', async () => {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-password').value;
+            const cours = document.getElementById('user-cours').value.trim();
 
             if (!email || !pass) {
-                afficherErreur("Veuillez remplir tous les champs.");
+                afficherErreur("Veuillez remplir tous les champs obligatoires.");
+                return;
+            }
+
+            if (selectedRole === "Enseignant" && !cours) {
+                afficherErreur("Veuillez indiquer le cours affilié pour votre rôle d'enseignant.");
                 return;
             }
 
@@ -144,14 +165,20 @@
                 try {
                     const cred = await createUserWithEmailAndPassword(auth, email, pass);
                     user = cred.user;
-                    await set(ref(db, 'comptes/' + user.uid), { email, roles: { [selectedRole]: true } });
+                    let dataCompte = { email, roles: { [selectedRole]: true } };
+                    if (selectedRole === "Enseignant") dataCompte.cours = cours;
+
+                    await set(ref(db, 'comptes/' + user.uid), dataCompte);
                     alert("Compte créé avec succès avec le rôle : " + selectedRole);
                 } catch (err) {
                     if (err.code === 'auth/email-already-in-use') {
                         const cred = await signInWithEmailAndPassword(auth, email, pass);
                         user = cred.user;
-                        await update(ref(db, 'comptes/' + user.uid + '/roles'), { [selectedRole]: true });
-                        alert("Le rôle '" + selectedRole + "' a été ajouté avec succès à votre compte existant !");
+                        let updates = { [`roles/${selectedRole}`]: true };
+                        if (selectedRole === "Enseignant") updates.cours = cours;
+
+                        await update(ref(db, 'comptes/' + user.uid), updates);
+                        alert("Le rôle '" + selectedRole + "' a été ajouté avec succès à votre compte !");
                         location.reload();
                     } else {
                         throw err;
@@ -178,20 +205,20 @@
             }
         });
 
-        function choisirOuAfficherEspace(user, rolesObj) {
+        function choisirOuAfficherEspace(user, rolesObj, userData) {
             const listeRoles = Object.keys(rolesObj);
             
             if (listeRoles.length > 1) {
                 let roleActif = localStorage.getItem('role_actif_' + user.uid) || listeRoles[0];
                 if (!rolesObj[roleActif]) roleActif = listeRoles[0];
                 
-                afficherTableauDeBordMulti(user, listeRoles, roleActif);
+                afficherTableauDeBordMulti(user, listeRoles, roleActif, userData);
             } else {
-                afficherTableauDeBordMulti(user, listeRoles, listeRoles[0]);
+                afficherTableauDeBordMulti(user, listeRoles, listeRoles[0], userData);
             }
         }
 
-        async function afficherTableauDeBordMulti(user, listeRoles, roleActif) {
+        async function afficherTableauDeBordMulti(user, listeRoles, roleActif, userData) {
             const container = document.getElementById('main-container');
 
             let optionsHtml = "";
@@ -204,7 +231,7 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4">
                         <div>
                             <h2 class="text-xl font-bold text-slate-900">Espace ${roleActif}</h2>
-                            <p class="text-xs text-slate-500 mt-0.5">Connecté : <span class="font-semibold text-indigo-600">${user.email}</span></p>
+                            <p class="text-xs text-slate-500 mt-0.5">Connecté : <span class="font-semibold text-indigo-600">${user.email}</span> ${userData.cours ? `| Cours : <span class="font-semibold text-emerald-600">${userData.cours}</span>` : ''}</p>
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="flex gap-1.5 items-center bg-slate-50 p-1 rounded-xl border">
@@ -238,20 +265,30 @@
                     </div>
                 `;
             } else if (roleActif === "Enseignant") {
+                const coursProf = userData.cours || "Mon Cours";
                 contenuHtml += `
                     <div class="space-y-6">
                         <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100">
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-900 mb-3">Saisir les résultats par identité (Reconnaissance auto)</h3>
-                            <div class="space-y-3 mb-3">
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <input type="text" id="note-nom" placeholder="Nom de l'élève" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
-                                    <input type="text" id="note-postnom" placeholder="Post-nom de l'élève" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
-                                    <input type="text" id="note-classe" placeholder="Classe & Option (ex: 5ème Math)" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
-                                </div>
-                                <div id="info-reconnaissance" class="text-xs text-indigo-700 font-semibold bg-indigo-50 p-2.5 rounded-xl border border-indigo-200 hidden"></div>
-                                <textarea id="note-details" placeholder="Saisir les résultats (ex: Math: 16/20, Physique: 14/20 - Trimestre 1)" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"></textarea>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-900 mb-2">Saisie des notes pour votre cours : <span class="underline">${coursProf}</span></h3>
+                            <p class="text-xs text-slate-500 mb-4">Sélectionnez la classe par onglet, puis choisissez un élève dans la liste pour lui attribuer une note.</p>
+
+                            <!-- Conteneur des onglets de classes -->
+                            <div id="onglets-classes" class="flex flex-wrap gap-2 mb-4 pb-2 border-b border-emerald-200">
+                                <span class="text-xs text-slate-400 italic">Chargement des classes...</span>
                             </div>
-                            <button id="btn-publier-note" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-md text-sm">Reconnaître l'élève & Publier</button>
+
+                            <!-- Zone d'affichage des élèves de la classe sélectionnée -->
+                            <div id="zone-eleves-classe" class="bg-white p-4 rounded-2xl border border-emerald-200 mb-4 max-h-60 overflow-y-auto space-y-2">
+                                <p class="text-xs text-slate-400 italic">Veuillez sélectionner une classe ci-dessus.</p>
+                            </div>
+
+                            <!-- Formulaire de saisie pour l'élève sélectionné -->
+                            <div id="form-saisie-note" class="bg-white p-4 rounded-2xl border border-emerald-200 hidden space-y-3">
+                                <div class="text-xs font-bold text-emerald-800" id="selection-eleve-info">Élève sélectionné : Aucun</div>
+                                <input type="hidden" id="selected-matricule">
+                                <input type="text" id="note-valeur" placeholder="Saisir la note ou résultat (ex: 16/20 - Interrogation 1)" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50">
+                                <button id="btn-publier-note" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl transition shadow text-xs">Enregistrer la note pour ${coursProf}</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -328,79 +365,102 @@
             }
 
             if (roleActif === "Enseignant") {
-                const inputNom = document.getElementById('note-nom');
-                const inputPostnom = document.getElementById('note-postnom');
-                const inputClasse = document.getElementById('note-classe');
-                const infoBox = document.getElementById('info-reconnaissance');
+                const snapEleves = await get(ref(db, 'eleves'));
+                const ongletsContainer = document.getElementById('onglets-classes');
+                const zoneEleves = document.getElementById('zone-eleves-classe');
+                const formSaisie = document.getElementById('form-saisie-note');
+                const infoSelection = document.getElementById('selection-eleve-info');
+                const inputMatriculeCache = document.getElementById('selected-matricule');
 
-                // Fonction de reconnaissance automatique basée sur Nom, Post-nom et Classe/Option
-                const verifierIdentite = async () => {
-                    const nomRecherche = inputNom.value.trim().toLowerCase();
-                    const postnomRecherche = inputPostnom.value.trim().toLowerCase();
-                    const classeRecherche = inputClasse.value.trim().toLowerCase();
+                let elevesParClasse = {};
 
-                    if (nomRecherche.length < 2 || postnomRecherche.length < 2 || classeRecherche.length < 2) {
-                        infoBox.classList.add('hidden');
-                        return;
-                    }
+                if (snapEleves.exists()) {
+                    snapEleves.forEach(child => {
+                        const e = child.val();
+                        const classeNom = e.classe || "Non classé";
+                        if (!elevesParClasse[classeNom]) {
+                            elevesParClasse[classeNom] = [];
+                        }
+                        elevesParClasse[classeNom].push(e);
+                    });
 
-                    const snap = await get(ref(db, 'eleves'));
-                    let trouve = null;
-
-                    if (snap.exists()) {
-                        snap.forEach(child => {
-                            const e = child.val();
-                            if (
-                                e.nom.toLowerCase() === nomRecherche && 
-                                e.postnom.toLowerCase() === postnomRecherche && 
-                                e.classe.toLowerCase().includes(classeRecherche)
-                            ) {
-                                trouve = e;
-                            }
+                    const classes = Object.keys(elevesParClasse);
+                    if (classes.length > 0) {
+                        let htmlOnglets = "";
+                        classes.forEach((cls, index) => {
+                            htmlOnglets += `<button type="button" class="tab-classe px-3 py-1.5 rounded-xl font-semibold text-xs transition bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white shadow-sm" data-classe="${cls}">${cls}</button>`;
                         });
-                    }
+                        ongletsContainer.innerHTML = htmlOnglets;
 
-                    if (trouve) {
-                        infoBox.innerHTML = `✅ Élève reconnu ! <strong>Matricule : ${trouve.matricule}</strong> (${trouve.classe})`;
-                        infoBox.classList.remove('hidden');
-                        infoBox.dataset.matriculeTrouve = trouve.matricule;
+                        // Gestion des clics sur les onglets de classes
+                        document.querySelectorAll('.tab-classe').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                document.querySelectorAll('.tab-classe').forEach(b => b.classList.remove('bg-emerald-600', 'text-white'));
+                                btn.classList.add('bg-emerald-600', 'text-white');
+
+                                const classeChoisie = btn.getAttribute('data-classe');
+                                const listeElevesDeClasse = elevesParClasse[classeChoisie];
+
+                                let htmlEleves = `<p class="text-xs font-bold text-slate-700 mb-2">Élèves de la classe : ${classeChoisie}</p><div class="space-y-1.5">`;
+                                listeElevesDeClasse.forEach(el => {
+                                    htmlEleves += `
+                                        <div class="p-2 bg-slate-50 hover:bg-emerald-50 rounded-xl border border-slate-200 flex justify-between items-center cursor-pointer transition select-eleve" data-matricule="${el.matricule}" data-nom="${el.nom} ${el.postnom}">
+                                            <div><strong>${el.nom} ${el.postnom}</strong></div>
+                                            <div class="text-[11px] text-indigo-600 font-mono font-bold bg-white px-2 py-0.5 rounded border">${el.matricule}</div>
+                                        </div>
+                                    `;
+                                });
+                                htmlEleves += `</div>`;
+                                zoneEleves.innerHTML = htmlEleves;
+                                formSaisie.classList.add('hidden'); // Cacher le formulaire tant qu'on ne clique pas sur un élève
+
+                                // Activer le choix de l'élève
+                                document.querySelectorAll('.select-eleve').forEach(item => {
+                                    item.addEventListener('click', () => {
+                                        document.querySelectorAll('.select-eleve').forEach(i => i.classList.remove('border-emerald-600', 'bg-emerald-50'));
+                                        item.classList.add('border-emerald-600', 'bg-emerald-50');
+
+                                        const mat = item.getAttribute('data-matricule');
+                                        const nomComplet = item.getAttribute('data-nom');
+
+                                        inputMatriculeCache.value = mat;
+                                        infoSelection.innerText = `Élève sélectionné : ${nomComplet} (Matricule : ${mat})`;
+                                        formSaisie.classList.remove('hidden');
+                                    });
+                                });
+                            });
+                        });
                     } else {
-                        infoBox.innerHTML = `⚠️ Aucun élève trouvé avec ces critères précis (Nom, Post-nom et Classe). Vérifiez les informations.`;
-                        infoBox.classList.remove('hidden');
-                        infoBox.dataset.matriculeTrouve = "";
+                        ongletsContainer.innerHTML = `<span class="text-slate-400 italic">Aucune classe disponible. Demandez au gérant d'enregistrer des élèves.</span>`;
                     }
-                };
-
-                inputNom.addEventListener('input', verifierIdentite);
-                inputPostnom.addEventListener('input', verifierIdentite);
-                inputClasse.addEventListener('input', verifierIdentite);
+                } else {
+                    ongletsContainer.innerHTML = `<span class="text-slate-400 italic">Aucun élève enregistré dans la base de données.</span>`;
+                }
 
                 document.getElementById('btn-publier-note').addEventListener('click', async () => {
-                    const matriculeAssocie = infoBox.dataset.matriculeTrouve;
-                    const details = document.getElementById('note-details').value.trim();
+                    const matricule = inputMatriculeCache.value;
+                    const valeurNote = document.getElementById('note-valeur').value.trim();
+                    const coursProf = userData.cours || "Mon Cours";
 
-                    if (!matriculeAssocie) {
-                        alert("Veuillez renseigner correctement le nom, le post-nom et la classe pour valider la reconnaissance de l'élève.");
+                    if (!matricule) {
+                        alert("Veuillez sélectionner un élève dans la liste.");
                         return;
                     }
-                    if (!details) {
-                        alert("Veuillez saisir les résultats de l'élève.");
+                    if (!valeurNote) {
+                        alert("Veuillez saisir une note ou un résultat.");
                         return;
                     }
 
                     try {
-                        await set(ref(db, 'resultats/' + matriculeAssocie), {
-                            details: details,
+                        // Stocker les notes par cours pour l'élève
+                        await set(ref(db, `resultats/${matricule}/cours/${coursProf}`), {
+                            note: valeurNote,
                             dateMiseAJour: new Date().toLocaleString()
                         });
-                        alert("Résultats publiés avec succès pour l'élève (Matricule : " + matriculeAssocie + ")");
-                        document.getElementById('note-nom').value = "";
-                        document.getElementById('note-postnom').value = "";
-                        document.getElementById('note-classe').value = "";
-                        document.getElementById('note-details').value = "";
-                        infoBox.classList.add('hidden');
+                        alert(`Note enregistrée avec succès pour le cours de ${coursProf} !`);
+                        document.getElementById('note-valeur').value = "";
                     } catch (err) {
-                        alert("Erreur : " + err.message);
+                        alert("Erreur lors de l'enregistrement : " + err.message);
                     }
                 });
             }
@@ -419,10 +479,18 @@
                         const snap = await get(ref(db, 'resultats/' + matricule));
                         if (snap.exists()) {
                             const data = snap.val();
+                            let htmlCours = "";
+                            if (data.cours) {
+                                for (let [coursNom, info] of Object.entries(data.cours)) {
+                                    htmlCours += `<div class="p-2 mb-2 bg-slate-50 rounded-lg border"><strong>${coursNom}</strong> : ${info.note} <span class="text-[10px] text-slate-400 block">Mise à jour : ${info.dateMiseAJour}</span></div>`;
+                                }
+                            } else if (data.details) {
+                                htmlCours = `<p class="whitespace-pre-line mb-2">${data.details}</p>`;
+                            }
+
                             resultatDiv.innerHTML = `
-                                <p class="font-bold text-indigo-600 mb-1">Matricule : ${matricule}</p>
-                                <p class="whitespace-pre-line mb-2">${data.details}</p>
-                                <p class="text-slate-400 text-[10px]">Dernière mise à jour : ${data.dateMiseAJour}</p>
+                                <p class="font-bold text-indigo-600 mb-2">Matricule : ${matricule}</p>
+                                <div class="space-y-1">${htmlCours}</div>
                             `;
                         } else {
                             resultatDiv.innerHTML = `<span class="text-amber-600 italic">Aucun résultat trouvé pour ce matricule.</span>`;
