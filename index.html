@@ -33,7 +33,7 @@
     </header>
 
     <!-- Conteneur Principal -->
-    <main class="max-w-4xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
+    <main id="main-container" class="max-w-4xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             
@@ -87,11 +87,10 @@
         Portail Scolaire RDC &copy; 2026 — Tous droits réservés
     </footer>
 
-    <!-- Script Firebase Auth -->
+    <!-- Script Firebase Auth & Logique -->
     <script>
         const firebaseConfig = {
             databaseURL: "https://site-publication-default-rtdb.firebaseio.com/"
-            // Ajoutez vos clés apiKey/authDomain ici si nécessaire pour Firebase Auth
         };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -103,8 +102,8 @@
             
             auth.createUserWithEmailAndPassword(email, pass)
                 .then(userCredential => {
-                    alert("Compte créé avec succès ! Vous êtes connecté.");
-                    // Redirection ou mise à jour de l'UI
+                    alert("Compte créé avec succès !");
+                    afficherInterfaceConnectee(userCredential.user.email);
                 })
                 .catch(error => {
                     alert("Erreur : " + error.message);
@@ -119,11 +118,35 @@
             auth.signInWithEmailAndPassword(email, pass)
                 .then(userCredential => {
                     alert("Connexion réussie !");
-                    // Redirection ou mise à jour de l'UI
+                    afficherInterfaceConnectee(userCredential.user.email);
                 })
                 .catch(error => {
                     alert("Erreur de connexion : " + error.message);
                 });
+        }
+
+        function afficherInterfaceConnectee(email) {
+            const container = document.getElementById('main-container');
+            container.innerHTML = `
+                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/25 max-w-xl mx-auto text-center">
+                    <div class="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Bienvenue sur votre portail</h2>
+                    <p class="text-sm text-slate-600 mb-6">Connecté en tant que : <span class="font-semibold text-indigo-600">${email}</span></p>
+                    <button onclick="deconnexion()" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-3.5 rounded-xl transition text-sm">Se déconnecter</button>
+                </div>
+            `;
+        }
+
+        function deconnexion() {
+            auth.signOut().then(() => {
+                location.reload();
+            }).catch(error => {
+                alert("Erreur lors de la déconnexion : " + error.message);
+            });
         }
     </script>
 </body>
