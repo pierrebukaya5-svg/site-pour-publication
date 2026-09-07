@@ -13,15 +13,15 @@
 
     <style>
         :root {
-            --bg-main: #090d16;
-            --card-bg: #131c31;
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --bg-main: #f1f5f9;       /* Fond clair moderne */
+            --card-bg: #ffffff;       /* Cartes en blanc pur */
+            --primary: #4f46e5;       /* Indigo principal */
+            --primary-hover: #4338ca;
+            --text-main: #0f172a;     /* Texte sombre bien lisible */
+            --text-muted: #64748b;    /* Texte secondaire gris */
             --danger: #ef4444;
             --success: #22c55e;
-            --border: #1e293b;
+            --border: #cbd5e1;        /* Bordures claires */
         }
 
         body {
@@ -38,7 +38,7 @@
         }
 
         header {
-            background: linear-gradient(135deg, #1e1b4b 0%, #131c31 100%);
+            background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
             border: 1px solid var(--border);
             padding: 20px 25px;
             border-radius: 16px;
@@ -46,22 +46,23 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            color: #ffffff;
         }
 
         header h1 { margin: 0; font-size: 22px; color: #fff; }
-        header p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 13px; }
+        header p { margin: 5px 0 0 0; color: #e2e8f0; font-size: 13px; }
 
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border);
             padding: 20px;
             border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
             margin-bottom: 20px;
         }
 
-        h2 { margin-top: 0; font-size: 16px; border-bottom: 2px solid var(--primary); padding-bottom: 6px; display: inline-block; color: #fff; }
+        h2 { margin-top: 0; font-size: 16px; border-bottom: 2px solid var(--primary); padding-bottom: 6px; display: inline-block; color: var(--text-main); }
         
         input, textarea, select, button {
             width: 100%;
@@ -69,9 +70,9 @@
             margin-top: 6px;
             margin-bottom: 12px;
             border-radius: 8px;
-            border: 1px solid #334155;
-            background: #0b0f19;
-            color: white;
+            border: 1px solid var(--border);
+            background: #f8fafc;
+            color: var(--text-main);
             box-sizing: border-box;
             font-size: 13px;
         }
@@ -79,10 +80,12 @@
         input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: var(--primary);
+            background: #ffffff;
         }
 
         button {
             background: var(--primary);
+            color: white;
             border: none;
             font-weight: 600;
             cursor: pointer;
@@ -106,8 +109,8 @@
         }
 
         .user-pill {
-            background: rgba(99, 102, 241, 0.1);
-            color: #818cf8;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
             padding: 6px 14px;
             border-radius: 20px;
             font-size: 13px;
@@ -153,30 +156,32 @@
             <div id="auth-status" class="user-pill">Espace Public / Visiteur</div>
         </header>
 
-        <!-- ESPACE PARENT / ÉLÈVE : CONSULTATION PAR MATRICULE -->
-        <div class="card" style="border-color: #4f46e5;">
-            <h2>🔍 Espace Consultation (Parent / Élève)</h2>
-            <p style="color: var(--text-muted); font-size: 13px;">Entrez votre matricule fourni par l'administration pour consulter votre dossier scolaire.</p>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="recherche-matricule" placeholder="Ex: MAT-001" style="margin: 0;">
-                <button onclick="rechercherParMatricule()" style="width: 180px; margin: 0;">Consulter</button>
+        <div class="grid-2">
+            <!-- ESPACE PARENT / ÉLÈVE : CONSULTATION PAR MATRICULE -->
+            <div class="card" style="border-color: #4f46e5;">
+                <h2>🔍 Espace Consultation (Parent / Élève)</h2>
+                <p style="color: var(--text-muted); font-size: 13px;">Entrez votre matricule élève fourni par l'administration.</p>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="recherche-matricule" placeholder="Ex: MAT-001" style="margin: 0;">
+                    <button onclick="rechercherParMatricule()" style="width: 130px; margin: 0;">Consulter</button>
+                </div>
+                <div id="resultat-recherche-parent" style="margin-top: 15px; font-size: 14px;"></div>
             </div>
-            <div id="resultat-recherche-parent" style="margin-top: 15px; font-size: 14px;"></div>
-        </div>
 
-        <!-- ESPACE PROFESSEUR -->
-        <div class="card" style="border-color: #0ea5e9;">
-            <h2>👨‍🏫 Espace Professeur</h2>
-            <p style="color: var(--text-muted); font-size: 13px;">Entrez votre nom enregistré par l'administration pour consulter vos cours et informations assignées.</p>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="recherche-prof" placeholder="Ex: M. Jean" style="margin: 0;">
-                <button onclick="rechercherProfesseur()" style="width: 180px; margin: 0; background: #0ea5e9;">Voir mon espace</button>
+            <!-- ESPACE PROFESSEUR (Par Matricule) -->
+            <div class="card" style="border-color: #0ea5e9;">
+                <h2>👨‍🏫 Espace Professeur</h2>
+                <p style="color: var(--text-muted); font-size: 13px;">Entrez votre matricule professeur fourni par l'administration.</p>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="recherche-prof-matricule" placeholder="Ex: PROF-001" style="margin: 0;">
+                    <button onclick="rechercherProfesseurParMatricule()" style="width: 130px; margin: 0; background: #0ea5e9;">Consulter</button>
+                </div>
+                <div id="resultat-recherche-prof" style="margin-top: 15px; font-size: 14px;"></div>
             </div>
-            <div id="resultat-recherche-prof" style="margin-top: 15px; font-size: 14px;"></div>
         </div>
 
         <div class="grid-2">
-            <!-- Actualités Publiques (Visibles par tous) -->
+            <!-- Actualités Publiques -->
             <div class="card">
                 <h2>📢 Actualités & Annonces</h2>
                 <div id="liste-articles-public">Chargement...</div>
@@ -199,18 +204,18 @@
             </div>
             <div id="admin-info-connecte" style="display: none;">
                 <p style="color: var(--success); font-weight: bold;">Connecté en tant que Gérant</p>
-                <button onclick="deconnecterAdmin()" style="background: transparent; border: 1px solid #334155; width: auto; padding: 6px 16px;">Se déconnecter</button>
+                <button onclick="deconnecterAdmin()" style="background: transparent; border: 1px solid var(--border); color: var(--text-main); width: auto; padding: 6px 16px;">Se déconnecter</button>
             </div>
         </div>
 
-        <!-- TABLEAU DE BORD GÉRANT (Totalement masqué pour les autres rôles) -->
+        <!-- TABLEAU DE BORD GÉRANT -->
         <div id="admin-dashboard" style="display: none;">
             
             <div class="grid-2">
                 <!-- Enregistrement Élève -->
                 <div class="card">
                     <h2>👨‍🎓 Enregistrer un Élève & Matricule</h2>
-                    <input type="text" id="eleve-matricule" placeholder="Matricule (ex: MAT-001)">
+                    <input type="text" id="eleve-matricule" placeholder="Matricule Élève (ex: MAT-001)">
                     <input type="text" id="eleve-nom" placeholder="Nom complet de l'élève">
                     <input type="text" id="eleve-classe" placeholder="Classe (ex: 5ème Math)">
                     <button onclick="ajouterEleve()">Enregistrer l'élève</button>
@@ -218,7 +223,8 @@
 
                 <!-- Enregistrement Professeur -->
                 <div class="card">
-                    <h2>👨‍🏫 Enregistrer un Professeur</h2>
+                    <h2>👨‍🏫 Enregistrer un Professeur & Matricule</h2>
+                    <input type="text" id="prof-matricule" placeholder="Matricule Prof (ex: PROF-001)">
                     <input type="text" id="prof-nom" placeholder="Nom complet du professeur">
                     <input type="text" id="prof-cours" placeholder="Cours dispensé (ex: Mathématiques)">
                     <button onclick="ajouterProf()">Enregistrer le professeur</button>
@@ -244,7 +250,7 @@
             </div>
 
             <!-- Clôture et Bilan Annuel -->
-            <div class="card" style="border-color: #3730a3;">
+            <div class="card" style="border-color: #4f46e5;">
                 <h2>📊 Clôture & Bilan Annuel (PDF & Reset)</h2>
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 12px;">
                     Générez le PDF officiel de fin d'année et nettoyez la base de données en toute sécurité.
@@ -278,7 +284,7 @@
         <div class="pdf-section">
             <h2>2. Corps Professoral</h2>
             <table class="pdf-table">
-                <thead><tr><th>Nom du Professeur</th><th>Cours / Matière</th></tr></thead>
+                <thead><tr><th>Matricule</th><th>Nom du Professeur</th><th>Cours / Matière</th></tr></thead>
                 <tbody id="pdf-table-profs"></tbody>
             </table>
         </div>
@@ -322,27 +328,27 @@
             document.getElementById('admin-password').value = '';
         });
 
-        // Chargement en direct des actualités pour tous
+        // Chargement en direct des actualités
         db.ref('articles').on('value', (snapshot) => {
             const container = document.getElementById('liste-articles-public');
             container.innerHTML = '';
             if (!snapshot.exists()) { container.innerHTML = '<p style="color: var(--text-muted); font-size:13px;">Aucune actualité publiée.</p>'; return; }
             snapshot.forEach((child) => {
                 const art = child.val();
-                container.innerHTML += `<div style="margin-bottom:10px; border-bottom:1px solid #1e293b; padding-bottom:8px;">
+                container.innerHTML += `<div style="margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:8px;">
                     <strong>${art.titre}</strong>
                     <p style="margin:4px 0 0 0; color: var(--text-muted); font-size:12px;">${art.contenu}</p>
                 </div>`;
             });
         });
 
-        // Recherche par matricule (Espace Parent / Élève)
+        // Recherche élève par matricule
         async function rechercherParMatricule() {
             const matriculeSaisi = document.getElementById('recherche-matricule').value.trim();
             const resultatDiv = document.getElementById('resultat-recherche-parent');
             
             if (!matriculeSaisi) {
-                resultatDiv.innerHTML = '<span style="color: var(--danger);">Veuillez entrer un matricule valide.</span>';
+                resultatDiv.innerHTML = '<span style="color: var(--danger);">Veuillez entrer un matricule élève.</span>';
                 return;
             }
 
@@ -350,13 +356,13 @@
             const snapshot = await db.ref('eleves').orderByChild('matricule').equalTo(matriculeSaisi).once('value');
 
             if (!snapshot.exists()) {
-                resultatDiv.innerHTML = `<span style="color: var(--danger);">Aucun élève trouvé avec le matricule "${matriculeSaisi}". Vérifiez auprès de l'administration.</span>`;
+                resultatDiv.innerHTML = `<span style="color: var(--danger);">Aucun élève trouvé avec le matricule "${matriculeSaisi}".</span>`;
             } else {
                 snapshot.forEach((child) => {
                     const eleve = child.val();
                     resultatDiv.innerHTML = `
                         <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); padding: 12px; border-radius: 8px;">
-                            <p style="margin: 0 0 5px 0; color: #4ade80; font-weight: bold;">Dossier Élève Trouvé :</p>
+                            <p style="margin: 0 0 5px 0; color: #15803d; font-weight: bold;">Dossier Élève Trouvé :</p>
                             <p style="margin: 3px 0;"><strong>Nom :</strong> ${eleve.nom}</p>
                             <p style="margin: 3px 0;"><strong>Classe :</strong> ${eleve.classe}</p>
                             <p style="margin: 3px 0;"><strong>Matricule :</strong> ${eleve.matricule}</p>
@@ -366,47 +372,37 @@
             }
         }
 
-        // Recherche par nom (Espace Professeur)
-        async function rechercherProfesseur() {
-            const nomSaisi = document.getElementById('recherche-prof').value.trim().toLowerCase();
+        // Recherche professeur par matricule
+        async function rechercherProfesseurParMatricule() {
+            const matriculeSaisi = document.getElementById('recherche-prof-matricule').value.trim();
             const resultatDiv = document.getElementById('resultat-recherche-prof');
             
-            if (!nomSaisi) {
-                resultatDiv.innerHTML = '<span style="color: var(--danger);">Veuillez entrer votre nom.</span>';
+            if (!matriculeSaisi) {
+                resultatDiv.innerHTML = '<span style="color: var(--danger);">Veuillez entrer votre matricule prof.</span>';
                 return;
             }
 
             resultatDiv.innerHTML = "Recherche en cours...";
-            const snapshot = await db.ref('professeurs').once('value');
+            const snapshot = await db.ref('professeurs').orderByChild('matricule').equalTo(matriculeSaisi).once('value');
 
             if (!snapshot.exists()) {
-                resultatDiv.innerHTML = `<span style="color: var(--danger);">Aucun professeur enregistré pour le moment.</span>`;
-                return;
-            }
-
-            let trouve = false;
-            resultatDiv.innerHTML = "";
-
-            snapshot.forEach((child) => {
-                const prof = child.val();
-                if (prof.nom && prof.nom.toLowerCase().includes(nomSaisi)) {
-                    trouve = true;
-                    resultatDiv.innerHTML += `
-                        <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
-                            <p style="margin: 0 0 5px 0; color: #38bdf8; font-weight: bold;">Espace Professeur Trouvé :</p>
+                resultatDiv.innerHTML = `<span style="color: var(--danger);">Aucun professeur trouvé avec le matricule "${matriculeSaisi}".</span>`;
+            } else {
+                snapshot.forEach((child) => {
+                    const prof = child.val();
+                    resultatDiv.innerHTML = `
+                        <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid #0ea5e9; padding: 12px; border-radius: 8px;">
+                            <p style="margin: 0 0 5px 0; color: #0369a1; font-weight: bold;">Espace Professeur Trouvé :</p>
                             <p style="margin: 3px 0;"><strong>Nom :</strong> ${prof.nom}</p>
-                            <p style="margin: 3px 0;"><strong>Cours Dispensé :</strong> ${prof.cours}</p>
+                            <p style="margin: 3px 0;"><strong>Cours :</strong> ${prof.cours}</p>
+                            <p style="margin: 3px 0;"><strong>Matricule :</strong> ${prof.matricule}</p>
                         </div>
                     `;
-                }
-            });
-
-            if (!trouve) {
-                resultatDiv.innerHTML = `<span style="color: var(--danger);">Aucun professeur trouvé correspondant à "${nomSaisi}". Vérifiez auprès de l'administration.</span>`;
+                });
             }
         }
 
-        // Sécurité et affichage conditionnel selon l'authentification du Gérant
+        // Sécurité et affichage conditionnel
         auth.onAuthStateChanged((user) => {
             const loginSection = document.getElementById('login-section');
             const infoConnecte = document.getElementById('admin-info-connecte');
@@ -415,15 +411,13 @@
 
             if (user) {
                 status.innerText = "Connecté : Gérant";
-                status.style.background = "rgba(34, 197, 94, 0.1)";
-                status.style.color = "#4ade80";
+                status.style.background = "rgba(34, 197, 94, 0.2)";
                 loginSection.style.display = 'none';
                 infoConnecte.style.display = 'block';
                 dashboard.style.display = 'block'; 
             } else {
                 status.innerText = "Espace Public / Visiteur";
-                status.style.background = "rgba(99, 102, 241, 0.1)";
-                status.style.color = "#818cf8";
+                status.style.background = "rgba(255, 255, 255, 0.15)";
                 loginSection.style.display = 'block';
                 infoConnecte.style.display = 'none';
                 dashboard.style.display = 'none'; 
@@ -443,15 +437,15 @@
             auth.signOut();
         }
 
-        // Actions réservées exclusivement au Gérant
+        // Actions réservées au Gérant
         function ajouterEleve() {
-            if (!auth.currentUser) return alert("Accès refusé. Réservé au gérant.");
+            if (!auth.currentUser) return alert("Accès refusé.");
             const matricule = document.getElementById('eleve-matricule').value;
             const nom = document.getElementById('eleve-nom').value;
             const classe = document.getElementById('eleve-classe').value;
             if (!matricule || !nom || !classe) return alert("Remplissez tous les champs élève !");
             db.ref('eleves').push({ matricule, nom, classe }).then(() => {
-                alert("Élève et matricule enregistrés avec succès !");
+                alert("Élève enregistré avec succès !");
                 document.getElementById('eleve-matricule').value = '';
                 document.getElementById('eleve-nom').value = '';
                 document.getElementById('eleve-classe').value = '';
@@ -460,11 +454,13 @@
 
         function ajouterProf() {
             if (!auth.currentUser) return alert("Accès refusé.");
+            const matricule = document.getElementById('prof-matricule').value;
             const nom = document.getElementById('prof-nom').value;
             const cours = document.getElementById('prof-cours').value;
-            if (!nom || !cours) return alert("Remplissez tous les champs professeur !");
-            db.ref('professeurs').push({ nom, cours }).then(() => {
-                alert("Professeur enregistré !");
+            if (!matricule || !nom || !cours) return alert("Remplissez tous les champs professeur !");
+            db.ref('professeurs').push({ matricule, nom, cours }).then(() => {
+                alert("Professeur et matricule enregistrés !");
+                document.getElementById('prof-matricule').value = '';
                 document.getElementById('prof-nom').value = '';
                 document.getElementById('prof-cours').value = '';
             });
@@ -494,7 +490,7 @@
             });
         }
 
-        // Téléchargement du Bilan PDF (Gérant uniquement)
+        // Téléchargement du Bilan PDF
         async function telechargerBilanPDF() {
             if (!auth.currentUser) return alert("Accès refusé.");
             const anneeScolaire = document.getElementById('input-annee-scolaire').value.trim();
@@ -512,7 +508,7 @@
             const data = snapshot.val() || {};
 
             remplirTableauPDF('pdf-table-eleves', data.eleves, ['matricule', 'nom', 'classe'], 3);
-            remplirTableauPDF('pdf-table-profs', data.professeurs, ['nom', 'cours'], 2);
+            remplirTableauPDF('pdf-table-profs', data.professeurs, ['matricule', 'nom', 'cours'], 3);
             remplirTableauPDF('pdf-table-evenements', data.evenements, ['titre', 'date'], 2);
             remplirTableauPDF('pdf-table-frais', data.frais, ['description', 'montant'], 2);
 
@@ -533,10 +529,10 @@
             });
         }
 
-        // Nettoyage de la base de données (Gérant uniquement)
+        // Réinitialisation de la base
         async function reinitialiserBaseDeDonnees() {
             if (!auth.currentUser) return alert("Accès refusé.");
-            const confirmation1 = confirm("⚠️ ATTENTION : Voulez-vous vraiment vider la base de données ? Assurez-vous d'avoir téléchargé le PDF avant.");
+            const confirmation1 = confirm("⚠️ ATTENTION : Voulez-vous vraiment vider la base de données ?");
             if (!confirmation1) return;
 
             const confirmation2 = prompt("Écrivez le mot SUPPRIMER pour confirmer :");
@@ -551,7 +547,7 @@
                 await db.ref('evenements').remove();
                 await db.ref('frais').remove();
 
-                alert("🧹 Base de données réinitialisée pour la nouvelle année !");
+                alert("🧹 Base de données réinitialisée !");
                 document.getElementById('input-annee-scolaire').value = '';
             } catch (error) {
                 alert("Erreur : " + error.message);
