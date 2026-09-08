@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC - Espace Sécurisé</title>
+    <title>Portail Scolaire RDC - Espace Élève & Admin</title>
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <!-- html2pdf -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <!-- Google Material Icons -->
@@ -25,7 +23,6 @@
             --md-sys-color-on-surface: #202124;
             --md-sys-color-on-surface-variant: #5f6368;
             --md-sys-color-outline: #dadce0;
-            --md-sys-color-error: #d93025;
             --md-sys-color-success: #188038;
         }
 
@@ -52,7 +49,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 24px;
-            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3);
         }
 
         .header-brand {
@@ -77,7 +74,6 @@
             margin: 0; 
             font-size: 20px; 
             font-weight: 500; 
-            color: var(--md-sys-color-on-surface);
         }
         header p { 
             margin: 2px 0 0 0; 
@@ -98,7 +94,6 @@
             margin-top: 0; 
             font-size: 16px; 
             font-weight: 500;
-            color: var(--md-sys-color-on-surface);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -118,7 +113,7 @@
             margin-bottom: 6px;
         }
 
-        input, textarea, select {
+        input {
             width: 100%;
             padding: 12px 16px;
             margin-top: 4px;
@@ -128,11 +123,11 @@
             background: var(--md-sys-color-surface);
             color: var(--md-sys-color-on-surface);
             box-sizing: border-box;
-            font-family: 'Google Sans', 'Roboto', sans-serif;
+            font-family: 'Google Sans', sans-serif;
             font-size: 14px;
         }
 
-        input:focus, textarea:focus, select:focus {
+        input:focus {
             outline: none;
             border-color: var(--md-sys-color-primary);
             box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
@@ -156,13 +151,10 @@
             box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3);
         }
 
-        button:hover { 
-            background: #1557b0; 
-        }
+        button:hover { background: #1557b0; }
 
         .user-pill {
             background: var(--md-sys-color-surface-variant);
-            color: var(--md-sys-color-on-surface);
             border: 1px solid var(--md-sys-color-outline);
             padding: 6px 14px;
             border-radius: 16px;
@@ -207,13 +199,25 @@
             <div id="auth-status" class="user-pill">Visiteur</div>
         </header>
 
+        <!-- ESPACE CONSULTATION ÉLÈVE -->
+        <div class="card" style="max-width: 600px; margin: 0 auto 20px auto;">
+            <h2><span class="material-icons-outlined">person_search</span> Espace Consultation Élève</h2>
+            <label for="recherche-matricule">Entrez votre Matricule</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="recherche-matricule" placeholder="Ex: KAKAP5ESECO1234" style="margin: 0; text-transform: uppercase;">
+                <button onclick="rechercherEleve()" style="width: 140px; margin: 0;">Consulter</button>
+            </div>
+            <div id="resultat-eleve" style="margin-top: 16px; font-size: 13px;"></div>
+        </div>
+
+        <!-- AUTHENTIFICATION ADMIN -->
         <div class="card" style="max-width: 480px; margin: 0 auto 24px auto;">
-            <h2><span class="material-icons-outlined">admin_panel_settings</span> Authentification Administration</h2>
+            <h2><span class="material-icons-outlined">admin_panel_settings</span> Administration</h2>
             <div id="login-section">
                 <label for="admin-email">Adresse e-mail</label>
-                <input type="email" id="admin-email" placeholder="admin@ecole.cd" autocomplete="off">
+                <input type="email" id="admin-email" placeholder="admin@ecole.cd">
                 <label for="admin-password">Mot de passe</label>
-                <input type="password" id="admin-password" placeholder="••••••••" autocomplete="new-password">
+                <input type="password" id="admin-password" placeholder="••••••••">
                 <button onclick="connecterAdmin()">Se connecter</button>
             </div>
             <div id="admin-info-connecte" style="display: none; text-align: center;">
@@ -222,8 +226,8 @@
             </div>
         </div>
 
+        <!-- TABLEAU DE BORD ADMIN (MASQUÉ PAR DÉFAUT) -->
         <div id="admin-dashboard" style="display: none;">
-            
             <div class="card" style="max-width: 600px; margin: 0 auto 20px auto;">
                 <h2><span class="material-icons-outlined">person_add</span> Enregistrer un Élève</h2>
                 <label>Nom</label>
@@ -238,14 +242,14 @@
             </div>
 
             <div class="card">
-                <h2><span class="material-icons-outlined">folder_shared</span> Registre des Élèves Actifs & Matricules</h2>
+                <h2><span class="material-icons-outlined">folder_shared</span> Registre des Élèves Inscrits</h2>
                 <table class="table-admin">
                     <thead><tr><th>Identité</th><th>Classe</th><th>Matricule</th></tr></thead>
                     <tbody id="admin-table-eleves"><tr><td colspan="3">Chargement...</td></tr></tbody>
                 </table>
             </div>
-
         </div>
+
     </div>
 
     <script>
@@ -276,7 +280,7 @@
                 dashboard.style.display = 'block';
                 chargerEleves();
             } else {
-                status.innerText = "Visiteur";
+                status.innerText = "Visiteur / Élève";
                 loginSection.style.display = 'block';
                 infoConnecte.style.display = 'none';
                 dashboard.style.display = 'none'; 
@@ -309,7 +313,7 @@
             const classe = document.getElementById('eleve-classe').value.trim();
 
             if (!nom || !postnom || !prenom || !classe) {
-                alert("Veuillez remplir tous les champs obligatoires de l'élève.");
+                alert("Veuillez remplir tous les champs obligatoires.");
                 return;
             }
 
@@ -331,6 +335,40 @@
                 .catch(error => {
                     alert("Erreur Firebase : " + error.message);
                 });
+        }
+
+        function rechercherEleve() {
+            const matriculeRecherche = document.getElementById('recherche-matricule').value.trim().toUpperCase();
+            const resultatDiv = document.getElementById('resultat-eleve');
+
+            if (!matriculeRecherche) {
+                resultatDiv.innerHTML = '<span style="color: var(--md-sys-color-error);">Veuillez entrer un matricule.</span>';
+                return;
+            }
+
+            resultatDiv.innerHTML = "Recherche en cours...";
+
+            db.ref('eleves').once('value', (snapshot) => {
+                let trouve = false;
+                snapshot.forEach((childSnapshot) => {
+                    const e = childSnapshot.val();
+                    if (e.matricule === matriculeRecherche) {
+                        trouve = true;
+                        resultatDiv.innerHTML = `
+                            <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 8px; border: 1px solid var(--md-sys-color-outline);">
+                                <p style="margin: 0 0 8px 0; color: var(--md-sys-color-success); font-weight: 500;">✓ Dossier trouvé</p>
+                                <p style="margin: 4px 0;"><strong>Nom complet :</strong> ${e.nom} ${e.postnom} ${e.prenom}</p>
+                                <p style="margin: 4px 0;"><strong>Classe :</strong> ${e.classe}</p>
+                                <p style="margin: 4px 0;"><strong>Matricule :</strong> ${e.matricule}</p>
+                            </div>
+                        `;
+                    }
+                });
+
+                if (!trouve) {
+                    resultatDiv.innerHTML = '<span style="color: #d93025;">Aucun élève trouvé avec ce matricule.</span>';
+                }
+            });
         }
 
         function chargerEleves() {
