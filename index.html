@@ -65,6 +65,7 @@
                     <button onclick="verifierCodeAdmin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition">
                         Déverrouiller la session admin
                     </button>
+                    <p id="message-erreur" class="text-red-500 text-sm mt-3 hidden"></p>
                 </div>
             </div>
         </main>
@@ -89,8 +90,9 @@
         // Initialisation de Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        console.log("Firebase initialisé avec succès !");
 
-        // Fonctions de navigation globale
+        // Fonctions de navigation globale rattachées à window pour fonctionner avec les balises onclick HTML
         window.afficherEspaceAdmin = function() {
             document.getElementById('vue-accueil').classList.add('hidden');
             document.getElementById('vue-admin-secu').classList.remove('hidden');
@@ -109,13 +111,51 @@
             alert("Espace Enseignant en cours de chargement...");
         }
 
-        window.verifierCodeAdmin = function() {
+        window.verifierCodeAdmin = async function() {
             const code = document.getElementById('code-maitre-input').value;
-            if (code) {
-                // Exemple de vérification basique ou connexion Firebase
-                alert("Vérification du code maître...");
-            } else {
-                alert("Veuillez entrer un code.");
+            const messageErreur = document.getElementById('message-erreur');
+            
+            if (!code) {
+                if(messageErreur) {
+                    messageErreur.textContent = "Veuillez entrer un code.";
+                    messageErreur.classList.remove('hidden');
+                } else {
+                    alert("Veuillez entrer un code.");
+                }
+                return;
+            }
+
+            try {
+                // Vous pouvez adapter ici la vérification avec votre base de données Realtime Database
+                const codeRef = ref(db, 'config/codeMaitre');
+                const snapshot = await get(codeRef);
+                
+                if (snapshot.exists()) {
+                    if (code === snapshot.val()) {
+                        alert("Accès administrateur autorisé !");
+                        if(messageErreur) messageErreur.classList.add('hidden');
+                    } else {
+                        if(messageErreur) {
+                            messageErreur.textContent = "Code maître incorrect.";
+                            messageErreur.classList.remove('hidden');
+                        } else {
+                            alert("Code incorrect.");
+                        }
+                    }
+                } else {
+                    // Si la base est vide, code par défaut de secours
+                    if (code === "1234") {
+                        alert("Connexion réussie avec le code par défaut.");
+                    } else {
+                        if(messageErreur) {
+                            messageErreur.textContent = "Code incorrect ou non configuré.";
+                            messageErreur.classList.remove('hidden');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Erreur Firebase :", error);
+                alert("Erreur de connexion à la base de données.");
             }
         }
     </script>
