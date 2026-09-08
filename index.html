@@ -434,7 +434,7 @@
                 <h2><span class="material-icons-outlined">lock</span> Connexion Administrateur</h2>
                 <label for="admin-email">Adresse e-mail</label>
                 <input type="email" id="admin-email" placeholder="admin@ecole.cd">
-                <label for="admin-password">Mot de passe</label>
+                <label for="admin-password">Mot de passe / Code d'accès</label>
                 <input type="password" id="admin-password" placeholder="••••••••">
                 <button onclick="connecterAdmin()">Se connecter</button>
             </div>
@@ -449,7 +449,8 @@
                     <!-- Onglets internes admin -->
                     <div class="tabs-admin">
                         <button class="tab-btn active" onclick="changerOngletAdmin('inscriptions')">Inscriptions</button>
-                        <button class="tab-btn" onclick="changerOngletAdmin('annuaire')">Annuaire Général (Élèves & Profs)</button>
+                        <button class="tab-btn" onclick="changerOngletAdmin('eleves')">Liste des Élèves</button>
+                        <button class="tab-btn" onclick="changerOngletAdmin('profs')">Liste des Professeurs</button>
                     </div>
 
                     <!-- Section Inscriptions -->
@@ -483,21 +484,39 @@
                         </div>
                     </div>
 
-                    <!-- Section Annuaire Global -->
-                    <div id="admin-section-annuaire" class="section-cache">
-                        <h3 style="font-size: 15px; margin-top: 0;">Liste de toutes les personnes enregistrées</h3>
+                    <!-- Section Liste des Élèves (Séparée) -->
+                    <div id="admin-section-eleves" class="section-cache">
+                        <h3 style="font-size: 15px; margin-top: 0;">Liste des Élèves Enregistrés</h3>
                         <div style="overflow-x: auto;">
                             <table class="admin-table">
                                 <thead>
                                     <tr>
-                                        <th>Type</th>
                                         <th>Nom complet</th>
-                                        <th>Détails (Classe / Matière)</th>
-                                        <th>Code / Matricule d'accès</th>
+                                        <th>Classe</th>
+                                        <th>Matricule</th>
                                     </tr>
                                 </thead>
-                                <tbody id="table-annuaire-body">
-                                    <tr><td colspan="4" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement de l'annuaire...</td></tr>
+                                <tbody id="table-eleves-body">
+                                    <tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Section Liste des Professeurs (Séparée) -->
+                    <div id="admin-section-profs" class="section-cache">
+                        <h3 style="font-size: 15px; margin-top: 0;">Liste des Professeurs Enregistrés</h3>
+                        <div style="overflow-x: auto;">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom complet</th>
+                                        <th>Matière</th>
+                                        <th>Code d'accès</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-profs-body">
+                                    <tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -523,6 +542,9 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const auth = firebase.auth();
+
+        // Empêcher l'auto-connexion persistante de l'Admin au chargement de la page
+        auth.signOut();
 
         function ouvrirEspace(type) {
             document.getElementById('page-accueil').style.display = 'none';
@@ -559,7 +581,7 @@
             if (user) {
                 loginCard.style.display = 'none';
                 dashboard.style.display = 'block';
-                chargerAnnuaireGlobal();
+                chargerListesAdmin();
             } else {
                 loginCard.style.display = 'block';
                 dashboard.style.display = 'none';
@@ -569,6 +591,12 @@
         function connecterAdmin() {
             const email = document.getElementById('admin-email').value.trim();
             const pass = document.getElementById('admin-password').value.trim();
+            
+            if (!email || !pass) {
+                alert("Veuillez remplir tous les champs de connexion.");
+                return;
+            }
+
             auth.signInWithEmailAndPassword(email, pass)
                 .then(() => {
                     // Nettoyage immédiat des champs pour que l'identité ne reste pas fixe
@@ -616,7 +644,7 @@
                     document.getElementById('eleve-postnom').value = '';
                     document.getElementById('eleve-prenom').value = '';
                     document.getElementById('eleve-classe').value = '';
-                    chargerAnnuaireGlobal();
+                    chargerListesAdmin();
                 })
                 .catch(error => {
                     alert("Erreur Firebase : " + error.message);
@@ -641,7 +669,7 @@
                     document.getElementById('prof-nom').value = '';
                     document.getElementById('prof-prenom').value = '';
                     document.getElementById('prof-matiere').value = '';
-                    chargerAnnuaireGlobal();
+                    chargerListesAdmin();
                 })
                 .catch(error => {
                     alert("Erreur Firebase : " + error.message);
@@ -680,69 +708,76 @@
         }
 
         function changerOngletAdmin(onglet) {
-            const btnInscriptions = document.querySelectorAll('.tab-btn')[0];
-            const btnAnnuaire = document.querySelectorAll('.tab-btn')[1];
+            const boutons = document.querySelectorAll('.tabs-admin .tab-btn');
+            boutons.forEach(b => b.classList.remove('active'));
+
             const secInscriptions = document.getElementById('admin-section-inscriptions');
-            const secAnnuaire = document.getElementById('admin-section-annuaire');
+            const secEleves = document.getElementById('admin-section-eleves');
+            const secProfs = document.getElementById('admin-section-profs');
+
+            secInscriptions.style.display = 'none';
+            secEleves.style.display = 'none';
+            secProfs.style.display = 'none';
 
             if (onglet === 'inscriptions') {
-                btnInscriptions.classList.add('active');
-                btnAnnuaire.classList.remove('active');
+                boutons[0].classList.add('active');
                 secInscriptions.style.display = 'block';
-                secAnnuaire.style.display = 'none';
-            } else {
-                btnAnnuaire.classList.add('active');
-                btnInscriptions.classList.remove('active');
-                secAnnuaire.style.display = 'block';
-                secInscriptions.style.display = 'none';
-                chargerAnnuaireGlobal();
+            } else if (onglet === 'eleves') {
+                boutons[1].classList.add('active');
+                secEleves.style.display = 'block';
+                chargerListesAdmin();
+            } else if (onglet === 'profs') {
+                boutons[2].classList.add('active');
+                secProfs.style.display = 'block';
+                chargerListesAdmin();
             }
         }
 
-        function chargerAnnuaireGlobal() {
-            const tbody = document.getElementById('table-annuaire-body');
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>';
+        function chargerListesAdmin() {
+            const tbodyEleves = document.getElementById('table-eleves-body');
+            const tbodyProfs = document.getElementById('table-profs-body');
 
+            tbodyEleves.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>';
+            tbodyProfs.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>';
+
+            // Charger Élèves
             db.ref('eleves').once('value', (snapshotEleves) => {
-                db.ref('professeurs').once('value', (snapshotProfs) => {
-                    let html = '';
+                let htmlEleves = '';
+                if (snapshotEleves.exists()) {
+                    snapshotEleves.forEach((child) => {
+                        const e = child.val();
+                        htmlEleves += `
+                            <tr>
+                                <td>${e.nom} ${e.postnom} ${e.prenom}</td>
+                                <td>${e.classe}</td>
+                                <td><code>${e.matricule}</code></td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    htmlEleves = '<tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Aucun élève enregistré.</td></tr>';
+                }
+                tbodyEleves.innerHTML = htmlEleves;
+            });
 
-                    // Élèves
-                    if (snapshotEleves.exists()) {
-                        snapshotEleves.forEach((child) => {
-                            const e = child.val();
-                            html += `
-                                <tr>
-                                    <td><strong>Élève</strong></td>
-                                    <td>${e.nom} ${e.postnom} ${e.prenom}</td>
-                                    <td>Classe : ${e.classe}</td>
-                                    <td><code>${e.matricule}</code></td>
-                                </tr>
-                            `;
-                        });
-                    }
-
-                    // Professeurs
-                    if (snapshotProfs.exists()) {
-                        snapshotProfs.forEach((child) => {
-                            const p = child.val();
-                            html += `
-                                <tr>
-                                    <td><strong style="color: var(--md-sys-color-primary);">Professeur</strong></td>
-                                    <td>${p.nom} ${p.prenom}</td>
-                                    <td>Matière : ${p.matiere}</td>
-                                    <td><code>${p.codeAcces}</code></td>
-                                </tr>
-                            `;
-                        });
-                    }
-
-                    if (!html) {
-                        html = '<tr><td colspan="4" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Aucun enregistrement pour le moment.</td></tr>';
-                    }
-
-                    tbody.innerHTML = html;
-                });
+            // Charger Professeurs
+            db.ref('professeurs').once('value', (snapshotProfs) => {
+                let htmlProfs = '';
+                if (snapshotProfs.exists()) {
+                    snapshotProfs.forEach((child) => {
+                        const p = child.val();
+                        htmlProfs += `
+                            <tr>
+                                <td>${p.nom} ${p.prenom}</td>
+                                <td>${p.matiere}</td>
+                                <td><code>${p.codeAcces}</code></td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    htmlProfs = '<tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Aucun professeur enregistré.</td></tr>';
+                }
+                tbodyProfs.innerHTML = htmlProfs;
             });
         }
 
