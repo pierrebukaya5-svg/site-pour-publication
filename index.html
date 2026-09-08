@@ -145,7 +145,7 @@
                     </button>
                 </div>
 
-                <!-- Onglets Admin (Option supprimée) -->
+                <!-- Onglets Admin -->
                 <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-200 pb-4">
                     <button onclick="changerOngletAdmin('eleves')" id="tab-eleves" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white transition shadow-sm">
                         🎓 Élèves & Parents
@@ -158,18 +158,17 @@
                 <!-- 1. Gestion Élèves & Parents -->
                 <div id="admin-content-eleves" class="admin-tab-content space-y-6">
                     <div class="bg-slate-50/70 border border-slate-200 p-5 rounded-2xl">
-                        <h4 class="font-bold text-sm text-slate-800 mb-3">Enregistrer un Élève & ses Tuteurs (Matricule 5 chiffres)</h4>
+                        <h4 class="font-bold text-sm text-slate-800 mb-3">Enregistrer un Élève & ses Tuteurs (Génération automatique du matricule)</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                             <input type="text" id="adm-el-nom" placeholder="Nom" class="p-3 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <input type="text" id="adm-el-postnom" placeholder="Post-nom" class="p-3 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <input type="text" id="adm-el-prenom" placeholder="Prénom" class="p-3 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <input type="text" id="adm-el-matricule" maxlength="5" placeholder="Matricule (ex: 10023)" class="p-3 bg-white border border-slate-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <input type="text" id="adm-el-classe" placeholder="Classe (ex: 4ème)" class="p-3 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <input type="text" id="adm-el-parent-nom" placeholder="Nom complet du tuteur" class="p-3 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <input type="text" id="adm-el-parent-tel" placeholder="Téléphone du tuteur" class="p-3 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                         <button onclick="ajouterEleve()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm">
-                            Enregistrer l'élève
+                            Enregistrer l'élève & Générer son matricule
                         </button>
                     </div>
 
@@ -378,24 +377,27 @@
             const nom = document.getElementById('adm-el-nom').value.trim();
             const postnom = document.getElementById('adm-el-postnom').value.trim();
             const prenom = document.getElementById('adm-el-prenom').value.trim();
-            const matricule = document.getElementById('adm-el-matricule').value.trim();
             const classe = document.getElementById('adm-el-classe').value.trim();
             const nomParent = document.getElementById('adm-el-parent-nom').value.trim();
             const telParent = document.getElementById('adm-el-parent-tel').value.trim();
 
-            if(!nom || matricule.length !== 5 || isNaN(matricule)) {
-                alert("Veuillez vérifier les informations. Le matricule doit comporter exactement 5 chiffres.");
+            if(!nom) {
+                alert("Veuillez renseigner au moins le nom de l'élève.");
                 return;
             }
+
+            // Génération automatique d'un matricule unique à 5 chiffres
+            const matricule = Math.floor(10000 + Math.random() * 90000).toString();
 
             await set(ref(db, `eleves/${matricule}`), {
                 nom, postnom, prenom, classe, nomParent, telParent, enOrdre: true
             });
-            alert("Élève enregistré avec succès !");
+            
+            alert(`Élève enregistré avec succès !\nMatricule généré : ${matricule}`);
+            
             document.getElementById('adm-el-nom').value = "";
             document.getElementById('adm-el-postnom').value = "";
             document.getElementById('adm-el-prenom').value = "";
-            document.getElementById('adm-el-matricule').value = "";
             document.getElementById('adm-el-classe').value = "";
             document.getElementById('adm-el-parent-nom').value = "";
             document.getElementById('adm-el-parent-tel').value = "";
@@ -414,7 +416,7 @@
                     const enOrdre = d.enOrdre !== false;
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50/50 transition">
-                            <td class="p-3.5 font-mono text-xs font-bold text-slate-700">${m}</td>
+                            <td class="p-3.5 font-mono text-xs font-bold text-indigo-600 bg-indigo-50/50 px-2 py-1 rounded inline-block my-2">${m}</td>
                             <td class="p-3.5 font-bold text-slate-900">${d.nom} ${d.postnom || ''} ${d.prenom || ''}</td>
                             <td class="p-3.5 text-xs text-slate-600">${d.classe || '-'}</td>
                             <td class="p-3.5 text-xs text-slate-600">${d.nomParent || '-'}<br><span class="text-slate-400">${d.telParent || ''}</span></td>
