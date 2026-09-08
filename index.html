@@ -265,13 +265,48 @@
             font-size: 13px;
         }
 
-        .admin-action-box {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px dashed var(--md-sys-color-outline);
-            background: #f8f9fa;
-            padding: 16px;
+        table.admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        table.admin-table th, table.admin-table td {
+            border: 1px solid var(--md-sys-color-outline);
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        table.admin-table th {
+            background: var(--md-sys-color-surface-variant);
+            font-weight: 500;
+        }
+
+        .tabs-admin {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--md-sys-color-outline);
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            background: var(--md-sys-color-surface-variant);
+            border: 1px solid var(--md-sys-color-outline);
+            color: var(--md-sys-color-on-surface);
+            padding: 8px 16px;
             border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            width: auto;
+            box-shadow: none;
+        }
+
+        .tab-btn.active {
+            background: var(--md-sys-color-primary);
+            color: white;
+            border-color: var(--md-sys-color-primary);
         }
 
         .section-cache { display: none; }
@@ -337,8 +372,23 @@
         <!-- ================= ESPACE PROFESSEUR ================= -->
         <div id="page-prof" class="section-cache">
             <button class="btn-retour" onclick="retourAccueil()"><span class="material-icons-outlined" style="font-size:18px;">arrow_back</span> Retour à l'accueil</button>
-            <div class="card">
-                <h2><span class="material-icons-outlined">edit_note</span> Espace Professeur - Cotations & Suivi</h2>
+            
+            <!-- Connexion Professeur par Code d'Accès -->
+            <div class="card" id="prof-login-card">
+                <h2><span class="material-icons-outlined">vpn_key</span> Connexion Professeur</h2>
+                <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px;">Veuillez entrer le code d'accès fourni par l'administration :</p>
+                <label for="prof-code-acces">Code d'accès Professeur</label>
+                <input type="text" id="prof-code-acces" placeholder="Ex: PROF-8A3B2C" style="text-transform: uppercase;">
+                <button onclick="connecterProf()">Accéder à l'espace</button>
+            </div>
+
+            <!-- Tableau de bord Professeur (Masqué par défaut) -->
+            <div class="card section-cache" id="prof-dashboard">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2 style="margin:0;"><span class="material-icons-outlined">edit_note</span> Espace Professeur - Cotations & Suivi</h2>
+                    <button onclick="deconnecterProf()" style="background: transparent; border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface); width: auto; padding: 6px 14px; font-size: 12px;">Déconnexion</button>
+                </div>
+                
                 <label>Matricule de l'élève concerné</label>
                 <input type="text" id="prof-eleve-matricule" placeholder="Ex: BUKAP6AB7HJL" style="text-transform: uppercase;">
                 
@@ -392,18 +442,67 @@
             <div id="admin-dashboard" class="section-cache">
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <h2 style="margin:0;"><span class="material-icons-outlined">person_add</span> Enregistrer un Nouvel Élève</h2>
+                        <h2 style="margin:0;"><span class="material-icons-outlined">admin_panel_settings</span> Tableau de Bord Administration</h2>
                         <button onclick="deconnecterAdmin()" style="background: transparent; border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface); width: auto; padding: 6px 14px; font-size: 12px;">Fermer la session admin</button>
                     </div>
-                    <label>Nom</label>
-                    <input type="text" id="eleve-nom" placeholder="Nom">
-                    <label>Post-nom</label>
-                    <input type="text" id="eleve-postnom" placeholder="Post-nom">
-                    <label>Prénom</label>
-                    <input type="text" id="eleve-prenom" placeholder="Prénom">
-                    <label>Classe</label>
-                    <input type="text" id="eleve-classe" placeholder="Ex: 5e Secondaire Math">
-                    <button onclick="ajouterEleve()">Générer le matricule & Enregistrer</button>
+
+                    <!-- Onglets internes admin -->
+                    <div class="tabs-admin">
+                        <button class="tab-btn active" onclick="changerOngletAdmin('inscriptions')">Inscriptions</button>
+                        <button class="tab-btn" onclick="changerOngletAdmin('annuaire')">Annuaire Général (Élèves & Profs)</button>
+                    </div>
+
+                    <!-- Section Inscriptions -->
+                    <div id="admin-section-inscriptions">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <!-- Formulaire Élève -->
+                            <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline);">
+                                <h3 style="margin-top:0; font-size: 15px;"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle;">person_add</span> Enregistrer un Élève</h3>
+                                <label>Nom</label>
+                                <input type="text" id="eleve-nom" placeholder="Nom">
+                                <label>Post-nom</label>
+                                <input type="text" id="eleve-postnom" placeholder="Post-nom">
+                                <label>Prénom</label>
+                                <input type="text" id="eleve-prenom" placeholder="Prénom">
+                                <label>Classe</label>
+                                <input type="text" id="eleve-classe" placeholder="Ex: 5e Secondaire Math">
+                                <button onclick="ajouterEleve()">Générer le matricule & Enregistrer</button>
+                            </div>
+
+                            <!-- Formulaire Professeur -->
+                            <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline);">
+                                <h3 style="margin-top:0; font-size: 15px;"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle;">badge</span> Enregistrer un Professeur</h3>
+                                <label>Nom</label>
+                                <input type="text" id="prof-nom" placeholder="Nom">
+                                <label>Post-nom / Prénom</label>
+                                <input type="text" id="prof-prenom" placeholder="Post-nom / Prénom">
+                                <label>Matière enseignée</label>
+                                <input type="text" id="prof-matiere" placeholder="Ex: Physique">
+                                <button onclick="ajouterProf()">Générer le code d'accès & Enregistrer</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Annuaire Global -->
+                    <div id="admin-section-annuaire" class="section-cache">
+                        <h3 style="font-size: 15px; margin-top: 0;">Liste de toutes les personnes enregistrées</h3>
+                        <div style="overflow-x: auto;">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Nom complet</th>
+                                        <th>Détails (Classe / Matière)</th>
+                                        <th>Code / Matricule d'accès</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-annuaire-body">
+                                    <tr><td colspan="4" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement de l'annuaire...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -460,6 +559,7 @@
             if (user) {
                 loginCard.style.display = 'none';
                 dashboard.style.display = 'block';
+                chargerAnnuaireGlobal();
             } else {
                 loginCard.style.display = 'block';
                 dashboard.style.display = 'none';
@@ -516,10 +616,134 @@
                     document.getElementById('eleve-postnom').value = '';
                     document.getElementById('eleve-prenom').value = '';
                     document.getElementById('eleve-classe').value = '';
+                    chargerAnnuaireGlobal();
                 })
                 .catch(error => {
                     alert("Erreur Firebase : " + error.message);
                 });
+        }
+
+        function ajouterProf() {
+            const nom = document.getElementById('prof-nom').value.trim();
+            const prenom = document.getElementById('prof-prenom').value.trim();
+            const matiere = document.getElementById('prof-matiere').value.trim();
+
+            if (!nom || !prenom || !matiere) {
+                alert("Veuillez remplir tous les champs pour le professeur.");
+                return;
+            }
+
+            const codeAcces = "PROF-" + genererCodeAleatoire(6);
+
+            db.ref('professeurs').push({ codeAcces, nom, prenom, matiere })
+                .then(() => {
+                    alert(`Succès ! Code d'accès généré pour le professeur : ${codeAcces}`);
+                    document.getElementById('prof-nom').value = '';
+                    document.getElementById('prof-prenom').value = '';
+                    document.getElementById('prof-matiere').value = '';
+                    chargerAnnuaireGlobal();
+                })
+                .catch(error => {
+                    alert("Erreur Firebase : " + error.message);
+                });
+        }
+
+        function connecterProf() {
+            const codeSaisi = document.getElementById('prof-code-acces').value.trim().toUpperCase();
+            if (!codeSaisi) {
+                alert("Veuillez entrer un code d'accès.");
+                return;
+            }
+
+            db.ref('professeurs').once('value', (snapshot) => {
+                let profTrouve = false;
+                snapshot.forEach((child) => {
+                    const p = child.val();
+                    if (p.codeAcces === codeSaisi) {
+                        profTrouve = true;
+                    }
+                });
+
+                if (profTrouve) {
+                    document.getElementById('prof-login-card').style.display = 'none';
+                    document.getElementById('prof-dashboard').style.display = 'block';
+                    document.getElementById('prof-code-acces').value = '';
+                } else {
+                    alert("Code d'accès invalide ou non reconnu par l'administration.");
+                }
+            });
+        }
+
+        function deconnecterProf() {
+            document.getElementById('prof-login-card').style.display = 'block';
+            document.getElementById('prof-dashboard').style.display = 'none';
+        }
+
+        function changerOngletAdmin(onglet) {
+            const btnInscriptions = document.querySelectorAll('.tab-btn')[0];
+            const btnAnnuaire = document.querySelectorAll('.tab-btn')[1];
+            const secInscriptions = document.getElementById('admin-section-inscriptions');
+            const secAnnuaire = document.getElementById('admin-section-annuaire');
+
+            if (onglet === 'inscriptions') {
+                btnInscriptions.classList.add('active');
+                btnAnnuaire.classList.remove('active');
+                secInscriptions.style.display = 'block';
+                secAnnuaire.style.display = 'none';
+            } else {
+                btnAnnuaire.classList.add('active');
+                btnInscriptions.classList.remove('active');
+                secAnnuaire.style.display = 'block';
+                secInscriptions.style.display = 'none';
+                chargerAnnuaireGlobal();
+            }
+        }
+
+        function chargerAnnuaireGlobal() {
+            const tbody = document.getElementById('table-annuaire-body');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>';
+
+            db.ref('eleves').once('value', (snapshotEleves) => {
+                db.ref('professeurs').once('value', (snapshotProfs) => {
+                    let html = '';
+
+                    // Élèves
+                    if (snapshotEleves.exists()) {
+                        snapshotEleves.forEach((child) => {
+                            const e = child.val();
+                            html += `
+                                <tr>
+                                    <td><strong>Élève</strong></td>
+                                    <td>${e.nom} ${e.postnom} ${e.prenom}</td>
+                                    <td>Classe : ${e.classe}</td>
+                                    <td><code>${e.matricule}</code></td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    // Professeurs
+                    if (snapshotProfs.exists()) {
+                        snapshotProfs.forEach((child) => {
+                            const p = child.val();
+                            html += `
+                                <tr>
+                                    <td><strong style="color: var(--md-sys-color-primary);">Professeur</strong></td>
+                                    <td>${p.nom} ${p.prenom}</td>
+                                    <td>Matière : ${p.matiere}</td>
+                                    <td><code>${p.codeAcces}</code></td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    if (!html) {
+                        html = '<tr><td colspan="4" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Aucun enregistrement pour le moment.</td></tr>';
+                    }
+
+                    tbody.innerHTML = html;
+                });
+            });
         }
 
         function rechercherEleve() {
