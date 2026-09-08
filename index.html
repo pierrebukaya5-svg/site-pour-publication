@@ -55,7 +55,7 @@
                     ← Retour à l'accueil
                 </button>
                 <div class="border border-slate-200 rounded-xl p-6">
-                    <h3 class="font-bold text-lg mb-2">🎓 Espace Élève</h3>
+                    <h3 class="font-bold text-lg mb-2">🎓 Élève</h3>
                     <p class="text-sm text-slate-500 mb-4">Entrez votre numéro de matricule pour accéder à vos résultats :</p>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Matricule</label>
                     <input type="text" id="input-matricule" class="w-full bg-slate-100 text-slate-900 border border-slate-300 p-3 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: MAT-12345">
@@ -72,7 +72,7 @@
                     ← Retour à l'accueil
                 </button>
                 <div class="border border-slate-200 rounded-xl p-6">
-                    <h3 class="font-bold text-lg mb-2">👨‍🏫 Espace Prof</h3>
+                    <h3 class="font-bold text-lg mb-2">👨‍🏫 Prof</h3>
                     <p class="text-sm text-slate-500 mb-4">Entrez votre code d'accès enseignant :</p>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Code Prof</label>
                     <input type="password" id="input-code-prof" class="w-full bg-slate-100 text-slate-900 border border-slate-300 p-3 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••••">
@@ -84,7 +84,7 @@
             </div>
 
             <!-- Vue Sécurité Admin (Code maître: pr1999) -->
-            <div id="vue-admin" class="hidden">
+            <div id="vue-admin-secu" class="hidden">
                 <button onclick="retourAccueil()" class="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1 mb-6">
                     ← Retour à l'accueil
                 </button>
@@ -99,6 +99,70 @@
                         Déverrouiller la session admin
                     </button>
                     <p id="message-erreur" class="text-red-500 text-sm mt-3 hidden"></p>
+                </div>
+            </div>
+
+            <!-- Vue Tableau de Bord Administration avec ses Onglets -->
+            <div id="vue-admin-dashboard" class="hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b border-slate-200 gap-4">
+                    <div>
+                        <h3 class="font-bold text-xl text-slate-800">⚙️ Tableau de Bord - Administration</h3>
+                        <p class="text-xs text-slate-500">Gestion centralisée de l'établissement</p>
+                    </div>
+                    <button onclick="retourAccueil()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-medium transition">
+                        Déconnexion Admin
+                    </button>
+                </div>
+
+                <!-- Barre d'onglets de l'administration -->
+                <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-200 pb-4">
+                    <button onclick="changerOngletAdmin('eleves')" id="tab-eleves" class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white transition">
+                        🎓 Gestion Élèves
+                    </button>
+                    <button onclick="changerOngletAdmin('profs')" id="tab-profs" class="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                        👨‍🏫 Gestion Profs
+                    </button>
+                    <button onclick="changerOngletAdmin('options')" id="tab-options" class="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                        📚 Options d'études
+                    </button>
+                    <button onclick="changerOngletAdmin('securite')" id="tab-securite" class="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                        🔐 Sécurité & Paramètres
+                    </button>
+                </div>
+
+                <!-- Contenu des Onglets Admin -->
+                <div id="admin-content-eleves" class="admin-tab-content">
+                    <h4 class="font-bold text-md mb-2 text-slate-700">Dossiers et Inscriptions des Élèves</h4>
+                    <p class="text-sm text-slate-500 mb-4">Ajoutez, modifiez ou attribuez des matricules aux élèves.</p>
+                    <div class="p-4 border border-dashed border-slate-300 rounded-xl text-center text-slate-400">
+                        [Module de gestion des élèves rattaché à Firebase]
+                    </div>
+                </div>
+
+                <div id="admin-content-profs" class="admin-tab-content hidden">
+                    <h4 class="font-bold text-md mb-2 text-slate-700">Registre du Corps Enseignant</h4>
+                    <p class="text-sm text-slate-500 mb-4">Générez ou révoquez les codes d'accès des professeurs.</p>
+                    <div class="p-4 border border-dashed border-slate-300 rounded-xl text-center text-slate-400">
+                        [Module de gestion des professeurs rattaché à Firebase]
+                    </div>
+                </div>
+
+                <div id="admin-content-options" class="admin-tab-content hidden">
+                    <h4 class="font-bold text-md mb-2 text-slate-700">Options d'Études et Cours</h4>
+                    <p class="text-sm text-slate-500 mb-4">Configurez les sections (Scientifique, Pédagogie, Commerciale, etc.) et les matières.</p>
+                    <div class="p-4 border border-dashed border-slate-300 rounded-xl text-center text-slate-400">
+                        [Module de configuration des options d'études]
+                    </div>
+                </div>
+
+                <div id="admin-content-securite" class="admin-tab-content hidden">
+                    <h4 class="font-bold text-md mb-2 text-slate-700">Sécurité et Accès Maître</h4>
+                    <p class="text-sm text-slate-500 mb-4">Modifiez le code d'accès maître ou consultez les journaux d'activité.</p>
+                    <div class="p-4 border border-slate-200 rounded-xl bg-slate-50">
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Code Maître Actuel</label>
+                        <input type="text" value="pr1999" disabled class="w-full bg-slate-200 text-slate-600 p-3 rounded-xl mb-4 cursor-not-allowed">
+                        <p class="text-xs text-slate-500">Pour modifier ce code, veuillez contacter le support technique ou synchroniser la base Firebase.</p>
+                    </div>
                 </div>
             </div>
         </main>
@@ -125,11 +189,12 @@
         const db = getDatabase(app);
         console.log("Firebase initialisé avec succès !");
 
-        // Navigation entre les vues
+        // Navigation entre les vues principales
         window.retourAccueil = function() {
             document.getElementById('vue-eleve').classList.add('hidden');
             document.getElementById('vue-prof').classList.add('hidden');
-            document.getElementById('vue-admin').classList.add('hidden');
+            document.getElementById('vue-admin-secu').classList.add('hidden');
+            document.getElementById('vue-admin-dashboard').classList.add('hidden');
             document.getElementById('vue-accueil').classList.remove('hidden');
         }
 
@@ -145,7 +210,26 @@
 
         window.afficherAdmin = function() {
             document.getElementById('vue-accueil').classList.add('hidden');
-            document.getElementById('vue-admin').classList.remove('hidden');
+            document.getElementById('vue-admin-secu').classList.remove('hidden');
+        }
+
+        // Gestion des onglets à l'intérieur du Dashboard Admin
+        window.changerOngletAdmin = function(onglet) {
+            // Masquer tous les contenus d'onglets
+            const contenus = document.querySelectorAll('.admin-tab-content');
+            contenus.forEach(c => c.classList.add('hidden'));
+
+            // Réinitialiser le style de tous les boutons d'onglets
+            const boutons = ['eleves', 'profs', 'options', 'securite'];
+            boutons.forEach(b => {
+                const btn = document.getElementById(`tab-${b}`);
+                btn.className = "px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition";
+            });
+
+            // Activer l'onglet sélectionné
+            document.getElementById(`admin-content-${onglet}`).classList.remove('hidden');
+            const actifBtn = document.getElementById(`tab-${onglet}`);
+            actifBtn.className = "px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white transition";
         }
 
         // Connexion Élève par Matricule
@@ -160,16 +244,13 @@
             }
 
             try {
-                // Vérification dans Firebase de l'existence du matricule (chemin /eleves/{matricule})
                 const eleveRef = ref(db, `eleves/${matricule}`);
                 const snapshot = await get(eleveRef);
 
                 if (snapshot.exists()) {
                     alert("Matricule reconnu ! Connexion de l'élève réussie.");
                     msgErreur.classList.add('hidden');
-                    // Vous pourrez charger les données de l'élève ici
                 } else {
-                    // Mode de test local si la base est vide ou en cours de configuration
                     alert("Matricule validé (Mode local).");
                 }
             } catch (error) {
@@ -220,9 +301,11 @@
             }
 
             if (code === "pr1999") {
-                alert("Accès Administration autorisé avec succès !");
                 messageErreur.classList.add('hidden');
-                // Charger le tableau de bord admin ici
+                // Masquer l'écran de sécurité et afficher le tableau de bord avec onglets
+                document.getElementById('vue-admin-secu').classList.add('hidden');
+                document.getElementById('vue-admin-dashboard').classList.remove('hidden');
+                document.getElementById('code-maitre-input').value = ""; // Vider le champ pour sécurité
             } else {
                 messageErreur.textContent = "Code maître incorrect (Rappel: pr1999).";
                 messageErreur.classList.remove('hidden');
