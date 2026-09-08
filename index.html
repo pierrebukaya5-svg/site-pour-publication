@@ -427,15 +427,18 @@
         <div id="page-admin" class="section-cache">
             <button class="btn-retour" onclick="retourAccueil()"><span class="material-icons-outlined" style="font-size:18px;">arrow_back</span> Retour à l'accueil</button>
             
+            <!-- Carte de connexion admin visible uniquement si déconnecté -->
             <div class="card" id="admin-login-card">
                 <h2><span class="material-icons-outlined">lock</span> Connexion Administrateur</h2>
+                <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px;">Veuillez vous authentifier pour déverrouiller la gestion et la création des comptes :</p>
                 <label for="admin-email">Adresse e-mail</label>
                 <input type="email" id="admin-email" placeholder="admin@ecole.cd">
-                <label for="admin-password">Mot de passe / Code d'accès</label>
+                <label for="admin-password">Mot de passe administrateur</label>
                 <input type="password" id="admin-password" placeholder="••••••••">
-                <button onclick="connecterAdmin()">Se connecter</button>
+                <button onclick="connecterAdmin()">Activer la session admin</button>
             </div>
 
+            <!-- Tableau de bord admin masqué tant que l'admin ne s'est pas authentifié -->
             <div id="admin-dashboard" class="section-cache">
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -569,6 +572,7 @@
             document.getElementById('auth-status').innerText = "Accueil";
         }
 
+        // Écouteur d'état d'authentification pour verrouiller/déverrouiller l'interface admin
         auth.onAuthStateChanged((user) => {
             const loginCard = document.getElementById('admin-login-card');
             const dashboard = document.getElementById('admin-dashboard');
@@ -588,7 +592,7 @@
             const pass = document.getElementById('admin-password').value.trim();
             
             if (!email || !pass) {
-                alert("Veuillez remplir tous les champs de connexion.");
+                alert("Veuillez remplir votre e-mail et votre mot de passe administrateur.");
                 return;
             }
 
@@ -597,7 +601,7 @@
                     document.getElementById('admin-email').value = '';
                     document.getElementById('admin-password').value = '';
                 })
-                .catch(err => alert("Erreur d'authentification : " + err.message));
+                .catch(err => alert("Échec d'authentification admin : " + err.message));
         }
 
         function deconnecterAdmin() {
@@ -614,6 +618,12 @@
         }
 
         function ajouterEleve() {
+            // Vérification de sécurité supplémentaire : s'assurer qu'un admin est bien connecté
+            if (!auth.currentUser) {
+                alert("Action interdite : Veuillez vous connecter en tant qu'administrateur.");
+                return;
+            }
+
             const nom = document.getElementById('eleve-nom').value.trim();
             const postnom = document.getElementById('eleve-postnom').value.trim();
             const prenom = document.getElementById('eleve-prenom').value.trim();
@@ -646,6 +656,12 @@
         }
 
         function ajouterProf() {
+            // Vérification de sécurité supplémentaire : s'assurer qu'un admin est bien connecté
+            if (!auth.currentUser) {
+                alert("Action interdite : Veuillez vous connecter en tant qu'administrateur.");
+                return;
+            }
+
             const nom = document.getElementById('prof-nom').value.trim();
             const prenom = document.getElementById('prof-prenom').value.trim();
             const matiere = document.getElementById('prof-matiere').value.trim();
@@ -728,6 +744,8 @@
         }
 
         function chargerListesAdmin() {
+            if (!auth.currentUser) return;
+
             const tbodyEleves = document.getElementById('table-eleves-body');
             const tbodyProfs = document.getElementById('table-profs-body');
 
@@ -864,7 +882,6 @@
                 return;
             }
 
-            // Validation stricte des barèmes
             if ((type === "Interrogation" || type === "Devoir") && note > 20) {
                 alert("Erreur : Une Interrogation ou un Devoir ne peut pas dépasser 20.");
                 return;
@@ -874,7 +891,6 @@
                 return;
             }
 
-            // Vérification préalable que l'élève existe dans la base avant d'enregistrer la note
             db.ref('eleves').once('value', (snapshot) => {
                 let eleveExiste = false;
                 snapshot.forEach((child) => {
@@ -888,7 +904,6 @@
                     return;
                 }
 
-                // Enregistrement sécurisé une fois le matricule validé
                 db.ref('cotations').push({
                     matricule,
                     cours,
