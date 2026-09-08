@@ -36,7 +36,7 @@
         }
 
         .wrapper {
-            max-width: 900px;
+            max-width: 950px;
             margin: 0 auto;
         }
 
@@ -283,7 +283,7 @@
 
         .tabs-admin {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 16px;
             border-bottom: 1px solid var(--md-sys-color-outline);
             padding-bottom: 12px;
@@ -294,7 +294,7 @@
             background: var(--md-sys-color-surface-variant);
             border: 1px solid var(--md-sys-color-outline);
             color: var(--md-sys-color-on-surface);
-            padding: 8px 16px;
+            padding: 8px 14px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 13px;
@@ -307,6 +307,20 @@
             color: white;
             border-color: var(--md-sys-color-primary);
         }
+
+        .btn-action {
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 6px;
+            width: auto;
+            margin-right: 4px;
+        }
+
+        .btn-modifier { background: #f9ab00; color: #202124; }
+        .btn-modifier:hover { background: #e09d00; }
+
+        .btn-supprimer { background: var(--md-sys-color-error); color: white; }
+        .btn-supprimer:hover { background: #b31412; }
 
         .section-cache { display: none; }
     </style>
@@ -360,7 +374,7 @@
                 <h2><span class="material-icons-outlined">person_search</span> Espace de Consultation Élève</h2>
                 <label for="recherche-matricule">Entrez votre Matricule</label>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="recherche-matricule" placeholder="Ex: BUKAP6AB7HJL" style="margin: 0; text-transform: uppercase;">
+                    <input type="text" id="recherche-matricule" placeholder="Ex: POKAL6INFORMATIQUEV-GVKCT" style="margin: 0; text-transform: uppercase;">
                     <button onclick="rechercherEleve()" style="width: 140px; margin: 0;">Consulter</button>
                 </div>
                 <div id="resultat-eleve" style="margin-top: 20px;"></div>
@@ -387,7 +401,7 @@
                 </div>
                 
                 <label>Matricule de l'élève concerné</label>
-                <input type="text" id="prof-eleve-matricule" placeholder="Ex: BUKAP6AB7HJL" style="text-transform: uppercase;">
+                <input type="text" id="prof-eleve-matricule" placeholder="Ex: POKAL6INFORMATIQUEV-GVKCT" style="text-transform: uppercase;">
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div>
@@ -448,7 +462,8 @@
                         <button class="tab-btn active" onclick="changerOngletAdmin('inscriptions')">Inscriptions</button>
                         <button class="tab-btn" onclick="changerOngletAdmin('eleves')">Liste des Élèves</button>
                         <button class="tab-btn" onclick="changerOngletAdmin('profs')">Liste des Professeurs</button>
-                        <button class="tab-btn" onclick="changerOngletAdmin('securite')">Sécurité & Code Maître</button>
+                        <button class="tab-btn" onclick="changerOngletAdmin('options')">Options d'Étude</button>
+                        <button class="tab-btn" onclick="changerOngletAdmin('securite')">Sécurité & Code</button>
                     </div>
 
                     <!-- Section Inscriptions -->
@@ -463,8 +478,27 @@
                                 <input type="text" id="eleve-postnom" placeholder="Post-nom">
                                 <label>Prénom</label>
                                 <input type="text" id="eleve-prenom" placeholder="Prénom">
-                                <label>Classe</label>
-                                <input type="text" id="eleve-classe" placeholder="Ex: 5e Secondaire Math">
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div>
+                                        <label>Année / Classe</label>
+                                        <select id="eleve-annee" style="background: white;">
+                                            <option value="1ère">1ère Année</option>
+                                            <option value="2ème">2ème Année</option>
+                                            <option value="3ème">3ème Année</option>
+                                            <option value="4ème">4ème Année</option>
+                                            <option value="5ème">5ème Année</option>
+                                            <option value="6ème" selected>6ème Année</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Option d'Étude</label>
+                                        <select id="eleve-option" style="background: white;">
+                                            <!-- Dynamique depuis Firebase -->
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <button onclick="ajouterEleve()">Générer le matricule élève & Enregistrer</button>
                             </div>
 
@@ -477,7 +511,7 @@
                                 <input type="text" id="prof-prenom" placeholder="Post-nom / Prénom">
                                 <label>Matière enseignée</label>
                                 <input type="text" id="prof-matiere" placeholder="Ex: Physique">
-                                <button onclick="ajouterProf()">Générer le code d'accès prof & Enregistrer</button>
+                                <button onclick="ajouterProf()" style="margin-top: 15px;">Générer le code d'accès prof & Enregistrer</button>
                             </div>
                         </div>
                     </div>
@@ -490,12 +524,13 @@
                                 <thead>
                                     <tr>
                                         <th>Nom complet</th>
-                                        <th>Classe</th>
-                                        <th>Matricule (Accès élève)</th>
+                                        <th>Classe / Option</th>
+                                        <th>Matricule</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="table-eleves-body">
-                                    <tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>
+                                    <tr><td colspan="4" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -510,11 +545,37 @@
                                     <tr>
                                         <th>Nom complet</th>
                                         <th>Matière</th>
-                                        <th>Code d'accès (Accès prof)</th>
+                                        <th>Code d'accès</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="table-profs-body">
-                                    <tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>
+                                    <tr><td colspan="4" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Section Options d'Étude -->
+                    <div id="admin-section-options" class="section-cache">
+                        <h3 style="font-size: 15px; margin-top: 0;"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle;">category</span> Gestion des Options d'Étude</h3>
+                        <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">Ajoutez ou supprimez les options disponibles pour les élèves (ex: Informatique, Littéraire, Scientifique...).</p>
+                        
+                        <div style="display: flex; gap: 10px; max-width: 500px; margin-bottom: 20px;">
+                            <input type="text" id="nouvelle-option-nom" placeholder="Ex: Commerciale et Gestion" style="margin: 0;">
+                            <button onclick="ajouterOptionEtude()" style="width: 160px; margin: 0;">Ajouter l'option</button>
+                        </div>
+
+                        <div style="max-width: 500px;">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Option disponible</th>
+                                        <th style="width: 100px; text-align: center;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-options-body">
+                                    <tr><td colspan="2" style="text-align: center;">Chargement...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -557,14 +618,25 @@
         const db = firebase.database();
 
         let adminConnecte = false;
-        // Code maître actuel par défaut en mémoire
         let codeMaitreActuel = "ECOLEADMIN2026";
 
-        // Charger le code personnalisé s'il existe dans Firebase au démarrage
+        // Charger le code maître personnalisé au démarrage
         db.ref('parametres/codeMaitre').once('value', (snapshot) => {
             if (snapshot.exists()) {
                 codeMaitreActuel = snapshot.val();
             }
+        });
+
+        // Charger les options par défaut si elles n'existent pas encore
+        db.ref('options_etude').once('value', (snapshot) => {
+            if (!snapshot.exists()) {
+                db.ref('options_etude').set({
+                    opt1: { nom: "Informatique" },
+                    opt2: { nom: "Littéraire" },
+                    opt3: { nom: "Scientifique" }
+                });
+            }
+            chargerOptionsSelect();
         });
 
         function ouvrirEspace(type) {
@@ -604,6 +676,7 @@
                 loginCard.style.display = 'none';
                 dashboard.style.display = 'block';
                 chargerListesAdmin();
+                chargerOptionsSelect();
             } else {
                 loginCard.style.display = 'block';
                 dashboard.style.display = 'none';
@@ -654,12 +727,66 @@
 
             db.ref('parametres/codeMaitre').set(nouveauSaisi).then(() => {
                 codeMaitreActuel = nouveauSaisi;
-                alert("Code maître mis à jour avec succès ! Pensez à noter votre nouveau code.");
+                alert("Code maître mis à jour avec succès !");
                 document.getElementById('ancien-code-saisi').value = '';
                 document.getElementById('nouveau-code-maitre').value = '';
             }).catch(err => {
-                alert("Erreur lors de la mise à jour : " + err.message);
+                alert("Erreur : " + err.message);
             });
+        }
+
+        function chargerOptionsSelect() {
+            db.ref('options_etude').once('value', (snapshot) => {
+                const selectEleve = document.getElementById('eleve-option');
+                const tbodyOptions = document.getElementById('table-options-body');
+                let optionsHtml = '';
+                let tableHtml = '';
+
+                if (snapshot.exists()) {
+                    snapshot.forEach((child) => {
+                        const opt = child.val();
+                        const key = child.key;
+                        optionsHtml += `<option value="${opt.nom}">${opt.nom}</option>`;
+                        tableHtml += `
+                            <tr>
+                                <td>${opt.nom}</td>
+                                <td style="text-align: center;">
+                                    <button class="btn-action btn-supprimer" onclick="supprimerOption('${key}')">Supprimer</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tableHtml = '<tr><td colspan="2" style="text-align: center;">Aucune option enregistrée.</td></tr>';
+                }
+
+                if (selectEleve) selectEleve.innerHTML = optionsHtml;
+                if (tbodyOptions) tbodyOptions.innerHTML = tableHtml;
+            });
+        }
+
+        function ajouterOptionEtude() {
+            if (!adminConnecte) return;
+            const nomOption = document.getElementById('nouvelle-option-nom').value.trim();
+            if (!nomOption) {
+                alert("Veuillez entrer le nom de l'option.");
+                return;
+            }
+
+            db.ref('options_etude').push({ nom: nomOption }).then(() => {
+                document.getElementById('nouvelle-option-nom').value = '';
+                chargerOptionsSelect();
+                alert("Option ajoutée avec succès !");
+            });
+        }
+
+        function supprimerOption(key) {
+            if (!adminConnecte) return;
+            if (confirm("Voulez-vous vraiment supprimer cette option ?")) {
+                db.ref('options_etude/' + key).remove().then(() => {
+                    chargerOptionsSelect();
+                });
+            }
         }
 
         function genererCodeAleatoire(longueur = 6) {
@@ -672,54 +799,46 @@
         }
 
         function ajouterEleve() {
-            if (!adminConnecte) {
-                alert("Action interdite : Veuillez vous connecter.");
-                return;
-            }
+            if (!adminConnecte) return;
 
             const nom = document.getElementById('eleve-nom').value.trim();
             const postnom = document.getElementById('eleve-postnom').value.trim();
             const prenom = document.getElementById('eleve-prenom').value.trim();
-            const classe = document.getElementById('eleve-classe').value.trim();
+            const annee = document.getElementById('eleve-annee').value;
+            const option = document.getElementById('eleve-option').value;
 
-            if (!nom || !postnom || !prenom || !classe) {
-                alert("Veuillez remplir tous les champs obligatoires.");
+            if (!nom || !postnom || !prenom) {
+                alert("Veuillez remplir le nom, post-nom et prénom.");
                 return;
             }
 
+            const classeComplete = `${annee} ${option}`;
             const codeNom = (nom + "XX").substring(0, 2).toUpperCase();
             const codePost = (postnom + "XX").substring(0, 2).toUpperCase();
             const codePre = (prenom + "X").substring(0, 1).toUpperCase();
-            const codeClasse = classe.toUpperCase().replace(/\s+/g, '');
+            const codeClasse = classeComplete.toUpperCase().replace(/[^A-Z0-9]/g, '');
             const randSuffix = genererCodeAleatoire(6);
-            const matricule = `${codeNom}${codePost}${codePre}${codeClasse}${randSuffix}`;
+            const matricule = `${codeNom}${codePost}${codePre}${codeClasse}-${randSuffix}`;
 
-            db.ref('eleves').push({ matricule, nom, postnom, prenom, classe })
+            db.ref('eleves').push({ matricule, nom, postnom, prenom, classe: classeComplete })
                 .then(() => {
-                    alert(`Élève enregistré avec succès !\n\nMatricule généré (à donner à l'élève) : ${matricule}`);
+                    alert(`Élève enregistré !\n\nMatricule : ${matricule}`);
                     document.getElementById('eleve-nom').value = '';
                     document.getElementById('eleve-postnom').value = '';
                     document.getElementById('eleve-prenom').value = '';
-                    document.getElementById('eleve-classe').value = '';
                     chargerListesAdmin();
-                })
-                .catch(error => {
-                    alert("Erreur Firebase : " + error.message);
                 });
         }
 
         function ajouterProf() {
-            if (!adminConnecte) {
-                alert("Action interdite : Veuillez vous connecter.");
-                return;
-            }
+            if (!adminConnecte) return;
 
             const nom = document.getElementById('prof-nom').value.trim();
             const prenom = document.getElementById('prof-prenom').value.trim();
             const matiere = document.getElementById('prof-matiere').value.trim();
 
             if (!nom || !prenom || !matiere) {
-                alert("Veuillez remplir tous les champs pour le professeur.");
+                alert("Veuillez remplir tous les champs du professeur.");
                 return;
             }
 
@@ -727,31 +846,81 @@
 
             db.ref('professeurs').push({ codeAcces, nom, prenom, matiere })
                 .then(() => {
-                    alert(`Professeur enregistré avec succès !\n\nCode d'accès généré (à transmettre au professeur) : ${codeAcces}`);
+                    alert(`Professeur enregistré !\n\nCode d'accès : ${codeAcces}`);
                     document.getElementById('prof-nom').value = '';
                     document.getElementById('prof-prenom').value = '';
                     document.getElementById('prof-matiere').value = '';
                     chargerListesAdmin();
-                })
-                .catch(error => {
-                    alert("Erreur Firebase : " + error.message);
                 });
+        }
+
+        function modifierEleve(id, ancienNom, ancienPostnom, ancienPrenom, ancienneClasse) {
+            if (!adminConnecte) return;
+            const nouveauNom = prompt("Modifier le Nom :", ancienNom);
+            if (nouveauNom === null) return;
+            const nouveauPostnom = prompt("Modifier le Post-nom :", ancienPostnom);
+            if (nouveauPostnom === null) return;
+            const nouveauPrenom = prompt("Modifier le Prénom :", ancienPrenom);
+            if (nouveauPrenom === null) return;
+            const nouvelleClasse = prompt("Modifier la Classe / Option :", ancienneClasse);
+            if (nouvelleClasse === null) return;
+
+            db.ref('eleves/' + id).update({
+                nom: nouveauNom.trim(),
+                postnom: nouveauPostnom.trim(),
+                prenom: nouveauPrenom.trim(),
+                classe: nouvelleClasse.trim()
+            }).then(() => {
+                alert("Informations de l'élève mises à jour !");
+                chargerListesAdmin();
+            });
+        }
+
+        function supprimerEleve(id) {
+            if (!adminConnecte) return;
+            if (confirm("Êtes-vous sûr de vouloir supprimer cet élève ?")) {
+                db.ref('eleves/' + id).remove().then(() => {
+                    chargerListesAdmin();
+                });
+            }
+        }
+
+        function modifierProf(id, ancienNom, ancienPrenom, ancienneMatiere) {
+            if (!adminConnecte) return;
+            const nouveauNom = prompt("Modifier le Nom :", ancienNom);
+            if (nouveauNom === null) return;
+            const nouveauPrenom = prompt("Modifier le Prénom / Post-nom :", ancienPrenom);
+            if (nouveauPrenom === null) return;
+            const nouvelleMatiere = prompt("Modifier la Matière :", ancienneMatiere);
+            if (nouvelleMatiere === null) return;
+
+            db.ref('professeurs/' + id).update({
+                nom: nouveauNom.trim(),
+                prenom: nouveauPrenom.trim(),
+                matiere: nouvelleMatiere.trim()
+            }).then(() => {
+                alert("Informations du professeur mises à jour !");
+                chargerListesAdmin();
+            });
+        }
+
+        function supprimerProf(id) {
+            if (!adminConnecte) return;
+            if (confirm("Êtes-vous sûr de vouloir supprimer ce professeur ?")) {
+                db.ref('professeurs/' + id).remove().then(() => {
+                    chargerListesAdmin();
+                });
+            }
         }
 
         function connecterProf() {
             const codeSaisi = document.getElementById('prof-code-acces').value.trim().toUpperCase();
-            if (!codeSaisi) {
-                alert("Veuillez entrer un code d'accès.");
-                return;
-            }
+            if (!codeSaisi) return;
 
             db.ref('professeurs').once('value', (snapshot) => {
                 let profTrouve = false;
                 snapshot.forEach((child) => {
-                    const p = child.val();
-                    if (p.codeAcces === codeSaisi) {
-                        profTrouve = true;
-                    }
+                    if (child.val().codeAcces === codeSaisi) profTrouve = true;
                 });
 
                 if (profTrouve) {
@@ -759,7 +928,7 @@
                     document.getElementById('prof-dashboard').style.display = 'block';
                     document.getElementById('prof-code-acces').value = '';
                 } else {
-                    alert("Code d'accès professeur invalide ou non reconnu.");
+                    alert("Code d'accès professeur invalide.");
                 }
             });
         }
@@ -773,31 +942,21 @@
             const boutons = document.querySelectorAll('.tabs-admin .tab-btn');
             boutons.forEach(b => b.classList.remove('active'));
 
-            const secInscriptions = document.getElementById('admin-section-inscriptions');
-            const secEleves = document.getElementById('admin-section-eleves');
-            const secProfs = document.getElementById('admin-section-profs');
-            const secSecurite = document.getElementById('admin-section-securite');
+            const secs = {
+                inscriptions: document.getElementById('admin-section-inscriptions'),
+                eleves: document.getElementById('admin-section-eleves'),
+                profs: document.getElementById('admin-section-profs'),
+                options: document.getElementById('admin-section-options'),
+                securite: document.getElementById('admin-section-securite')
+            };
 
-            secInscriptions.style.display = 'none';
-            secEleves.style.display = 'none';
-            secProfs.style.display = 'none';
-            secSecurite.style.display = 'none';
+            for (let key in secs) secs[key].style.display = 'none';
 
-            if (onglet === 'inscriptions') {
-                boutons[0].classList.add('active');
-                secInscriptions.style.display = 'block';
-            } else if (onglet === 'eleves') {
-                boutons[1].classList.add('active');
-                secEleves.style.display = 'block';
-                chargerListesAdmin();
-            } else if (onglet === 'profs') {
-                boutons[2].classList.add('active');
-                secProfs.style.display = 'block';
-                chargerListesAdmin();
-            } else if (onglet === 'securite') {
-                boutons[3].classList.add('active');
-                secSecurite.style.display = 'block';
-            }
+            if (onglet === 'inscriptions') { boutons[0].classList.add('active'); secs.inscriptions.style.display = 'block'; }
+            else if (onglet === 'eleves') { boutons[1].classList.add('active'); secs.eleves.style.display = 'block'; chargerListesAdmin(); }
+            else if (onglet === 'profs') { boutons[2].classList.add('active'); secs.profs.style.display = 'block'; chargerListesAdmin(); }
+            else if (onglet === 'options') { boutons[3].classList.add('active'); secs.options.style.display = 'block'; chargerOptionsSelect(); }
+            else if (onglet === 'securite') { boutons[4].classList.add('active'); secs.securite.style.display = 'block'; }
         }
 
         function chargerListesAdmin() {
@@ -806,24 +965,26 @@
             const tbodyEleves = document.getElementById('table-eleves-body');
             const tbodyProfs = document.getElementById('table-profs-body');
 
-            tbodyEleves.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>';
-            tbodyProfs.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>';
-
             db.ref('eleves').once('value', (snapshotEleves) => {
                 let htmlEleves = '';
                 if (snapshotEleves.exists()) {
                     snapshotEleves.forEach((child) => {
                         const e = child.val();
+                        const id = child.key;
                         htmlEleves += `
                             <tr>
                                 <td>${e.nom} ${e.postnom} ${e.prenom}</td>
                                 <td>${e.classe}</td>
                                 <td><code>${e.matricule}</code></td>
+                                <td>
+                                    <button class="btn-action btn-modifier" onclick="modifierEleve('${id}', '${e.nom}', '${e.postnom}', '${e.prenom}', '${e.classe}')">Modifier</button>
+                                    <button class="btn-action btn-supprimer" onclick="supprimerEleve('${id}')">Supprimer</button>
+                                </td>
                             </tr>
                         `;
                     });
                 } else {
-                    htmlEleves = '<tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Aucun élève enregistré.</td></tr>';
+                    htmlEleves = '<tr><td colspan="4" style="text-align: center;">Aucun élève enregistré.</td></tr>';
                 }
                 tbodyEleves.innerHTML = htmlEleves;
             });
@@ -833,16 +994,21 @@
                 if (snapshotProfs.exists()) {
                     snapshotProfs.forEach((child) => {
                         const p = child.val();
+                        const id = child.key;
                         htmlProfs += `
                             <tr>
                                 <td>${p.nom} ${p.prenom}</td>
                                 <td>${p.matiere}</td>
                                 <td><code>${p.codeAcces}</code></td>
+                                <td>
+                                    <button class="btn-action btn-modifier" onclick="modifierProf('${id}', '${p.nom}', '${p.prenom}', '${p.matiere}')">Modifier</button>
+                                    <button class="btn-action btn-supprimer" onclick="supprimerProf('${id}')">Supprimer</button>
+                                </td>
                             </tr>
                         `;
                     });
                 } else {
-                    htmlProfs = '<tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Aucun professeur enregistré.</td></tr>';
+                    htmlProfs = '<tr><td colspan="4" style="text-align: center;">Aucun professeur enregistré.</td></tr>';
                 }
                 tbodyProfs.innerHTML = htmlProfs;
             });
@@ -852,20 +1018,12 @@
             const matriculeRecherche = document.getElementById('recherche-matricule').value.trim().toUpperCase();
             const resultatDiv = document.getElementById('resultat-eleve');
 
-            if (!matriculeRecherche) {
-                resultatDiv.innerHTML = '<span style="color: var(--md-sys-color-error); font-size: 13px;">Veuillez entrer un matricule.</span>';
-                return;
-            }
-
-            resultatDiv.innerHTML = '<p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">Recherche en cours...</p>';
+            if (!matriculeRecherche) return;
 
             db.ref('eleves').once('value', (snapshot) => {
                 let eleveData = null;
                 snapshot.forEach((child) => {
-                    const e = child.val();
-                    if (e.matricule === matriculeRecherche) {
-                        eleveData = e;
-                    }
+                    if (child.val().matricule === matriculeRecherche) eleveData = child.val();
                 });
 
                 if (!eleveData) {
@@ -896,7 +1054,7 @@
                             }
                         });
                     } else {
-                        evaluationsHTML = '<p style="color: var(--md-sys-color-on-surface-variant); font-size: 13px; grid-column: span 2;">Aucune cotation enregistrée pour le moment.</p>';
+                        evaluationsHTML = '<p style="color: var(--md-sys-color-on-surface-variant); font-size: 13px; grid-column: span 2;">Aucune cotation enregistrée.</p>';
                     }
 
                     resultatDiv.innerHTML = `
@@ -904,17 +1062,9 @@
                             <p style="margin: 0 0 4px 0; color: var(--md-sys-color-success); font-weight: 500;">✓ Dossier élève actif</p>
                             <h3 style="margin: 6px 0; font-size: 16px;">${eleveData.nom} ${eleveData.postnom} ${eleveData.prenom}</h3>
                             <p style="margin: 4px 0; color: var(--md-sys-color-on-surface-variant);">Classe : ${eleveData.classe} | Matricule : <strong>${eleveData.matricule}</strong></p>
-                            
                             ${convocationMsg}
-
                             <h4 style="margin: 16px 0 8px 0; font-size: 14px; font-weight: 500;">Cotations & Évaluations :</h4>
-                            <div class="grid-evaluations">
-                                ${evaluationsHTML}
-                            </div>
-
-                            <div class="communique-box">
-                                <strong>Communiqué de l'école :</strong> Pensez à vérifier vos notes régulièrement avant la fin de la session.
-                            </div>
+                            <div class="grid-evaluations">${evaluationsHTML}</div>
                         </div>
                     `;
                 });
@@ -929,51 +1079,25 @@
             const convocation = document.getElementById('prof-convocation').value;
 
             if (!matricule || !cours || !noteBrute) {
-                alert("Veuillez remplir le matricule, le cours et la note.");
+                alert("Veuillez remplir tous les champs obligatoires.");
                 return;
             }
 
             const note = parseFloat(noteBrute);
-            if (isNaN(note) || note < 0) {
-                alert("Veuillez entrer une note numérique valide (positive).");
-                return;
-            }
-
-            if ((type === "Interrogation" || type === "Devoir") && note > 20) {
-                alert("Erreur : Une Interrogation ou un Devoir ne peut pas dépasser 20.");
-                return;
-            }
-            if (type === "Examen" && note > 100) {
-                alert("Erreur : Un Examen ne peut pas dépasser 100.");
-                return;
-            }
-
             db.ref('eleves').once('value', (snapshot) => {
-                let eleveExiste = false;
-                snapshot.forEach((child) => {
-                    if (child.val().matricule === matricule) {
-                        eleveExiste = true;
-                    }
-                });
+                let existe = false;
+                snapshot.forEach((child) => { if (child.val().matricule === matricule) existe = true; });
 
-                if (!eleveExiste) {
-                    alert("Erreur : Ce matricule n'existe pas dans le registre des élèves.");
+                if (!existe) {
+                    alert("Erreur : Ce matricule n'existe pas.");
                     return;
                 }
 
-                db.ref('cotations').push({
-                    matricule,
-                    cours,
-                    type,
-                    note,
-                    convocation
-                }).then(() => {
+                db.ref('cotations').push({ matricule, cours, type, note, convocation }).then(() => {
                     alert("Cotation enregistrée avec succès !");
                     document.getElementById('prof-eleve-matricule').value = '';
                     document.getElementById('prof-cours').value = '';
                     document.getElementById('prof-note').value = '';
-                }).catch(err => {
-                    alert("Erreur : " + err.message);
                 });
             });
         }
