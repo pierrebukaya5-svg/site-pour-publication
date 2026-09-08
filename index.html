@@ -253,16 +253,6 @@
             gap: 8px;
         }
 
-        .communique-box {
-            background: #e6f4ea;
-            border: 1px solid #ceead6;
-            color: var(--md-sys-color-success);
-            padding: 12px;
-            border-radius: 10px;
-            margin-top: 12px;
-            font-size: 13px;
-        }
-
         table.admin-table {
             width: 100%;
             border-collapse: collapse;
@@ -627,16 +617,19 @@
             }
         });
 
-        // Charger les options par défaut si elles n'existent pas encore
+        // Initialiser les options par défaut si vide et charger l'affichage
         db.ref('options_etude').once('value', (snapshot) => {
             if (!snapshot.exists()) {
                 db.ref('options_etude').set({
                     opt1: { nom: "Informatique" },
                     opt2: { nom: "Littéraire" },
                     opt3: { nom: "Scientifique" }
+                }, () => {
+                    chargerOptionsSelect();
                 });
+            } else {
+                chargerOptionsSelect();
             }
-            chargerOptionsSelect();
         });
 
         function ouvrirEspace(type) {
@@ -736,7 +729,7 @@
         }
 
         function chargerOptionsSelect() {
-            db.ref('options_etude').once('value', (snapshot) => {
+            db.ref('options_etude').on('value', (snapshot) => {
                 const selectEleve = document.getElementById('eleve-option');
                 const tbodyOptions = document.getElementById('table-options-body');
                 let optionsHtml = '';
@@ -766,25 +759,32 @@
         }
 
         function ajouterOptionEtude() {
-            if (!adminConnecte) return;
-            const nomOption = document.getElementById('nouvelle-option-nom').value.trim();
+            if (!adminConnecte) {
+                alert("Veuillez d'abord vous connecter en tant qu'administrateur.");
+                return;
+            }
+            const inputNom = document.getElementById('nouvelle-option-nom');
+            const nomOption = inputNom.value.trim();
             if (!nomOption) {
                 alert("Veuillez entrer le nom de l'option.");
                 return;
             }
 
-            db.ref('options_etude').push({ nom: nomOption }).then(() => {
-                document.getElementById('nouvelle-option-nom').value = '';
-                chargerOptionsSelect();
-                alert("Option ajoutée avec succès !");
-            });
+            db.ref('options_etude').push({ nom: nomOption })
+                .then(() => {
+                    inputNom.value = '';
+                    alert("Option ajoutée avec succès !");
+                })
+                .catch((error) => {
+                    alert("Erreur lors de l'ajout : " + error.message);
+                });
         }
 
         function supprimerOption(key) {
             if (!adminConnecte) return;
             if (confirm("Voulez-vous vraiment supprimer cette option ?")) {
-                db.ref('options_etude/' + key).remove().then(() => {
-                    chargerOptionsSelect();
+                db.ref('options_etude/' + key).remove().catch((error) => {
+                    alert("Erreur : " + error.message);
                 });
             }
         }
@@ -807,8 +807,8 @@
             const annee = document.getElementById('eleve-annee').value;
             const option = document.getElementById('eleve-option').value;
 
-            if (!nom || !postnom || !prenom) {
-                alert("Veuillez remplir le nom, post-nom et prénom.");
+            if (!nom || !postnom || !prenom || !option) {
+                alert("Veuillez remplir tous les champs de l'élève.");
                 return;
             }
 
