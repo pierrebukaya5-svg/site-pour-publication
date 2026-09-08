@@ -288,6 +288,7 @@
             margin-bottom: 16px;
             border-bottom: 1px solid var(--md-sys-color-outline);
             padding-bottom: 12px;
+            flex-wrap: wrap;
         }
 
         .tab-btn {
@@ -450,6 +451,7 @@
                         <button class="tab-btn active" onclick="changerOngletAdmin('inscriptions')">Inscriptions</button>
                         <button class="tab-btn" onclick="changerOngletAdmin('eleves')">Liste des Élèves</button>
                         <button class="tab-btn" onclick="changerOngletAdmin('profs')">Liste des Professeurs</button>
+                        <button class="tab-btn" onclick="changerOngletAdmin('securite')">Sécurité & Code Admin</button>
                     </div>
 
                     <!-- Section Inscriptions -->
@@ -521,6 +523,21 @@
                         </div>
                     </div>
 
+                    <!-- Section Sécurité & Code Admin -->
+                    <div id="admin-section-securite" class="section-cache">
+                        <h3 style="font-size: 15px; margin-top: 0;"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle;">security</span> Gestion du Code d'Accès Administrateur</h3>
+                        <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">Vous pouvez à tout moment supprimer l'ancien code d'accès administrateur ou en configurer un nouveau pour sécuriser ou réactiver vos privilèges de création.</p>
+                        
+                        <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); margin-top: 16px;">
+                            <p style="font-size: 13px; margin-top: 0;">Code d'accès administrateur actuel : <strong id="admin-code-actuel" style="color: var(--md-sys-color-primary);">Chargement...</strong></p>
+                            
+                            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                                <button onclick="supprimerCodeAdmin()" style="background: var(--md-sys-color-error); width: auto;">Supprimer le code actuel</button>
+                                <button onclick="reactiverCodeAdmin()" style="background: var(--md-sys-color-success); width: auto;">Réactiver / Générer un nouveau code</button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -581,6 +598,7 @@
                 loginCard.style.display = 'none';
                 dashboard.style.display = 'block';
                 chargerListesAdmin();
+                verifierCodeAdminActuel();
             } else {
                 loginCard.style.display = 'block';
                 dashboard.style.display = 'none';
@@ -618,7 +636,6 @@
         }
 
         function ajouterEleve() {
-            // Vérification de sécurité supplémentaire : s'assurer qu'un admin est bien connecté
             if (!auth.currentUser) {
                 alert("Action interdite : Veuillez vous connecter en tant qu'administrateur.");
                 return;
@@ -656,7 +673,6 @@
         }
 
         function ajouterProf() {
-            // Vérification de sécurité supplémentaire : s'assurer qu'un admin est bien connecté
             if (!auth.currentUser) {
                 alert("Action interdite : Veuillez vous connecter en tant qu'administrateur.");
                 return;
@@ -724,10 +740,12 @@
             const secInscriptions = document.getElementById('admin-section-inscriptions');
             const secEleves = document.getElementById('admin-section-eleves');
             const secProfs = document.getElementById('admin-section-profs');
+            const secSecurite = document.getElementById('admin-section-securite');
 
             secInscriptions.style.display = 'none';
             secEleves.style.display = 'none';
             secProfs.style.display = 'none';
+            secSecurite.style.display = 'none';
 
             if (onglet === 'inscriptions') {
                 boutons[0].classList.add('active');
@@ -740,7 +758,52 @@
                 boutons[2].classList.add('active');
                 secProfs.style.display = 'block';
                 chargerListesAdmin();
+            } else if (onglet === 'securite') {
+                boutons[3].classList.add('active');
+                secSecurite.style.display = 'block';
+                verifierCodeAdminActuel();
             }
+        }
+
+        function verifierCodeAdminActuel() {
+            if (!auth.currentUser) return;
+            const uid = auth.currentUser.uid;
+            
+            db.ref('admin_securite/' + uid).once('value', (snapshot) => {
+                const codeAffichage = document.getElementById('admin-code-actuel');
+                if (snapshot.exists() && snapshot.val().codeAcces) {
+                    codeAffichage.innerText = snapshot.val().codeAcces;
+                } else {
+                    codeAffichage.innerText = "Aucun code configuré (supprimé ou non activé)";
+                }
+            });
+        }
+
+        function supprimerCodeAdmin() {
+            if (!auth.currentUser) return;
+            if (confirm("Voulez-vous vraiment supprimer votre code d'accès administrateur ?")) {
+                const uid = auth.currentUser.uid;
+                db.ref('admin_securite/' + uid).remove()
+                    .then(() => {
+                        alert("Code d'accès administrateur supprimé avec succès.");
+                        verifierCodeAdminActuel();
+                    })
+                    .catch(err => alert("Erreur : " + err.message));
+            }
+        }
+
+        function reactiverCodeAdmin() {
+            if (!auth.currentUser) return;
+            const nouveauCode = "ADM-" + genererCodeAleatoire(6);
+            const uid = auth.currentUser.uid;
+
+            db.ref('admin_securite/' + uid).set({
+                codeAcces: nouveauCode,
+                dateMiseAJour: new Date().toISOString()
+            }).then(() => {
+                alert(`Nouveau code d'accès administrateur activé avec succès !\n\nVotre code : ${nouveauCode}`);
+                verifierCodeAdminActuel();
+            }).catch(err => alert("Erreur : " + err.message));
         }
 
         function chargerListesAdmin() {
