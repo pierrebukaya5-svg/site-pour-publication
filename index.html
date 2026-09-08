@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC - Espace Élève Amélioré</title>
+    <title>Portail Scolaire RDC - Intégré</title>
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -24,7 +24,6 @@
             --md-sys-color-on-surface-variant: #5f6368;
             --md-sys-color-outline: #dadce0;
             --md-sys-color-success: #188038;
-            --md-sys-color-warn: #e37400;
             --md-sys-color-error: #d93025;
         }
 
@@ -38,7 +37,7 @@
         }
 
         .wrapper {
-            max-width: 1040px;
+            max-width: 900px;
             margin: 0 auto;
         }
 
@@ -104,7 +103,7 @@
             margin-bottom: 6px;
         }
 
-        input {
+        input, select {
             width: 100%;
             padding: 12px 16px;
             margin-top: 4px;
@@ -118,7 +117,7 @@
             font-size: 14px;
         }
 
-        input:focus {
+        input:focus, select:focus {
             outline: none;
             border-color: var(--md-sys-color-primary);
             box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
@@ -153,33 +152,29 @@
             font-weight: 500;
         }
 
-        /* Styles spécifiques pour le tableau de bord de l'élève connecté */
         .grid-evaluations {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
         }
 
         .eval-box {
             background: var(--md-sys-color-surface-variant);
             border: 1px solid var(--md-sys-color-outline);
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 10px;
+            padding: 12px;
         }
 
         .eval-title {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
             color: var(--md-sys-color-on-surface-variant);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .eval-value {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--md-sys-color-primary);
         }
@@ -188,40 +183,33 @@
             background: #fce8e6;
             border: 1px solid #fad2cf;
             color: var(--md-sys-color-error);
-            padding: 14px;
-            border-radius: 12px;
-            margin-top: 16px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 12px;
             font-weight: 500;
+            font-size: 13px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .communique-box {
             background: #e6f4ea;
             border: 1px solid #ceead6;
             color: var(--md-sys-color-success);
-            padding: 14px;
-            border-radius: 12px;
-            margin-top: 16px;
-            font-size: 13px;
-        }
-
-        .table-admin {
-            width: 100%;
-            border-collapse: collapse;
+            padding: 12px;
+            border-radius: 10px;
             margin-top: 12px;
             font-size: 13px;
         }
-        .table-admin th, .table-admin td {
-            border-bottom: 1px solid var(--md-sys-color-outline);
-            padding: 12px 8px;
-            text-align: left;
-        }
-        .table-admin th {
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface-variant);
-            background-color: var(--md-sys-color-surface-variant);
+
+        .admin-action-box {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--md-sys-color-outline);
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -236,79 +224,35 @@
                 </div>
                 <div>
                     <h1>Portail Académique RDC</h1>
-                    <p>Plateforme institutionnelle sécurisée</p>
+                    <p>Espace Élève & Gestion Intégrée</p>
                 </div>
             </div>
             <div id="auth-status" class="user-pill">Visiteur / Élève</div>
         </header>
 
-        <!-- ESPACE CONSULTATION ÉLÈVE AVEC COTATIONS & CONVOCATION -->
-        <div class="card" style="max-width: 800px; margin: 0 auto 20px auto;">
-            <h2><span class="material-icons-outlined">person_search</span> Espace Consultation Élève (Notes & Profil)</h2>
-            <label for="recherche-matricule">Entrez votre Matricule</label>
+        <!-- AUTHENTIFICATION ADMIN DISCRÈTE -->
+        <div class="card" style="padding: 16px;">
+            <div id="login-section" style="display: flex; gap: 10px; align-items: center;">
+                <input type="email" id="admin-email" placeholder="Email admin" style="margin:0; flex:1;">
+                <input type="password" id="admin-password" placeholder="Mot de passe" style="margin:0; flex:1;">
+                <button onclick="connecterAdmin()" style="width: auto; margin:0;">Connexion Admin</button>
+            </div>
+            <div id="admin-info-connecte" style="display: none; display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--md-sys-color-success); font-weight: 500; font-size: 13px;">Mode Administrateur Actif (Gestion intégrée dans les dossiers élèves)</span>
+                <button onclick="deconnecterAdmin()" style="background: transparent; border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface); width: auto; padding: 4px 12px; font-size: 12px;">Déconnexion</button>
+            </div>
+        </div>
+
+        <!-- ESPACE CONSULTATION ET GESTION INTERNE DE L'ÉLÈVE -->
+        <div class="card">
+            <h2><span class="material-icons-outlined">person_search</span> Espace de Consultation & Dossier Élève</h2>
+            <label for="recherche-matricule">Entrez le Matricule de l'élève</label>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="recherche-matricule" placeholder="Ex: BUKAP6AB7HJL" style="margin: 0; text-transform: uppercase;">
                 <button onclick="rechercherEleve()" style="width: 140px; margin: 0;">Consulter</button>
             </div>
             
-            <div id="resultat-eleve" style="margin-top: 20px; font-size: 13px;"></div>
-        </div>
-
-        <!-- AUTHENTIFICATION ADMIN -->
-        <div class="card" style="max-width: 480px; margin: 0 auto 24px auto;">
-            <h2><span class="material-icons-outlined">admin_panel_settings</span> Administration</h2>
-            <div id="login-section">
-                <label for="admin-email">Adresse e-mail</label>
-                <input type="email" id="admin-email" placeholder="admin@ecole.cd">
-                <label for="admin-password">Mot de passe</label>
-                <input type="password" id="admin-password" placeholder="••••••••">
-                <button onclick="connecterAdmin()">Se connecter</button>
-            </div>
-            <div id="admin-info-connecte" style="display: none; text-align: center;">
-                <p style="color: var(--md-sys-color-success); font-weight: 500; font-size: 13px; margin-bottom: 16px;">Connecté en tant qu'administrateur</p>
-                <button onclick="deconnecterAdmin()" style="background: transparent; border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface); width: auto; padding: 6px 16px;">Fermer la session</button>
-            </div>
-        </div>
-
-        <!-- TABLEAU DE BORD ADMIN POUR GÉRER LES NOTES & CONVOCATIONS -->
-        <div id="admin-dashboard" style="display: none;">
-            <div class="card" style="max-width: 700px; margin: 0 auto 20px auto;">
-                <h2><span class="material-icons-outlined">edit_note</span> Gestion des Notes, Devoirs & Convocations</h2>
-                
-                <label>Matricule de l'élève concerné</label>
-                <input type="text" id="adm-eleve-matricule" placeholder="Ex: BUKAP6AB7HJL" style="text-transform: uppercase;">
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div>
-                        <label>Cours / Matière</label>
-                        <input type="text" id="adm-cours" placeholder="Ex: Mathématiques">
-                    </div>
-                    <div>
-                        <label>Type de Cotation</label>
-                        <select id="adm-type" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--md-sys-color-outline); margin-bottom: 16px; background: white;">
-                            <option value="Interrogation">Interrogation (/20)</option>
-                            <option value="Devoir">Devoir (/20)</option>
-                            <option value="Examen">Examen (/100)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div>
-                        <label>Note / Cotation</label>
-                        <input type="text" id="adm-note" placeholder="Ex: 16.5">
-                    </div>
-                    <div>
-                        <label>Statut Convocation (Optionnel)</label>
-                        <select id="adm-convocation" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--md-sys-color-outline); margin-bottom: 16px; background: white;">
-                            <option value="Aucune">Aucune convocation</option>
-                            <option value="Convoqué(e) à la Direction">Convoqué(e) à la Direction</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button onclick="enregistrerCotation()">Enregistrer la Cotation / Suivi</button>
-            </div>
+            <div id="resultat-eleve" style="margin-top: 20px;"></div>
         </div>
 
     </div>
@@ -328,23 +272,28 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
+        let estAdmin = false;
+
         auth.onAuthStateChanged((user) => {
             const loginSection = document.getElementById('login-section');
             const infoConnecte = document.getElementById('admin-info-connecte');
-            const dashboard = document.getElementById('admin-dashboard');
             const status = document.getElementById('auth-status');
 
             if (user) {
-                status.innerText = "Session : Administrateur";
+                estAdmin = true;
+                status.innerText = "Mode : Admin / Gestion";
                 loginSection.style.display = 'none';
-                infoConnecte.style.display = 'block';
-                dashboard.style.display = 'block';
+                infoConnecte.style.display = 'flex';
             } else {
+                estAdmin = false;
                 status.innerText = "Visiteur / Élève";
-                loginSection.style.display = 'block';
+                loginSection.style.display = 'flex';
                 infoConnecte.style.display = 'none';
-                dashboard.style.display = 'none'; 
             }
+            
+            // Relancer la recherche si un matricule était déjà affiché pour basculer les droits d'administration internes
+            const matriculeActuel = document.getElementById('recherche-matricule').value.trim();
+            if(matriculeActuel) rechercherEleve();
         });
 
         function connecterAdmin() {
@@ -362,13 +311,12 @@
             const resultatDiv = document.getElementById('resultat-eleve');
 
             if (!matriculeRecherche) {
-                resultatDiv.innerHTML = '<span style="color: var(--md-sys-color-error);">Veuillez entrer un matricule.</span>';
+                resultatDiv.innerHTML = '<span style="color: var(--md-sys-color-error); font-size: 13px;">Veuillez entrer un matricule.</span>';
                 return;
             }
 
-            resultatDiv.innerHTML = "Recherche du dossier et des cotations...";
+            resultatDiv.innerHTML = '<p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">Recherche en cours...</p>';
 
-            // 1. Chercher l'élève dans la table 'eleves'
             db.ref('eleves').once('value', (snapshot) => {
                 let eleveData = null;
                 snapshot.forEach((child) => {
@@ -379,11 +327,11 @@
                 });
 
                 if (!eleveData) {
-                    resultatDiv.innerHTML = '<span style="color: var(--md-sys-color-error);">Aucun élève trouvé avec ce matricule.</span>';
+                    resultatDiv.innerHTML = '<span style="color: var(--md-sys-color-error); font-size: 13px;">Aucun élève trouvé avec ce matricule.</span>';
                     return;
                 }
 
-                // 2. Charger les cotations de cet élève
+                // Charger les cotations et infos propres à cet élève
                 db.ref('cotations').orderByChild('matricule').equalTo(matriculeRecherche).once('value', (cotSnapshot) => {
                     let evaluationsHTML = '';
                     let convocationMsg = '';
@@ -393,7 +341,7 @@
                             const c = cotChild.val();
                             evaluationsHTML += `
                                 <div class="eval-box">
-                                    <div class="eval-title"><span class="material-icons-outlined">menu_book</span> ${c.cours} (${c.type})</div>
+                                    <div class="eval-title">${c.cours} (${c.type})</div>
                                     <div class="eval-value">${c.note}</div>
                                 </div>
                             `;
@@ -401,46 +349,87 @@
                                 convocationMsg = `
                                     <div class="convocation-banner">
                                         <span class="material-icons-outlined">warning</span>
-                                        <strong>Attention :</strong> ${c.convocation}
+                                        <strong>Convocation :</strong> ${c.convocation}
                                     </div>
                                 `;
                             }
                         });
                     } else {
-                        evaluationsHTML = '<p style="color: var(--md-sys-color-on-surface-variant); grid-column: span 2;">Aucune cotation enregistrée pour le moment.</p>';
+                        evaluationsHTML = '<p style="color: var(--md-sys-color-on-surface-variant); font-size: 13px; grid-column: span 2;">Aucune cotation enregistrée pour le moment.</p>';
+                    }
+
+                    // Section de gestion interne si l'administrateur est connecté
+                    let adminSectionHTML = '';
+                    if (estAdmin) {
+                        adminSectionHTML = `
+                            <div class="admin-action-box">
+                                <h3 style="margin: 0 0 12px 0; font-size: 14px; color: var(--md-sys-color-primary); display:flex; align-items:center; gap:6px;">
+                                    <span class="material-icons-outlined">edit</span> Ajouter une note ou convocation pour cet élève
+                                </h3>
+                                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px;">
+                                    <div>
+                                        <label>Cours / Matière</label>
+                                        <input type="text" id="input-cours-${matriculeRecherche}" placeholder="Ex: Mathématiques" style="margin-bottom:10px;">
+                                    </div>
+                                    <div>
+                                        <label>Type</label>
+                                        <select id="input-type-${matriculeRecherche}" style="margin-bottom:10px;">
+                                            <option value="Interrogation">Interrogation (/20)</option>
+                                            <option value="Devoir">Devoir (/20)</option>
+                                            <option value="Examen">Examen (/100)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Note</label>
+                                        <input type="text" id="input-note-${matriculeRecherche}" placeholder="Ex: 16.5" style="margin-bottom:10px;">
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                                    <div style="flex: 1;">
+                                        <label>Convocation (Optionnel)</label>
+                                        <select id="input-conv-${matriculeRecherche}" style="margin-bottom:0;">
+                                            <option value="Aucune">Aucune</option>
+                                            <option value="Présence requise à la Direction">Présence requise à la Direction</option>
+                                        </select>
+                                    </div>
+                                    <button onclick="enregistrerCotationInterne('${matriculeRecherche}')" style="width: auto; height: 44px; margin:0;">Enregistrer</button>
+                                </div>
+                            </div>
+                        `;
                     }
 
                     resultatDiv.innerHTML = `
-                        <div style="background: var(--md-sys-color-surface-variant); padding: 18px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline);">
-                            <p style="margin: 0 0 4px 0; color: var(--md-sys-color-success); font-weight: 500;">✓ Dossier validé</p>
-                            <h3 style="margin: 8px 0; font-size: 18px;">${eleveData.nom} ${eleveData.postnom} ${eleveData.prenom}</h3>
+                        <div style="background: var(--md-sys-color-surface-variant); padding: 18px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); font-size: 13px;">
+                            <p style="margin: 0 0 4px 0; color: var(--md-sys-color-success); font-weight: 500;">✓ Dossier élève actif</p>
+                            <h3 style="margin: 6px 0; font-size: 16px;">${eleveData.nom} ${eleveData.postnom} ${eleveData.prenom}</h3>
                             <p style="margin: 4px 0; color: var(--md-sys-color-on-surface-variant);">Classe : ${eleveData.classe} | Matricule : <strong>${eleveData.matricule}</strong></p>
                             
                             ${convocationMsg}
 
-                            <h4 style="margin: 20px 0 8px 0; font-size: 14px; font-weight: 500;">Cotations (Interrogations, Devoirs, Examens) :</h4>
+                            <h4 style="margin: 16px 0 8px 0; font-size: 14px; font-weight: 500;">Cotations & Évaluations :</h4>
                             <div class="grid-evaluations">
                                 ${evaluationsHTML}
                             </div>
 
-                            <div class="communique-box" style="margin-top: 16px;">
-                                <strong>Communiqué officiel de l'école :</strong> Le paiement des frais scolaires du 2e trimestre se clôture ce vendredi. Veuillez vous mettre en ordre.
+                            <div class="communique-box">
+                                <strong>Communiqué de l'école :</strong> Pensez à vérifier vos notes régulièrement avant la fin de la session.
                             </div>
+
+                            ${adminSectionHTML}
                         </div>
                     `;
                 });
             });
         }
 
-        function enregistrerCotation() {
-            const matricule = document.getElementById('adm-eleve-matricule').value.trim().toUpperCase();
-            const cours = document.getElementById('adm-cours').value.trim();
-            const type = document.getElementById('adm-type').value;
-            const note = document.getElementById('adm-note').value.trim();
-            const convocation = document.getElementById('adm-convocation').value;
+        function enregistrerCotationInterne(matricule) {
+            const cours = document.getElementById(`input-cours-${matricule}`).value.trim();
+            const type = document.getElementById(`input-type-${matricule}`).value;
+            const note = document.getElementById(`input-note-${matricule}`).value.trim();
+            const convocation = document.getElementById(`input-conv-${matricule}`).value;
 
-            if (!matricule || !cours || !note) {
-                alert("Veuillez remplir le matricule, le cours et la note.");
+            if (!cours || !note) {
+                alert("Veuillez remplir le nom du cours et la note.");
                 return;
             }
 
@@ -451,10 +440,8 @@
                 note,
                 convocation
             }).then(() => {
-                alert("Cotation et suivi enregistrés avec succès !");
-                document.getElementById('adm-eleve-matricule').value = '';
-                document.getElementById('adm-cours').value = '';
-                document.getElementById('adm-note').value = '';
+                alert("Cotation enregistrée avec succès !");
+                rechercherEleve(); // Actualiser l'affichage du dossier
             }).catch(err => {
                 alert("Erreur : " + err.message);
             });
