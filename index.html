@@ -37,8 +37,8 @@
                     <p class="text-sm text-gray-500">Gestion complète des élèves et professeurs</p>
                 </div>
             </div>
-            <!-- Bouton Déconnexion fonctionnel -->
-            <button onclick="deconnecterAdmin()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 shadow-sm transition z-10 cursor-pointer">
+            <!-- Bouton Déconnexion redirigeant vers l'accueil -->
+            <button onclick="window.location.href='/'" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 shadow-sm transition z-10 cursor-pointer">
                 Déconnexion Admin
             </button>
         </div>
@@ -59,9 +59,9 @@
             </button>
         </div>
 
-        <!-- Section Élèves (Par défaut) -->
+        <!-- SECTION ÉLÈVES & PARENTS -->
         <div id="section-eleves" class="space-y-6">
-            <!-- Formulaire d'enregistrement -->
+            <!-- Formulaire Élève -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
                 <h2 class="text-base font-bold text-gray-800">Enregistrer un Élève & ses Tuteurs</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -72,13 +72,12 @@
                     <input id="input-tuteur" type="text" placeholder="Nom complet du tuteur" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="isabelle">
                     <input id="input-tel" type="text" placeholder="Téléphone du tuteur" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="08999827637">
                 </div>
-                <!-- Bouton Générer / Enregistrer fonctionnel -->
                 <button onclick="enregistrerEleve()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 text-sm transition cursor-pointer">
                     Enregistrer l'élève & Générer son matricule
                 </button>
             </div>
 
-            <!-- Liste des élèves -->
+            <!-- Liste Élèves (Visible Admin) -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
                 <h2 class="text-base font-bold text-gray-800">Liste des Élèves & Gestion d'Accès</h2>
                 <div class="overflow-x-auto">
@@ -114,26 +113,84 @@
             </div>
         </div>
 
-        <!-- Section Professeurs (Cachée par défaut) -->
+        <!-- SECTION PROFESSEURS -->
         <div id="section-profs" class="space-y-6 hidden">
+            <!-- Formulaire Enregistrement Professeur -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
-                <h2 class="text-base font-bold text-gray-800">Gestion des Professeurs</h2>
-                <p class="text-sm text-gray-500">Espace dédié à l'attribution des cours et des enseignants.</p>
-                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-sm text-gray-600">
-                    Aucun professeur enregistré pour le moment. Utilisez une API backend pour lier cette interface à votre base de données.
+                <h2 class="text-base font-bold text-gray-800">Enregistrer un Professeur & Générer son Code</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input id="prof-nom" type="text" placeholder="Nom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
+                    <input id="prof-postnom" type="text" placeholder="Post-nom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
+                    <input id="prof-prenom" type="text" placeholder="Prénom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
+                    <input id="prof-cours" type="text" placeholder="Cours enseigné (ex: Mathématiques)" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
+                </div>
+                <button onclick="enregistrerProf()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 text-sm transition cursor-pointer">
+                    Enregistrer le Professeur & Générer le Code (4 chiffres)
+                </button>
+            </div>
+
+            <!-- Liste des Professeurs Enregistrés -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
+                <h2 class="text-base font-bold text-gray-800">Liste des Professeurs & Codes d'Accès</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="border-b border-gray-200 text-xs uppercase text-gray-400">
+                            <tr>
+                                <th class="pb-3 font-semibold">Code d'accès</th>
+                                <th class="pb-3 font-semibold">Identité Professeur</th>
+                                <th class="pb-3 font-semibold">Cours</th>
+                                <th class="pb-3 font-semibold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableau-profs">
+                            <tr class="border-b border-gray-100">
+                                <td class="py-4 font-bold text-indigo-600 bg-indigo-50 px-3 rounded-lg">8492</td>
+                                <td class="py-4 font-medium text-gray-800">Mbuyi Jean Paul</td>
+                                <td class="py-4">Mathématiques</td>
+                                <td class="py-4">
+                                    <button onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 font-medium text-xs cursor-pointer">Supprimer</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vue Liste Élèves pour les Professeurs (SANS LES PARENTS) -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-base font-bold text-gray-800">Cote des Élèves (Vue Professeur)</h2>
+                    <span class="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-medium">Confidentiel : Informations parent masquées</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="border-b border-gray-200 text-xs uppercase text-gray-400">
+                            <tr>
+                                <th class="pb-3 font-semibold">Matricule</th>
+                                <th class="pb-3 font-semibold">Identité Élève</th>
+                                <th class="pb-3 font-semibold">Classe</th>
+                                <th class="pb-3 font-semibold">Saisir la Cote (/20)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableau-eleves-prof">
+                            <tr class="border-b border-gray-100">
+                                <td class="py-4 font-semibold text-indigo-600">12345</td>
+                                <td class="py-4 font-medium text-gray-800">bukaya kambondji pierre</td>
+                                <td class="py-4">6</td>
+                                <td class="py-4">
+                                    <input type="number" min="0" max="20" placeholder="/20" class="w-20 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-indigo-500">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
     </div>
 
-    <!-- Script JavaScript pour rendre les boutons interactifs -->
+    <!-- Script JavaScript -->
     <script>
-        function deconnecterAdmin() {
-            // Redirige vers la page d'accueil (remplacez '/' par l'URL exacte si besoin)
-            window.location.href = '/';
-        }
-
         function changerOnglet(onglet) {
             const secEleves = document.getElementById('section-eleves');
             const secProfs = document.getElementById('section-profs');
@@ -166,13 +223,13 @@
                 return;
             }
 
-            // Génération d'un matricule aléatoire à 5 chiffres
             const matricule = Math.floor(10000 + Math.random() * 90000);
 
-            const tbody = document.getElementById('tableau-eleves');
-            const nouvelleLigne = document.createElement('tr');
-            nouvelleLigne.className = "border-b border-gray-100";
-            nouvelleLigne.innerHTML = `
+            // Ajout dans la table Admin
+            const tbodyAdmin = document.getElementById('tableau-eleves');
+            const ligneAdmin = document.createElement('tr');
+            ligneAdmin.className = "border-b border-gray-100";
+            ligneAdmin.innerHTML = `
                 <td class="py-4 font-semibold text-indigo-600">${matricule}</td>
                 <td class="py-4 font-medium text-gray-800">${nom} ${postnom} ${prenom}</td>
                 <td class="py-4">${classe}</td>
@@ -186,8 +243,59 @@
                     <button onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 font-medium text-xs cursor-pointer">Supprimer</button>
                 </td>
             `;
-            tbody.appendChild(nouvelleLigne);
-            alert("Élève enregistré et matricule " + matricule + " généré avec succès !");
+            tbodyAdmin.appendChild(ligneAdmin);
+
+            // Ajout dans la table Professeur (SANS LES PARENTS)
+            const tbodyProf = document.getElementById('tableau-eleves-prof');
+            const ligneProf = document.createElement('tr');
+            ligneProf.className = "border-b border-gray-100";
+            ligneProf.innerHTML = `
+                <td class="py-4 font-semibold text-indigo-600">${matricule}</td>
+                <td class="py-4 font-medium text-gray-800">${nom} ${postnom} ${prenom}</td>
+                <td class="py-4">${classe}</td>
+                <td class="py-4">
+                    <input type="number" min="0" max="20" placeholder="/20" class="w-20 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-indigo-500">
+                </td>
+            `;
+            tbodyProf.appendChild(ligneProf);
+
+            alert("Élève enregistré avec succès ! Matricule : " + matricule);
+        }
+
+        function enregistrerProf() {
+            const nom = document.getElementById('prof-nom').value;
+            const postnom = document.getElementById('prof-postnom').value;
+            const prenom = document.getElementById('prof-prenom').value;
+            const cours = document.getElementById('prof-cours').value;
+
+            if(!nom || !prenom || !cours) {
+                alert("Veuillez remplir tous les champs du professeur.");
+                return;
+            }
+
+            // Génération d'un code d'accès à 4 chiffres aléatoire
+            const codeAcces = Math.floor(1000 + Math.random() * 9000);
+
+            const tbodyProfs = document.getElementById('tableau-profs');
+            const nouvelleLigne = document.createElement('tr');
+            nouvelleLigne.className = "border-b border-gray-100";
+            nouvelleLigne.innerHTML = `
+                <td class="py-4 font-bold text-indigo-600 bg-indigo-50 px-3 rounded-lg">${codeAcces}</td>
+                <td class="py-4 font-medium text-gray-800">${nom} ${postnom} ${prenom}</td>
+                <td class="py-4">${cours}</td>
+                <td class="py-4">
+                    <button onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 font-medium text-xs cursor-pointer">Supprimer</button>
+                </td>
+            `;
+            tbodyProfs.appendChild(nouvelleLigne);
+
+            alert("Professeur enregistré avec succès ! Code d'accès généré : " + codeAcces);
+            
+            // Vider les champs
+            document.getElementById('prof-nom').value = '';
+            document.getElementById('prof-postnom').value = '';
+            document.getElementById('prof-prenom').value = '';
+            document.getElementById('prof-cours').value = '';
         }
     </script>
 </body>
