@@ -448,7 +448,6 @@
                         <button class="tab-btn active" onclick="changerOngletAdmin('inscriptions')">Inscriptions</button>
                         <button class="tab-btn" onclick="changerOngletAdmin('eleves')">Liste des Élèves</button>
                         <button class="tab-btn" onclick="changerOngletAdmin('profs')">Liste des Professeurs</button>
-                        <button class="tab-btn" onclick="changerOngletAdmin('securite')">Sécurité & Code Maître</button>
                     </div>
 
                     <!-- Section Inscriptions -->
@@ -517,18 +516,6 @@
                                     <tr><td colspan="3" style="text-align: center; color: var(--md-sys-color-on-surface-variant);">Chargement...</td></tr>
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-
-                    <!-- Section Sécurité & Code Maître -->
-                    <div id="admin-section-securite" class="section-cache">
-                        <h3 style="font-size: 15px; margin-top: 0;"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle;">security</span> Modification du Code Maître Administrateur</h3>
-                        <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">Modifiez ou personnalisez le code maître requis pour accéder à cet espace d'administration.</p>
-                        
-                        <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); margin-top: 16px;">
-                            <label for="nouveau-code-maitre">Nouveau Code Maître Administrateur</label>
-                            <input type="text" id="nouveau-code-maitre" placeholder="Ex: MON-NOUVEAU-CODE-ADMIN" style="text-transform: uppercase;">
-                            <button onclick="modifierCodeMaitre()" style="width: auto;">Mettre à jour le code maître</button>
                         </div>
                     </div>
 
@@ -604,41 +591,21 @@
                 return;
             }
 
-            db.ref('parametres/codeMaitre').once('value', (snapshot) => {
-                let codeActuel = "ECOLEADMIN2026"; // Code par défaut si non créé dans Firebase
-                if (snapshot.exists()) {
-                    codeActuel = snapshot.val();
-                }
+            // Code maître défini en dur pour un accès direct et instantané
+            const codeActuel = "ECOLEADMIN2026";
 
-                if (saisi === codeActuel) {
-                    adminConnecte = true;
-                    document.getElementById('admin-code-maitre-saisi').value = '';
-                    verifierEtatAdminSession();
-                } else {
-                    alert("Code maître administrateur incorrect.");
-                }
-            }, (error) => {
-                alert("Erreur de lecture ou accès refusé.");
-            });
+            if (saisi === codeActuel) {
+                adminConnecte = true;
+                document.getElementById('admin-code-maitre-saisi').value = '';
+                verifierEtatAdminSession();
+            } else {
+                alert("Code maître administrateur incorrect.");
+            }
         }
 
         function deconnecterAdmin() {
             adminConnecte = false;
             verifierEtatAdminSession();
-        }
-
-        function modifierCodeMaitre() {
-            if (!adminConnecte) return;
-            const nouveau = document.getElementById('nouveau-code-maitre').value.trim().toUpperCase();
-            if (!nouveau || nouveau.length < 4) {
-                alert("Veuillez entrer un code valide d'au moins 4 caractères.");
-                return;
-            }
-
-            db.ref('parametres/codeMaitre').set(nouveau).then(() => {
-                alert("Code maître administrateur mis à jour avec succès !");
-                document.getElementById('nouveau-code-maitre').value = '';
-            }).catch(err => alert("Erreur : " + err.message));
         }
 
         function genererCodeAleatoire(longueur = 6) {
@@ -755,12 +722,10 @@
             const secInscriptions = document.getElementById('admin-section-inscriptions');
             const secEleves = document.getElementById('admin-section-eleves');
             const secProfs = document.getElementById('admin-section-profs');
-            const secSecurite = document.getElementById('admin-section-securite');
 
             secInscriptions.style.display = 'none';
             secEleves.style.display = 'none';
             secProfs.style.display = 'none';
-            secSecurite.style.display = 'none';
 
             if (onglet === 'inscriptions') {
                 boutons[0].classList.add('active');
@@ -773,9 +738,6 @@
                 boutons[2].classList.add('active');
                 secProfs.style.display = 'block';
                 chargerListesAdmin();
-            } else if (onglet === 'securite') {
-                boutons[3].classList.add('active');
-                secSecurite.style.display = 'block';
             }
         }
 
