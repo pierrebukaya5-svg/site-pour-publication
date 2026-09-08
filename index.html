@@ -43,7 +43,6 @@
             margin: 0 auto;
         }
 
-        /* En-tête style Google */
         header {
             background: var(--md-sys-color-surface);
             border: 1px solid var(--md-sys-color-outline);
@@ -86,7 +85,6 @@
             font-size: 13px; 
         }
 
-        /* Cartes Style Material Design 3 */
         .card {
             background: var(--md-sys-color-surface);
             border: 1px solid var(--md-sys-color-outline);
@@ -125,7 +123,6 @@
             margin-bottom: 6px;
         }
 
-        /* Champs de saisie style Google Search / Material */
         input, textarea, select {
             width: 100%;
             padding: 12px 16px;
@@ -147,7 +144,6 @@
             box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
         }
 
-        /* Boutons Material Design */
         button {
             display: inline-flex;
             align-items: center;
@@ -198,7 +194,6 @@
             font-weight: 500;
         }
 
-        /* Tableaux Material */
         .table-admin {
             width: 100%;
             border-collapse: collapse;
@@ -263,7 +258,6 @@
         </header>
 
         <div class="grid-2">
-            <!-- ESPACE PARENT / ÉLÈVE -->
             <div class="card">
                 <h2><span class="material-icons-outlined">face</span> Espace Consultation (Élève)</h2>
                 <p style="color: var(--md-sys-color-on-surface-variant); font-size: 13px; margin-bottom: 16px;">Saisissez votre matricule d'identification unique.</p>
@@ -275,7 +269,6 @@
                 <div id="resultat-recherche-parent" style="margin-top: 16px; font-size: 13px;"></div>
             </div>
 
-            <!-- ESPACE PROFESSEUR -->
             <div class="card">
                 <h2><span class="material-icons-outlined">engineering</span> Espace Professeur</h2>
                 <p style="color: var(--md-sys-color-on-surface-variant); font-size: 13px; margin-bottom: 16px;">Saisissez votre matricule enseignant.</p>
@@ -299,7 +292,6 @@
             </div>
         </div>
 
-        <!-- ZONE DE CONNEXION GÉRANT -->
         <div class="card" style="max-width: 480px; margin: 24px auto;">
             <h2><span class="material-icons-outlined">admin_panel_settings</span> Authentification Administration</h2>
             <div id="login-section">
@@ -315,11 +307,9 @@
             </div>
         </div>
 
-        <!-- TABLEAU DE BORD GÉRANT -->
         <div id="admin-dashboard" style="display: none;">
             
             <div class="grid-2">
-                <!-- Enregistrement Élève -->
                 <div class="card">
                     <h2><span class="material-icons-outlined">person_add</span> Enregistrer un Élève</h2>
                     <label>Nom</label>
@@ -333,7 +323,6 @@
                     <button onclick="ajouterEleve()">Générer le matricule & Enregistrer</button>
                 </div>
 
-                <!-- Enregistrement Professeur -->
                 <div class="card">
                     <h2><span class="material-icons-outlined">badge</span> Enregistrer un Professeur</h2>
                     <label>Nom</label>
@@ -348,7 +337,6 @@
                 </div>
             </div>
 
-            <!-- SECTION : LISTE DES ENREGISTREMENTS & MATRICULES POUR PARTAGE -->
             <div class="card">
                 <h2><span class="material-icons-outlined">folder_shared</span> Registre des Actifs & Matricules</h2>
                 <p style="color: var(--md-sys-color-on-surface-variant); font-size: 13px; margin-bottom: 16px;">
@@ -430,7 +418,6 @@
         </div>
     </div>
 
-    <!-- ZONE PDF CACHÉE -->
     <div id="rapport-pdf-container">
         <h1 style="text-align: center;">RAPPORT ANNUEL DE FIN D'ANNÉE SCOLAIRE</h1>
         <p style="text-align: center; font-size: 13px; color: #555;">Établissement Scolaire - République Démocratique du Congo</p>
@@ -671,9 +658,9 @@
                 return;
             }
 
-            const codeNom = nom.substring(0, 2).toUpperCase();
-            const codePost = postnom.substring(0, 2).toUpperCase();
-            const codePre = prenom.substring(0, 1).toUpperCase();
+            const codeNom = (nom + "XX").substring(0, 2).toUpperCase();
+            const codePost = (postnom + "XX").substring(0, 2).toUpperCase();
+            const codePre = (prenom + "X").substring(0, 1).toUpperCase();
             const codeClasse = classe.toUpperCase().replace(/\s+/g, '');
             const randSuffix = genererCodeAleatoire(6);
             const matricule = `${codeNom}${codePost}${codePre}${codeClasse}${randSuffix}`;
@@ -684,6 +671,8 @@
                 document.getElementById('eleve-postnom').value = '';
                 document.getElementById('eleve-prenom').value = '';
                 document.getElementById('eleve-classe').value = '';
+            }).catch(error => {
+                alert("Erreur lors de l'enregistrement : " + error.message);
             });
         }
 
@@ -699,8 +688,8 @@
                 return;
             }
 
-            const codeNom = nom.padEnd(3, 'X').substring(0, 3).toUpperCase();
-            const codePost = postnom.padEnd(2, 'X').substring(0, 2).toUpperCase();
+            const codeNom = (nom + "XXX").substring(0, 3).toUpperCase();
+            const codePost = (postnom + "XX").substring(0, 2).toUpperCase();
             const randSuffix = genererCodeAleatoire(6);
             const matricule = `PROF${codeNom}${codePost}${randSuffix}`;
 
