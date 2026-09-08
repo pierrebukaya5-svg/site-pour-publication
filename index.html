@@ -368,7 +368,7 @@
                 changerOngletAdmin('eleves');
             } else {
                 messageErreur.textContent = "Code maître incorrect.";
-                messageErreur.classList.remove('hidden');
+                messageErreur.classList.add('hidden');
             }
         }
 
@@ -386,52 +386,70 @@
                 return;
             }
 
-            // Génération automatique d'un matricule unique à 5 chiffres
-            const matricule = Math.floor(10000 + Math.random() * 90000).toString();
+            try {
+                let matricule;
+                let existe = true;
 
-            await set(ref(db, `eleves/${matricule}`), {
-                nom, postnom, prenom, classe, nomParent, telParent, enOrdre: true
-            });
-            
-            alert(`Élève enregistré avec succès !\nMatricule généré : ${matricule}`);
-            
-            document.getElementById('adm-el-nom').value = "";
-            document.getElementById('adm-el-postnom').value = "";
-            document.getElementById('adm-el-prenom').value = "";
-            document.getElementById('adm-el-classe').value = "";
-            document.getElementById('adm-el-parent-nom').value = "";
-            document.getElementById('adm-el-parent-tel').value = "";
-            chargerListeEleves();
+                // Génération sécurisée et vérification d'unicité du matricule
+                while (existe) {
+                    matricule = Math.floor(10000 + Math.random() * 90000).toString();
+                    const verifSnapshot = await get(ref(db, `eleves/${matricule}`));
+                    existe = verifSnapshot.exists();
+                }
+
+                await set(ref(db, `eleves/${matricule}`), {
+                    nom, postnom, prenom, classe, nomParent, telParent, enOrdre: true
+                });
+                
+                alert(`Élève enregistré avec succès !\nMatricule généré : ${matricule}`);
+                
+                document.getElementById('adm-el-nom').value = "";
+                document.getElementById('adm-el-postnom').value = "";
+                document.getElementById('adm-el-prenom').value = "";
+                document.getElementById('adm-el-classe').value = "";
+                document.getElementById('adm-el-parent-nom').value = "";
+                document.getElementById('adm-el-parent-tel').value = "";
+                chargerListeEleves();
+            } catch (error) {
+                console.error("Erreur lors de l'enregistrement de l'élève :", error);
+                alert("Erreur lors de l'enregistrement. Vérifiez votre connexion ou vos règles Firebase.");
+            }
         }
 
         window.chargerListeEleves = async function() {
             const tbody = document.getElementById('table-body-eleves');
             tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Chargement...</td></tr>`;
-            const snapshot = await get(ref(db, 'eleves'));
-            if(snapshot.exists()) {
-                tbody.innerHTML = "";
-                snapshot.forEach(child => {
-                    const m = child.key;
-                    const d = child.val();
-                    const enOrdre = d.enOrdre !== false;
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50/50 transition">
-                            <td class="p-3.5 font-mono text-xs font-bold text-indigo-600 bg-indigo-50/50 px-2 py-1 rounded inline-block my-2">${m}</td>
-                            <td class="p-3.5 font-bold text-slate-900">${d.nom} ${d.postnom || ''} ${d.prenom || ''}</td>
-                            <td class="p-3.5 text-xs text-slate-600">${d.classe || '-'}</td>
-                            <td class="p-3.5 text-xs text-slate-600">${d.nomParent || '-'}<br><span class="text-slate-400">${d.telParent || ''}</span></td>
-                            <td class="p-3.5">
-                                <button onclick="basculerStatutEleve('${m}', ${!enOrdre})" class="px-3 py-1 rounded-full text-xs font-semibold ${enOrdre ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
-                                    ${enOrdre ? '✓ En Ordre' : '✕ Bloqué'}
-                                </button>
-                            </td>
-                            <td class="p-3.5 text-right">
-                                <button onclick="supprimerEleve('${m}')" class="text-rose-500 hover:text-rose-700 text-xs font-semibold">Supprimer</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } else { tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 text-xs">Aucun élève enregistré.</td></tr>`; }
+            try {
+                const snapshot = await get(ref(db, 'eleves'));
+                if(snapshot.exists()) {
+                    tbody.innerHTML = "";
+                    snapshot.forEach(child => {
+                        const m = child.key;
+                        const d = child.val();
+                        const enOrdre = d.enOrdre !== false;
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50/50 transition">
+                                <td class="p-3.5 font-mono text-xs font-bold text-indigo-600 bg-indigo-50/50 px-2 py-1 rounded inline-block my-2">${m}</td>
+                                <td class="p-3.5 font-bold text-slate-900">${d.nom} ${d.postnom || ''} ${d.prenom || ''}</td>
+                                <td class="p-3.5 text-xs text-slate-600">${d.classe || '-'}</td>
+                                <td class="p-3.5 text-xs text-slate-600">${d.nomParent || '-'}<br><span class="text-slate-400">${d.telParent || ''}</span></td>
+                                <td class="p-3.5">
+                                    <button onclick="basculerStatutEleve('${m}', ${!enOrdre})" class="px-3 py-1 rounded-full text-xs font-semibold ${enOrdre ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+                                        ${enOrdre ? '✓ En Ordre' : '✕ Bloqué'}
+                                    </button>
+                                </td>
+                                <td class="p-3.5 text-right">
+                                    <button onclick="supprimerEleve('${m}')" class="text-rose-500 hover:text-rose-700 text-xs font-semibold">Supprimer</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else { 
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 text-xs">Aucun élève enregistré.</td></tr>`; 
+                }
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-rose-500 text-xs">Erreur de chargement des données.</td></tr>`;
+            }
         }
 
         window.basculerStatutEleve = async function(m, statut) {
@@ -453,42 +471,60 @@
             const prenom = document.getElementById('adm-prof-prenom').value.trim();
 
             if(!nom) {
-                alert("Veuillez renseigner le nom du professeur.");
+                alert("Veuillez renseigner au moins le nom du professeur.");
                 return;
             }
 
-            // Génération automatique d'un code unique à 5 chiffres
-            const code = Math.floor(10000 + Math.random() * 90000).toString();
+            try {
+                let code;
+                let existe = true;
 
-            await set(ref(db, `profs/${code}`), { nom, postnom, prenom });
-            alert(`Professeur enregistré avec succès !\nCode d'accès généré : ${code}`);
-            
-            document.getElementById('adm-prof-nom').value = "";
-            document.getElementById('adm-prof-postnom').value = "";
-            document.getElementById('adm-prof-prenom').value = "";
-            chargerListeProfs();
+                // Boucle de garantie d'unicité pour le code prof
+                while (existe) {
+                    code = Math.floor(10000 + Math.random() * 90000).toString();
+                    const verifSnapshot = await get(ref(db, `profs/${code}`));
+                    existe = verifSnapshot.exists();
+                }
+
+                await set(ref(db, `profs/${code}`), { nom, postnom, prenom });
+                alert(`Professeur enregistré avec succès !\nCode d'accès généré : ${code}`);
+                
+                document.getElementById('adm-prof-nom').value = "";
+                document.getElementById('adm-prof-postnom').value = "";
+                document.getElementById('adm-prof-prenom').value = "";
+                chargerListeProfs();
+            } catch (error) {
+                console.error("Erreur lors de l'enregistrement du professeur :", error);
+                alert("Une erreur est survenue lors de l'enregistrement. Vérifiez votre connexion ou vos règles Firebase.");
+            }
         }
 
         window.chargerListeProfs = async function() {
             const tbody = document.getElementById('table-body-profs');
             tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">Chargement...</td></tr>`;
-            const snapshot = await get(ref(db, 'profs'));
-            if(snapshot.exists()) {
-                tbody.innerHTML = "";
-                snapshot.forEach(child => {
-                    const code = child.key;
-                    const d = child.val();
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50/50 transition">
-                            <td class="p-3.5 font-bold text-slate-900">${d.nom} ${d.postnom || ''} ${d.prenom || ''}</td>
-                            <td class="p-3.5 font-mono text-xs font-bold text-indigo-600 bg-indigo-50/50 px-2 py-1 rounded inline-block my-2">${code}</td>
-                            <td class="p-3.5 text-right">
-                                <button onclick="supprimerProf('${code}')" class="text-rose-500 hover:text-rose-700 text-xs font-semibold">Supprimer</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } else { tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400 text-xs">Aucun professeur enregistré.</td></tr>`; }
+            try {
+                const snapshot = await get(ref(db, 'profs'));
+                if(snapshot.exists()) {
+                    tbody.innerHTML = "";
+                    snapshot.forEach(child => {
+                        const code = child.key;
+                        const d = child.val();
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50/50 transition">
+                                <td class="p-3.5 font-bold text-slate-900">${d.nom} ${d.postnom || ''} ${d.prenom || ''}</td>
+                                <td class="p-3.5 font-mono text-xs font-bold text-indigo-600 bg-indigo-50/50 px-2 py-1 rounded inline-block my-2">${code}</td>
+                                <td class="p-3.5 text-right">
+                                    <button onclick="supprimerProf('${code}')" class="text-rose-500 hover:text-rose-700 text-xs font-semibold">Supprimer</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else { 
+                    tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400 text-xs">Aucun professeur enregistré.</td></tr>`; 
+                }
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-rose-500 text-xs">Erreur de chargement des données.</td></tr>`;
+            }
         }
 
         window.supprimerProf = async function(code) {
