@@ -9,7 +9,7 @@
 </head>
 <body class="bg-slate-50 min-h-screen font-sans text-slate-900">
 
-    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
         <!-- En-tête -->
         <header class="bg-white shadow-sm rounded-2xl p-4 mb-6 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -54,9 +54,9 @@
                 <button onclick="retourAccueil()" class="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1 mb-6">
                     ← Retour à l'accueil
                 </button>
-                <div class="border border-slate-200 rounded-xl p-6">
-                    <h3 class="font-bold text-lg mb-2">🎓 Élève</h3>
-                    <p class="text-sm text-slate-500 mb-4">Entrez votre numéro de matricule pour accéder à vos résultats :</p>
+                <div class="border border-slate-200 rounded-xl p-6 max-w-md mx-auto">
+                    <h3 class="font-bold text-lg mb-2">🎓 Espace Élève</h3>
+                    <p class="text-sm text-slate-500 mb-4">Entrez votre numéro de matricule :</p>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Matricule</label>
                     <input type="text" id="input-matricule" class="w-full bg-slate-100 text-slate-900 border border-slate-300 p-3 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: MAT-12345">
                     <button onclick="connexionEleve()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition">
@@ -66,13 +66,26 @@
                 </div>
             </div>
 
+            <!-- Résultat de l'Élève (Affichage des infos & parents) -->
+            <div id="vue-eleve-dossier" class="hidden">
+                <button onclick="retourAccueil()" class="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1 mb-6">
+                    ← Déconnexion / Accueil
+                </button>
+                <div class="border border-slate-200 rounded-xl p-6 bg-slate-50">
+                    <h3 class="font-bold text-xl text-blue-600 mb-4">📘 Dossier Académique de l'Élève</h3>
+                    <div id="contenu-dossier-eleve" class="space-y-3 text-sm text-slate-700">
+                        <!-- Injection dynamique des infos de l'élève et de ses parents -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Vue Connexion Prof -->
             <div id="vue-prof" class="hidden">
                 <button onclick="retourAccueil()" class="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1 mb-6">
                     ← Retour à l'accueil
                 </button>
-                <div class="border border-slate-200 rounded-xl p-6">
-                    <h3 class="font-bold text-lg mb-2">👨‍🏫 Prof</h3>
+                <div class="border border-slate-200 rounded-xl p-6 max-w-md mx-auto">
+                    <h3 class="font-bold text-lg mb-2">👨‍🏫 Espace Prof</h3>
                     <p class="text-sm text-slate-500 mb-4">Entrez votre code d'accès enseignant :</p>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Code Prof</label>
                     <input type="password" id="input-code-prof" class="w-full bg-slate-100 text-slate-900 border border-slate-300 p-3 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••••">
@@ -88,7 +101,7 @@
                 <button onclick="retourAccueil()" class="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1 mb-6">
                     ← Retour à l'accueil
                 </button>
-                <div class="border border-slate-200 rounded-xl p-6">
+                <div class="border border-slate-200 rounded-xl p-6 max-w-md mx-auto">
                     <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
                         🔒 Sécurité Administration
                     </h3>
@@ -107,7 +120,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b border-slate-200 gap-4">
                     <div>
                         <h3 class="font-bold text-xl text-slate-800">⚙️ Tableau de Bord - Administration</h3>
-                        <p class="text-xs text-slate-500">Gestion centralisée de l'établissement</p>
+                        <p class="text-xs text-slate-500">Gestion centralisée des élèves, tuteurs et professeurs</p>
                     </div>
                     <button onclick="retourAccueil()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-medium transition">
                         Déconnexion Admin
@@ -117,51 +130,90 @@
                 <!-- Barre d'onglets de l'administration -->
                 <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-200 pb-4">
                     <button onclick="changerOngletAdmin('eleves')" id="tab-eleves" class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white transition">
-                        🎓 Gestion Élèves
+                        🎓 Inscription Élève & Parents
                     </button>
                     <button onclick="changerOngletAdmin('profs')" id="tab-profs" class="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
-                        👨‍🏫 Gestion Profs
+                        👨‍🏫 Gestion des Profs
                     </button>
                     <button onclick="changerOngletAdmin('options')" id="tab-options" class="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
                         📚 Options d'études
                     </button>
-                    <button onclick="changerOngletAdmin('securite')" id="tab-securite" class="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
-                        🔐 Sécurité & Paramètres
-                    </button>
                 </div>
 
-                <!-- Contenu des Onglets Admin -->
-                <div id="admin-content-eleves" class="admin-tab-content">
-                    <h4 class="font-bold text-md mb-2 text-slate-700">Dossiers et Inscriptions des Élèves</h4>
-                    <p class="text-sm text-slate-500 mb-4">Ajoutez, modifiez ou attribuez des matricules aux élèves.</p>
-                    <div class="p-4 border border-dashed border-slate-300 rounded-xl text-center text-slate-400">
-                        [Module de gestion des élèves rattaché à Firebase]
+                <!-- Contenu Onglet 1 : Inscription & Liste Élèves + Parents + Statut Paiement -->
+                <div id="admin-content-eleves" class="admin-tab-content space-y-6">
+                    <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                        <h4 class="font-bold text-md mb-3 text-slate-700">Enregistrer un Élève et ses Tuteurs Légaux</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                            <input type="text" id="adm-nom-eleve" placeholder="Nom complet de l'élève" class="p-3 bg-white border border-slate-300 rounded-xl text-sm">
+                            <input type="text" id="adm-matricule-eleve" placeholder="Matricule (ex: MAT-001)" class="p-3 bg-white border border-slate-300 rounded-xl text-sm">
+                            <input type="text" id="adm-nom-parent" placeholder="Nom du Tuteur / Parent" class="p-3 bg-white border border-slate-300 rounded-xl text-sm">
+                            <input type="text" id="adm-tel-parent" placeholder="Téléphone du Parent" class="p-3 bg-white border border-slate-300 rounded-xl text-sm">
+                        </div>
+                        <button onclick="ajouterEleveEtParent()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition">
+                            Enregistrer l'élève et ses parents
+                        </button>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-md mb-3 text-slate-700">Liste des Élèves & Gestion des Accès (En ordre / Bloqué)</h4>
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                                        <th class="p-3">Matricule</th>
+                                        <th class="p-3">Élève</th>
+                                        <th class="p-3">Tuteur / Parent</th>
+                                        <th class="p-3">Statut (Frais scolaires)</th>
+                                        <th class="p-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body-eleves">
+                                    <!-- Rempli dynamiquement -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <div id="admin-content-profs" class="admin-tab-content hidden">
-                    <h4 class="font-bold text-md mb-2 text-slate-700">Registre du Corps Enseignant</h4>
-                    <p class="text-sm text-slate-500 mb-4">Générez ou révoquez les codes d'accès des professeurs.</p>
-                    <div class="p-4 border border-dashed border-slate-300 rounded-xl text-center text-slate-400">
-                        [Module de gestion des professeurs rattaché à Firebase]
+                <!-- Contenu Onglet 2 : Gestion des Professeurs sous forme de liste -->
+                <div id="admin-content-profs" class="admin-tab-content hidden space-y-6">
+                    <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                        <h4 class="font-bold text-md mb-3 text-slate-700">Ajouter un Enseignant</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                            <input type="text" id="adm-nom-prof" placeholder="Nom complet du Prof" class="p-3 bg-white border border-slate-300 rounded-xl text-sm">
+                            <input type="text" id="adm-code-prof" placeholder="Code d'accès (ex: prof123)" class="p-3 bg-white border border-slate-300 rounded-xl text-sm">
+                        </div>
+                        <button onclick="ajouterProfesseur()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition">
+                            Enregistrer le Professeur
+                        </button>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-md mb-3 text-slate-700">Registre du Corps Enseignant</h4>
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                                        <th class="p-3">Nom du Professeur</th>
+                                        <th class="p-3">Code d'accès</th>
+                                        <th class="p-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body-profs">
+                                    <!-- Rempli dynamiquement -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Contenu Onglet 3 : Options d'études -->
                 <div id="admin-content-options" class="admin-tab-content hidden">
                     <h4 class="font-bold text-md mb-2 text-slate-700">Options d'Études et Cours</h4>
                     <p class="text-sm text-slate-500 mb-4">Configurez les sections (Scientifique, Pédagogie, Commerciale, etc.) et les matières.</p>
                     <div class="p-4 border border-dashed border-slate-300 rounded-xl text-center text-slate-400">
                         [Module de configuration des options d'études]
-                    </div>
-                </div>
-
-                <div id="admin-content-securite" class="admin-tab-content hidden">
-                    <h4 class="font-bold text-md mb-2 text-slate-700">Sécurité et Accès Maître</h4>
-                    <p class="text-sm text-slate-500 mb-4">Modifiez le code d'accès maître ou consultez les journaux d'activité.</p>
-                    <div class="p-4 border border-slate-200 rounded-xl bg-slate-50">
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Code Maître Actuel</label>
-                        <input type="text" value="pr1999" disabled class="w-full bg-slate-200 text-slate-600 p-3 rounded-xl mb-4 cursor-not-allowed">
-                        <p class="text-xs text-slate-500">Pour modifier ce code, veuillez contacter le support technique ou synchroniser la base Firebase.</p>
                     </div>
                 </div>
             </div>
@@ -171,9 +223,8 @@
     <!-- Scripts Firebase et Logique -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, get, set, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Configuration Firebase fournie
         const firebaseConfig = {
           apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
           authDomain: "site-publication.firebaseapp.com",
@@ -184,14 +235,13 @@
           appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
         };
 
-        // Initialisation de Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        console.log("Firebase initialisé avec succès !");
 
-        // Navigation entre les vues principales
+        // Navigation globale
         window.retourAccueil = function() {
             document.getElementById('vue-eleve').classList.add('hidden');
+            document.getElementById('vue-eleve-dossier').classList.add('hidden');
             document.getElementById('vue-prof').classList.add('hidden');
             document.getElementById('vue-admin-secu').classList.add('hidden');
             document.getElementById('vue-admin-dashboard').classList.add('hidden');
@@ -213,26 +263,22 @@
             document.getElementById('vue-admin-secu').classList.remove('hidden');
         }
 
-        // Gestion des onglets à l'intérieur du Dashboard Admin
+        // Onglets Admin
         window.changerOngletAdmin = function(onglet) {
-            // Masquer tous les contenus d'onglets
-            const contenus = document.querySelectorAll('.admin-tab-content');
-            contenus.forEach(c => c.classList.add('hidden'));
-
-            // Réinitialiser le style de tous les boutons d'onglets
-            const boutons = ['eleves', 'profs', 'options', 'securite'];
-            boutons.forEach(b => {
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
+            ['eleves', 'profs', 'options'].forEach(b => {
                 const btn = document.getElementById(`tab-${b}`);
                 btn.className = "px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition";
             });
 
-            // Activer l'onglet sélectionné
             document.getElementById(`admin-content-${onglet}`).classList.remove('hidden');
-            const actifBtn = document.getElementById(`tab-${onglet}`);
-            actifBtn.className = "px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white transition";
+            document.getElementById(`tab-${onglet}`).className = "px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white transition";
+
+            if(onglet === 'eleves') chargerListeEleves();
+            if(onglet === 'profs') chargerListeProfs();
         }
 
-        // Connexion Élève par Matricule
+        // Connexion Élève avec Vérification du Statut (En ordre ou bloqué)
         window.connexionEleve = async function() {
             const matricule = document.getElementById('input-matricule').value.trim();
             const msgErreur = document.getElementById('msg-erreur-eleve');
@@ -244,18 +290,39 @@
             }
 
             try {
-                const eleveRef = ref(db, `eleves/${matricule}`);
-                const snapshot = await get(eleveRef);
-
+                const snapshot = await get(ref(db, `eleves/${matricule}`));
                 if (snapshot.exists()) {
-                    alert("Matricule reconnu ! Connexion de l'élève réussie.");
-                    msgErreur.classList.add('hidden');
+                    const data = snapshot.val();
+                    
+                    // Vérification si l'élève est en ordre (bloqué par l'admin si false)
+                    if (data.enOrdre === false) {
+                        msgErreur.textContent = "Accès refusé : Vous n'êtes pas en ordre de frais scolaires. Veuillez contacter l'administration.";
+                        msgErreur.classList.remove('hidden');
+                        return;
+                    }
+
+                    // Affichage du dossier et des infos parents
+                    document.getElementById('vue-eleve').classList.add('hidden');
+                    document.getElementById('vue-eleve-dossier').classList.remove('hidden');
+                    
+                    document.getElementById('contenu-dossier-eleve').innerHTML = `
+                        <p><strong>Nom de l'élève :</strong> ${data.nom}</p>
+                        <p><strong>Matricule :</strong> ${matricule}</p>
+                        <hr class="my-2 border-slate-300">
+                        <p class="font-semibold text-slate-800">Identité du Tuteur / Parent :</p>
+                        <p><strong>Nom du Parent :</strong> ${data.nomParent || 'Non renseigné'}</p>
+                        <p><strong>Téléphone du Parent :</strong> ${data.telParent || 'Non renseigné'}</p>
+                        <div class="mt-4 p-3 bg-green-50 text-green-700 rounded-xl text-xs">
+                            ✓ Compte actif - En ordre avec l'administration.
+                        </div>
+                    `;
                 } else {
-                    alert("Matricule validé (Mode local).");
+                    msgErreur.textContent = "Matricule introuvable dans la base de données.";
+                    msgErreur.classList.remove('hidden');
                 }
             } catch (error) {
-                console.error("Erreur Firebase :", error);
-                msgErreur.textContent = "Erreur de connexion à la base de données.";
+                console.error(error);
+                msgErreur.textContent = "Erreur de connexion à Firebase.";
                 msgErreur.classList.remove('hidden');
             }
         }
@@ -272,9 +339,7 @@
             }
 
             try {
-                const profRef = ref(db, `profs/${codeProf}`);
-                const snapshot = await get(profRef);
-
+                const snapshot = await get(ref(db, `profs/${codeProf}`));
                 if (snapshot.exists() || codeProf === "prof123") {
                     alert("Accès Enseignant autorisé !");
                     msgErreur.classList.add('hidden');
@@ -283,32 +348,161 @@
                     msgErreur.classList.remove('hidden');
                 }
             } catch (error) {
-                console.error("Erreur Firebase :", error);
-                msgErreur.textContent = "Erreur de connexion à la base de données.";
+                msgErreur.textContent = "Erreur de connexion.";
                 msgErreur.classList.remove('hidden');
             }
         }
 
-        // Vérification Admin avec le code maître "pr1999"
+        // Vérification Admin "pr1999"
         window.verifierCodeAdmin = function() {
             const code = document.getElementById('code-maitre-input').value;
             const messageErreur = document.getElementById('message-erreur');
             
-            if (!code) {
-                messageErreur.textContent = "Veuillez entrer le code maître.";
+            if (code === "pr1999") {
+                messageErreur.classList.add('hidden');
+                document.getElementById('vue-admin-secu').classList.add('hidden');
+                document.getElementById('vue-admin-dashboard').classList.remove('hidden');
+                document.getElementById('code-maitre-input').value = "";
+                changerOngletAdmin('eleves');
+            } else {
+                messageErreur.textContent = "Code maître incorrect.";
                 messageErreur.classList.remove('hidden');
+            }
+        }
+
+        // Enregistrement combiné Élève + Parent + Statut par défaut "en ordre" (true)
+        window.ajouterEleveEtParent = async function() {
+            const nom = document.getElementById('adm-nom-eleve').value.trim();
+            const matricule = document.getElementById('adm-matricule-eleve').value.trim();
+            const nomParent = document.getElementById('adm-nom-parent').value.trim();
+            const telParent = document.getElementById('adm-tel-parent').value.trim();
+
+            if(!nom || !matricule || !nomParent) {
+                alert("Veuillez remplir au moins le nom de l'élève, le matricule et le nom du parent.");
                 return;
             }
 
-            if (code === "pr1999") {
-                messageErreur.classList.add('hidden');
-                // Masquer l'écran de sécurité et afficher le tableau de bord avec onglets
-                document.getElementById('vue-admin-secu').classList.add('hidden');
-                document.getElementById('vue-admin-dashboard').classList.remove('hidden');
-                document.getElementById('code-maitre-input').value = ""; // Vider le champ pour sécurité
-            } else {
-                messageErreur.textContent = "Code maître incorrect (Rappel: pr1999).";
-                messageErreur.classList.remove('hidden');
+            try {
+                await set(ref(db, `eleves/${matricule}`), {
+                    nom,
+                    nomParent,
+                    telParent,
+                    enOrdre: true // Par défaut, l'élève est en ordre
+                });
+                alert("Élève et tuteur enregistrés avec succès !");
+                document.getElementById('adm-nom-eleve').value = "";
+                document.getElementById('adm-matricule-eleve').value = "";
+                document.getElementById('adm-nom-parent').value = "";
+                document.getElementById('adm-tel-parent').value = "";
+                chargerListeEleves();
+            } catch (e) {
+                alert("Erreur lors de l'enregistrement.");
+            }
+        }
+
+        // Charger la liste des élèves pour l'admin avec options de blocage et suppression
+        window.chargerListeEleves = async function() {
+            const tbody = document.getElementById('table-body-eleves');
+            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Chargement...</td></tr>`;
+            
+            try {
+                const snapshot = await get(ref(db, 'eleves'));
+                if(snapshot.exists()) {
+                    tbody.innerHTML = "";
+                    snapshot.forEach((childSnap) => {
+                        const matricule = childSnap.key;
+                        const data = childSnap.val();
+                        const enOrdre = data.enOrdre !== false;
+
+                        tbody.innerHTML += `
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="p-3 font-mono text-xs">${matricule}</td>
+                                <td class="p-3 font-semibold">${data.nom}</td>
+                                <td class="p-3 text-xs text-slate-600">${data.nomParent || 'N/A'}<br><span class="text-slate-400">${data.telParent || ''}</span></td>
+                                <td class="p-3">
+                                    <button onclick="basculerStatutEleve('${matricule}', ${!enOrdre})" class="px-3 py-1 rounded-full text-xs font-semibold ${enOrdre ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'} transition">
+                                        ${enOrdre ? '✓ En Ordre (Actif)' : '✕ Bloqué (Non en ordre)'}
+                                    </button>
+                                </td>
+                                <td class="p-3 text-right">
+                                    <button onclick="supprimerEleve('${matricule}')" class="text-red-500 hover:text-red-700 text-xs font-medium">Supprimer</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Aucun élève enregistré.</td></tr>`;
+                }
+            } catch(e) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400">Erreur de chargement.</td></tr>`;
+            }
+        }
+
+        // Basculer l'accès de l'élève (Bloqué / En ordre)
+        window.basculerStatutEleve = async function(matricule, nouveauStatut) {
+            await update(ref(db, `eleves/${matricule}`), { enOrdre: nouveauStatut });
+            chargerListeEleves();
+        }
+
+        window.supprimerEleve = async function(matricule) {
+            if(confirm("Voulez-vous vraiment supprimer cet élève ?")) {
+                await remove(ref(db, `eleves/${matricule}`));
+                chargerListeEleves();
+            }
+        }
+
+        // Ajout Prof
+        window.ajouterProfesseur = async function() {
+            const nom = document.getElementById('adm-nom-prof').value.trim();
+            const code = document.getElementById('adm-code-prof').value.trim();
+
+            if(!nom || !code) {
+                alert("Veuillez remplir tous les champs.");
+                return;
+            }
+
+            await set(ref(db, `profs/${code}`), { nom });
+            alert("Professeur ajouté !");
+            document.getElementById('adm-nom-prof').value = "";
+            document.getElementById('adm-code-prof').value = "";
+            chargerListeProfs();
+        }
+
+        // Charger liste des profs sous forme de liste
+        window.chargerListeProfs = async function() {
+            const tbody = document.getElementById('table-body-profs');
+            tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">Chargement...</td></tr>`;
+
+            try {
+                const snapshot = await get(ref(db, 'profs'));
+                if(snapshot.exists()) {
+                    tbody.innerHTML = "";
+                    snapshot.forEach((childSnap) => {
+                        const code = childSnap.key;
+                        const data = childSnap.val();
+
+                        tbody.innerHTML += `
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="p-3 font-semibold">${data.nom}</td>
+                                <td class="p-3 font-mono text-xs">${code}</td>
+                                <td class="p-3 text-right">
+                                    <button onclick="supprimerProf('${code}')" class="text-red-500 hover:text-red-700 text-xs font-medium">Supprimer</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">Aucun professeur enregistré.</td></tr>`;
+                }
+            } catch(e) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-red-400">Erreur de chargement.</td></tr>`;
+            }
+        }
+
+        window.supprimerProf = async function(code) {
+            if(confirm("Supprimer ce professeur ?")) {
+                await remove(ref(db, `profs/${code}`));
+                chargerListeProfs();
             }
         }
     </script>
