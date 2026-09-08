@@ -525,16 +525,30 @@
 
                     <!-- Section Sécurité & Code Admin -->
                     <div id="admin-section-securite" class="section-cache">
-                        <h3 style="font-size: 15px; margin-top: 0;"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle;">security</span> Gestion du Code d'Accès Administrateur</h3>
-                        <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">Vous pouvez à tout moment supprimer l'ancien code d'accès administrateur ou en configurer un nouveau pour sécuriser ou réactiver vos privilèges de création.</p>
+                        <h3 style="font-size: 15px; margin-top: 0;"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle;">security</span> Gestion du Code d'Accès & Comptes Administrateurs</h3>
+                        <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">Vous pouvez gérer votre code d'accès ou créer un nouveau compte administrateur pour donner accès à une autre personne.</p>
                         
                         <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); margin-top: 16px;">
                             <p style="font-size: 13px; margin-top: 0;">Code d'accès administrateur actuel : <strong id="admin-code-actuel" style="color: var(--md-sys-color-primary);">Chargement...</strong></p>
                             
-                            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                            <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
                                 <button onclick="supprimerCodeAdmin()" style="background: var(--md-sys-color-error); width: auto;">Supprimer le code actuel</button>
                                 <button onclick="reactiverCodeAdmin()" style="background: var(--md-sys-color-success); width: auto;">Réactiver / Générer un nouveau code</button>
                             </div>
+                        </div>
+
+                        <!-- Nouveau bloc pour créer un autre compte admin -->
+                        <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); margin-top: 16px;">
+                            <h4 style="font-size: 14px; margin-top: 0; display: flex; align-items: center; gap: 6px;"><span class="material-icons-outlined" style="font-size:18px;">person_add</span> Créer un nouveau compte Administrateur</h4>
+                            <p style="font-size: 12px; color: var(--md-sys-color-on-surface-variant); margin-bottom: 12px;">Créez un nouvel accès e-mail et mot de passe pour un autre administrateur.</p>
+                            
+                            <label for="new-admin-email">Nouvelle adresse e-mail admin</label>
+                            <input type="email" id="new-admin-email" placeholder="admin2@ecole.cd">
+                            
+                            <label for="new-admin-password">Mot de passe temporaire</label>
+                            <input type="password" id="new-admin-password" placeholder="Min. 6 caractères">
+                            
+                            <button onclick="creerNouvelAdmin()" style="width: auto;">Créer le nouveau compte admin</button>
                         </div>
                     </div>
 
@@ -554,6 +568,9 @@
             messagingSenderId: "934019778891",
             appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
         };
+
+        const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
+        const secondaryAuth = secondaryApp.auth();
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -804,6 +821,25 @@
                 alert(`Nouveau code d'accès administrateur activé avec succès !\n\nVotre code : ${nouveauCode}`);
                 verifierCodeAdminActuel();
             }).catch(err => alert("Erreur : " + err.message));
+        }
+
+        function creerNouvelAdmin() {
+            if (!auth.currentUser) return;
+            const email = document.getElementById('new-admin-email').value.trim();
+            const pass = document.getElementById('new-admin-password').value.trim();
+
+            if (!email || !pass) {
+                alert("Veuillez renseigner l'e-mail et le mot de passe du nouveau compte.");
+                return;
+            }
+
+            secondaryAuth.createUserWithEmailAndPassword(email, pass)
+                .then(() => {
+                    alert(`Compte administrateur créé avec succès pour : ${email}\n\nCette personne peut désormais se connecter au portail avec ces identifiants.`);
+                    document.getElementById('new-admin-email').value = '';
+                    document.getElementById('new-admin-password').value = '';
+                })
+                .catch(err => alert("Erreur lors de la création du compte : " + err.message));
         }
 
         function chargerListesAdmin() {
