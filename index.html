@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC - Administration</title>
+    <title>Portail Scolaire RDC</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -33,134 +33,164 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-gray-800">Tableau de Bord – Administration</h1>
-                    <p class="text-sm text-gray-500">Gestion complète des élèves et professeurs</p>
+                    <h1 class="text-xl font-bold text-gray-800">Portail Scolaire RDC</h1>
+                    <p class="text-sm text-gray-500">Espace unifié - Administration & Professeurs</p>
                 </div>
             </div>
-            <!-- Bouton Déconnexion redirigeant vers l'accueil -->
-            <button onclick="window.location.href='/'" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 shadow-sm transition z-10 cursor-pointer">
-                Déconnexion Admin
+            <!-- Bouton Déconnexion Admin (revient à l'accueil) -->
+            <button id="btn-deconnexion" onclick="deconnecterAdmin()" class="hidden bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 shadow-sm transition cursor-pointer">
+                Verrouiller l'Admin
             </button>
         </div>
 
-        <!-- Navigation par onglets -->
+        <!-- Navigation par onglets principaux -->
         <div class="flex flex-wrap gap-3">
-            <button id="btn-eleves" onclick="changerOnglet('eleves')" class="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl shadow-md font-medium text-sm transition cursor-pointer">
+            <button id="nav-btn-admin" onclick="changerOngletPrincipal('admin')" class="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl shadow-md font-medium text-sm transition cursor-pointer">
                 <div class="bg-white/20 p-1.5 rounded-lg">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                 </div>
-                Élèves & Parents
+                Onglet Administration
             </button>
-            <button id="btn-profs" onclick="changerOnglet('profs')" class="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-5 py-2.5 rounded-2xl shadow-sm font-medium text-sm hover:bg-gray-50 transition cursor-pointer">
+            <button id="nav-btn-profs" onclick="changerOngletPrincipal('profs')" class="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-5 py-2.5 rounded-2xl shadow-sm font-medium text-sm hover:bg-gray-50 transition cursor-pointer">
                 <div class="icon-badge-2026 p-1.5">
                     <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
                 </div>
-                Professeurs
+                Espace Professeurs
             </button>
         </div>
 
-        <!-- SECTION ÉLÈVES & PARENTS -->
-        <div id="section-eleves" class="space-y-6">
-            <!-- Formulaire Élève -->
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
-                <h2 class="text-base font-bold text-gray-800">Enregistrer un Élève & ses Tuteurs</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input id="input-nom" type="text" placeholder="Nom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="bukaya">
-                    <input id="input-postnom" type="text" placeholder="Post-nom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="kambondji">
-                    <input id="input-prenom" type="text" placeholder="Prénom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="pierre">
-                    <input id="input-classe" type="text" placeholder="Classe (ex: 6ème)" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="6">
-                    <input id="input-tuteur" type="text" placeholder="Nom complet du tuteur" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="isabelle">
-                    <input id="input-tel" type="text" placeholder="Téléphone du tuteur" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="08999827637">
+        <!-- SECTION ADMINISTRATION (PROTÉGÉE PAR MOT DE PASSE) -->
+        <div id="section-admin" class="space-y-6">
+            
+            <!-- Écran de Connexion Admin -->
+            <div id="admin-login-box" class="bg-white rounded-2xl p-8 shadow-sm border border-gray-200 max-w-md mx-auto space-y-4 text-center">
+                <div class="icon-badge-2026 mx-auto w-12 h-12">
+                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
                 </div>
-                <button onclick="enregistrerEleve()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 text-sm transition cursor-pointer">
-                    Enregistrer l'élève & Générer son matricule
-                </button>
+                <h2 class="text-lg font-bold text-gray-800">Accès Restreint – Administration</h2>
+                <p class="text-xs text-gray-500">Veuillez entrer le mot de passe administrateur pour gérer les élèves et les professeurs.</p>
+                <div class="space-y-3 pt-2">
+                    <input id="input-admin-pwd" type="password" placeholder="Mot de passe admin (ex: admin2026)" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500 text-center">
+                    <button onclick="verifierMotDePasseAdmin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl shadow-lg shadow-indigo-600/20 text-sm transition cursor-pointer">
+                        Se connecter à l'Admin
+                    </button>
+                </div>
             </div>
 
-            <!-- Liste Élèves (Visible Admin) -->
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
-                <h2 class="text-base font-bold text-gray-800">Liste des Élèves & Gestion d'Accès</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-gray-600">
-                        <thead class="border-b border-gray-200 text-xs uppercase text-gray-400">
-                            <tr>
-                                <th class="pb-3 font-semibold">Matricule</th>
-                                <th class="pb-3 font-semibold">Identité Élève</th>
-                                <th class="pb-3 font-semibold">Classe</th>
-                                <th class="pb-3 font-semibold">Tuteur Légal</th>
-                                <th class="pb-3 font-semibold">Statut Frais</th>
-                                <th class="pb-3 font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableau-eleves">
-                            <tr class="border-b border-gray-100">
-                                <td class="py-4 font-semibold text-indigo-600">12345</td>
-                                <td class="py-4 font-medium text-gray-800">bukaya kambondji pierre</td>
-                                <td class="py-4">6</td>
-                                <td class="py-4">isabelle<br><span class="text-xs text-gray-400">08999827637</span></td>
-                                <td class="py-4">
-                                    <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1 rounded-full text-xs font-medium">
-                                        ✓ En Ordre
-                                    </span>
-                                </td>
-                                <td class="py-4">
-                                    <button onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 font-medium text-xs cursor-pointer">Supprimer</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- Contenu Admin (Caché tant que non connecté) -->
+            <div id="admin-dashboard-content" class="space-y-6 hidden">
+                
+                <!-- Sous-onglets Admin (Élèves / Professeurs) -->
+                <div class="flex gap-2 border-b border-gray-300 pb-3">
+                    <button onclick="changerSousOngletAdmin('eleves')" id="sub-btn-eleves" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Gestion Élèves & Parents</button>
+                    <button onclick="changerSousOngletAdmin('profs')" id="sub-btn-profs" class="bg-transparent text-gray-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 transition cursor-pointer">Gestion Professeurs & Codes</button>
                 </div>
+
+                <!-- SOUS-SECTION GESTION ÉLÈVES -->
+                <div id="sub-admin-eleves" class="space-y-6">
+                    <!-- Formulaire Élève -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
+                        <h2 class="text-base font-bold text-gray-800">Enregistrer un Élève & ses Tuteurs</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input id="input-nom" type="text" placeholder="Nom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="bukaya">
+                            <input id="input-postnom" type="text" placeholder="Post-nom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="kambondji">
+                            <input id="input-prenom" type="text" placeholder="Prénom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="pierre">
+                            <input id="input-classe" type="text" placeholder="Classe (ex: 6ème)" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="6">
+                            <input id="input-tuteur" type="text" placeholder="Nom complet du tuteur" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="isabelle">
+                            <input id="input-tel" type="text" placeholder="Téléphone du tuteur" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500" value="08999827637">
+                        </div>
+                        <button onclick="enregistrerEleve()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 text-sm transition cursor-pointer">
+                            Enregistrer l'élève & Générer son matricule
+                        </button>
+                    </div>
+
+                    <!-- Liste Élèves Admin -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
+                        <h2 class="text-base font-bold text-gray-800">Liste Administrative des Élèves & Parents</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-gray-600">
+                                <thead class="border-b border-gray-200 text-xs uppercase text-gray-400">
+                                    <tr>
+                                        <th class="pb-3 font-semibold">Matricule</th>
+                                        <th class="pb-3 font-semibold">Identité Élève</th>
+                                        <th class="pb-3 font-semibold">Classe</th>
+                                        <th class="pb-3 font-semibold">Tuteur Légal (Visible Admin)</th>
+                                        <th class="pb-3 font-semibold">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableau-eleves">
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-4 font-semibold text-indigo-600">12345</td>
+                                        <td class="py-4 font-medium text-gray-800">bukaya kambondji pierre</td>
+                                        <td class="py-4">6</td>
+                                        <td class="py-4">isabelle<br><span class="text-xs text-gray-400">08999827637</span></td>
+                                        <td class="py-4">
+                                            <button onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 font-medium text-xs cursor-pointer">Supprimer</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SOUS-SECTION GESTION PROFESSEURS -->
+                <div id="sub-admin-profs" class="space-y-6 hidden">
+                    <!-- Formulaire Enregistrement Professeur -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
+                        <h2 class="text-base font-bold text-gray-800">Enregistrer un Professeur & Générer son Code</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input id="prof-nom" type="text" placeholder="Nom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
+                            <input id="prof-postnom" type="text" placeholder="Post-nom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
+                            <input id="prof-prenom" type="text" placeholder="Prénom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
+                            <input id="prof-cours" type="text" placeholder="Cours enseigné (ex: Mathématiques)" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
+                        </div>
+                        <button onclick="enregistrerProf()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 text-sm transition cursor-pointer">
+                            Enregistrer le Professeur & Générer le Code (4 chiffres)
+                        </button>
+                    </div>
+
+                    <!-- Liste des Professeurs Enregistrés -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
+                        <h2 class="text-base font-bold text-gray-800">Liste des Professeurs & Codes d'Accès Attribués</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-gray-600">
+                                <thead class="border-b border-gray-200 text-xs uppercase text-gray-400">
+                                    <tr>
+                                        <th class="pb-3 font-semibold">Code d'accès (4 chiffres)</th>
+                                        <th class="pb-3 font-semibold">Identité Professeur</th>
+                                        <th class="pb-3 font-semibold">Cours</th>
+                                        <th class="pb-3 font-semibold">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableau-profs">
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-4 font-bold text-indigo-600 bg-indigo-50 px-3 rounded-lg">8492</td>
+                                        <td class="py-4 font-medium text-gray-800">Mbuyi Jean Paul</td>
+                                        <td class="py-4">Mathématiques</td>
+                                        <td class="py-4">
+                                            <button onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 font-medium text-xs cursor-pointer">Supprimer</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        <!-- SECTION PROFESSEURS -->
+        <!-- SECTION ESPACE PROFESSEURS -->
         <div id="section-profs" class="space-y-6 hidden">
-            <!-- Formulaire Enregistrement Professeur -->
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
-                <h2 class="text-base font-bold text-gray-800">Enregistrer un Professeur & Générer son Code</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input id="prof-nom" type="text" placeholder="Nom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
-                    <input id="prof-postnom" type="text" placeholder="Post-nom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
-                    <input id="prof-prenom" type="text" placeholder="Prénom" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
-                    <input id="prof-cours" type="text" placeholder="Cours enseigné (ex: Mathématiques)" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
-                </div>
-                <button onclick="enregistrerProf()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 text-sm transition cursor-pointer">
-                    Enregistrer le Professeur & Générer le Code (4 chiffres)
-                </button>
-            </div>
-
-            <!-- Liste des Professeurs Enregistrés -->
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
-                <h2 class="text-base font-bold text-gray-800">Liste des Professeurs & Codes d'Accès</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-gray-600">
-                        <thead class="border-b border-gray-200 text-xs uppercase text-gray-400">
-                            <tr>
-                                <th class="pb-3 font-semibold">Code d'accès</th>
-                                <th class="pb-3 font-semibold">Identité Professeur</th>
-                                <th class="pb-3 font-semibold">Cours</th>
-                                <th class="pb-3 font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableau-profs">
-                            <tr class="border-b border-gray-100">
-                                <td class="py-4 font-bold text-indigo-600 bg-indigo-50 px-3 rounded-lg">8492</td>
-                                <td class="py-4 font-medium text-gray-800">Mbuyi Jean Paul</td>
-                                <td class="py-4">Mathématiques</td>
-                                <td class="py-4">
-                                    <button onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 font-medium text-xs cursor-pointer">Supprimer</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
             <!-- Vue Liste Élèves pour les Professeurs (SANS LES PARENTS) -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-base font-bold text-gray-800">Cote des Élèves (Vue Professeur)</h2>
-                    <span class="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-medium">Confidentiel : Informations parent masquées</span>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-800">Cote des Élèves – Espace Pédagogique</h2>
+                        <p class="text-xs text-gray-500">Visualisation des élèves inscrits pour attribution des cotes.</p>
+                    </div>
+                    <span class="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-medium">Sécurité : Identité des parents masquée</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-gray-600">
@@ -191,22 +221,63 @@
 
     <!-- Script JavaScript -->
     <script>
-        function changerOnglet(onglet) {
-            const secEleves = document.getElementById('section-eleves');
-            const secProfs = document.getElementById('section-profs');
-            const btnEleves = document.getElementById('btn-eleves');
-            const btnProfs = document.getElementById('btn-profs');
+        const MOT_DE_PASSE_ADMIN = "admin2026";
 
-            if (onglet === 'eleves') {
-                secEleves.classList.remove('hidden');
-                secProfs.classList.add('hidden');
-                btnEleves.className = "flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl shadow-md font-medium text-sm transition cursor-pointer";
-                btnProfs.className = "flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-5 py-2.5 rounded-2xl shadow-sm font-medium text-sm hover:bg-gray-50 transition cursor-pointer";
+        function verifierMotDePasseAdmin() {
+            const saisie = document.getElementById('input-admin-pwd').value;
+            if (saisie === MOT_DE_PASSE_ADMIN) {
+                document.getElementById('admin-login-box').classList.add('hidden');
+                document.getElementById('admin-dashboard-content').classList.remove('hidden');
+                document.getElementById('btn-deconnexion').classList.remove('hidden');
+                alert("Connexion Administrateur réussie !");
             } else {
-                secEleves.classList.add('hidden');
+                alert("Mot de passe incorrect. Indice par défaut : admin2026");
+            }
+        }
+
+        function deconnecterAdmin() {
+            document.getElementById('admin-dashboard-content').classList.add('hidden');
+            document.getElementById('btn-deconnexion').classList.add('hidden');
+            document.getElementById('admin-login-box').classList.remove('hidden');
+            document.getElementById('input-admin-pwd').value = '';
+            alert("Session administrateur verrouillée.");
+        }
+
+        function changerOngletPrincipal(onglet) {
+            const secAdmin = document.getElementById('section-admin');
+            const secProfs = document.getElementById('section-profs');
+            const navBtnAdmin = document.getElementById('nav-btn-admin');
+            const navBtnProfs = document.getElementById('nav-btn-profs');
+
+            if (onglet === 'admin') {
+                secAdmin.classList.remove('hidden');
+                secProfs.classList.add('hidden');
+                navBtnAdmin.className = "flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl shadow-md font-medium text-sm transition cursor-pointer";
+                navBtnProfs.className = "flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-5 py-2.5 rounded-2xl shadow-sm font-medium text-sm hover:bg-gray-50 transition cursor-pointer";
+            } else {
+                secAdmin.classList.add('hidden');
                 secProfs.classList.remove('hidden');
-                btnProfs.className = "flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl shadow-md font-medium text-sm transition cursor-pointer";
-                btnEleves.className = "flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-5 py-2.5 rounded-2xl shadow-sm font-medium text-sm hover:bg-gray-50 transition cursor-pointer";
+                navBtnProfs.className = "flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl shadow-md font-medium text-sm transition cursor-pointer";
+                navBtnAdmin.className = "flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-5 py-2.5 rounded-2xl shadow-sm font-medium text-sm hover:bg-gray-50 transition cursor-pointer";
+            }
+        }
+
+        function changerSousOngletAdmin(sousOnglet) {
+            const subEleves = document.getElementById('sub-admin-eleves');
+            const subProfs = document.getElementById('sub-admin-profs');
+            const btnSubEleves = document.getElementById('sub-btn-eleves');
+            const btnSubProfs = document.getElementById('sub-btn-profs');
+
+            if (sousOnglet === 'eleves') {
+                subEleves.classList.remove('hidden');
+                subProfs.classList.add('hidden');
+                btnSubEleves.className = "bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer";
+                btnSubProfs.className = "bg-transparent text-gray-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 transition cursor-pointer";
+            } else {
+                subEleves.classList.add('hidden');
+                subProfs.classList.remove('hidden');
+                btnSubProfs.className = "bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer";
+                btnSubEleves.className = "bg-transparent text-gray-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 transition cursor-pointer";
             }
         }
 
@@ -225,7 +296,7 @@
 
             const matricule = Math.floor(10000 + Math.random() * 90000);
 
-            // Ajout dans la table Admin
+            // Ajout table Admin
             const tbodyAdmin = document.getElementById('tableau-eleves');
             const ligneAdmin = document.createElement('tr');
             ligneAdmin.className = "border-b border-gray-100";
@@ -235,17 +306,12 @@
                 <td class="py-4">${classe}</td>
                 <td class="py-4">${tuteur}<br><span class="text-xs text-gray-400">${tel}</span></td>
                 <td class="py-4">
-                    <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1 rounded-full text-xs font-medium">
-                        ✓ En Ordre
-                    </span>
-                </td>
-                <td class="py-4">
                     <button onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 font-medium text-xs cursor-pointer">Supprimer</button>
                 </td>
             `;
             tbodyAdmin.appendChild(ligneAdmin);
 
-            // Ajout dans la table Professeur (SANS LES PARENTS)
+            // Ajout table Prof (SANS LES PARENTS)
             const tbodyProf = document.getElementById('tableau-eleves-prof');
             const ligneProf = document.createElement('tr');
             ligneProf.className = "border-b border-gray-100";
@@ -273,7 +339,6 @@
                 return;
             }
 
-            // Génération d'un code d'accès à 4 chiffres aléatoire
             const codeAcces = Math.floor(1000 + Math.random() * 9000);
 
             const tbodyProfs = document.getElementById('tableau-profs');
@@ -289,9 +354,8 @@
             `;
             tbodyProfs.appendChild(nouvelleLigne);
 
-            alert("Professeur enregistré avec succès ! Code d'accès généré : " + codeAcces);
+            alert("Professeur enregistré ! Code d'accès à 4 chiffres généré : " + codeAcces);
             
-            // Vider les champs
             document.getElementById('prof-nom').value = '';
             document.getElementById('prof-postnom').value = '';
             document.getElementById('prof-prenom').value = '';
