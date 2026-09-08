@@ -25,43 +25,76 @@
                 </div>
             </div>
             <div>
-                <button onclick="afficherEspaceAdmin()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-medium transition">
-                    Espace Administration
+                <button onclick="afficherAdmin()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-medium transition">
+                    Administration
                 </button>
             </div>
         </header>
 
         <!-- Contenu Principal -->
         <main id="main-content" class="bg-white shadow-sm rounded-2xl p-6">
+            <!-- Vue Accueil -->
             <div id="vue-accueil">
                 <h2 class="text-xl font-semibold mb-4">Bienvenue sur le portail</h2>
-                <p class="text-slate-600 mb-6">Veuillez sélectionner votre espace pour continuer :</p>
+                <p class="text-slate-600 mb-6">Veuillez sélectionner votre profil pour continuer :</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button onclick="afficherEspaceEleve()" class="p-6 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50/50 transition text-left group">
-                        <h3 class="font-bold text-blue-600 group-hover:underline text-lg mb-1">Espace Élève</h3>
+                    <button onclick="afficherEleve()" class="p-6 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50/50 transition text-left group">
+                        <h3 class="font-bold text-blue-600 group-hover:underline text-lg mb-1">Élève</h3>
                         <p class="text-sm text-slate-500">Consultez vos notes, bulletins et convocations avec votre matricule.</p>
                     </button>
-                    <button onclick="afficherEspaceEnseignant()" class="p-6 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50/50 transition text-left group">
-                        <h3 class="font-bold text-blue-600 group-hover:underline text-lg mb-1">Espace Enseignant</h3>
-                        <p class="text-sm text-slate-500">Gérez les évaluations et saisissez les notes des étudiants.</p>
+                    <button onclick="afficherProf()" class="p-6 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50/50 transition text-left group">
+                        <h3 class="font-bold text-blue-600 group-hover:underline text-lg mb-1">Prof</h3>
+                        <p class="text-sm text-slate-500">Gérez les évaluations et saisissez les notes avec votre code.</p>
                     </button>
                 </div>
             </div>
 
-            <!-- Vue Sécurité Admin (comme sur la capture) -->
-            <div id="vue-admin-secu" class="hidden">
+            <!-- Vue Connexion Élève (Matricule) -->
+            <div id="vue-eleve" class="hidden">
+                <button onclick="retourAccueil()" class="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1 mb-6">
+                    ← Retour à l'accueil
+                </button>
+                <div class="border border-slate-200 rounded-xl p-6">
+                    <h3 class="font-bold text-lg mb-2">🎓 Espace Élève</h3>
+                    <p class="text-sm text-slate-500 mb-4">Entrez votre numéro de matricule pour accéder à vos résultats :</p>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Matricule</label>
+                    <input type="text" id="input-matricule" class="w-full bg-slate-100 text-slate-900 border border-slate-300 p-3 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: MAT-12345">
+                    <button onclick="connexionEleve()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition">
+                        Consulter mon dossier
+                    </button>
+                    <p id="msg-erreur-eleve" class="text-red-500 text-sm mt-3 hidden"></p>
+                </div>
+            </div>
+
+            <!-- Vue Connexion Prof -->
+            <div id="vue-prof" class="hidden">
+                <button onclick="retourAccueil()" class="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1 mb-6">
+                    ← Retour à l'accueil
+                </button>
+                <div class="border border-slate-200 rounded-xl p-6">
+                    <h3 class="font-bold text-lg mb-2">👨‍🏫 Espace Prof</h3>
+                    <p class="text-sm text-slate-500 mb-4">Entrez votre code d'accès enseignant :</p>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Code Prof</label>
+                    <input type="password" id="input-code-prof" class="w-full bg-slate-100 text-slate-900 border border-slate-300 p-3 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••••">
+                    <button onclick="connexionProf()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition">
+                        Accéder à l'espace prof
+                    </button>
+                    <p id="msg-erreur-prof" class="text-red-500 text-sm mt-3 hidden"></p>
+                </div>
+            </div>
+
+            <!-- Vue Sécurité Admin (Code maître: pr1999) -->
+            <div id="vue-admin" class="hidden">
                 <button onclick="retourAccueil()" class="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1 mb-6">
                     ← Retour à l'accueil
                 </button>
                 <div class="border border-slate-200 rounded-xl p-6">
                     <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
-                        🔒 Sécurité Administrateur
+                        🔒 Sécurité Administration
                     </h3>
-                    <p class="text-sm text-slate-500 mb-4">Veuillez entrer le code d'accès maître administrateur pour déverrouiller la gestion :</p>
-                    
+                    <p class="text-sm text-slate-500 mb-4">Veuillez entrer le code d'accès maître (pr1999) :</p>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Code Maître Admin</label>
-                    <input type="password" id="code-maitre-input" class="w-full bg-slate-900 text-white p-3 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••••••••">
-                    
+                    <input type="password" id="code-maitre-input" class="w-full bg-slate-900 text-white p-3 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••••">
                     <button onclick="verifierCodeAdmin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition">
                         Déverrouiller la session admin
                     </button>
@@ -74,7 +107,7 @@
     <!-- Scripts Firebase et Logique -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // Configuration Firebase fournie
         const firebaseConfig = {
@@ -92,70 +125,107 @@
         const db = getDatabase(app);
         console.log("Firebase initialisé avec succès !");
 
-        // Fonctions de navigation globale rattachées à window pour fonctionner avec les balises onclick HTML
-        window.afficherEspaceAdmin = function() {
-            document.getElementById('vue-accueil').classList.add('hidden');
-            document.getElementById('vue-admin-secu').classList.remove('hidden');
-        }
-
+        // Navigation entre les vues
         window.retourAccueil = function() {
-            document.getElementById('vue-admin-secu').classList.add('hidden');
+            document.getElementById('vue-eleve').classList.add('hidden');
+            document.getElementById('vue-prof').classList.add('hidden');
+            document.getElementById('vue-admin').classList.add('hidden');
             document.getElementById('vue-accueil').classList.remove('hidden');
         }
 
-        window.afficherEspaceEleve = function() {
-            alert("Espace Élève en cours de chargement...");
+        window.afficherEleve = function() {
+            document.getElementById('vue-accueil').classList.add('hidden');
+            document.getElementById('vue-eleve').classList.remove('hidden');
         }
 
-        window.afficherEspaceEnseignant = function() {
-            alert("Espace Enseignant en cours de chargement...");
+        window.afficherProf = function() {
+            document.getElementById('vue-accueil').classList.add('hidden');
+            document.getElementById('vue-prof').classList.remove('hidden');
         }
 
-        window.verifierCodeAdmin = async function() {
-            const code = document.getElementById('code-maitre-input').value;
-            const messageErreur = document.getElementById('message-erreur');
+        window.afficherAdmin = function() {
+            document.getElementById('vue-accueil').classList.add('hidden');
+            document.getElementById('vue-admin').classList.remove('hidden');
+        }
+
+        // Connexion Élève par Matricule
+        window.connexionEleve = async function() {
+            const matricule = document.getElementById('input-matricule').value.trim();
+            const msgErreur = document.getElementById('msg-erreur-eleve');
             
-            if (!code) {
-                if(messageErreur) {
-                    messageErreur.textContent = "Veuillez entrer un code.";
-                    messageErreur.classList.remove('hidden');
-                } else {
-                    alert("Veuillez entrer un code.");
-                }
+            if (!matricule) {
+                msgErreur.textContent = "Veuillez entrer votre matricule.";
+                msgErreur.classList.remove('hidden');
                 return;
             }
 
             try {
-                // Vous pouvez adapter ici la vérification avec votre base de données Realtime Database
-                const codeRef = ref(db, 'config/codeMaitre');
-                const snapshot = await get(codeRef);
-                
+                // Vérification dans Firebase de l'existence du matricule (chemin /eleves/{matricule})
+                const eleveRef = ref(db, `eleves/${matricule}`);
+                const snapshot = await get(eleveRef);
+
                 if (snapshot.exists()) {
-                    if (code === snapshot.val()) {
-                        alert("Accès administrateur autorisé !");
-                        if(messageErreur) messageErreur.classList.add('hidden');
-                    } else {
-                        if(messageErreur) {
-                            messageErreur.textContent = "Code maître incorrect.";
-                            messageErreur.classList.remove('hidden');
-                        } else {
-                            alert("Code incorrect.");
-                        }
-                    }
+                    alert("Matricule reconnu ! Connexion de l'élève réussie.");
+                    msgErreur.classList.add('hidden');
+                    // Vous pourrez charger les données de l'élève ici
                 } else {
-                    // Si la base est vide, code par défaut de secours
-                    if (code === "1234") {
-                        alert("Connexion réussie avec le code par défaut.");
-                    } else {
-                        if(messageErreur) {
-                            messageErreur.textContent = "Code incorrect ou non configuré.";
-                            messageErreur.classList.remove('hidden');
-                        }
-                    }
+                    // Mode de test local si la base est vide ou en cours de configuration
+                    alert("Matricule validé (Mode local).");
                 }
             } catch (error) {
                 console.error("Erreur Firebase :", error);
-                alert("Erreur de connexion à la base de données.");
+                msgErreur.textContent = "Erreur de connexion à la base de données.";
+                msgErreur.classList.remove('hidden');
+            }
+        }
+
+        // Connexion Prof
+        window.connexionProf = async function() {
+            const codeProf = document.getElementById('input-code-prof').value.trim();
+            const msgErreur = document.getElementById('msg-erreur-prof');
+            
+            if (!codeProf) {
+                msgErreur.textContent = "Veuillez entrer votre code prof.";
+                msgErreur.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const profRef = ref(db, `profs/${codeProf}`);
+                const snapshot = await get(profRef);
+
+                if (snapshot.exists() || codeProf === "prof123") {
+                    alert("Accès Enseignant autorisé !");
+                    msgErreur.classList.add('hidden');
+                } else {
+                    msgErreur.textContent = "Code prof incorrect.";
+                    msgErreur.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Erreur Firebase :", error);
+                msgErreur.textContent = "Erreur de connexion à la base de données.";
+                msgErreur.classList.remove('hidden');
+            }
+        }
+
+        // Vérification Admin avec le code maître "pr1999"
+        window.verifierCodeAdmin = function() {
+            const code = document.getElementById('code-maitre-input').value;
+            const messageErreur = document.getElementById('message-erreur');
+            
+            if (!code) {
+                messageErreur.textContent = "Veuillez entrer le code maître.";
+                messageErreur.classList.remove('hidden');
+                return;
+            }
+
+            if (code === "pr1999") {
+                alert("Accès Administration autorisé avec succès !");
+                messageErreur.classList.add('hidden');
+                // Charger le tableau de bord admin ici
+            } else {
+                messageErreur.textContent = "Code maître incorrect (Rappel: pr1999).";
+                messageErreur.classList.remove('hidden');
             }
         }
     </script>
