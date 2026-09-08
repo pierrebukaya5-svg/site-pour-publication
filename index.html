@@ -574,7 +574,7 @@
                     <!-- Section Sécurité & Code Maître -->
                     <div id="admin-section-securite" class="section-cache">
                         <h3 style="font-size: 15px; margin-top: 0;"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle;">security</span> Modification du Code Maître Administrateur</h3>
-                        <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">Modifiez votre code d'accès maître pour sécuriser l'administration de l'école.</p>
+                        <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">Modifiez votre code d'accès maître pour sécuriser l'administration de l'école (synchronisé sur tous vos appareils).</p>
                         
                         <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); margin-top: 16px; max-width: 500px;">
                             <label for="ancien-code-saisi">Ancien Code Maître</label>
@@ -608,14 +608,21 @@
         const db = firebase.database();
 
         let adminConnecte = false;
-        let codeMaitreActuel = "ECOLEADMIN2026";
 
-        // Charger le code maître personnalisé au démarrage
-        db.ref('parametres/codeMaitre').once('value', (snapshot) => {
-            if (snapshot.exists()) {
-                codeMaitreActuel = snapshot.val();
-            }
-        });
+        // Fonction pour récupérer dynamiquement le code maître depuis Firebase (par défaut ECOLEADMIN2026 s'il n'existe pas)
+        function getCodeMaitreActuel(callback) {
+            db.ref('parametres/codeMaitre').once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    callback(snapshot.val());
+                } else {
+                    // Initialisation par défaut si inexistant dans la base de données
+                    const defaut = "ECOLEADMIN2026";
+                    db.ref('parametres/codeMaitre').set(defaut, () => {
+                        callback(defaut);
+                    });
+                }
+            });
+        }
 
         // Initialiser les options par défaut si vide et charger l'affichage
         db.ref('options_etude').once('value', (snapshot) => {
@@ -683,13 +690,15 @@
                 return;
             }
 
-            if (saisi === codeMaitreActuel) {
-                adminConnecte = true;
-                document.getElementById('admin-code-maitre-saisi').value = '';
-                verifierEtatAdminSession();
-            } else {
-                alert("Code maître administrateur incorrect.");
-            }
+            getCodeMaitreActuel((codeActuel) => {
+                if (saisi === codeActuel) {
+                    adminConnecte = true;
+                    document.getElementById('admin-code-maitre-saisi').value = '';
+                    verifierEtatAdminSession();
+                } else {
+                    alert("Code maître administrateur incorrect.");
+                }
+            });
         }
 
         function deconnecterAdmin() {
@@ -708,23 +717,25 @@
                 return;
             }
 
-            if (ancienSaisi !== codeMaitreActuel) {
-                alert("L'ancien code maître saisi est incorrect.");
-                return;
-            }
-
             if (nouveauSaisi.length < 4) {
                 alert("Le nouveau code doit contenir au moins 4 caractères.");
                 return;
             }
 
-            db.ref('parametres/codeMaitre').set(nouveauSaisi).then(() => {
-                codeMaitreActuel = nouveauSaisi;
-                alert("Code maître mis à jour avec succès !");
-                document.getElementById('ancien-code-saisi').value = '';
-                document.getElementById('nouveau-code-maitre').value = '';
-            }).catch(err => {
-                alert("Erreur : " + err.message);
+            getCodeMaitreActuel((codeActuel) => {
+                if (ancienSaisi !== codeActuel) {
+                    alert("L'ancien code maître saisi est incorrect.");
+                    return;
+                }
+
+                // Enregistrement dans Firebase -> instantanément partagé entre l'ordinateur et le téléphone
+                db.ref('parametres/codeMaitre').set(nouveauSaisi).then(() => {
+                    alert("Code maître mis à jour et synchronisé avec succès sur tous vos appareils !");
+                    document.getElementById('ancien-code-saisi').value = '';
+                    document.getElementById('nouveau-code-maitre').value = '';
+                }).catch(err => {
+                    alert("Erreur : " + err.message);
+                });
             });
         }
 
