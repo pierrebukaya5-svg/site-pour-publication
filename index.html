@@ -407,7 +407,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div>
                         <label>Note / Cotation</label>
-                        <input type="text" id="prof-note" placeholder="Ex: 16.5">
+                        <input type="number" id="prof-note" step="0.5" min="0" placeholder="Ex: 16.5">
                     </div>
                     <div>
                         <label>Convocation (Optionnel)</label>
@@ -850,27 +850,59 @@
             const matricule = document.getElementById('prof-eleve-matricule').value.trim().toUpperCase();
             const cours = document.getElementById('prof-cours').value.trim();
             const type = document.getElementById('prof-type').value;
-            const note = document.getElementById('prof-note').value.trim();
+            const noteBrute = document.getElementById('prof-note').value.trim();
             const convocation = document.getElementById('prof-convocation').value;
 
-            if (!matricule || !cours || !note) {
+            if (!matricule || !cours || !noteBrute) {
                 alert("Veuillez remplir le matricule, le cours et la note.");
                 return;
             }
 
-            db.ref('cotations').push({
-                matricule,
-                cours,
-                type,
-                note,
-                convocation
-            }).then(() => {
-                alert("Cotation enregistrée avec succès !");
-                document.getElementById('prof-eleve-matricule').value = '';
-                document.getElementById('prof-cours').value = '';
-                document.getElementById('prof-note').value = '';
-            }).catch(err => {
-                alert("Erreur : " + err.message);
+            const note = parseFloat(noteBrute);
+            if (isNaN(note) || note < 0) {
+                alert("Veuillez entrer une note numérique valide (positive).");
+                return;
+            }
+
+            // Validation stricte des barèmes
+            if ((type === "Interrogation" || type === "Devoir") && note > 20) {
+                alert("Erreur : Une Interrogation ou un Devoir ne peut pas dépasser 20.");
+                return;
+            }
+            if (type === "Examen" && note > 100) {
+                alert("Erreur : Un Examen ne peut pas dépasser 100.");
+                return;
+            }
+
+            // Vérification préalable que l'élève existe dans la base avant d'enregistrer la note
+            db.ref('eleves').once('value', (snapshot) => {
+                let eleveExiste = false;
+                snapshot.forEach((child) => {
+                    if (child.val().matricule === matricule) {
+                        eleveExiste = true;
+                    }
+                });
+
+                if (!eleveExiste) {
+                    alert("Erreur : Ce matricule n'existe pas dans le registre des élèves.");
+                    return;
+                }
+
+                // Enregistrement sécurisé une fois le matricule validé
+                db.ref('cotations').push({
+                    matricule,
+                    cours,
+                    type,
+                    note,
+                    convocation
+                }).then(() => {
+                    alert("Cotation enregistrée avec succès !");
+                    document.getElementById('prof-eleve-matricule').value = '';
+                    document.getElementById('prof-cours').value = '';
+                    document.getElementById('prof-note').value = '';
+                }).catch(err => {
+                    alert("Erreur : " + err.message);
+                });
             });
         }
     </script>
