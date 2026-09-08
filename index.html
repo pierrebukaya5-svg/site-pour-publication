@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC - Espace Élève & Admin</title>
+    <title>Portail Scolaire RDC - Espace Élève Amélioré</title>
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -24,6 +24,8 @@
             --md-sys-color-on-surface-variant: #5f6368;
             --md-sys-color-outline: #dadce0;
             --md-sys-color-success: #188038;
+            --md-sys-color-warn: #e37400;
+            --md-sys-color-error: #d93025;
         }
 
         body {
@@ -70,16 +72,8 @@
             font-size: 24px;
         }
 
-        header h1 { 
-            margin: 0; 
-            font-size: 20px; 
-            font-weight: 500; 
-        }
-        header p { 
-            margin: 2px 0 0 0; 
-            color: var(--md-sys-color-on-surface-variant); 
-            font-size: 13px; 
-        }
+        header h1 { margin: 0; font-size: 20px; font-weight: 500; }
+        header p { margin: 2px 0 0 0; color: var(--md-sys-color-on-surface-variant); font-size: 13px; }
 
         .card {
             background: var(--md-sys-color-surface);
@@ -100,10 +94,7 @@
             margin-bottom: 16px;
         }
 
-        h2 .material-icons-outlined {
-            color: var(--md-sys-color-primary);
-            font-size: 20px;
-        }
+        h2 .material-icons-outlined { color: var(--md-sys-color-primary); font-size: 20px; }
         
         label {
             display: block;
@@ -162,19 +153,71 @@
             font-weight: 500;
         }
 
+        /* Styles spécifiques pour le tableau de bord de l'élève connecté */
+        .grid-evaluations {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .eval-box {
+            background: var(--md-sys-color-surface-variant);
+            border: 1px solid var(--md-sys-color-outline);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .eval-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .eval-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--md-sys-color-primary);
+        }
+
+        .convocation-banner {
+            background: #fce8e6;
+            border: 1px solid #fad2cf;
+            color: var(--md-sys-color-error);
+            padding: 14px;
+            border-radius: 12px;
+            margin-top: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .communique-box {
+            background: #e6f4ea;
+            border: 1px solid #ceead6;
+            color: var(--md-sys-color-success);
+            padding: 14px;
+            border-radius: 12px;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+
         .table-admin {
             width: 100%;
             border-collapse: collapse;
             margin-top: 12px;
             font-size: 13px;
         }
-
         .table-admin th, .table-admin td {
             border-bottom: 1px solid var(--md-sys-color-outline);
             padding: 12px 8px;
             text-align: left;
         }
-
         .table-admin th {
             font-weight: 500;
             color: var(--md-sys-color-on-surface-variant);
@@ -196,18 +239,19 @@
                     <p>Plateforme institutionnelle sécurisée</p>
                 </div>
             </div>
-            <div id="auth-status" class="user-pill">Visiteur</div>
+            <div id="auth-status" class="user-pill">Visiteur / Élève</div>
         </header>
 
-        <!-- ESPACE CONSULTATION ÉLÈVE -->
-        <div class="card" style="max-width: 600px; margin: 0 auto 20px auto;">
-            <h2><span class="material-icons-outlined">person_search</span> Espace Consultation Élève</h2>
+        <!-- ESPACE CONSULTATION ÉLÈVE AVEC COTATIONS & CONVOCATION -->
+        <div class="card" style="max-width: 800px; margin: 0 auto 20px auto;">
+            <h2><span class="material-icons-outlined">person_search</span> Espace Consultation Élève (Notes & Profil)</h2>
             <label for="recherche-matricule">Entrez votre Matricule</label>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="recherche-matricule" placeholder="Ex: KAKAP5ESECO1234" style="margin: 0; text-transform: uppercase;">
+                <input type="text" id="recherche-matricule" placeholder="Ex: BUKAP6AB7HJL" style="margin: 0; text-transform: uppercase;">
                 <button onclick="rechercherEleve()" style="width: 140px; margin: 0;">Consulter</button>
             </div>
-            <div id="resultat-eleve" style="margin-top: 16px; font-size: 13px;"></div>
+            
+            <div id="resultat-eleve" style="margin-top: 20px; font-size: 13px;"></div>
         </div>
 
         <!-- AUTHENTIFICATION ADMIN -->
@@ -226,27 +270,44 @@
             </div>
         </div>
 
-        <!-- TABLEAU DE BORD ADMIN (MASQUÉ PAR DÉFAUT) -->
+        <!-- TABLEAU DE BORD ADMIN POUR GÉRER LES NOTES & CONVOCATIONS -->
         <div id="admin-dashboard" style="display: none;">
-            <div class="card" style="max-width: 600px; margin: 0 auto 20px auto;">
-                <h2><span class="material-icons-outlined">person_add</span> Enregistrer un Élève</h2>
-                <label>Nom</label>
-                <input type="text" id="eleve-nom" placeholder="Nom">
-                <label>Post-nom</label>
-                <input type="text" id="eleve-postnom" placeholder="Post-nom">
-                <label>Prénom</label>
-                <input type="text" id="eleve-prenom" placeholder="Prénom">
-                <label>Classe</label>
-                <input type="text" id="eleve-classe" placeholder="Ex: 5e Secondaire Math">
-                <button onclick="ajouterEleve()">Générer le matricule & Enregistrer</button>
-            </div>
+            <div class="card" style="max-width: 700px; margin: 0 auto 20px auto;">
+                <h2><span class="material-icons-outlined">edit_note</span> Gestion des Notes, Devoirs & Convocations</h2>
+                
+                <label>Matricule de l'élève concerné</label>
+                <input type="text" id="adm-eleve-matricule" placeholder="Ex: BUKAP6AB7HJL" style="text-transform: uppercase;">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label>Cours / Matière</label>
+                        <input type="text" id="adm-cours" placeholder="Ex: Mathématiques">
+                    </div>
+                    <div>
+                        <label>Type de Cotation</label>
+                        <select id="adm-type" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--md-sys-color-outline); margin-bottom: 16px; background: white;">
+                            <option value="Interrogation">Interrogation (/20)</option>
+                            <option value="Devoir">Devoir (/20)</option>
+                            <option value="Examen">Examen (/100)</option>
+                        </select>
+                    </div>
+                </div>
 
-            <div class="card">
-                <h2><span class="material-icons-outlined">folder_shared</span> Registre des Élèves Inscrits</h2>
-                <table class="table-admin">
-                    <thead><tr><th>Identité</th><th>Classe</th><th>Matricule</th></tr></thead>
-                    <tbody id="admin-table-eleves"><tr><td colspan="3">Chargement...</td></tr></tbody>
-                </table>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label>Note / Cotation</label>
+                        <input type="text" id="adm-note" placeholder="Ex: 16.5">
+                    </div>
+                    <div>
+                        <label>Statut Convocation (Optionnel)</label>
+                        <select id="adm-convocation" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--md-sys-color-outline); margin-bottom: 16px; background: white;">
+                            <option value="Aucune">Aucune convocation</option>
+                            <option value="Convoqué(e) à la Direction">Convoqué(e) à la Direction</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="enregistrerCotation()">Enregistrer la Cotation / Suivi</button>
             </div>
         </div>
 
@@ -278,7 +339,6 @@
                 loginSection.style.display = 'none';
                 infoConnecte.style.display = 'block';
                 dashboard.style.display = 'block';
-                chargerEleves();
             } else {
                 status.innerText = "Visiteur / Élève";
                 loginSection.style.display = 'block';
@@ -290,51 +350,11 @@
         function connecterAdmin() {
             const email = document.getElementById('admin-email').value.trim();
             const pass = document.getElementById('admin-password').value.trim();
-            auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Erreur d'authentification : " + err.message));
+            auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Erreur : " + err.message));
         }
 
         function deconnecterAdmin() {
             auth.signOut();
-        }
-
-        function genererCodeAleatoire(longueur = 6) {
-            const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let resultat = '';
-            for (let i = 0; i < longueur; i++) {
-                resultat += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
-            }
-            return resultat;
-        }
-
-        function ajouterEleve() {
-            const nom = document.getElementById('eleve-nom').value.trim();
-            const postnom = document.getElementById('eleve-postnom').value.trim();
-            const prenom = document.getElementById('eleve-prenom').value.trim();
-            const classe = document.getElementById('eleve-classe').value.trim();
-
-            if (!nom || !postnom || !prenom || !classe) {
-                alert("Veuillez remplir tous les champs obligatoires.");
-                return;
-            }
-
-            const codeNom = (nom + "XX").substring(0, 2).toUpperCase();
-            const codePost = (postnom + "XX").substring(0, 2).toUpperCase();
-            const codePre = (prenom + "X").substring(0, 1).toUpperCase();
-            const codeClasse = classe.toUpperCase().replace(/\s+/g, '');
-            const randSuffix = genererCodeAleatoire(6);
-            const matricule = `${codeNom}${codePost}${codePre}${codeClasse}${randSuffix}`;
-
-            db.ref('eleves').push({ matricule, nom, postnom, prenom, classe })
-                .then(() => {
-                    alert(`Succès ! Matricule élève généré : ${matricule}`);
-                    document.getElementById('eleve-nom').value = '';
-                    document.getElementById('eleve-postnom').value = '';
-                    document.getElementById('eleve-prenom').value = '';
-                    document.getElementById('eleve-classe').value = '';
-                })
-                .catch(error => {
-                    alert("Erreur Firebase : " + error.message);
-                });
         }
 
         function rechercherEleve() {
@@ -346,45 +366,97 @@
                 return;
             }
 
-            resultatDiv.innerHTML = "Recherche en cours...";
+            resultatDiv.innerHTML = "Recherche du dossier et des cotations...";
 
+            // 1. Chercher l'élève dans la table 'eleves'
             db.ref('eleves').once('value', (snapshot) => {
-                let trouve = false;
-                snapshot.forEach((childSnapshot) => {
-                    const e = childSnapshot.val();
+                let eleveData = null;
+                snapshot.forEach((child) => {
+                    const e = child.val();
                     if (e.matricule === matriculeRecherche) {
-                        trouve = true;
-                        resultatDiv.innerHTML = `
-                            <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 8px; border: 1px solid var(--md-sys-color-outline);">
-                                <p style="margin: 0 0 8px 0; color: var(--md-sys-color-success); font-weight: 500;">✓ Dossier trouvé</p>
-                                <p style="margin: 4px 0;"><strong>Nom complet :</strong> ${e.nom} ${e.postnom} ${e.prenom}</p>
-                                <p style="margin: 4px 0;"><strong>Classe :</strong> ${e.classe}</p>
-                                <p style="margin: 4px 0;"><strong>Matricule :</strong> ${e.matricule}</p>
-                            </div>
-                        `;
+                        eleveData = e;
                     }
                 });
 
-                if (!trouve) {
-                    resultatDiv.innerHTML = '<span style="color: #d93025;">Aucun élève trouvé avec ce matricule.</span>';
+                if (!eleveData) {
+                    resultatDiv.innerHTML = '<span style="color: var(--md-sys-color-error);">Aucun élève trouvé avec ce matricule.</span>';
+                    return;
                 }
+
+                // 2. Charger les cotations de cet élève
+                db.ref('cotations').orderByChild('matricule').equalTo(matriculeRecherche).once('value', (cotSnapshot) => {
+                    let evaluationsHTML = '';
+                    let convocationMsg = '';
+                    
+                    if (cotSnapshot.exists()) {
+                        cotSnapshot.forEach((cotChild) => {
+                            const c = cotChild.val();
+                            evaluationsHTML += `
+                                <div class="eval-box">
+                                    <div class="eval-title"><span class="material-icons-outlined">menu_book</span> ${c.cours} (${c.type})</div>
+                                    <div class="eval-value">${c.note}</div>
+                                </div>
+                            `;
+                            if (c.convocation && c.convocation !== "Aucune") {
+                                convocationMsg = `
+                                    <div class="convocation-banner">
+                                        <span class="material-icons-outlined">warning</span>
+                                        <strong>Attention :</strong> ${c.convocation}
+                                    </div>
+                                `;
+                            }
+                        });
+                    } else {
+                        evaluationsHTML = '<p style="color: var(--md-sys-color-on-surface-variant); grid-column: span 2;">Aucune cotation enregistrée pour le moment.</p>';
+                    }
+
+                    resultatDiv.innerHTML = `
+                        <div style="background: var(--md-sys-color-surface-variant); padding: 18px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline);">
+                            <p style="margin: 0 0 4px 0; color: var(--md-sys-color-success); font-weight: 500;">✓ Dossier validé</p>
+                            <h3 style="margin: 8px 0; font-size: 18px;">${eleveData.nom} ${eleveData.postnom} ${eleveData.prenom}</h3>
+                            <p style="margin: 4px 0; color: var(--md-sys-color-on-surface-variant);">Classe : ${eleveData.classe} | Matricule : <strong>${eleveData.matricule}</strong></p>
+                            
+                            ${convocationMsg}
+
+                            <h4 style="margin: 20px 0 8px 0; font-size: 14px; font-weight: 500;">Cotations (Interrogations, Devoirs, Examens) :</h4>
+                            <div class="grid-evaluations">
+                                ${evaluationsHTML}
+                            </div>
+
+                            <div class="communique-box" style="margin-top: 16px;">
+                                <strong>Communiqué officiel de l'école :</strong> Le paiement des frais scolaires du 2e trimestre se clôture ce vendredi. Veuillez vous mettre en ordre.
+                            </div>
+                        </div>
+                    `;
+                });
             });
         }
 
-        function chargerEleves() {
-            db.ref('eleves').on('value', (snapshot) => {
-                const tbody = document.getElementById('admin-table-eleves');
-                tbody.innerHTML = '';
-                if (!snapshot.exists()) {
-                    tbody.innerHTML = '<tr><td colspan="3">Aucun élève enregistré.</td></tr>';
-                    return;
-                }
-                snapshot.forEach((childSnapshot) => {
-                    const e = childSnapshot.val();
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${e.nom} ${e.postnom} ${e.prenom}</td><td>${e.classe}</td><td><strong>${e.matricule}</strong></td>`;
-                    tbody.appendChild(tr);
-                });
+        function enregistrerCotation() {
+            const matricule = document.getElementById('adm-eleve-matricule').value.trim().toUpperCase();
+            const cours = document.getElementById('adm-cours').value.trim();
+            const type = document.getElementById('adm-type').value;
+            const note = document.getElementById('adm-note').value.trim();
+            const convocation = document.getElementById('adm-convocation').value;
+
+            if (!matricule || !cours || !note) {
+                alert("Veuillez remplir le matricule, le cours et la note.");
+                return;
+            }
+
+            db.ref('cotations').push({
+                matricule,
+                cours,
+                type,
+                note,
+                convocation
+            }).then(() => {
+                alert("Cotation et suivi enregistrés avec succès !");
+                document.getElementById('adm-eleve-matricule').value = '';
+                document.getElementById('adm-cours').value = '';
+                document.getElementById('adm-note').value = '';
+            }).catch(err => {
+                alert("Erreur : " + err.message);
             });
         }
     </script>
