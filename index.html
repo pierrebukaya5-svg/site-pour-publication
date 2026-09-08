@@ -204,32 +204,6 @@
             color: var(--md-sys-color-on-surface-variant);
             background-color: var(--md-sys-color-surface-variant);
         }
-
-        #rapport-pdf-container {
-            background: #ffffff;
-            color: #202124;
-            padding: 40px;
-            font-family: Arial, sans-serif;
-            display: none;
-        }
-        #rapport-pdf-container h1, #rapport-pdf-container h2 {
-            color: #1a73e8;
-            border-bottom: 1px solid #dadce0;
-            padding-bottom: 5px;
-        }
-        .pdf-section { margin-bottom: 25px; }
-        .pdf-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-        }
-        .pdf-table th, .pdf-table td {
-            border: 1px solid #dadce0;
-            padding: 8px;
-            text-align: left;
-            font-size: 11px;
-        }
-        .pdf-table th { background-color: #f8f9fa; }
     </style>
 </head>
 <body>
@@ -249,29 +223,7 @@
             <div id="auth-status" class="user-pill">Visiteur</div>
         </header>
 
-        <div class="grid-2">
-            <div class="card">
-                <h2><span class="material-icons-outlined">face</span> Espace Consultation (Élève)</h2>
-                <label for="recherche-matricule">Matricule Élève</label>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="recherche-matricule" placeholder="Ex: KAB5M9A8F2" style="margin: 0; text-transform: uppercase;">
-                    <button onclick="rechercherParMatricule()" style="width: 130px; margin: 0;">Rechercher</button>
-                </div>
-                <div id="resultat-recherche-parent" style="margin-top: 16px; font-size: 13px;"></div>
-            </div>
-
-            <div class="card">
-                <h2><span class="material-icons-outlined">engineering</span> Espace Professeur</h2>
-                <label for="recherche-prof-matricule">Matricule Professeur</label>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="recherche-prof-matricule" placeholder="Ex: PROFMUKAB4B7C1" style="margin: 0; text-transform: uppercase;">
-                    <button onclick="rechercherProfesseurParMatricule()" style="width: 130px; margin: 0;">Rechercher</button>
-                </div>
-                <div id="resultat-recherche-prof" style="margin-top: 16px; font-size: 13px;"></div>
-            </div>
-        </div>
-
-        <div class="card" style="max-width: 480px; margin: 24px auto;">
+        <div class="card" style="max-width: 480px; margin: 0 auto 24px auto;">
             <h2><span class="material-icons-outlined">admin_panel_settings</span> Authentification Administration</h2>
             <div id="login-section">
                 <label for="admin-email">Adresse e-mail</label>
@@ -303,16 +255,16 @@
                 </div>
 
                 <div class="card">
-                    <h2><span class="material-icons-outlined">badge</span> Enregistrer un Professeur</h2>
-                    <label>Nom</label>
-                    <input type="text" id="prof-nom" placeholder="Nom">
-                    <label>Post-nom</label>
-                    <input type="text" id="prof-postnom" placeholder="Post-nom">
-                    <label>Prénom</label>
-                    <input type="text" id="prof-prenom" placeholder="Prénom">
-                    <label>Cours dispensé</label>
-                    <input type="text" id="prof-cours" placeholder="Ex: Mathématiques">
-                    <button onclick="ajouterProf()">Générer le matricule & Enregistrer</button>
+                    <h2><span class="material-icons-outlined">badge</span> Register a Teacher</h2>
+                    <label>Last Name</label>
+                    <input type="text" id="prof-nom" placeholder="Last Name">
+                    <label>Middle Name</label>
+                    <input type="text" id="prof-postnom" placeholder="Middle Name">
+                    <label>First Name</label>
+                    <input type="text" id="prof-prenom" placeholder="First Name">
+                    <label>Subject</label>
+                    <input type="text" id="prof-cours" placeholder="Ex: Mathematics">
+                    <button onclick="ajouterProf()">Generate ID & Register</button>
                 </div>
             </div>
 
@@ -334,13 +286,6 @@
                         </table>
                     </div>
                 </div>
-            </div>
-
-            <div class="card">
-                <h2><span class="material-icons-outlined">summarize</span> Clôture & Bilan Annuel (PDF)</h2>
-                <label for="input-annee-scolaire">Exercice / Année scolaire</label>
-                <input type="text" id="input-annee-scolaire" placeholder="Ex: 2025-2026">
-                <button class="btn-success" onclick="telechargerBilanPDF()">Télécharger le Bilan PDF Officiel</button>
             </div>
 
         </div>
@@ -399,7 +344,6 @@
             return resultat;
         }
 
-        // --- CORRECTION CLÉ : GARANTIE D'EXÉCUTION SANS BLOQUAGE ---
         function ajouterEleve() {
             const nom = document.getElementById('eleve-nom').value.trim();
             const postnom = document.getElementById('eleve-postnom').value.trim();
@@ -438,7 +382,7 @@
             const cours = document.getElementById('prof-cours').value.trim();
 
             if (!nom || !postnom || !prenom || !cours) {
-                alert("Veuillez remplir tous les champs obligatoires du professeur.");
+                alert("Please fill in all required teacher fields.");
                 return;
             }
 
@@ -449,14 +393,14 @@
 
             db.ref('professeurs').push({ matricule, nom, postnom, prenom, cours })
                 .then(() => {
-                    alert(`Succès ! Matricule professeur généré : ${matricule}`);
+                    alert(`Success! Teacher ID generated: ${matricule}`);
                     document.getElementById('prof-nom').value = '';
                     document.getElementById('prof-postnom').value = '';
                     document.getElementById('prof-prenom').value = '';
                     document.getElementById('prof-cours').value = '';
                 })
                 .catch(error => {
-                    alert("Erreur Firebase : " + error.message);
+                    alert("Firebase Error: " + error.message);
                 });
         }
     </script>
