@@ -160,22 +160,6 @@
             background: #1557b0; 
         }
 
-        .btn-success { background: var(--md-sys-color-success); }
-        .btn-success:hover { background: #137333; }
-        
-        .btn-danger { background: var(--md-sys-color-error); }
-        .btn-danger:hover { background: #c5221f; }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .grid-2 { grid-template-columns: 1fr; }
-        }
-
         .user-pill {
             background: var(--md-sys-color-surface-variant);
             color: var(--md-sys-color-on-surface);
@@ -240,52 +224,25 @@
 
         <div id="admin-dashboard" style="display: none;">
             
-            <div class="grid-2">
-                <div class="card">
-                    <h2><span class="material-icons-outlined">person_add</span> Enregistrer un Élève</h2>
-                    <label>Nom</label>
-                    <input type="text" id="eleve-nom" placeholder="Nom">
-                    <label>Post-nom</label>
-                    <input type="text" id="eleve-postnom" placeholder="Post-nom">
-                    <label>Prénom</label>
-                    <input type="text" id="eleve-prenom" placeholder="Prénom">
-                    <label>Classe</label>
-                    <input type="text" id="eleve-classe" placeholder="Ex: 5e Secondaire Math">
-                    <button onclick="ajouterEleve()">Générer le matricule & Enregistrer</button>
-                </div>
-
-                <div class="card">
-                    <h2><span class="material-icons-outlined">badge</span> Register a Teacher</h2>
-                    <label>Last Name</label>
-                    <input type="text" id="prof-nom" placeholder="Last Name">
-                    <label>Middle Name</label>
-                    <input type="text" id="prof-postnom" placeholder="Middle Name">
-                    <label>First Name</label>
-                    <input type="text" id="prof-prenom" placeholder="First Name">
-                    <label>Subject</label>
-                    <input type="text" id="prof-cours" placeholder="Ex: Mathematics">
-                    <button onclick="ajouterProf()">Generate ID & Register</button>
-                </div>
+            <div class="card" style="max-width: 600px; margin: 0 auto 20px auto;">
+                <h2><span class="material-icons-outlined">person_add</span> Enregistrer un Élève</h2>
+                <label>Nom</label>
+                <input type="text" id="eleve-nom" placeholder="Nom">
+                <label>Post-nom</label>
+                <input type="text" id="eleve-postnom" placeholder="Post-nom">
+                <label>Prénom</label>
+                <input type="text" id="eleve-prenom" placeholder="Prénom">
+                <label>Classe</label>
+                <input type="text" id="eleve-classe" placeholder="Ex: 5e Secondaire Math">
+                <button onclick="ajouterEleve()">Générer le matricule & Enregistrer</button>
             </div>
 
             <div class="card">
-                <h2><span class="material-icons-outlined">folder_shared</span> Registre des Actifs & Matricules</h2>
-                <div class="grid-2">
-                    <div>
-                        <h3 style="font-size: 13px; font-weight: 500;">Élèves inscrits</h3>
-                        <table class="table-admin">
-                            <thead><tr><th>Identité</th><th>Classe</th><th>Matricule</th></tr></thead>
-                            <tbody id="admin-table-eleves"><tr><td colspan="3">Chargement...</td></tr></tbody>
-                        </table>
-                    </div>
-                    <div>
-                        <h3 style="font-size: 13px; font-weight: 500;">Enseignants inscrits</h3>
-                        <table class="table-admin">
-                            <thead><tr><th>Identité</th><th>Matière</th><th>Matricule</th></tr></thead>
-                            <tbody id="admin-table-profs"><tr><td colspan="3">Chargement...</td></tr></tbody>
-                        </table>
-                    </div>
-                </div>
+                <h2><span class="material-icons-outlined">folder_shared</span> Registre des Élèves Actifs & Matricules</h2>
+                <table class="table-admin">
+                    <thead><tr><th>Identité</th><th>Classe</th><th>Matricule</th></tr></thead>
+                    <tbody id="admin-table-eleves"><tr><td colspan="3">Chargement...</td></tr></tbody>
+                </table>
             </div>
 
         </div>
@@ -316,7 +273,8 @@
                 status.innerText = "Session : Administrateur";
                 loginSection.style.display = 'none';
                 infoConnecte.style.display = 'block';
-                dashboard.style.display = 'block'; 
+                dashboard.style.display = 'block';
+                chargerEleves();
             } else {
                 status.innerText = "Visiteur";
                 loginSection.style.display = 'block';
@@ -375,33 +333,21 @@
                 });
         }
 
-        function ajouterProf() {
-            const nom = document.getElementById('prof-nom').value.trim();
-            const postnom = document.getElementById('prof-postnom').value.trim();
-            const prenom = document.getElementById('prof-prenom').value.trim();
-            const cours = document.getElementById('prof-cours').value.trim();
-
-            if (!nom || !postnom || !prenom || !cours) {
-                alert("Please fill in all required teacher fields.");
-                return;
-            }
-
-            const codeNom = (nom + "XXX").substring(0, 3).toUpperCase();
-            const codePost = (postnom + "XX").substring(0, 2).toUpperCase();
-            const randSuffix = genererCodeAleatoire(6);
-            const matricule = `PROF${codeNom}${codePost}${randSuffix}`;
-
-            db.ref('professeurs').push({ matricule, nom, postnom, prenom, cours })
-                .then(() => {
-                    alert(`Success! Teacher ID generated: ${matricule}`);
-                    document.getElementById('prof-nom').value = '';
-                    document.getElementById('prof-postnom').value = '';
-                    document.getElementById('prof-prenom').value = '';
-                    document.getElementById('prof-cours').value = '';
-                })
-                .catch(error => {
-                    alert("Firebase Error: " + error.message);
+        function chargerEleves() {
+            db.ref('eleves').on('value', (snapshot) => {
+                const tbody = document.getElementById('admin-table-eleves');
+                tbody.innerHTML = '';
+                if (!snapshot.exists()) {
+                    tbody.innerHTML = '<tr><td colspan="3">Aucun élève enregistré.</td></tr>';
+                    return;
+                }
+                snapshot.forEach((childSnapshot) => {
+                    const e = childSnapshot.val();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${e.nom} ${e.postnom} ${e.prenom}</td><td>${e.classe}</td><td><strong>${e.matricule}</strong></td>`;
+                    tbody.appendChild(tr);
                 });
+            });
         }
     </script>
 </body>
