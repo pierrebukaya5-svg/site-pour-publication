@@ -534,17 +534,22 @@
             }
             snapshot.forEach((child) => {
                 const p = child.val();
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${p.nom} ${p.postnom} ${p.prenom}</td>
-                        <td>${p.cours}</td>
-                        <td>
-                            <code style="background: #f1f3f4; padding: 2px 6px; border-radius: 4px; font-weight:500; font-size: 11px;">${p.matricule}</code>
-                            <button onclick="copierMatricule('${p.matricule}')" style="margin-top: 4px; padding: 4px 10px; font-size: 11px; width: auto; border-radius: 4px;">Copier</button>
-                        </td>
-                    </tr>
-                `;
+                if (p && p.nom) {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${p.nom} ${p.postnom || ''} ${p.prenom || ''}</td>
+                            <td>${p.cours || 'N/A'}</td>
+                            <td>
+                                <code style="background: #f1f3f4; padding: 2px 6px; border-radius: 4px; font-weight:500; font-size: 11px;">${p.matricule}</code>
+                                <button onclick="copierMatricule('${p.matricule}')" style="margin-top: 4px; padding: 4px 10px; font-size: 11px; width: auto; border-radius: 4px;">Copier</button>
+                            </td>
+                        </tr>
+                    `;
+                }
             });
+            if (tbody.innerHTML === '') {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--md-sys-color-on-surface-variant);">Aucun enregistrement valide.</td></tr>`;
+            }
         });
 
         function copierMatricule(matricule) {
@@ -705,6 +710,8 @@
                 document.getElementById('prof-postnom').value = '';
                 document.getElementById('prof-prenom').value = '';
                 document.getElementById('prof-cours').value = '';
+            }).catch(error => {
+                alert("Erreur lors de l'enregistrement : " + error.message);
             });
         }
 
