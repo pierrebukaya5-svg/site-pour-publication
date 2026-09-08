@@ -7,7 +7,6 @@
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <!-- Google Material Icons -->
@@ -428,30 +427,28 @@
         <div id="page-admin" class="section-cache">
             <button class="btn-retour" onclick="retourAccueil()"><span class="material-icons-outlined" style="font-size:18px;">arrow_back</span> Retour à l'accueil</button>
             
-            <!-- Carte de connexion admin visible uniquement si déconnecté -->
+            <!-- Carte de connexion admin par Code Maître -->
             <div class="card" id="admin-login-card">
-                <h2><span class="material-icons-outlined">lock</span> Connexion Administrateur</h2>
-                <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px;">Veuillez vous authentifier pour déverrouiller la gestion et la création des comptes :</p>
-                <label for="admin-email">Adresse e-mail</label>
-                <input type="email" id="admin-email" placeholder="admin@ecole.cd">
-                <label for="admin-password">Mot de passe administrateur</label>
-                <input type="password" id="admin-password" placeholder="••••••••">
-                <button onclick="connecterAdmin()">Activer la session admin</button>
+                <h2><span class="material-icons-outlined">lock</span> Sécurité Administrateur</h2>
+                <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px;">Veuillez entrer le code d'accès maître administrateur pour déverrouiller la gestion :</p>
+                <label for="admin-code-maitre-saisi">Code Maître Admin</label>
+                <input type="password" id="admin-code-maitre-saisi" placeholder="Ex: ADMIN-2026" style="text-transform: uppercase;">
+                <button onclick="connecterAdmin()">Déverrouiller la session admin</button>
             </div>
 
-            <!-- Tableau de bord admin masqué tant que l'admin ne s'est pas authentifié -->
+            <!-- Tableau de bord admin -->
             <div id="admin-dashboard" class="section-cache">
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                         <h2 style="margin:0;"><span class="material-icons-outlined">admin_panel_settings</span> Tableau de Bord Administration</h2>
-                        <button onclick="deconnecterAdmin()" style="background: transparent; border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface); width: auto; padding: 6px 14px; font-size: 12px;">Fermer la session admin</button>
+                        <button onclick="deconnecterAdmin()" style="background: transparent; border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface); width: auto; padding: 6px 14px; font-size: 12px;">Verrouiller la session</button>
                     </div>
 
                     <div class="tabs-admin">
                         <button class="tab-btn active" onclick="changerOngletAdmin('inscriptions')">Inscriptions</button>
                         <button class="tab-btn" onclick="changerOngletAdmin('eleves')">Liste des Élèves</button>
                         <button class="tab-btn" onclick="changerOngletAdmin('profs')">Liste des Professeurs</button>
-                        <button class="tab-btn" onclick="changerOngletAdmin('securite')">Sécurité & Code Admin</button>
+                        <button class="tab-btn" onclick="changerOngletAdmin('securite')">Sécurité & Code Maître</button>
                     </div>
 
                     <!-- Section Inscriptions -->
@@ -468,7 +465,7 @@
                                 <input type="text" id="eleve-prenom" placeholder="Prénom">
                                 <label>Classe</label>
                                 <input type="text" id="eleve-classe" placeholder="Ex: 5e Secondaire Math">
-                                <button onclick="ajouterEleve()">Générer le matricule & Enregistrer</button>
+                                <button onclick="ajouterEleve()">Générer le matricule élève & Enregistrer</button>
                             </div>
 
                             <!-- Formulaire Professeur -->
@@ -480,7 +477,7 @@
                                 <input type="text" id="prof-prenom" placeholder="Post-nom / Prénom">
                                 <label>Matière enseignée</label>
                                 <input type="text" id="prof-matiere" placeholder="Ex: Physique">
-                                <button onclick="ajouterProf()">Générer le code d'accès & Enregistrer</button>
+                                <button onclick="ajouterProf()">Générer le code d'accès prof & Enregistrer</button>
                             </div>
                         </div>
                     </div>
@@ -494,7 +491,7 @@
                                     <tr>
                                         <th>Nom complet</th>
                                         <th>Classe</th>
-                                        <th>Matricule</th>
+                                        <th>Matricule (Accès élève)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="table-eleves-body">
@@ -513,7 +510,7 @@
                                     <tr>
                                         <th>Nom complet</th>
                                         <th>Matière</th>
-                                        <th>Code d'accès</th>
+                                        <th>Code d'accès (Accès prof)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="table-profs-body">
@@ -523,32 +520,15 @@
                         </div>
                     </div>
 
-                    <!-- Section Sécurité & Code Admin -->
+                    <!-- Section Sécurité & Code Maître -->
                     <div id="admin-section-securite" class="section-cache">
-                        <h3 style="font-size: 15px; margin-top: 0;"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle;">security</span> Gestion du Code d'Accès & Comptes Administrateurs</h3>
-                        <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">Vous pouvez gérer votre code d'accès ou créer un nouveau compte administrateur pour donner accès à une autre personne.</p>
+                        <h3 style="font-size: 15px; margin-top: 0;"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle;">security</span> Modification du Code Maître Administrateur</h3>
+                        <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">Modifiez ou personnalisez le code maître requis pour accéder à cet espace d'administration.</p>
                         
                         <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); margin-top: 16px;">
-                            <p style="font-size: 13px; margin-top: 0;">Code d'accès administrateur actuel : <strong id="admin-code-actuel" style="color: var(--md-sys-color-primary);">Chargement...</strong></p>
-                            
-                            <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
-                                <button onclick="supprimerCodeAdmin()" style="background: var(--md-sys-color-error); width: auto;">Supprimer le code actuel</button>
-                                <button onclick="reactiverCodeAdmin()" style="background: var(--md-sys-color-success); width: auto;">Réactiver / Générer un nouveau code</button>
-                            </div>
-                        </div>
-
-                        <!-- Nouveau bloc pour créer un autre compte admin -->
-                        <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); margin-top: 16px;">
-                            <h4 style="font-size: 14px; margin-top: 0; display: flex; align-items: center; gap: 6px;"><span class="material-icons-outlined" style="font-size:18px;">person_add</span> Créer un nouveau compte Administrateur</h4>
-                            <p style="font-size: 12px; color: var(--md-sys-color-on-surface-variant); margin-bottom: 12px;">Créez un nouvel accès e-mail et mot de passe pour un autre administrateur.</p>
-                            
-                            <label for="new-admin-email">Nouvelle adresse e-mail admin</label>
-                            <input type="email" id="new-admin-email" placeholder="admin2@ecole.cd">
-                            
-                            <label for="new-admin-password">Mot de passe temporaire</label>
-                            <input type="password" id="new-admin-password" placeholder="Min. 6 caractères">
-                            
-                            <button onclick="creerNouvelAdmin()" style="width: auto;">Créer le nouveau compte admin</button>
+                            <label for="nouveau-code-maitre">Nouveau Code Maître Administrateur</label>
+                            <input type="text" id="nouveau-code-maitre" placeholder="Ex: MON-NOUVEAU-CODE-ADMIN" style="text-transform: uppercase;">
+                            <button onclick="modifierCodeMaitre()" style="width: auto;">Mettre à jour le code maître</button>
                         </div>
                     </div>
 
@@ -569,14 +549,10 @@
             appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
         };
 
-        const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
-        const secondaryAuth = secondaryApp.auth();
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const auth = firebase.auth();
 
-        auth.signOut();
+        let adminConnecte = false;
 
         function ouvrirEspace(type) {
             document.getElementById('page-accueil').style.display = 'none';
@@ -595,6 +571,7 @@
             } else if (type === 'admin') {
                 document.getElementById('page-admin').style.display = 'block';
                 status.innerText = "Espace Administration";
+                verifierEtatAdminSession();
             }
         }
 
@@ -606,41 +583,60 @@
             document.getElementById('auth-status').innerText = "Accueil";
         }
 
-        // Écouteur d'état d'authentification pour verrouiller/déverrouiller l'interface admin
-        auth.onAuthStateChanged((user) => {
+        function verifierEtatAdminSession() {
             const loginCard = document.getElementById('admin-login-card');
             const dashboard = document.getElementById('admin-dashboard');
 
-            if (user) {
+            if (adminConnecte) {
                 loginCard.style.display = 'none';
                 dashboard.style.display = 'block';
                 chargerListesAdmin();
-                verifierCodeAdminActuel();
             } else {
                 loginCard.style.display = 'block';
                 dashboard.style.display = 'none';
             }
-        });
+        }
 
         function connecterAdmin() {
-            const email = document.getElementById('admin-email').value.trim();
-            const pass = document.getElementById('admin-password').value.trim();
-            
-            if (!email || !pass) {
-                alert("Veuillez remplir votre e-mail et votre mot de passe administrateur.");
+            const saisi = document.getElementById('admin-code-maitre-saisi').value.trim().toUpperCase();
+            if (!saisi) {
+                alert("Veuillez entrer le code maître administrateur.");
                 return;
             }
 
-            auth.signInWithEmailAndPassword(email, pass)
-                .then(() => {
-                    document.getElementById('admin-email').value = '';
-                    document.getElementById('admin-password').value = '';
-                })
-                .catch(err => alert("Échec d'authentification admin : " + err.message));
+            db.ref('parametres/codeMaitre').once('value', (snapshot) => {
+                let codeActuel = "ECOLEADMIN2026"; // Code par défaut si non créé dans Firebase
+                if (snapshot.exists()) {
+                    codeActuel = snapshot.val();
+                }
+
+                if (saisi === codeActuel) {
+                    adminConnecte = true;
+                    document.getElementById('admin-code-maitre-saisi').value = '';
+                    verifierEtatAdminSession();
+                } else {
+                    alert("Code maître administrateur incorrect.");
+                }
+            });
         }
 
         function deconnecterAdmin() {
-            auth.signOut();
+            adminConnecte = false;
+            verifierEtatAdminSession();
+        }
+
+        function modifierCodeMaitre() {
+            if (!adminConnecte) return;
+            const nouveau = document.getElementById('nouveau-code-maitre').value.trim().toUpperCase();
+            if (!nouveau || nouveau.length < 4) {
+                alert("Veuillez entrer un code valide d'au moins 4 caractères.");
+                return;
+            }
+
+            db.ref('parametres/codeMaitre').set(nouveau).then(() => {
+                alert("Code maître administrateur mis à jour avec succès !");
+                document.getElementById('nouveau-code-maitre').value = '';
+            }).catch(err => alert("Erreur : " + err.message));
         }
 
         function genererCodeAleatoire(longueur = 6) {
@@ -653,8 +649,8 @@
         }
 
         function ajouterEleve() {
-            if (!auth.currentUser) {
-                alert("Action interdite : Veuillez vous connecter en tant qu'administrateur.");
+            if (!adminConnecte) {
+                alert("Action interdite : Veuillez vous connecter.");
                 return;
             }
 
@@ -677,7 +673,7 @@
 
             db.ref('eleves').push({ matricule, nom, postnom, prenom, classe })
                 .then(() => {
-                    alert(`Succès ! Matricule élève généré : ${matricule}`);
+                    alert(`Élève enregistré avec succès !\n\nMatricule généré (à donner à l'élève) : ${matricule}`);
                     document.getElementById('eleve-nom').value = '';
                     document.getElementById('eleve-postnom').value = '';
                     document.getElementById('eleve-prenom').value = '';
@@ -690,8 +686,8 @@
         }
 
         function ajouterProf() {
-            if (!auth.currentUser) {
-                alert("Action interdite : Veuillez vous connecter en tant qu'administrateur.");
+            if (!adminConnecte) {
+                alert("Action interdite : Veuillez vous connecter.");
                 return;
             }
 
@@ -740,7 +736,7 @@
                     document.getElementById('prof-dashboard').style.display = 'block';
                     document.getElementById('prof-code-acces').value = '';
                 } else {
-                    alert("Code d'accès invalide ou non reconnu par l'administration.");
+                    alert("Code d'accès professeur invalide ou non reconnu.");
                 }
             });
         }
@@ -778,72 +774,11 @@
             } else if (onglet === 'securite') {
                 boutons[3].classList.add('active');
                 secSecurite.style.display = 'block';
-                verifierCodeAdminActuel();
             }
-        }
-
-        function verifierCodeAdminActuel() {
-            if (!auth.currentUser) return;
-            const uid = auth.currentUser.uid;
-            
-            db.ref('admin_securite/' + uid).once('value', (snapshot) => {
-                const codeAffichage = document.getElementById('admin-code-actuel');
-                if (snapshot.exists() && snapshot.val().codeAcces) {
-                    codeAffichage.innerText = snapshot.val().codeAcces;
-                } else {
-                    codeAffichage.innerText = "Aucun code configuré (supprimé ou non activé)";
-                }
-            });
-        }
-
-        function supprimerCodeAdmin() {
-            if (!auth.currentUser) return;
-            if (confirm("Voulez-vous vraiment supprimer votre code d'accès administrateur ?")) {
-                const uid = auth.currentUser.uid;
-                db.ref('admin_securite/' + uid).remove()
-                    .then(() => {
-                        alert("Code d'accès administrateur supprimé avec succès.");
-                        verifierCodeAdminActuel();
-                    })
-                    .catch(err => alert("Erreur : " + err.message));
-            }
-        }
-
-        function reactiverCodeAdmin() {
-            if (!auth.currentUser) return;
-            const nouveauCode = "ADM-" + genererCodeAleatoire(6);
-            const uid = auth.currentUser.uid;
-
-            db.ref('admin_securite/' + uid).set({
-                codeAcces: nouveauCode,
-                dateMiseAJour: new Date().toISOString()
-            }).then(() => {
-                alert(`Nouveau code d'accès administrateur activé avec succès !\n\nVotre code : ${nouveauCode}`);
-                verifierCodeAdminActuel();
-            }).catch(err => alert("Erreur : " + err.message));
-        }
-
-        function creerNouvelAdmin() {
-            if (!auth.currentUser) return;
-            const email = document.getElementById('new-admin-email').value.trim();
-            const pass = document.getElementById('new-admin-password').value.trim();
-
-            if (!email || !pass) {
-                alert("Veuillez renseigner l'e-mail et le mot de passe du nouveau compte.");
-                return;
-            }
-
-            secondaryAuth.createUserWithEmailAndPassword(email, pass)
-                .then(() => {
-                    alert(`Compte administrateur créé avec succès pour : ${email}\n\nCette personne peut désormais se connecter au portail avec ces identifiants.`);
-                    document.getElementById('new-admin-email').value = '';
-                    document.getElementById('new-admin-password').value = '';
-                })
-                .catch(err => alert("Erreur lors de la création du compte : " + err.message));
         }
 
         function chargerListesAdmin() {
-            if (!auth.currentUser) return;
+            if (!adminConnecte) return;
 
             const tbodyEleves = document.getElementById('table-eleves-body');
             const tbodyProfs = document.getElementById('table-profs-body');
