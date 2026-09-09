@@ -265,24 +265,26 @@
                 <!-- Inscription Élève -->
                 <div class="card">
                     <h2>Inscrire un Élève</h2>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Nom</label><input type="text" id="el-nom"></div>
-                        <div class="form-group"><label>Post-nom</label><input type="text" id="el-postnom"></div>
-                        <div class="form-group"><label>Prénom</label><input type="text" id="el-prenom"></div>
-                        <div class="form-group">
-                            <label>Sexe</label>
-                            <select id="el-sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select>
+                    <form id="form-inscription" onsubmit="event.preventDefault(); inscrireEleve();">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Nom *</label><input type="text" id="el-nom" required></div>
+                            <div class="form-group"><label>Post-nom</label><input type="text" id="el-postnom"></div>
+                            <div class="form-group"><label>Prénom *</label><input type="text" id="el-prenom" required></div>
+                            <div class="form-group">
+                                <label>Sexe</label>
+                                <select id="el-sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select>
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;"><label>Classe *</label><input type="text" id="el-classe" placeholder="Ex: 6ème" required></div>
                         </div>
-                        <div class="form-group" style="grid-column: span 2;"><label>Classe</label><input type="text" id="el-classe" placeholder="Ex: 4ème Scientifique"></div>
-                    </div>
 
-                    <h4 style="margin: 1rem 0 0.5rem 0; color: var(--primary);">Identité du Tuteur Principal</h4>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Nom Tuteur</label><input type="text" id="tut1-nom"></div>
-                        <div class="form-group"><label>Prénom Tuteur</label><input type="text" id="tut1-prenom"></div>
-                    </div>
+                        <h4 style="margin: 1rem 0 0.5rem 0; color: var(--primary);">Identité du Tuteur Principal</h4>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Nom Tuteur</label><input type="text" id="tut1-nom"></div>
+                            <div class="form-group"><label>Prénom Tuteur</label><input type="text" id="tut1-prenom"></div>
+                        </div>
 
-                    <button class="btn-submit" onclick="inscrireEleve()" style="margin-top: 1rem;">Inscrire l'élève (Firebase)</button>
+                        <button type="submit" class="btn-submit" style="margin-top: 1rem;">Inscrire l'élève (Firebase)</button>
+                    </form>
                 </div>
 
                 <!-- Publication Communiqué -->
@@ -392,7 +394,7 @@
             }
         });
 
-        // Inscription d'un élève
+        // Inscription d'un élève sécurisée (anti-champs vides / anti-undefined)
         window.inscrireEleve = async function() {
             if (!checkAdminSession()) return;
 
@@ -405,7 +407,7 @@
             const t1_prenom = document.getElementById('tut1-prenom').value.trim();
 
             if(!nom || !prenom || !classe) {
-                alert("Veuillez remplir les champs obligatoires.");
+                alert("Erreur : Veuillez remplir le nom, le prénom et la classe.");
                 return;
             }
 
@@ -414,20 +416,20 @@
             try {
                 await set(ref(db, 'eleves/' + matricule), {
                     matricule,
-                    nom, postnom, prenom, sexe, classe,
-                    tuteur1: { nom: t1_nom, prenom: t1_prenom },
-                    enOrdreFrais: true
+                    nom, 
+                    postnom: postnom || "", 
+                    prenom, 
+                    sexe, 
+                    classe,
+                    tuteur1: { nom: t1_nom || "Non renseigné", prenom: t1_prenom || "" },
+                    enOrdreFrais: false // Bloqué par défaut à l'inscription
                 });
-                alert(`Élève enregistré dans Firebase ! Matricule : ${matricule}`);
-                document.getElementById('el-nom').value = '';
-                document.getElementById('el-postnom').value = '';
-                document.getElementById('el-prenom').value = '';
-                document.getElementById('el-classe').value = '';
-                document.getElementById('tut1-nom').value = '';
-                document.getElementById('tut1-prenom').value = '';
+                alert(`Élève enregistré avec succès ! Matricule attribué : ${matricule}`);
+                document.getElementById('form-inscription').reset();
                 chargerDonneesAdmin();
             } catch (error) {
                 console.error("Erreur d'enregistrement :", error);
+                alert("Erreur lors de l'enregistrement dans Firebase.");
             }
         }
 
@@ -451,7 +453,7 @@
             }
         }
 
-        // Charger la liste des élèves avec badge interactif cliquable
+        // Charger la liste des élèves
         async function chargerDonneesAdmin() {
             if (!checkAdminSession()) return;
             const dbRef = ref(db);
@@ -463,24 +465,27 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     Object.values(data).forEach(e => {
+                        // Ignore les entrées corrompues s'il en reste
+                        if(!e.nom || !e.prenom) return;
+
                         const tr = document.createElement('tr');
 
                         const tdMat = document.createElement('td');
                         const code = document.createElement('code');
-                        code.textContent = e.matricule;
+                        code.textContent = e.matricule || 'N/A';
                         tdMat.appendChild(code);
                         tr.appendChild(tdMat);
 
                         const tdNom = document.createElement('td');
-                        tdNom.textContent = `${e.nom} ${e.postnom || ''} ${e.prenom}`;
+                        tdNom.textContent = `${e.nom} ${e.postnom ? e.postnom + ' ' : ''}${e.prenom}`;
                         tr.appendChild(tdNom);
 
                         const tdSexe = document.createElement('td');
-                        tdSexe.textContent = e.sexe;
+                        tdSexe.textContent = e.sexe || 'M';
                         tr.appendChild(tdSexe);
 
                         const tdClasse = document.createElement('td');
-                        tdClasse.textContent = e.classe;
+                        tdClasse.textContent = e.classe || '';
                         tr.appendChild(tdClasse);
 
                         const tdTuteur = document.createElement('td');
@@ -521,7 +526,7 @@
                     document.getElementById('parent-login-card').style.display = 'none';
                     document.getElementById('parent-dashboard-card').style.display = 'block';
 
-                    document.getElementById('p-nom-eleve').textContent = `${eleve.nom} ${eleve.postnom || ''} ${eleve.prenom}`;
+                    document.getElementById('p-nom-eleve').textContent = `${eleve.nom} ${eleve.postnom ? eleve.postnom + ' ' : ''}${eleve.prenom}`;
                     document.getElementById('p-mat').textContent = eleve.matricule;
                     document.getElementById('p-classe').textContent = eleve.classe;
                     document.getElementById('p-sexe').textContent = eleve.sexe === 'M' ? 'Masculin' : 'Féminin';
