@@ -213,7 +213,7 @@
                 
                 <h3>📢 Communiqués Récents</h3>
                 <div id="public-communiques">
-                    <p style="color: var(--text-muted);">Aucun communiqué pour le moment.</p>
+                    <p style="color: var(--text-muted);">Chargement des communiqués...</p>
                 </div>
             </div>
         </section>
@@ -327,11 +327,24 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let isAdminAuthenticated = false;
+        // Hash SHA-256 du code maître "pr1999" pour masquer le mot de passe en clair dans le code source
+        const ADMIN_HASH_TARGET = "4c6b5415757d59b2a7534c568f6ff0fc44a57cb891fc953b00685b8fae929bdf";
+
+        async function hashString(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Vérification de la session admin stockée temporairement dans le navigateur (sessionStorage)
+        function checkAdminSession() {
+            return sessionStorage.getItem('isAdminAuth') === 'true';
+        }
 
         // Navigation et historique
         window.switchView = function(viewId, pushHistory = true) {
-            if(viewId === 'admin' && !isAdminAuthenticated) {
+            if(viewId === 'admin' && !checkAdminSession()) {
                 alert("Accès refusé. Veuillez entrer le code maître.");
                 return;
             }
@@ -349,32 +362,35 @@
             window.scrollTo(0, 0);
         }
 
-        // Vérification du code maître pour l'administration
-        window.accederAdmin = function() {
-            if(isAdminAuthenticated) {
+        // Vérification sécurisée du code maître pour l'administration
+        window.accederAdmin = async function() {
+            if(checkAdminSession()) {
                 switchView('admin');
                 return;
             }
 
             const codeSaisi = prompt("Entrez le code maître administrateur :");
-            if(codeSaisi === "pr1999") {
-                isAdminAuthenticated = true;
-                switchView('admin');
-                chargerDonneesAdmin();
-            } else if(codeSaisi !== null) {
-                alert("Code maître incorrect ! Accès refusé.");
+            if(codeSaisi !== null) {
+                const hashedInput = await hashString(codeSaisi);
+                if(hashedInput === ADMIN_HASH_TARGET) {
+                    sessionStorage.setItem('isAdminAuth', 'true');
+                    switchView('admin');
+                    chargerDonneesAdmin();
+                } else {
+                    alert("Code maître incorrect ! Accès refusé.");
+                }
             }
         }
 
         window.deconnexionAdmin = function() {
-            isAdminAuthenticated = false;
+            sessionStorage.removeItem('isAdminAuth');
             switchView('home');
             alert("Panneau d'administration verrouillé.");
         }
 
         window.addEventListener('popstate', (event) => {
             if (event.state && event.state.view) {
-                if(event.state.view === 'admin' && !isAdminAuthenticated) {
+                if(event.state.view === 'admin' && !checkAdminSession()) {
                     switchView('home', false);
                 } else {
                     switchView(event.state.view, false);
@@ -386,6 +402,11 @@
 
         // Inscription d'un élève dans Firebase
         window.inscrireEleve = async function() {
+            if (!checkAdminSession()) {
+                alert("Session expirée.");
+                return;
+            }
+
             const nom = document.getElementById('el-nom').value.trim();
             const postnom = document.getElementById('el-postnom').value.trim();
             const prenom = document.getElementById('el-prenom').value.trim();
@@ -409,30 +430,63 @@
                     enOrdreFrais: true
                 });
                 alert(`Élève enregistré dans Firebase ! Matricule : ${matricule}`);
+                document.getElementById('el-nom').value = '';
+                document.getElementById('el-postnom').value = '';
+                document.getElementById('el-prenom').value = '';
+                document.getElementById('el-classe').value = '';
+                document.getElementById('tut1-nom').value = '';
+                document.getElementById('tut1-prenom').value = '';
                 chargerDonneesAdmin();
             } catch (error) {
                 console.error("Erreur d'enregistrement :", error);
             }
         }
 
-        // Charger la liste des élèves pour l'admin
+        // Charger la liste des élèves pour l'admin (Sécurisé anti-XSS via textContent)
         async function chargerDonneesAdmin() {
+            if (!checkAdminSession()) return;
             const dbRef = ref(db);
             try {
                 const snapshot = await get(child(dbRef, 'eleves'));
                 const tbody = document.getElementById('table-eleves');
+                tbody.innerHTML = '';
+                
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    tbody.innerHTML = Object.values(data).map(e => `
-                        <tr>
-                            <td><code>${e.matricule}</code></td>
-                            <td>${e.nom} ${e.postnom || ''} ${e.prenom}</td>
-                            <td>${e.sexe}</td>
-                            <td>${e.classe}</td>
-                            <td>${e.tuteur1 ? e.tuteur1.nom : ''}</td>
-                            <td><span class="badge ${e.enOrdreFrais ? 'success' : 'danger'}">${e.enOrdreFrais ? 'En ordre' : 'Bloqué'}</span></td>
-                        </tr>
-                    `).join('');
+                    Object.values(data).forEach(e => {
+                        const tr = document.createElement('tr');
+
+                        const tdMat = document.createElement('td');
+                        const code = document.createElement('code');
+                        code.textContent = e.matricule;
+                        tdMat.appendChild(code);
+                        tr.appendChild(tdMat);
+
+                        const tdNom = document.createElement('td');
+                        tdNom.textContent = `${e.nom} ${e.postnom || ''} ${e.prenom}`;
+                        tr.appendChild(tdNom);
+
+                        const tdSexe = document.createElement('td');
+                        tdSexe.textContent = e.sexe;
+                        tr.appendChild(tdSexe);
+
+                        const tdClasse = document.createElement('td');
+                        tdClasse.textContent = e.classe;
+                        tr.appendChild(tdClasse);
+
+                        const tdTuteur = document.createElement('td');
+                        tdTuteur.textContent = e.tuteur1 ? e.tuteur1.nom : '';
+                        tr.appendChild(tdTuteur);
+
+                        const tdFrais = document.createElement('td');
+                        const badge = document.createElement('span');
+                        badge.className = `badge ${e.enOrdreFrais ? 'success' : 'danger'}`;
+                        badge.textContent = e.enOrdreFrais ? 'En ordre' : 'Bloqué';
+                        tdFrais.appendChild(badge);
+                        tr.appendChild(tdFrais);
+
+                        tbody.appendChild(tr);
+                    });
                 } else {
                     tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Aucun élève enregistré.</td></tr>`;
                 }
@@ -441,9 +495,10 @@
             }
         }
 
-        // Connexion espace parent via Firebase
+        // Connexion espace parent via Firebase (Sécurisé anti-XSS)
         window.parentLogin = async function() {
             const mat = document.getElementById('parent-matricule-input').value.trim();
+            if(!mat) return;
             const dbRef = ref(db);
             
             try {
@@ -453,19 +508,19 @@
                     document.getElementById('parent-login-card').style.display = 'none';
                     document.getElementById('parent-dashboard-card').style.display = 'block';
 
-                    document.getElementById('p-nom-eleve').innerText = `${eleve.nom} ${eleve.postnom || ''} ${eleve.prenom}`;
-                    document.getElementById('p-mat').innerText = eleve.matricule;
-                    document.getElementById('p-classe').innerText = eleve.classe;
-                    document.getElementById('p-sexe').innerText = eleve.sexe === 'M' ? 'Masculin' : 'Féminin';
-                    document.getElementById('p-tuteur1').innerText = eleve.tuteur1 ? `${eleve.tuteur1.nom} ${eleve.tuteur1.prenom}` : 'Non renseigné';
+                    document.getElementById('p-nom-eleve').textContent = `${eleve.nom} ${eleve.postnom || ''} ${eleve.prenom}`;
+                    document.getElementById('p-mat').textContent = eleve.matricule;
+                    document.getElementById('p-classe').textContent = eleve.classe;
+                    document.getElementById('p-sexe').textContent = eleve.sexe === 'M' ? 'Masculin' : 'Féminin';
+                    document.getElementById('p-tuteur1').textContent = eleve.tuteur1 ? `${eleve.tuteur1.nom} ${eleve.tuteur1.prenom}` : 'Non renseigné';
                     
                     const badgeFrais = document.getElementById('p-statut-frais');
                     if(eleve.enOrdreFrais) {
                         badgeFrais.className = "badge success";
-                        badgeFrais.innerText = "En ordre";
+                        badgeFrais.textContent = "En ordre";
                     } else {
                         badgeFrais.className = "badge danger";
-                        badgeFrais.innerText = "Bloqué";
+                        badgeFrais.textContent = "Bloqué";
                     }
                 } else {
                     alert("Matricule introuvable dans la base de données.");
@@ -483,6 +538,10 @@
 
         // Publier un communiqué
         window.publierCommunique = async function() {
+            if (!checkAdminSession()) {
+                alert("Session expirée.");
+                return;
+            }
             const texte = document.getElementById('com-texte').value.trim();
             if(!texte) return;
 
@@ -497,19 +556,33 @@
             }
         }
 
+        // Charger les communiqués publics (Sécurisé anti-XSS via textContent)
         async function chargerCommuniques() {
             const dbRef = ref(db);
             try {
                 const snapshot = await get(child(dbRef, 'communiques'));
                 const container = document.getElementById('public-communiques');
+                container.innerHTML = '';
+
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    container.innerHTML = Object.values(data).reverse().map(c => `
-                        <div class="communique-item">
-                            <div class="communique-date">${c.date}</div>
-                            <p>${c.texte}</p>
-                        </div>
-                    `).join('');
+                    Object.values(data).reverse().forEach(c => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'communique-item';
+
+                        const dateDiv = document.createElement('div');
+                        dateDiv.className = 'communique-date';
+                        dateDiv.textContent = c.date;
+
+                        const p = document.createElement('p');
+                        p.textContent = c.texte;
+
+                        itemDiv.appendChild(dateDiv);
+                        itemDiv.appendChild(p);
+                        container.appendChild(itemDiv);
+                    });
+                } else {
+                    container.innerHTML = `<p style="color: var(--text-muted);">Aucun communiqué pour le moment.</p>`;
                 }
             } catch (error) {
                 console.error(error);
