@@ -187,7 +187,6 @@
             margin-bottom: 0.25rem;
         }
 
-        /* Style des cartes d'accès rapide sur l'accueil */
         .portal-links {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -239,7 +238,6 @@
                 <h2>Bienvenue sur le Portail Scolaire</h2>
                 <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Consultez les dernières actualités et accédez à vos espaces dédiés.</p>
                 
-                <!-- Accès Rapides Parent & Prof -->
                 <div class="portal-links">
                     <div class="portal-box" onclick="switchView('parent')">
                         <h3 style="color: var(--primary); margin-bottom: 0.5rem;">👨‍👩‍👧 Espace Parent</h3>
@@ -247,7 +245,7 @@
                     </div>
                     <div class="portal-box" onclick="switchView('prof')">
                         <h3 style="color: var(--primary); margin-bottom: 0.5rem;">👨‍🏫 Espace Professeur</h3>
-                        <p style="font-size: 0.875rem; color: var(--text-muted);">Accédez aux informations et listes des enseignants.</p>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Connectez-vous avec votre code pour coter vos élèves.</p>
                     </div>
                 </div>
 
@@ -290,14 +288,50 @@
             </div>
         </section>
 
-        <!-- VUE ESPACE PROF -->
+        <!-- VUE ESPACE PROFESSEUR -->
         <section id="prof" class="view">
-            <div class="card">
-                <h2>Espace Professeur - Annuaire</h2>
-                <p style="color: var(--text-muted); margin-bottom: 1rem;">Liste des professeurs enregistrés dans l'établissement.</p>
+            <!-- Formulaire de Connexion Prof -->
+            <div class="card" id="prof-login-card">
+                <h2>Espace Professeur - Connexion</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">Entrez votre code d'accès personnel à 4 chiffres fourni lors de votre enregistrement.</p>
+                <div class="form-group" style="max-width: 300px; margin-bottom: 1rem;">
+                    <label>Code d'accès (4 chiffres)</label>
+                    <input type="password" id="prof-code-input" maxlength="4" placeholder="Ex: 5892">
+                </div>
+                <button class="btn-submit" style="max-width: 300px;" onclick="profLogin()">Accéder à mon espace</button>
+            </div>
+
+            <!-- Tableau de bord du Professeur connecté -->
+            <div class="card" id="prof-dashboard-card" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <div>
+                        <h2>Bienvenue, Prof. <span id="prof-nom-affiche" style="color: var(--primary);"></span></h2>
+                        <p style="color: var(--text-muted);">Cours enseigné : <strong id="prof-cours-affiche" style="color: var(--text-main);"></strong></p>
+                    </div>
+                    <button onclick="profLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer;">Déconnexion</button>
+                </div>
+
+                <div class="form-group" style="max-width: 350px; margin-bottom: 1.5rem;">
+                    <label>Filtrer par Classe</label>
+                    <select id="prof-filtre-classe" onchange="chargerElevesPourProf()">
+                        <option value="">-- Sélectionnez une classe --</option>
+                    </select>
+                </div>
+
+                <h3>Cotation des élèves</h3>
                 <table>
-                    <thead><tr><th>Nom & Prénom</th><th>Cours Enseigné</th></tr></thead>
-                    <tbody id="table-profs-public"><tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
+                    <thead>
+                        <tr>
+                            <th>Matricule</th>
+                            <th>Nom & Prénom</th>
+                            <th>Classe</th>
+                            <th>Note / 20</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-prof-cotation">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Sélectionnez une classe pour afficher les élèves.</td></tr>
+                    </tbody>
                 </table>
             </div>
         </section>
@@ -376,8 +410,8 @@
             <div class="card" style="margin-top: 1.5rem;">
                 <h2>LISTE DES PROFESSEURS (ENREGISTRÉS)</h2>
                 <table>
-                    <thead><tr><th>Nom & Prénom</th><th>Cours Enseigné</th><th>Action</th></tr></thead>
-                    <tbody id="table-profs-admin"><tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
+                    <thead><tr><th>Code</th><th>Nom & Prénom</th><th>Cours Enseigné</th><th>Action</th></tr></thead>
+                    <tbody id="table-profs-admin"><tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
                 </table>
             </div>
         </section>
@@ -404,6 +438,8 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+
+        let profConnecteData = null;
 
         function checkAdminSession() {
             return sessionStorage.getItem('isAdminAuth') === 'true';
@@ -463,7 +499,7 @@
             }
         }
 
-        // Enregistrement global (Élève ou Professeur)
+        // Enregistrement global (Élève ou Professeur avec code à 4 chiffres)
         window.enregistrerMembre = async function() {
             if (!checkAdminSession()) return;
 
@@ -508,12 +544,14 @@
                     return;
                 }
 
+                // Génération d'un code unique à 4 chiffres pour le professeur
+                const codeAcces = Math.floor(1000 + Math.random() * 9000).toString();
                 const profId = 'prof_' + Date.now();
                 try {
                     await set(ref(db, 'profs/' + profId), {
-                        id: profId, nom, postnom, prenom, cours
+                        id: profId, nom, postnom, prenom, cours, code: codeAcces
                     });
-                    alert("Professeur enregistré avec succès !");
+                    alert(`Professeur enregistré avec succès !\n\nCode d'accès personnel à 4 chiffres : ${codeAcces}`);
                     document.getElementById('form-enregistrement').reset();
                     chargerDonneesAdmin();
                 } catch (error) {
@@ -581,6 +619,7 @@
                     Object.values(snapProfs.val()).forEach(p => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
+                            <td><code style="color: var(--primary); font-weight: bold;">${p.code || 'N/A'}</code></td>
                             <td>${p.nom} ${p.postnom || ''} ${p.prenom}</td>
                             <td>${p.cours}</td>
                             <td><button style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:2px 6px; border-radius:3px; cursor:pointer;" onclick="supprimerProf('${p.id}')">Supprimer</button></td>
@@ -588,31 +627,139 @@
                         tbodyProfs.appendChild(tr);
                     });
                 } else {
-                    tbodyProfs.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Aucun professeur enregistré.</td></tr>`;
+                    tbodyProfs.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun professeur enregistré.</td></tr>`;
                 }
             } catch (err) { console.error(err); }
         }
 
-        // Chargement public des profs pour l'Espace Prof
-        async function chargerProfsPublic() {
-            const dbRef = ref(db);
+        // --- ESPACE PROFESSEUR (LOGIN & COTATION) ---
+        window.profLogin = async function() {
+            const codeSaisi = document.getElementById('prof-code-input').value.trim();
+            if(!codeSaisi || codeSaisi.length !== 4) {
+                alert("Veuillez entrer un code d'accès valide à 4 chiffres.");
+                return;
+            }
+
             try {
-                const snapshot = await get(child(dbRef, 'profs'));
-                const tbody = document.getElementById('table-profs-public');
-                tbody.innerHTML = '';
-                if (snapshot.exists()) {
+                const snapshot = await get(child(ref(db), 'profs'));
+                if(snapshot.exists()) {
+                    let trouve = null;
                     Object.values(snapshot.val()).forEach(p => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${p.nom} ${p.postnom || ''} ${p.prenom}</td>
-                            <td>${p.cours}</td>
-                        `;
-                        tbody.appendChild(tr);
+                        if(p.code === codeSaisi) {
+                            trouve = p;
+                        }
                     });
+
+                    if(trouve) {
+                        profConnecteData = trouve;
+                        document.getElementById('prof-login-card').style.display = 'none';
+                        document.getElementById('prof-dashboard-card').style.display = 'block';
+
+                        document.getElementById('prof-nom-affiche').textContent = `${trouve.nom} ${trouve.postnom || ''} ${trouve.prenom}`;
+                        document.getElementById('prof-cours-affiche').textContent = trouve.cours;
+
+                        chargerClassesDisponiblesPourProf();
+                    } else {
+                        alert("Code d'accès incorrect.");
+                    }
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Aucun professeur répertorié.</td></tr>`;
+                    alert("Aucun professeur enregistré dans le système.");
                 }
-            } catch (err) { console.error(err); }
+            } catch(err) { console.error(err); }
+        }
+
+        window.profLogout = function() {
+            profConnecteData = null;
+            document.getElementById('prof-login-card').style.display = 'block';
+            document.getElementById('prof-dashboard-card').style.display = 'none';
+            document.getElementById('prof-code-input').value = '';
+            document.getElementById('table-prof-cotation').innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Sélectionnez une classe pour afficher les élèves.</td></tr>`;
+        }
+
+        async function chargerClassesDisponiblesPourProf() {
+            try {
+                const snapshot = await get(child(ref(db), 'eleves'));
+                const selectClasse = document.getElementById('prof-filtre-classe');
+                selectClasse.innerHTML = '<option value="">-- Sélectionnez une classe --</option>';
+                
+                if(snapshot.exists()) {
+                    const classesSet = new Set();
+                    Object.values(snapshot.val()).forEach(e => {
+                        if(e.classe) classesSet.add(e.classe);
+                    });
+
+                    classesSet.forEach(classe => {
+                        const opt = document.createElement('option');
+                        opt.value = classe;
+                        opt.textContent = classe;
+                        selectClasse.appendChild(opt);
+                    });
+                }
+            } catch(err) { console.error(err); }
+        }
+
+        window.chargerElevesPourProf = async function() {
+            const classeChoisie = document.getElementById('prof-filtre-classe').value;
+            const tbody = document.getElementById('table-prof-cotation');
+            tbody.innerHTML = '';
+
+            if(!classeChoisie) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Sélectionnez une classe pour afficher les élèves.</td></tr>`;
+                return;
+            }
+
+            try {
+                const snapshot = await get(child(ref(db), 'eleves'));
+                if(snapshot.exists()) {
+                    let count = 0;
+                    Object.values(snapshot.val()).forEach(e => {
+                        if(e.classe === classeChoisie) {
+                            count++;
+                            // Récupérer la note existante pour ce cours si elle existe
+                            // On normalise le nom du cours pour l'utiliser comme clé unique dans Firebase
+                            const coursKey = profConnecteData.cours.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                            const noteActuelle = (e.notes && e.notes[coursKey]) !== undefined ? e.notes[coursKey] : '';
+
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td><code>${e.matricule}</code></td>
+                                <td>${e.nom} ${e.postnom || ''} ${e.prenom}</td>
+                                <td>${e.classe}</td>
+                                <td><input type="number" min="0" max="20" step="0.5" id="note_${e.matricule}" value="${noteActuelle}" style="width: 80px; padding: 4px;" placeholder="/20"></td>
+                                <td><button class="btn-submit" style="padding: 4px 10px; font-size: 0.85rem;" onclick="sauvegarderNote('${e.matricule}')">Enregistrer</button></td>
+                            `;
+                            tbody.appendChild(tr);
+                        }
+                    });
+
+                    if(count === 0) {
+                        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucun élève trouvé dans cette classe.</td></tr>`;
+                    }
+                }
+            } catch(err) { console.error(err); }
+        }
+
+        window.sauvegarderNote = async function(matricule) {
+            if(!profConnecteData) return;
+            const inputVal = document.getElementById(`note_${matricule}`).value;
+            const noteNum = parseFloat(inputVal);
+
+            if(isNaN(noteNum) || noteNum < 0 || noteNum > 20) {
+                alert("Veuillez entrer une note valide comprise entre 0 et 20.");
+                return;
+            }
+
+            const coursKey = profConnecteData.cours.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+            try {
+                await update(ref(db, `eleves/${matricule}/notes`), {
+                    [coursKey]: noteNum
+                });
+                alert(`Note de ${noteNum}/20 enregistrée avec succès pour l'élève !`);
+            } catch(err) {
+                console.error(err);
+                alert("Erreur lors de l'enregistrement de la note.");
+            }
         }
 
         window.parentLogin = async function() {
@@ -678,7 +825,6 @@
         }
 
         chargerCommuniques();
-        chargerProfsPublic();
     </script>
 </body>
 </html>
