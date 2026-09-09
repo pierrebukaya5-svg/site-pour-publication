@@ -666,7 +666,7 @@
                     <h2>LISTE DES ÉLÈVES</h2>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Matricule</th><th>Élève</th><th>Sexe</th><th>Classe</th><th>Tuteur</th><th>Frais</th><th>Action</th></tr></thead>
+                            <thead><tr><th>Matricule</th><th>Élève</th><th>Classe</th><th>Parent / Tuteur</th><th>Contact / Infos</th><th>Frais</th><th>Action</th></tr></thead>
                             <tbody id="table-eleves"><tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
                         </table>
                     </div>
@@ -904,13 +904,14 @@
                 if (snapEleves.exists()) {
                     Object.values(snapEleves.val()).forEach(e => {
                         if(!e.nom) return;
+                        const tuteurNom = e.tuteur1 ? `${e.tuteur1.nom} ${e.tuteur1.prenom || ''}` : 'Non renseigné';
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td><code>${e.matricule}</code></td>
                             <td>${e.nom} ${e.postnom || ''} ${e.prenom}</td>
-                            <td>${e.sexe}</td>
                             <td>${e.classe}</td>
-                            <td>${e.tuteur1 ? e.tuteur1.nom : ''}</td>
+                            <td><strong>${tuteurNom}</strong></td>
+                            <td><span style="color: var(--text-muted); font-size: 0.85rem;">Espace Parent actif via matricule</span></td>
                             <td><span class="badge ${e.enOrdreFrais ? 'success' : 'danger'} clickable-badge" onclick="toggleStatutFrais('${e.matricule}', ${e.enOrdreFrais})">${e.enOrdreFrais ? 'En ordre' : 'Bloqué'}</span></td>
                             <td><button style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:600;" onclick="supprimerEleve('${e.matricule}')">Suppr.</button></td>
                         `;
