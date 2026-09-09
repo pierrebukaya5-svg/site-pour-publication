@@ -2,14 +2,11 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware pour parser le JSON et les données du corps des requêtes
 app.use(express.json());
 
-// Tableaux en mémoire pour stocker les données de l'école
 let listeEleves = [];
 let listeProfesseurs = [];
 
-// Route pour l'API : Inscrire un nouvel élève
 app.post('/api/admin/eleve', (req, res) => {
     const { nom, classe } = req.body;
     if (!nom || !classe) {
@@ -21,7 +18,6 @@ app.post('/api/admin/eleve', (req, res) => {
     res.status(201).json(nouvelEleve);
 });
 
-// Route pour l'API : Ajouter un professeur
 app.post('/api/admin/prof', (req, res) => {
     const { nom, code } = req.body;
     if (!nom || !code) {
@@ -32,7 +28,6 @@ app.post('/api/admin/prof', (req, res) => {
     res.status(201).json(nouveauProf);
 });
 
-// Route pour l'API : Connexion d'un professeur
 app.post('/api/prof/login', (req, res) => {
     const { code } = req.body;
     const prof = listeProfesseurs.find(p => p.code === code);
@@ -42,7 +37,6 @@ app.post('/api/prof/login', (req, res) => {
     res.json(prof);
 });
 
-// Route pour l'API : Attribuer une cote
 app.post('/api/prof/cote', (req, res) => {
     const { matricule, cours, note } = req.body;
     const eleve = listeEleves.find(e => e.matricule.toLowerCase() === matricule.toLowerCase());
@@ -53,7 +47,6 @@ app.post('/api/prof/cote', (req, res) => {
     res.json({ success: true });
 });
 
-// Route pour l'API : Consulter les résultats d'un élève par matricule
 app.get('/api/eleve/resultats/:matricule', (req, res) => {
     const eleve = listeEleves.find(e => e.matricule.toLowerCase() === req.params.matricule.toLowerCase());
     if (!eleve) {
@@ -62,7 +55,6 @@ app.get('/api/eleve/resultats/:matricule', (req, res) => {
     res.json(eleve);
 });
 
-// Route principale : Sert le code HTML de ton interface
 app.get('/', (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(`<!DOCTYPE html>
@@ -269,21 +261,21 @@ app.get('/', (req, res) => {
             if (!matricule) return;
 
             try {
-                const res = await fetch(\`/api/eleve/resultats/\${matricule}\`);
+                const res = await fetch('/api/eleve/resultats/' + matricule);
                 if (!res.ok) {
-                    conteneur.innerHTML = \`<div class="bg-red-900/30 border border-red-700 text-red-300 p-4 rounded-xl text-center text-sm">Aucun élève trouvé avec le matricule \${matricule}.</div>\`;
+                    conteneur.innerHTML = '<div class="bg-red-900/30 border border-red-700 text-red-300 p-4 rounded-xl text-center text-sm">Aucun élève trouvé avec le matricule ' + matricule + '.</div>';
                     conteneur.classList.remove('hidden');
                     return;
                 }
                 const data = await res.json();
                 let cotesHtml = '';
                 if (data.cotes && data.cotes.length > 0) {
-                    cotesHtml = data.cotes.map(c => \`<div class="flex justify-between border-b border-slate-700 py-2 text-sm"><span>\${c.cours}</span><span class="font-semibold text-indigo-400">\${c.note}/20</span></div>\`).join('');
+                    cotesHtml = data.cotes.map(c => '<div class="flex justify-between border-b border-slate-700 py-2 text-sm"><span>' + c.cours + '</span><span class="font-semibold text-indigo-400">' + c.note + '/20</span></div>').join('');
                 } else {
-                    cotesHtml = \`<p class="text-sm text-slate-400 italic">Aucune cote enregistrée pour le moment.</p>\`;
+                    cotesHtml = '<p class="text-sm text-slate-400 italic">Aucune cote enregistrée pour le moment.</p>';
                 }
 
-                conteneur.innerHTML = \`
+                conteneur.innerHTML = `
                     <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg space-y-4">
                         <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                             <div>
@@ -297,7 +289,7 @@ app.get('/', (req, res) => {
                             \${cotesHtml}
                         </div>
                     </div>
-                \`;
+                `;
                 conteneur.classList.remove('hidden');
             } catch (e) {
                 console.error(e);
@@ -382,7 +374,7 @@ app.get('/', (req, res) => {
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    alert(\`Élève inscrit avec succès ! Matricule attribué : \${data.matricule}\`);
+                    alert("Élève inscrit avec succès ! Matricule attribué : " + data.matricule);
                     document.getElementById('admin-eleve-nom').value = '';
                     document.getElementById('admin-eleve-classe').value = '';
                 } else {
@@ -425,5 +417,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(\`Serveur démarré sur le port \${PORT}\`);
+    console.log("Serveur démarré sur le port " + PORT);
 });
