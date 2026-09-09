@@ -1,102 +1,4 @@
-const express = require('express');
-const app = express();
-
-app.use(express.json());
-
-// --- SÉCURITÉ ET DONNÉES CÔTÉ SERVEUR ---
-const MOT_DE_PASSE_ADMIN = "admin2026";
-
-let listeProfesseurs = [
-    { code: "8492", nomComplet: "Mbuyi Jean Paul", cours: "Mathématiques" }
-];
-
-let listeEleves = [
-    { matricule: "12345", nomComplet: "Bukaya Kambondji Pierre", classe: "6", tuteur: "Isabelle", tel: "08999827637", statut: "actif", cotes: {} }
-];
-
-// --- ROUTES API SÉCURISÉES ---
-
-app.post('/api/admin/login', (req, res) => {
-    const { password } = req.body;
-    if (password === MOT_DE_PASSE_ADMIN) res.json({ success: true });
-    else res.status(401).json({ success: false, message: "Mot de passe incorrect" });
-});
-
-app.post('/api/prof/login', (req, res) => {
-    const { code } = req.body;
-    const prof = listeProfesseurs.find(p => p.code === code);
-    if (prof) res.json({ success: true, prof });
-    else res.status(401).json({ success: false, message: "Code professeur incorrect" });
-});
-
-app.get('/api/data', (req, res) => {
-    res.json({ eleves: listeEleves, professeurs: listeProfesseurs });
-});
-
-app.post('/api/admin/eleve', (req, res) => {
-    const { nom, postnom, prenom, classe, tuteur, tel } = req.body;
-    if (!nom || !prenom || !classe) return res.status(400).json({ success: false });
-    const matricule = Math.floor(10000 + Math.random() * 90000).toString();
-    listeEleves.push({ matricule, nomComplet: `${nom} ${postnom || ''} ${prenom}`.replace(/\s+/g, ' ').trim(), classe, tuteur: tuteur || '', tel: tel || '', statut: "actif", cotes: {} });
-    res.json({ success: true, matricule });
-});
-
-app.post('/api/admin/prof', (req, res) => {
-    const { nom, postnom, prenom, cours } = req.body;
-    if (!nom || !prenom || !cours) return res.status(400).json({ success: false });
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
-    listeProfesseurs.push({ code, nomComplet: `${nom} ${postnom || ''} ${prenom}`.replace(/\s+/g, ' ').trim(), cours });
-    res.json({ success: true, code });
-});
-
-app.post('/api/admin/eleve/statut', (req, res) => {
-    const { matricule } = req.body;
-    const eleve = listeEleves.find(e => e.matricule === matricule);
-    if (eleve) {
-        eleve.statut = eleve.statut === "actif" ? "bloque" : "actif";
-        res.json({ success: true, statut: eleve.statut });
-    } else res.status(404).json({ success: false });
-});
-
-app.delete('/api/admin/eleve/:matricule', (req, res) => {
-    listeEleves = listeEleves.filter(e => e.matricule !== req.params.matricule);
-    res.json({ success: true });
-});
-
-app.delete('/api/admin/prof/:code', (req, res) => {
-    listeProfesseurs = listeProfesseurs.filter(p => p.code !== req.params.code);
-    res.json({ success: true });
-});
-
-app.post('/api/prof/cote', (req, res) => {
-    const { codeProf, matricule, cours, valeur } = req.body;
-    const prof = listeProfesseurs.find(p => p.code === codeProf);
-    if (!prof || prof.cours !== cours) return res.status(403).json({ success: false });
-    const eleve = listeEleves.find(e => e.matricule === matricule);
-    if (eleve) {
-        eleve.cotes[cours] = valeur;
-        res.json({ success: true });
-    } else res.status(404).json({ success: false });
-});
-
-app.get('/api/eleve/resultats/:matricule', (req, res) => {
-    const eleve = listeEleves.find(e => e.matricule === req.params.matricule);
-    if (!eleve) return res.status(404).json({ success: false, message: "Matricule introuvable" });
-    if (eleve.statut === "bloque") return res.json({ success: true, statut: "bloque" });
-
-    const coursDetails = listeProfesseurs.map(p => ({
-        cours: p.cours,
-        prof: p.nomComplet,
-        cote: eleve.cotes[p.cours] !== undefined ? eleve.cotes[p.cours] : null
-    }));
-
-    res.json({ success: true, statut: "actif", nomComplet: eleve.nomComplet, classe: eleve.classe, matricule: eleve.matricule, cotes: coursDetails });
-});
-
-// --- INTERFACE FRONTEND INTÉGRÉE ---
-app.get('*', (req, res) => {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(`<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -116,7 +18,6 @@ app.get('*', (req, res) => {
             box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
         }
 
-        /* Design inspiré du maillot officiel des Léopards RDC */
         body {
             background-color: #0066cc;
             background-image: 
@@ -587,16 +488,16 @@ app.get('*', (req, res) => {
                         tbody.innerHTML = '';
 
                         if (data.cotes.length === 0) {
-                            tbody.innerHTML = \`<tr><td colspan="2" class="py-4 text-center text-gray-400">Aucun cours disponible.</td></tr>\`;
+                            tbody.innerHTML = `<tr><td colspan="2" class="py-4 text-center text-gray-400">Aucun cours disponible.</td></tr>`;
                         } else {
                             data.cotes.forEach(c => {
                                 const note = c.cote !== null && c.cote !== "" ? c.cote + " /20" : "<span class='text-gray-400 italic'>Non coté</span>";
-                                tbody.innerHTML += \`
+                                tbody.innerHTML += `
                                     <tr class="border-b border-gray-100">
-                                        <td class="py-3 font-medium text-gray-800">\${c.cours} <span class="text-xs text-gray-400">(\${c.prof})</span></td>
-                                        <td class="py-3 font-semibold text-indigo-600">\${note}</td>
+                                        <td class="py-3 font-medium text-gray-800">${c.cours} <span class="text-xs text-gray-400">(${c.prof})</span></td>
+                                        <td class="py-3 font-semibold text-indigo-600">${note}</td>
                                     </tr>
-                                \`;
+                                `;
                             });
                         }
                     }
@@ -621,18 +522,18 @@ app.get('*', (req, res) => {
                     const btnText = estBloque ? "Débloquer" : "Bloquer";
                     const badgeClass = estBloque ? "bg-red-50 text-red-600 border border-red-200" : "bg-emerald-50 text-emerald-600 border border-emerald-200";
 
-                    tbodyElevesAdmin.innerHTML += \`
+                    tbodyElevesAdmin.innerHTML += `
                         <tr class="border-b border-gray-100">
-                            <td class="py-3 font-semibold text-indigo-600">\${e.matricule}</td>
-                            <td class="py-3 font-medium text-gray-800">\${e.nomComplet}</td>
-                            <td class="py-3">\${e.classe}</td>
-                            <td class="py-3"><span class="\${badgeClass} px-2.5 py-1 rounded-full text-xs font-medium uppercase">\${e.statut || 'actif'}</span></td>
+                            <td class="py-3 font-semibold text-indigo-600">${e.matricule}</td>
+                            <td class="py-3 font-medium text-gray-800">${e.nomComplet}</td>
+                            <td class="py-3">${e.classe}</td>
+                            <td class="py-3"><span class="${badgeClass} px-2.5 py-1 rounded-full text-xs font-medium uppercase">${e.statut || 'actif'}</span></td>
                             <td class="py-3 space-x-2">
-                                <button onclick="basculerStatutEleve('\${e.matricule}')" class="\${btnClass} px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer">\${btnText}</button>
-                                <button onclick="supprimerEleve('\${e.matricule}')" class="text-red-500 hover:text-red-700 text-xs cursor-pointer font-medium">Supprimer</button>
+                                <button onclick="basculerStatutEleve('${e.matricule}')" class="${btnClass} px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer">${btnText}</button>
+                                <button onclick="supprimerEleve('${e.matricule}')" class="text-red-500 hover:text-red-700 text-xs cursor-pointer font-medium">Supprimer</button>
                             </td>
                         </tr>
-                    \`;
+                    `;
                 });
             }
 
@@ -641,14 +542,14 @@ app.get('*', (req, res) => {
             if (tbodyProfsAdmin) {
                 tbodyProfsAdmin.innerHTML = '';
                 donneesGlobales.professeurs.forEach(p => {
-                    tbodyProfsAdmin.innerHTML += \`
+                    tbodyProfsAdmin.innerHTML += `
                         <tr class="border-b border-gray-100">
-                            <td class="py-3 font-bold text-indigo-600 bg-indigo-50 px-2 rounded">\${p.code}</td>
-                            <td class="py-3 font-medium text-gray-800">\${p.nomComplet}</td>
-                            <td class="py-3">\${p.cours}</td>
-                            <td class="py-3"><button onclick="supprimerProf('\${p.code}')" class="text-red-500 hover:text-red-700 text-xs cursor-pointer font-medium">Supprimer</button></td>
+                            <td class="py-3 font-bold text-indigo-600 bg-indigo-50 px-2 rounded">${p.code}</td>
+                            <td class="py-3 font-medium text-gray-800">${p.nomComplet}</td>
+                            <td class="py-3">${p.cours}</td>
+                            <td class="py-3"><button onclick="supprimerProf('${p.code}')" class="text-red-500 hover:text-red-700 text-xs cursor-pointer font-medium">Supprimer</button></td>
                         </tr>
-                    \`;
+                    `;
                 });
             }
 
@@ -658,25 +559,19 @@ app.get('*', (req, res) => {
                 tbodyProfEleves.innerHTML = '';
                 donneesGlobales.eleves.forEach(e => {
                     const noteActuelle = e.cotes[profConnecte.cours] !== undefined ? e.cotes[profConnecte.cours] : '';
-                    tbodyProfEleves.innerHTML += \`
+                    tbodyProfEleves.innerHTML += `
                         <tr class="border-b border-gray-100">
-                            <td class="py-3 font-semibold text-indigo-600">\${e.matricule}</td>
-                            <td class="py-3 font-medium text-gray-800">\${e.nomComplet}</td>
-                            <td class="py-3">\${e.classe}</td>
+                            <td class="py-3 font-semibold text-indigo-600">${e.matricule}</td>
+                            <td class="py-3 font-medium text-gray-800">${e.nomComplet}</td>
+                            <td class="py-3">${e.classe}</td>
                             <td class="py-3">
-                                <input type="number" min="0" max="20" value="\${noteActuelle}" onchange="mettreAJourCote('\${e.matricule}', '\${profConnecte.cours}', this.value)" placeholder="/20" class="w-20 bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-indigo-500">
+                                <input type="number" min="0" max="20" value="${noteActuelle}" onchange="mettreAJourCote('${e.matricule}', '${profConnecte.cours}', this.value)" placeholder="/20" class="w-20 bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-indigo-500">
                             </td>
                         </tr>
-                    \`;
+                    `;
                 });
             }
         }
     </script>
 </body>
-</html>`);
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Portail Scolaire RDC sécurisé démarré sur le port ${PORT}`);
-});
+</html>
