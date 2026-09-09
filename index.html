@@ -715,8 +715,15 @@
             }
         });
 
-        if (!history.state) {
-            history.replaceState({ view: 'home' }, "", "#home");
+        // Détection automatique de la vue initiale basée sur le hash de l'URL au chargement
+        const initialHash = window.location.hash.replace('#', '');
+        const validViews = ['home', 'parent', 'eleve', 'prof', 'admin'];
+        if (validViews.includes(initialHash)) {
+            switchView(initialHash, false);
+        } else {
+            if (!history.state) {
+                history.replaceState({ view: 'home' }, "", "#home");
+            }
         }
 
         window.accederAdmin = function() {
