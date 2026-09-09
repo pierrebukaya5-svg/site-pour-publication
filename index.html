@@ -93,7 +93,7 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 1rem;
             margin-bottom: 1rem;
         }
@@ -238,6 +238,7 @@
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                     <div>
+                        <p><strong>Matricule :</strong> <span id="p-mat"></span></p>
                         <p><strong>Classe :</strong> <span id="p-classe"></span></p>
                         <p><strong>Sexe :</strong> <span id="p-sexe"></span></p>
                         <p><strong>Statut Frais :</strong> <span id="p-statut-frais" class="badge"></span></p>
@@ -271,7 +272,7 @@
                             <label>Sexe</label>
                             <select id="el-sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select>
                         </div>
-                        <div class="form-group"><label>Classe</label><input type="text" id="el-classe" placeholder="Ex: 4ème Scientifique"></div>
+                        <div class="form-group" style="grid-column: span 2;"><label>Classe</label><input type="text" id="el-classe" placeholder="Ex: 4ème Scientifique"></div>
                     </div>
 
                     <h4 style="margin: 1rem 0 0.5rem 0; color: var(--primary);">Identité du Tuteur Principal (Obligatoire)</h4>
@@ -296,7 +297,7 @@
                         </div>
                     </div>
 
-                    <button class="btn-submit" onclick="inscrireEleve()">Inscrire l'élève</button>
+                    <button class="btn-submit" onclick="inscrireEleve()" style="margin-top: 1rem;">Inscrire l'élève</button>
                 </div>
 
                 <!-- Création Prof & Publication Communiqué -->
@@ -319,7 +320,7 @@
                     <div class="card">
                         <h2>Publier un Communiqué</h2>
                         <div class="form-group" style="margin-bottom: 1rem;">
-                            <label>Message du communiqué (Visible à l'accueil)</label>
+                            <label>Message (Visible à l'accueil)</label>
                             <textarea id="com-texte" rows="3" placeholder="Écrivez votre communiqué ici..."></textarea>
                         </div>
                         <button class="btn-submit" onclick="publierCommunique()">Publier</button>
@@ -327,7 +328,7 @@
                 </div>
             </div>
 
-            <!-- Listes et Gestion Admin -->
+            <!-- Listes Admin -->
             <div class="card">
                 <h2>LISTE DES PROFESSEURS</h2>
                 <table>
@@ -337,9 +338,9 @@
             </div>
 
             <div class="card">
-                <h2>LISTE DES ÉLÈVES & GESTION FINANCIÈRE / CONVOCATIONS</h2>
+                <h2>LISTE DES ÉLÈVES & GESTION</h2>
                 <table>
-                    <thead><tr><th>Matricule</th><th>Élève</th><th>Sexe</th><th>Classe</th><th>Tuteur Principal</th><th>Frais Scolaires</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Matricule</th><th>Élève</th><th>Sexe</th><th>Classe</th><th>Tuteur Principal</th><th>Frais</th><th>Actions</th></tr></thead>
                     <tbody id="table-eleves"><tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Aucun élève enregistré.</td></tr></tbody>
                 </table>
             </div>
@@ -351,7 +352,6 @@
     </footer>
 
     <script>
-        // Charger la base de données locale ou initialiser
         let db = JSON.parse(localStorage.getItem('portail_scolaire_rdc')) || {
             eleves: [],
             profs: [],
@@ -364,7 +364,7 @@
             renderAll();
         }
 
-        // --- GESTION DE L'HISTORIQUE (Bouton retour téléphone) ---
+        // --- GESTION BOUTON RETOUR TÉLÉPHONE ---
         function switchView(viewId, pushHistory = true) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-btns button').forEach(b => b.classList.remove('active'));
@@ -387,10 +387,9 @@
             }
         });
 
-        // Initialisation de l'état de l'historique au chargement
         window.history.replaceState({ view: 'home' }, "", "#home");
 
-        // --- GÉNÉRATEUR DE MATRICULE 4 CHIFFRES UNIQUE ---
+        // --- MATRICULE 4 CHIFFRES ---
         function genererMatricule() {
             let matricule;
             do {
@@ -418,7 +417,7 @@
             const t2_sexe = document.getElementById('tut2-sexe').value;
 
             if(!nom || !postnom || !prenom || !classe || !t1_nom || !t1_postnom || !t1_prenom) {
-                alert("Veuillez remplir tous les champs obligatoires de l'élève et du tuteur principal.");
+                alert("Veuillez remplir tous les champs obligatoires (Nom, Post-nom, Prénom élève et Tuteur Principal).");
                 return;
             }
 
@@ -427,18 +426,17 @@
                 nom, postnom, prenom, sexe, classe,
                 tuteur1: { nom: t1_nom, postnom: t1_postnom, prenom: t1_prenom, sexe: t1_sexe },
                 tuteur2: t2_nom ? { nom: t2_nom, postnom: t2_postnom, prenom: t2_prenom, sexe: t2_sexe } : null,
-                enOrdreFrais: true // Par défaut en ordre
+                enOrdreFrais: true
             };
 
             db.eleves.push(nouvelEleve);
             saveData();
-            alert(`Élève inscrit avec succès ! Son matricule (code parent) est : ${nouvelEleve.matricule}`);
+            alert(`Élève inscrit ! Son matricule (code parent) est : ${nouvelEleve.matricule}`);
             
-            // Vider les champs
             document.querySelectorAll('#admin input').forEach(i => i.value = '');
         }
 
-        // --- CRÉATION PROFESSEUR ---
+        // --- CRÉATION PROF ---
         function creerProf() {
             const nom = document.getElementById('prof-nom').value.trim();
             const postnom = document.getElementById('prof-postnom').value.trim();
@@ -458,14 +456,14 @@
 
             db.profs.push(nouveauProf);
             saveData();
-            alert("Compte professeur créé avec succès !");
+            alert("Compte professeur créé !");
             document.getElementById('prof-nom').value = '';
             document.getElementById('prof-postnom').value = '';
             document.getElementById('prof-prenom').value = '';
             document.getElementById('prof-cours').value = '';
         }
 
-        // --- PUBLICATION COMMUNIQUÉ ---
+        // --- COMMUNQUÉS ---
         function publierCommunique() {
             const texte = document.getElementById('com-texte').value.trim();
             if(!texte) return;
@@ -477,10 +475,10 @@
 
             saveData();
             document.getElementById('com-texte').value = '';
-            alert("Communiqué publié avec succès sur la page d'accueil !");
+            alert("Communiqué publié !");
         }
 
-        // --- GESTION BLOQUER / DÉBLOQUER FRAIS ---
+        // --- FRAIS & CONVOCATIONS ADMIN ---
         function toggleFrais(matricule) {
             const eleve = db.eleves.find(e => e.matricule === matricule);
             if(eleve) {
@@ -489,9 +487,8 @@
             }
         }
 
-        // --- CONVOQUER UN PARENT ---
         function convoquerParent(matricule) {
-            const message = prompt("Entrez le message de convocation pour le parent de cet élève :");
+            const message = prompt("Entrez le message de convocation pour le parent :");
             if(message) {
                 db.convocations.push({
                     matricule,
@@ -500,7 +497,7 @@
                     date: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                 });
                 saveData();
-                alert("Message/Convocation envoyé avec succès.");
+                alert("Convocation envoyée.");
             }
         }
 
@@ -512,7 +509,7 @@
             const eleve = db.eleves.find(e => e.matricule === mat);
 
             if(!eleve) {
-                alert("Matricule introuvable. Vérifiez le code à 4 chiffres.");
+                alert("Matricule introuvable.");
                 return;
             }
 
@@ -521,6 +518,7 @@
             document.getElementById('parent-dashboard-card').style.display = 'block';
 
             document.getElementById('p-nom-eleve').innerText = `${eleve.nom} ${eleve.postnom} ${eleve.prenom}`;
+            document.getElementById('p-mat').innerText = eleve.matricule;
             document.getElementById('p-classe').innerText = eleve.classe;
             document.getElementById('p-sexe').innerText = eleve.sexe === 'M' ? 'Masculin' : 'Féminin';
             
@@ -530,12 +528,12 @@
                 badgeFrais.innerText = "En ordre (Accès autorisé)";
             } else {
                 badgeFrais.className = "badge danger";
-                badgeFrais.innerText = "Non en ordre (Accès restreint par l'administration)";
+                badgeFrais.innerText = "Non en ordre (Accès restreint)";
             }
 
-            document.getElementById('p-tuteur1').innerText = `${eleve.tuteur1.nom} ${eleve.tuteur1.prenom} (${eleve.tuteur1.sexe})`;
+            document.getElementById('p-tuteur1').innerText = `${eleve.tuteur1.nom} ${eleve.tuteur1.postnom} ${eleve.tuteur1.prenom} (${eleve.tuteur1.sexe})`;
             if(eleve.tuteur2) {
-                document.getElementById('p-tuteur2').innerText = `${eleve.tuteur2.nom} ${eleve.tuteur2.prenom} (${eleve.tuteur2.sexe})`;
+                document.getElementById('p-tuteur2').innerText = `${eleve.tuteur2.nom} ${eleve.tuteur2.postnom} ${eleve.tuteur2.prenom} (${eleve.tuteur2.sexe})`;
             } else {
                 document.getElementById('p-tuteur2').innerText = "Aucun";
             }
@@ -580,7 +578,6 @@
             const texteReponse = input.value.trim();
             if(!texteReponse) return;
 
-            // Retrouver la bonne convocation globale
             const convs = db.convocations.filter(c => c.matricule === currentParentMatricule);
             const targetConv = convs[index];
             const globalIndex = db.convocations.indexOf(targetConv);
@@ -592,9 +589,8 @@
             }
         }
 
-        // --- RENDU GLOBAL DES DONNÉES ---
+        // --- RENDU GLOBAL ---
         function renderAll() {
-            // Affichage Accueil (Communiqués)
             const comContainer = document.getElementById('public-communiques');
             if(db.communiques.length === 0) {
                 comContainer.innerHTML = `<p style="color: var(--text-muted);">Aucun communiqué pour le moment.</p>`;
@@ -607,7 +603,6 @@
                 `).join('');
             }
 
-            // Affichage Profs Admin
             const profsTbody = document.getElementById('table-profs');
             if(db.profs.length === 0) {
                 profsTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Aucun professeur enregistré.</td></tr>`;
@@ -624,7 +619,6 @@
                 `).join('');
             }
 
-            // Affichage Élèves Admin
             const elevesTbody = document.getElementById('table-eleves');
             if(db.eleves.length === 0) {
                 elevesTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Aucun élève enregistré.</td></tr>`;
@@ -636,7 +630,7 @@
                         <td>${e.sexe}</td>
                         <td>${e.classe}</td>
                         <td>${e.tuteur1.nom} ${e.tuteur1.prenom}</td>
-                        <td><span class="badge ${e.enOrdreFrais ? 'success' : 'danger'}">${e.enOrdreFrais ? 'En ordre' : 'Bloqué (Frais)'}</span></td>
+                        <td><span class="badge ${e.enOrdreFrais ? 'success' : 'danger'}">${e.enOrdreFrais ? 'En ordre' : 'Bloqué'}</span></td>
                         <td>
                             <button onclick="toggleFrais('${e.matricule}')" style="background: ${e.enOrdreFrais ? 'var(--danger)' : 'var(--success)'}; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">${e.enOrdreFrais ? 'Bloquer' : 'Débloquer'}</button>
                             <button onclick="convoquerParent('${e.matricule}')" style="background: var(--primary); color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; margin-left: 4px;">Convoquer</button>
@@ -646,7 +640,6 @@
             }
         }
 
-        // Lancer le rendu initial au chargement
         renderAll();
     </script>
 </body>
