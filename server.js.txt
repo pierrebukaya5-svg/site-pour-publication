@@ -1,37 +1,31 @@
 const express = require('express');
+const fs = require('fs');
 const app = express();
+
 app.use(express.json());
 app.use(express.static('.'));
 
-let eleves = [];
-let profs = [];
+let data = { eleves: [], profs: [] };
+try { data = JSON.parse(fs.readFileSync('donnees.json','utf8')); } catch(e){}
 
 app.post('/api/admin/prof', (req, res) => {
-  try {
-    const { nom, code } = req.body; // Maintenant on prend bien nom et code comme sur ta photo
-    if(!nom || !code) return res.json({success: false, message: "Nom et code obligatoires"});
-    profs.push({ nom, code });
-    console.log("Prof créé:", nom, code);
-    return res.json({ success: true });
-  } catch(e) {
-    console.log(e);
-    return res.json({ success: false, message: e.message });
-  }
+  console.log("Reçu prof:", req.body);
+  const nom = req.body.nom || req.body.nomProf || req.body.Nom || "Prof Inconnu";
+  const code = req.body.code || req.body.codeAcces || "1234";
+  data.profs.push({ nom, code, date: new Date() });
+  fs.writeFileSync('donnees.json', JSON.stringify(data, null, 2));
+  res.json({ success: true, message: "Prof créé" });
 });
 
 app.post('/api/admin/eleve', (req, res) => {
-  try {
-    const { nom, section, tuteur } = req.body;
-    const matricule = "RDC" + Math.floor(10000 + Math.random()*90000);
-    eleves.push({ nom, section, matricule });
-    console.log("Eleve créé:", nom);
-    return res.json({ success: true, matricule });
-  } catch(e) {
-    return res.json({ success: false, message: e.message });
-  }
+  console.log("Reçu élève:", req.body);
+  const nom = req.body.nom || req.body.nomEleve || "Eleve Inconnu";
+  data.eleves.push({ nom, ...req.body, matricule: "RDC"+Date.now().toString().slice(-5) });
+  fs.writeFileSync('donnees.json', JSON.stringify(data, null, 2));
+  res.json({ success: true, message: "Elève créé" });
 });
 
-app.get('/api/eleves', (req,res)=> res.json(eleves));
+app.get('/', (req,res) => res.sendFile(__dirname + '/index.html'));
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log("Serveur OK sur " + PORT));
+app.listen(PORT, ()=> console.log("Portail RDC OK sur "+PORT));
