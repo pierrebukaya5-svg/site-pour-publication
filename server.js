@@ -275,21 +275,20 @@ app.get('/', (req, res) => {
                     cotesHtml = '<p class="text-sm text-slate-400 italic">Aucune cote enregistrée pour le moment.</p>';
                 }
 
-                conteneur.innerHTML = `
-                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg space-y-4">
-                        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                            <div>
-                                <h3 class="font-bold text-lg">\${data.nom}</h3>
-                                <p class="text-xs text-slate-400">Classe : \${data.classe}</p>
-                            </div>
-                            <span class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full font-mono">\${data.matricule}</span>
-                        </div>
-                        <div class="space-y-2">
-                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Bulletin des cotes</h4>
-                            \${cotesHtml}
-                        </div>
-                    </div>
-                `;
+                conteneur.innerHTML = 
+                    '<div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg space-y-4">' +
+                        '<div class="flex justify-between items-center border-b border-slate-700 pb-3">' +
+                            '<div>' +
+                                '<h3 class="font-bold text-lg">' + data.nom + '</h3>' +
+                                '<p class="text-xs text-slate-400">Classe : ' + data.classe + '</p>' +
+                            '</div>' +
+                            '<span class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full font-mono">' + data.matricule + '</span>' +
+                        '</div>' +
+                        '<div class="space-y-2">' +
+                            '<h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Bulletin des cotes</h4>' +
+                            cotesHtml +
+                        '</div>' +
+                    '</div>';
                 conteneur.classList.remove('hidden');
             } catch (e) {
                 console.error(e);
