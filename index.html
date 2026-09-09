@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail Scolaire RDC</title>
+    <title>École de la RDC</title>
     <!-- Lien vers le fichier Manifest pour l'installation PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#090d16">
@@ -38,7 +38,6 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            /* Motif inspiré de la vareuse de la RDC (Bleu, touches de rouge et de jaune/vagues géométriques) */
             background-image: 
                 linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, transparent 40%),
                 linear-gradient(225deg, rgba(234, 179, 8, 0.07) 0%, transparent 40%),
@@ -199,6 +198,35 @@
             border-color: var(--border-focus);
             background-color: rgba(9, 13, 22, 0.9);
             box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-wrapper input {
+            padding-right: 3rem;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 0.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
+            color: var(--text-main);
         }
 
         button.btn-submit {
@@ -372,7 +400,7 @@
 <body>
 
     <header>
-        <h1>Portail Scolaire RDC</h1>
+        <h1>École de la RDC</h1>
         <div class="nav-btns">
             <button onclick="switchView('home')" id="btn-home" class="active">Accueil</button>
             <button onclick="switchView('parent')" id="btn-parent">Espace Parent</button>
@@ -386,7 +414,7 @@
         <!-- VUE ACCUEIL -->
         <section id="home" class="view active">
             <div class="card">
-                <h2>Bienvenue sur le Portail Scolaire</h2>
+                <h2>Bienvenue sur le Portail de l'École</h2>
                 <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Consultez les actualités et accédez à votre espace dédié en toute sécurité.</p>
                 
                 <div class="portal-links">
@@ -514,7 +542,10 @@
                 <div id="prof-msg" class="msg-box"></div>
                 <div class="form-group" style="max-width: 100%; margin-bottom: 1.25rem;">
                     <label>Code d'accès (4 chiffres)</label>
-                    <input type="password" id="prof-code-input" maxlength="4" placeholder="Ex: 5892">
+                    <div class="password-wrapper">
+                        <input type="password" id="prof-code-input" maxlength="4" placeholder="Ex: 5892">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('prof-code-input', this)">👁️</button>
+                    </div>
                 </div>
                 <button class="btn-submit" onclick="profLogin()">Accéder à mon espace</button>
             </div>
@@ -566,7 +597,10 @@
                 <div id="admin-login-msg" class="msg-box"></div>
                 <div class="form-group" style="max-width: 100%; margin-bottom: 1.25rem;">
                     <label>Code Maître</label>
-                    <input type="password" id="admin-code-input" placeholder="Code secret">
+                    <div class="password-wrapper">
+                        <input type="password" id="admin-code-input" placeholder="Code secret">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('admin-code-input', this)">👁️</button>
+                    </div>
                 </div>
                 <button class="btn-submit" onclick="validerCodeAdmin()">Se connecter</button>
             </div>
@@ -652,7 +686,7 @@
     </main>
 
     <footer>
-        Portail Scolaire RDC &copy; 2026 - République Démocratique du Congo
+        École de la RDC &copy; 2026 - République Démocratique du Congo
     </footer>
 
     <!-- SDK Firebase & Logique -->
@@ -686,6 +720,17 @@
 
         function checkAdminSession() {
             return sessionStorage.getItem('isAdminAuth') === 'true';
+        }
+
+        window.togglePasswordVisibility = function(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                btn.textContent = "🙈";
+            } else {
+                input.type = "password";
+                btn.textContent = "👁️";
+            }
         }
 
         window.switchView = function(viewId, pushHistory = true) {
@@ -1122,6 +1167,23 @@
                 }
             } catch (err) { console.error(err); }
         }
+
+        // --- Gestion de la touche "Entrée" pour valider les formulaires de connexion ---
+        document.getElementById('parent-matricule-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') parentLogin();
+        });
+
+        document.getElementById('eleve-matricule-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') eleveLogin();
+        });
+
+        document.getElementById('prof-code-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') profLogin();
+        });
+
+        document.getElementById('admin-code-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') validerCodeAdmin();
+        });
 
         chargerCommuniques();
     </script>
