@@ -187,6 +187,29 @@
             margin-bottom: 0.25rem;
         }
 
+        /* Style des cartes d'accès rapide sur l'accueil */
+        .portal-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .portal-box {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .portal-box:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
         footer {
             text-align: center;
             padding: 1rem;
@@ -204,6 +227,7 @@
         <div class="nav-btns">
             <button onclick="switchView('home')" id="btn-home" class="active">Accueil</button>
             <button onclick="switchView('parent')" id="btn-parent">Espace Parent</button>
+            <button onclick="switchView('prof')" id="btn-prof">Espace Prof</button>
             <button onclick="accederAdmin()" id="btn-admin">Administration</button>
         </div>
     </header>
@@ -213,9 +237,21 @@
         <section id="home" class="view active">
             <div class="card">
                 <h2>Bienvenue sur le Portail Scolaire</h2>
-                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Consultez les dernières actualités et communiqués officiels de l'établissement.</p>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Consultez les dernières actualités et accédez à vos espaces dédiés.</p>
                 
-                <h3>📢 Communiqués Récents</h3>
+                <!-- Accès Rapides Parent & Prof -->
+                <div class="portal-links">
+                    <div class="portal-box" onclick="switchView('parent')">
+                        <h3 style="color: var(--primary); margin-bottom: 0.5rem;">👨‍👩‍👧 Espace Parent</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Consultez le dossier et le statut des frais de votre enfant.</p>
+                    </div>
+                    <div class="portal-box" onclick="switchView('prof')">
+                        <h3 style="color: var(--primary); margin-bottom: 0.5rem;">👨‍🏫 Espace Professeur</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Accédez aux informations et listes des enseignants.</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 2rem;">📢 Communiqués Récents</h3>
                 <div id="public-communiques">
                     <p style="color: var(--text-muted);">Chargement des communiqués...</p>
                 </div>
@@ -254,6 +290,18 @@
             </div>
         </section>
 
+        <!-- VUE ESPACE PROF -->
+        <section id="prof" class="view">
+            <div class="card">
+                <h2>Espace Professeur - Annuaire</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">Liste des professeurs enregistrés dans l'établissement.</p>
+                <table>
+                    <thead><tr><th>Nom & Prénom</th><th>Cours Enseigné</th></tr></thead>
+                    <tbody id="table-profs-public"><tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
         <!-- VUE ADMINISTRATION -->
         <section id="admin" class="view">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -262,28 +310,44 @@
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                <!-- Inscription Élève -->
+                <!-- Enregistrement Global (Élève ou Prof) -->
                 <div class="card">
-                    <h2>Inscrire un Élève</h2>
-                    <form id="form-inscription" onsubmit="event.preventDefault(); inscrireEleve();">
+                    <h2>Enregistrement</h2>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Type d'enregistrement</label>
+                        <select id="type-enregistrement" onchange="changerFormulaireType()">
+                            <option value="eleve">Élève</option>
+                            <option value="prof">Professeur</option>
+                        </select>
+                    </div>
+
+                    <form id="form-enregistrement" onsubmit="event.preventDefault(); enregistrerMembre();">
                         <div class="form-grid">
-                            <div class="form-group"><label>Nom *</label><input type="text" id="el-nom" required></div>
-                            <div class="form-group"><label>Post-nom</label><input type="text" id="el-postnom"></div>
-                            <div class="form-group"><label>Prénom *</label><input type="text" id="el-prenom" required></div>
-                            <div class="form-group">
+                            <div class="form-group"><label>Nom *</label><input type="text" id="en-nom" required></div>
+                            <div class="form-group"><label>Post-nom</label><input type="text" id="en-postnom"></div>
+                            <div class="form-group"><label>Prénom *</label><input type="text" id="en-prenom" required></div>
+                            <div class="form-group" id="group-sexe">
                                 <label>Sexe</label>
-                                <select id="el-sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select>
+                                <select id="en-sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select>
                             </div>
-                            <div class="form-group" style="grid-column: span 2;"><label>Classe *</label><input type="text" id="el-classe" placeholder="Ex: 6ème" required></div>
                         </div>
 
-                        <h4 style="margin: 1rem 0 0.5rem 0; color: var(--primary);">Identité du Tuteur Principal</h4>
-                        <div class="form-grid">
-                            <div class="form-group"><label>Nom Tuteur</label><input type="text" id="tut1-nom"></div>
-                            <div class="form-group"><label>Prénom Tuteur</label><input type="text" id="tut1-prenom"></div>
+                        <!-- Champs spécifiques Élève -->
+                        <div id="champs-eleve">
+                            <div class="form-group" style="margin-bottom: 1rem;"><label>Classe *</label><input type="text" id="en-classe" placeholder="Ex: 6ème Scientifique"></div>
+                            <h4 style="margin: 1rem 0 0.5rem 0; color: var(--primary);">Identité du Tuteur Principal</h4>
+                            <div class="form-grid">
+                                <div class="form-group"><label>Nom Tuteur</label><input type="text" id="tut1-nom"></div>
+                                <div class="form-group"><label>Prénom Tuteur</label><input type="text" id="tut1-prenom"></div>
+                            </div>
                         </div>
 
-                        <button type="submit" class="btn-submit" style="margin-top: 1rem;">Inscrire l'élève (Firebase)</button>
+                        <!-- Champs spécifiques Professeur -->
+                        <div id="champs-prof" style="display: none;">
+                            <div class="form-group" style="margin-bottom: 1rem;"><label>Cours enseigné *</label><input type="text" id="en-cours" placeholder="Ex: Mathématiques"></div>
+                        </div>
+
+                        <button type="submit" class="btn-submit" style="margin-top: 1rem;">Enregistrer dans Firebase</button>
                     </form>
                 </div>
 
@@ -302,11 +366,18 @@
 
             <!-- Listes Admin -->
             <div class="card">
-                <h2>LISTE DES ÉLÈVES (ENREGISTRÉS DANS FIREBASE)</h2>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">💡 Astuce : Cliquez directement sur le badge de statut (En ordre / Bloqué) dans le tableau pour inverser l'état de l'élève en un clic.</p>
+                <h2>LISTE DES ÉLÈVES (ENREGISTRÉS)</h2>
                 <table>
                     <thead><tr><th>Matricule</th><th>Élève</th><th>Sexe</th><th>Classe</th><th>Tuteur</th><th>Frais</th></tr></thead>
-                    <tbody id="table-eleves"><tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Chargement depuis Firebase...</td></tr></tbody>
+                    <tbody id="table-eleves"><tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
+                </table>
+            </div>
+
+            <div class="card" style="margin-top: 1.5rem;">
+                <h2>LISTE DES PROFESSEURS (ENREGISTRÉS)</h2>
+                <table>
+                    <thead><tr><th>Nom & Prénom</th><th>Cours Enseigné</th><th>Action</th></tr></thead>
+                    <tbody id="table-profs-admin"><tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
                 </table>
             </div>
         </section>
@@ -316,10 +387,10 @@
         Portail Scolaire RDC &copy; 2026 - République Démocratique du Congo
     </footer>
 
-    <!-- SDK Firebase & Logique de Base de Données -->
+    <!-- SDK Firebase & Logique -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, child, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
@@ -338,7 +409,6 @@
             return sessionStorage.getItem('isAdminAuth') === 'true';
         }
 
-        // Navigation et historique
         window.switchView = function(viewId, pushHistory = true) {
             if(viewId === 'admin' && !checkAdminSession()) {
                 alert("Accès refusé. Veuillez entrer le code maître.");
@@ -382,170 +452,192 @@
             alert("Panneau d'administration verrouillé.");
         }
 
-        window.addEventListener('popstate', (event) => {
-            if (event.state && event.state.view) {
-                if(event.state.view === 'admin' && !checkAdminSession()) {
-                    switchView('home', false);
-                } else {
-                    switchView(event.state.view, false);
-                }
+        window.changerFormulaireType = function() {
+            const type = document.getElementById('type-enregistrement').value;
+            if(type === 'eleve') {
+                document.getElementById('champs-eleve').style.display = 'block';
+                document.getElementById('champs-prof').style.display = 'none';
             } else {
-                switchView('home', false);
+                document.getElementById('champs-eleve').style.display = 'none';
+                document.getElementById('champs-prof').style.display = 'block';
             }
-        });
+        }
 
-        // Inscription d'un élève sécurisée (anti-champs vides / anti-undefined)
-        window.inscrireEleve = async function() {
+        // Enregistrement global (Élève ou Professeur)
+        window.enregistrerMembre = async function() {
             if (!checkAdminSession()) return;
 
-            const nom = document.getElementById('el-nom').value.trim();
-            const postnom = document.getElementById('el-postnom').value.trim();
-            const prenom = document.getElementById('el-prenom').value.trim();
-            const sexe = document.getElementById('el-sexe').value;
-            const classe = document.getElementById('el-classe').value.trim();
-            const t1_nom = document.getElementById('tut1-nom').value.trim();
-            const t1_prenom = document.getElementById('tut1-prenom').value.trim();
+            const type = document.getElementById('type-enregistrement').value;
+            const nom = document.getElementById('en-nom').value.trim();
+            const postnom = document.getElementById('en-postnom').value.trim();
+            const prenom = document.getElementById('en-prenom').value.trim();
 
-            if(!nom || !prenom || !classe) {
-                alert("Erreur : Veuillez remplir le nom, le prénom et la classe.");
+            if(!nom || !prenom) {
+                alert("Erreur : Veuillez remplir le nom et le prénom.");
                 return;
             }
 
-            const matricule = Math.floor(1000 + Math.random() * 9000).toString();
+            if (type === 'eleve') {
+                const classe = document.getElementById('en-classe').value.trim();
+                const sexe = document.getElementById('en-sexe').value;
+                const t1_nom = document.getElementById('tut1-nom').value.trim();
+                const t1_prenom = document.getElementById('tut1-prenom').value.trim();
 
-            try {
-                await set(ref(db, 'eleves/' + matricule), {
-                    matricule,
-                    nom, 
-                    postnom: postnom || "", 
-                    prenom, 
-                    sexe, 
-                    classe,
-                    tuteur1: { nom: t1_nom || "Non renseigné", prenom: t1_prenom || "" },
-                    enOrdreFrais: false // Bloqué par défaut à l'inscription
-                });
-                alert(`Élève enregistré avec succès ! Matricule attribué : ${matricule}`);
-                document.getElementById('form-inscription').reset();
-                chargerDonneesAdmin();
-            } catch (error) {
-                console.error("Erreur d'enregistrement :", error);
-                alert("Erreur lors de l'enregistrement dans Firebase.");
-            }
-        }
+                if(!classe) {
+                    alert("Veuillez renseigner la classe de l'élève.");
+                    return;
+                }
 
-        // Fonction pour basculer l'état des frais d'un élève (Bloquer <-> Débloquer)
-        window.toggleStatutFrais = async function(matricule, etatActuel) {
-            if (!checkAdminSession()) return;
-            
-            const nouvelEtat = !etatActuel;
-            const actionTexte = nouvelEtat ? "débloquer (mettre en ordre)" : "bloquer";
-
-            if (confirm(`Voulez-vous vraiment ${actionTexte} l'élève portant le matricule ${matricule} ?`)) {
+                const matricule = Math.floor(1000 + Math.random() * 9000).toString();
                 try {
-                    await update(ref(db, `eleves/${matricule}`), {
-                        enOrdreFrais: nouvelEtat
+                    await set(ref(db, 'eleves/' + matricule), {
+                        matricule, nom, postnom, prenom, sexe, classe,
+                        tuteur1: { nom: t1_nom || "Non renseigné", prenom: t1_prenom || "" },
+                        enOrdreFrais: false
                     });
+                    alert(`Élève enregistré avec succès ! Matricule : ${matricule}`);
+                    document.getElementById('form-enregistrement').reset();
                     chargerDonneesAdmin();
                 } catch (error) {
-                    console.error("Erreur lors de la mise à jour du statut :", error);
-                    alert("Impossible de modifier le statut.");
+                    console.error(error);
+                }
+            } else {
+                const cours = document.getElementById('en-cours').value.trim();
+                if(!cours) {
+                    alert("Veuillez renseigner le cours enseigné.");
+                    return;
+                }
+
+                const profId = 'prof_' + Date.now();
+                try {
+                    await set(ref(db, 'profs/' + profId), {
+                        id: profId, nom, postnom, prenom, cours
+                    });
+                    alert("Professeur enregistré avec succès !");
+                    document.getElementById('form-enregistrement').reset();
+                    chargerDonneesAdmin();
+                } catch (error) {
+                    console.error(error);
                 }
             }
         }
 
-        // Charger la liste des élèves
-        async function chargerDonneesAdmin() {
+        window.toggleStatutFrais = async function(matricule, etatActuel) {
             if (!checkAdminSession()) return;
-            const dbRef = ref(db);
             try {
-                const snapshot = await get(child(dbRef, 'eleves'));
-                const tbody = document.getElementById('table-eleves');
-                tbody.innerHTML = '';
-                
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    Object.values(data).forEach(e => {
-                        // Ignore les entrées corrompues s'il en reste
-                        if(!e.nom || !e.prenom) return;
-
-                        const tr = document.createElement('tr');
-
-                        const tdMat = document.createElement('td');
-                        const code = document.createElement('code');
-                        code.textContent = e.matricule || 'N/A';
-                        tdMat.appendChild(code);
-                        tr.appendChild(tdMat);
-
-                        const tdNom = document.createElement('td');
-                        tdNom.textContent = `${e.nom} ${e.postnom ? e.postnom + ' ' : ''}${e.prenom}`;
-                        tr.appendChild(tdNom);
-
-                        const tdSexe = document.createElement('td');
-                        tdSexe.textContent = e.sexe || 'M';
-                        tr.appendChild(tdSexe);
-
-                        const tdClasse = document.createElement('td');
-                        tdClasse.textContent = e.classe || '';
-                        tr.appendChild(tdClasse);
-
-                        const tdTuteur = document.createElement('td');
-                        tdTuteur.textContent = e.tuteur1 ? e.tuteur1.nom : '';
-                        tr.appendChild(tdTuteur);
-
-                        const tdFrais = document.createElement('td');
-                        const badge = document.createElement('span');
-                        badge.className = `badge ${e.enOrdreFrais ? 'success' : 'danger'}`;
-                        badge.textContent = e.enOrdreFrais ? 'En ordre' : 'Bloqué';
-                        badge.title = "Cliquez pour changer le statut";
-                        
-                        badge.onclick = () => window.toggleStatutFrais(e.matricule, e.enOrdreFrais);
-
-                        tdFrais.appendChild(badge);
-                        tr.appendChild(tdFrais);
-
-                        tbody.appendChild(tr);
-                    });
-                } else {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Aucun élève enregistré.</td></tr>`;
-                }
+                await update(ref(db, `eleves/${matricule}`), { enOrdreFrais: !etatActuel });
+                chargerDonneesAdmin();
             } catch (error) {
                 console.error(error);
             }
         }
 
-        // Connexion espace parent
+        window.supprimerProf = async function(profId) {
+            if (!checkAdminSession()) return;
+            if (confirm("Voulez-vous supprimer ce professeur ?")) {
+                try {
+                    await remove(ref(db, `profs/${profId}`));
+                    chargerDonneesAdmin();
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        }
+
+        async function chargerDonneesAdmin() {
+            if (!checkAdminSession()) return;
+            const dbRef = ref(db);
+            
+            // Chargement Élèves
+            try {
+                const snapEleves = await get(child(dbRef, 'eleves'));
+                const tbodyEleves = document.getElementById('table-eleves');
+                tbodyEleves.innerHTML = '';
+                if (snapEleves.exists()) {
+                    Object.values(snapEleves.val()).forEach(e => {
+                        if(!e.nom) return;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><code>${e.matricule}</code></td>
+                            <td>${e.nom} ${e.postnom || ''} ${e.prenom}</td>
+                            <td>${e.sexe}</td>
+                            <td>${e.classe}</td>
+                            <td>${e.tuteur1 ? e.tuteur1.nom : ''}</td>
+                            <td><span class="badge ${e.enOrdreFrais ? 'success' : 'danger'}" onclick="toggleStatutFrais('${e.matricule}', ${e.enOrdreFrais})">${e.enOrdreFrais ? 'En ordre' : 'Bloqué'}</span></td>
+                        `;
+                        tbodyEleves.appendChild(tr);
+                    });
+                } else {
+                    tbodyEleves.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Aucun élève enregistré.</td></tr>`;
+                }
+            } catch (err) { console.error(err); }
+
+            // Chargement Profs Admin
+            try {
+                const snapProfs = await get(child(dbRef, 'profs'));
+                const tbodyProfs = document.getElementById('table-profs-admin');
+                tbodyProfs.innerHTML = '';
+                if (snapProfs.exists()) {
+                    Object.values(snapProfs.val()).forEach(p => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${p.nom} ${p.postnom || ''} ${p.prenom}</td>
+                            <td>${p.cours}</td>
+                            <td><button style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:2px 6px; border-radius:3px; cursor:pointer;" onclick="supprimerProf('${p.id}')">Supprimer</button></td>
+                        `;
+                        tbodyProfs.appendChild(tr);
+                    });
+                } else {
+                    tbodyProfs.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Aucun professeur enregistré.</td></tr>`;
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        // Chargement public des profs pour l'Espace Prof
+        async function chargerProfsPublic() {
+            const dbRef = ref(db);
+            try {
+                const snapshot = await get(child(dbRef, 'profs'));
+                const tbody = document.getElementById('table-profs-public');
+                tbody.innerHTML = '';
+                if (snapshot.exists()) {
+                    Object.values(snapshot.val()).forEach(p => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${p.nom} ${p.postnom || ''} ${p.prenom}</td>
+                            <td>${p.cours}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Aucun professeur répertorié.</td></tr>`;
+                }
+            } catch (err) { console.error(err); }
+        }
+
         window.parentLogin = async function() {
             const mat = document.getElementById('parent-matricule-input').value.trim();
             if(!mat) return;
-            const dbRef = ref(db);
-            
             try {
-                const snapshot = await get(child(dbRef, `eleves/${mat}`));
+                const snapshot = await get(child(ref(db), `eleves/${mat}`));
                 if (snapshot.exists()) {
                     const eleve = snapshot.val();
                     document.getElementById('parent-login-card').style.display = 'none';
                     document.getElementById('parent-dashboard-card').style.display = 'block';
 
-                    document.getElementById('p-nom-eleve').textContent = `${eleve.nom} ${eleve.postnom ? eleve.postnom + ' ' : ''}${eleve.prenom}`;
+                    document.getElementById('p-nom-eleve').textContent = `${eleve.nom} ${eleve.postnom || ''} ${eleve.prenom}`;
                     document.getElementById('p-mat').textContent = eleve.matricule;
                     document.getElementById('p-classe').textContent = eleve.classe;
                     document.getElementById('p-sexe').textContent = eleve.sexe === 'M' ? 'Masculin' : 'Féminin';
                     document.getElementById('p-tuteur1').textContent = eleve.tuteur1 ? `${eleve.tuteur1.nom} ${eleve.tuteur1.prenom}` : 'Non renseigné';
                     
                     const badgeFrais = document.getElementById('p-statut-frais');
-                    if(eleve.enOrdreFrais) {
-                        badgeFrais.className = "badge success";
-                        badgeFrais.textContent = "En ordre";
-                    } else {
-                        badgeFrais.className = "badge danger";
-                        badgeFrais.textContent = "Bloqué";
-                    }
+                    badgeFrais.className = `badge ${eleve.enOrdreFrais ? 'success' : 'danger'}`;
+                    badgeFrais.textContent = eleve.enOrdreFrais ? "En ordre" : "Bloqué";
                 } else {
-                    alert("Matricule introuvable dans la base de données.");
+                    alert("Matricule introuvable.");
                 }
-            } catch (error) {
-                console.error(error);
-            }
+            } catch (err) { console.error(err); }
         }
 
         window.parentLogout = function() {
@@ -554,56 +646,39 @@
             document.getElementById('parent-matricule-input').value = '';
         }
 
-        // Publier un communiqué
         window.publierCommunique = async function() {
             if (!checkAdminSession()) return;
             const texte = document.getElementById('com-texte').value.trim();
             if(!texte) return;
-
             const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
             try {
                 await set(ref(db, 'communiques/' + Date.now()), { texte, date });
                 alert("Communiqué publié !");
                 document.getElementById('com-texte').value = '';
                 chargerCommuniques();
-            } catch (error) {
-                console.error(error);
-            }
+            } catch (err) { console.error(err); }
         }
 
         async function chargerCommuniques() {
-            const dbRef = ref(db);
             try {
-                const snapshot = await get(child(dbRef, 'communiques'));
+                const snapshot = await get(child(ref(db), 'communiques'));
                 const container = document.getElementById('public-communiques');
                 container.innerHTML = '';
-
                 if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    Object.values(data).reverse().forEach(c => {
+                    Object.values(snapshot.val()).reverse().forEach(c => {
                         const itemDiv = document.createElement('div');
                         itemDiv.className = 'communique-item';
-
-                        const dateDiv = document.createElement('div');
-                        dateDiv.className = 'communique-date';
-                        dateDiv.textContent = c.date;
-
-                        const p = document.createElement('p');
-                        p.textContent = c.texte;
-
-                        itemDiv.appendChild(dateDiv);
-                        itemDiv.appendChild(p);
+                        itemDiv.innerHTML = `<div class="communique-date">${c.date}</div><p>${c.texte}</p>`;
                         container.appendChild(itemDiv);
                     });
                 } else {
                     container.innerHTML = `<p style="color: var(--text-muted);">Aucun communiqué pour le moment.</p>`;
                 }
-            } catch (error) {
-                console.error(error);
-            }
+            } catch (err) { console.error(err); }
         }
 
         chargerCommuniques();
+        chargerProfsPublic();
     </script>
 </body>
 </html>
