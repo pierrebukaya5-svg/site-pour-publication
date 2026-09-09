@@ -1,31 +1,69 @@
 const express = require('express');
+const cors = require('cors');
 const fs = require('fs');
+const path = require('path');
+
 const app = express();
-
-app.use(express.json());
-app.use(express.static('.'));
-
-let data = { eleves: [], profs: [] };
-try { data = JSON.parse(fs.readFileSync('donnees.json','utf8')); } catch(e){}
-
-app.post('/api/admin/prof', (req, res) => {
-  console.log("Reçu prof:", req.body);
-  const nom = req.body.nom || req.body.nomProf || req.body.Nom || "Prof Inconnu";
-  const code = req.body.code || req.body.codeAcces || "1234";
-  data.profs.push({ nom, code, date: new Date() });
-  fs.writeFileSync('donnees.json', JSON.stringify(data, null, 2));
-  res.json({ success: true, message: "Prof créé" });
-});
-
-app.post('/api/admin/eleve', (req, res) => {
-  console.log("Reçu élève:", req.body);
-  const nom = req.body.nom || req.body.nomEleve || "Eleve Inconnu";
-  data.eleves.push({ nom, ...req.body, matricule: "RDC"+Date.now().toString().slice(-5) });
-  fs.writeFileSync('donnees.json', JSON.stringify(data, null, 2));
-  res.json({ success: true, message: "Elève créé" });
-});
-
-app.get('/', (req,res) => res.sendFile(__dirname + '/index.html'));
-
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, ()=> console.log("Portail RDC OK sur "+PORT));
+const DATA_FILE = path.join(__dirname, 'donnees.json');
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static(__dirname));
+
+function lireDonnees() {
+  try {
+    if (!fs.existsSync(DATA_FILE)) {
+      return { eleves: [], profs: [] };
+    }
+    const data = fs.readFileSync(DATA_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (e) {
+    return { eleves: [], profs: [] };
+  }
+}
+
+function sauverDonnees(data) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
+// Créer prof
+app.post('/api/admin/prof', (req, res) => {
+  try {
+    const { nom, code } = req.body;
+    if (!nom || !code) return res.status(400).json({ error: "Champs manquants" });
+    const db = lireDonnees();
+    db.profs = db.profs || [];
+    if (db.profs.find(p => p.nom === nom)) {
+      return res.status(400).json({ error: "Prof existe déjà" });
+    }
+    db.profs.push({ nom, code: String(code), date: new Date().toISOString() });
+    sauverDonnees(db);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Inscrire élève
+app.post('/api/eleves', (req, res) => {
+  try {
+    const { nom, classe, matricule } = req.body;
+    const db = lireDonnees();
+    db.eleves = db.eleves || [];
+    db.eleves.push({ nom, classe, matricule, date: new Date().toISOString() });
+    sauverDonnees(db);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Serveur lance sur port ${PORT}`);
+});
