@@ -200,7 +200,7 @@
         <div class="nav-btns">
             <button onclick="switchView('home')" id="btn-home" class="active">Accueil</button>
             <button onclick="switchView('parent')" id="btn-parent">Espace Parent</button>
-            <button onclick="switchView('admin')" id="btn-admin">Administration</button>
+            <button onclick="accederAdmin()" id="btn-admin">Administration</button>
         </div>
     </header>
 
@@ -252,6 +252,11 @@
 
         <!-- VUE ADMINISTRATION -->
         <section id="admin" class="view">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2>Panneau d'Administration</h2>
+                <button onclick="deconnexionAdmin()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer;">Verrouiller l'Admin</button>
+            </div>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                 <!-- Inscription Élève -->
                 <div class="card">
@@ -307,7 +312,7 @@
     <!-- SDK Firebase & Logique de Base de Données -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
@@ -322,8 +327,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        let isAdminAuthenticated = false;
+
         // Navigation et historique
         window.switchView = function(viewId, pushHistory = true) {
+            if(viewId === 'admin' && !isAdminAuthenticated) {
+                alert("Accès refusé. Veuillez entrer le code maître.");
+                return;
+            }
+
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-btns button').forEach(b => b.classList.remove('active'));
 
@@ -337,9 +349,36 @@
             window.scrollTo(0, 0);
         }
 
+        // Vérification du code maître pour l'administration
+        window.accederAdmin = function() {
+            if(isAdminAuthenticated) {
+                switchView('admin');
+                return;
+            }
+
+            const codeSaisi = prompt("Entrez le code maître administrateur :");
+            if(codeSaisi === "pr1999") {
+                isAdminAuthenticated = true;
+                switchView('admin');
+                chargerDonneesAdmin();
+            } else if(codeSaisi !== null) {
+                alert("Code maître incorrect ! Accès refusé.");
+            }
+        }
+
+        window.deconnexionAdmin = function() {
+            isAdminAuthenticated = false;
+            switchView('home');
+            alert("Panneau d'administration verrouillé.");
+        }
+
         window.addEventListener('popstate', (event) => {
             if (event.state && event.state.view) {
-                switchView(event.state.view, false);
+                if(event.state.view === 'admin' && !isAdminAuthenticated) {
+                    switchView('home', false);
+                } else {
+                    switchView(event.state.view, false);
+                }
             } else {
                 switchView('home', false);
             }
@@ -477,8 +516,7 @@
             }
         }
 
-        // Chargement initial des données au démarrage
-        chargerDonneesAdmin();
+        // Chargement initial des communiqués publics au démarrage
         chargerCommuniques();
     </script>
 </body>
