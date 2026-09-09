@@ -4,460 +4,1189 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>École de la RDC</title>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- Lien vers le fichier Manifest pour l'installation PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#090d16">
     <style>
         :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --border-color: #30363d;
-            --text-color: #c9d1d9;
-            --accent-color: #1f6feb;
-            --accent-hover: #388bfd;
-            --danger-color: #da3633;
-            --success-color: #238636;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.25);
+            --bg-dark: #090d16;
+            --bg-card: #131c2e;
+            --bg-card-hover: #192640;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #1e293b;
+            --border-focus: #4f46e5;
+            --danger: #f43f5e;
+            --danger-bg: rgba(244, 63, 94, 0.1);
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.1);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, transparent 40%),
+                linear-gradient(225deg, rgba(234, 179, 8, 0.07) 0%, transparent 40%),
+                radial-gradient(circle at 50% 0%, #1a2744 0%, var(--bg-dark) 75%),
+                repeating-linear-gradient(45deg, rgba(99, 102, 241, 0.03) 0px, rgba(99, 102, 241, 0.03) 2px, transparent 2px, transparent 12px);
+            background-attachment: fixed;
         }
 
         header {
-            background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(19, 28, 46, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 2rem;
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 2rem;
+            gap: 1rem;
             position: sticky;
             top: 0;
-            z-index: 1000;
+            z-index: 100;
         }
 
-        .logo {
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #ffffff;
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
         }
 
-        nav {
+        .nav-btns {
             display: flex;
+            flex-wrap: wrap;
             gap: 0.5rem;
         }
 
-        .nav-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-color);
+        .nav-btns button {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
             padding: 0.5rem 1rem;
-            border-radius: 6px;
+            border-radius: 0.5rem;
             cursor: pointer;
-            transition: background 0.2s;
             font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.25s ease;
         }
 
-        .nav-btn:hover, .nav-btn.active {
-            background-color: var(--border-color);
-            color: #ffffff;
+        .nav-btns button:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--text-main);
+            border-color: var(--primary);
         }
 
-        .nav-btn.admin-btn {
-            background-color: var(--accent-color);
-            color: #ffffff;
-        }
-
-        .nav-btn.admin-btn:hover {
-            background-color: var(--accent-hover);
+        .nav-btns button.active {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px var(--primary-glow);
         }
 
         main {
-            padding: 2rem;
+            flex: 1;
+            padding: 2rem 1.5rem;
             max-width: 1200px;
             margin: 0 auto;
+            width: 100%;
         }
 
-        .section {
+        @media (min-width: 768px) {
+            main { padding: 3rem 2rem; }
+        }
+
+        .view {
             display: none;
+            animation: fadeIn 0.3s ease-in-out;
         }
 
-        .section.active {
+        .view.active {
             display: block;
         }
 
-        h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            color: #ffffff;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.75rem;
+            margin-bottom: 1.75rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        @media (min-width: 768px) {
+            .card { padding: 2.25rem; }
+        }
+
+        h2, h3 {
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        @media (min-width: 768px) {
+            h2, h3 { font-size: 1.5rem; }
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        @media (min-width: 640px) {
+            .form-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.5rem;
+        input, select, textarea {
+            background-color: rgba(9, 13, 22, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 0.6rem;
+            padding: 0.85rem 1rem;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            background-color: rgba(9, 13, 22, 0.9);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-wrapper input {
+            padding-right: 3rem;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 0.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
+            color: var(--text-main);
+        }
+
+        button.btn-submit {
+            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+            color: white;
+            border: none;
+            padding: 0.9rem 1.75rem;
+            border-radius: 0.6rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px var(--primary-glow);
+            font-size: 0.95rem;
+        }
+
+        button.btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--primary-glow);
+            filter: brightness(1.1);
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
             margin-bottom: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-back:hover {
+            border-color: var(--text-main);
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .msg-box {
+            padding: 1rem;
+            border-radius: 0.6rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.25rem;
+            display: none;
+            font-weight: 500;
+        }
+        .msg-box.error { background-color: var(--danger-bg); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.3); }
+        .msg-box.success { background-color: var(--success-bg); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 1.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1rem;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
+            background-color: var(--bg-card);
+            min-width: 600px;
         }
 
         th, td {
-            padding: 0.75rem 1rem;
+            padding: 1rem 1.25rem;
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border);
             font-size: 0.9rem;
         }
 
         th {
-            background-color: #21262d;
+            background-color: rgba(9, 13, 22, 0.5);
+            color: var(--text-muted);
             font-weight: 600;
-            color: #ffffff;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.8px;
         }
 
         tr:last-child td {
             border-bottom: none;
         }
 
-        .btn {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: background 0.2s;
+        tbody tr {
+            transition: background-color 0.15s ease;
         }
 
-        .btn:hover {
-            background-color: var(--accent-hover);
-        }
-
-        .btn-danger {
-            background-color: var(--danger-color);
-        }
-
-        .btn-danger:hover {
-            background-color: #b62324;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            color: #8b949e;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: #0d1117;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-color);
-            font-size: 0.9rem;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--accent-color);
+        tbody tr:hover {
+            background-color: var(--bg-card-hover);
         }
 
         .badge {
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 500;
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            letter-spacing: 0.3px;
+        }
+        .badge.success { background-color: var(--success-bg); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .badge.danger { background-color: var(--danger-bg); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.2); }
+        .clickable-badge { cursor: pointer; transition: transform 0.15s; }
+        .clickable-badge:hover { transform: scale(1.05); }
+
+        .communique-item {
+            background: rgba(9, 13, 22, 0.4);
+            border-left: 3px solid var(--primary);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-radius: 0 0.75rem 0.75rem 0;
+            border-top: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
         }
 
-        .badge-success {
-            background-color: rgba(35, 134, 54, 0.2);
-            color: #3fb950;
-            border: 1px solid rgba(35, 134, 54, 0.4);
+        .communique-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .portal-links {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .portal-links { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .portal-box {
+            background: rgba(9, 13, 22, 0.4);
+            border: 1px solid var(--border);
+            padding: 1.75rem 1.25rem;
+            border-radius: 0.85rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .portal-box:hover {
+            border-color: var(--primary);
+            background: var(--bg-card-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -5px var(--primary-glow);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background-color: var(--bg-card);
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">École de la RDC</div>
-        <nav>
-            <button class="nav-btn active" onclick="switchSection('home')">Accueil</button>
-            <button class="nav-btn" onclick="switchSection('parent')">Espace Parent</button>
-            <button class="nav-btn" onclick="switchSection('eleve')">Espace Élève</button>
-            <button class="nav-btn" onclick="switchSection('prof')">Espace Prof</button>
-            <button class="nav-btn admin-btn" onclick="checkAdmin()">Admin</button>
-        </nav>
+        <h1>École de la RDC</h1>
+        <div class="nav-btns">
+            <button onclick="switchView('home')" id="btn-home" class="active">Accueil</button>
+            <button onclick="switchView('parent')" id="btn-parent">Espace Parent</button>
+            <button onclick="switchView('eleve')" id="btn-eleve">Espace Élève</button>
+            <button onclick="switchView('prof')" id="btn-prof">Espace Prof</button>
+            <button onclick="accederAdmin()" id="btn-admin">Admin</button>
+        </div>
     </header>
 
     <main>
-        <!-- ACCUEIL -->
-        <section id="home" class="section active">
-            <h2>Bienvenue sur le portail scolaire</h2>
+        <!-- VUE ACCUEIL -->
+        <section id="home" class="view active">
             <div class="card">
-                <p>Sélectionnez votre espace dans le menu supérieur pour consulter les notes, les bulletins, gérer les inscriptions ou administrer l'établissement.</p>
-            </div>
-        </section>
-
-        <!-- ESPACE PARENT -->
-        <section id="parent" class="section">
-            <h2>Espace Parent</h2>
-            <div class="card">
-                <div class="form-group">
-                    <label for="parent-matricule">Matricule de l'élève</label>
-                    <input type="text" id="parent-matricule" placeholder="Entrez le matricule...">
+                <h2>Bienvenue sur le Portail de l'École</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Consultez les actualités et accédez à votre espace dédié en toute sécurité.</p>
+                
+                <div class="portal-links">
+                    <div class="portal-box" onclick="switchView('parent')">
+                        <h3 style="color: var(--primary); margin-bottom: 0.5rem; font-size: 1.15rem;">👨‍👩‍👧 Espace Parent</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Suivi des frais et évolution de l'enfant.</p>
+                    </div>
+                    <div class="portal-box" onclick="switchView('eleve')">
+                        <h3 style="color: var(--primary); margin-bottom: 0.5rem; font-size: 1.15rem;">🎒 Espace Élève</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Consultez votre bulletin et statut de frais.</p>
+                    </div>
+                    <div class="portal-box" onclick="switchView('prof')">
+                        <h3 style="color: var(--primary); margin-bottom: 0.5rem; font-size: 1.15rem;">👨‍🏫 Espace Prof</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Cotation et gestion des listes de classes.</p>
+                    </div>
                 </div>
-                <button class="btn" onclick="consultParent()">Consulter</button>
-            </div>
-            <div id="parent-result"></div>
-        </section>
 
-        <!-- ESPACE ELEVE -->
-        <section id="eleve" class="section">
-            <h2>Espace Élève</h2>
-            <div class="card">
-                <div class="form-group">
-                    <label for="eleve-matricule">Votre Matricule</label>
-                    <input type="text" id="eleve-matricule" placeholder="Entrez votre matricule...">
+                <h3 style="margin-top: 2.5rem;">📢 Communiqués Récents</h3>
+                <div id="public-communiques">
+                    <p style="color: var(--text-muted);">Chargement des communiqués...</p>
                 </div>
-                <button class="btn" onclick="consultEleve()">Afficher mon dossier</button>
             </div>
-            <div id="eleve-result"></div>
         </section>
 
-        <!-- ESPACE PROF -->
-        <section id="prof" class="section">
-            <h2>Espace Professeur</h2>
+        <!-- VUE ESPACE PARENT -->
+        <section id="parent" class="view">
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
+            <div class="card" id="parent-login-card">
+                <h2>Espace Parent - Connexion</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.95rem;">Entrez le code matricule de votre enfant pour accéder à son dossier complet.</p>
+                <div id="parent-msg" class="msg-box"></div>
+                <div class="form-group" style="max-width: 100%; margin-bottom: 1.25rem;">
+                    <label>Matricule de l'enfant</label>
+                    <input type="text" id="parent-matricule-input" placeholder="Ex: 4812">
+                </div>
+                <button class="btn-submit" onclick="parentLogin()">Se connecter</button>
+            </div>
+
+            <div class="card" id="parent-dashboard-card" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h2>Dossier : <span id="p-nom-eleve" style="color: var(--primary);"></span></h2>
+                    <button onclick="parentLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.4rem 0.9rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Déconnexion</button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr; gap: 1.25rem; margin-bottom: 1.75rem; font-size: 0.95rem;">
+                    <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: 0.75rem; border: 1px solid var(--border);">
+                        <p style="margin-bottom: 0.5rem;"><strong>Matricule :</strong> <span id="p-mat"></span></p>
+                        <p style="margin-bottom: 0.5rem;"><strong>Classe :</strong> <span id="p-classe"></span></p>
+                        <p style="margin-bottom: 0.5rem;"><strong>Sexe :</strong> <span id="p-sexe"></span></p>
+                        <p style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem;"><strong>Statut Frais :</strong> <span id="p-statut-frais" class="badge"></span></p>
+                    </div>
+                    <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: 0.75rem; border: 1px solid var(--border);">
+                        <p><strong>Tuteur Principal :</strong> <span id="p-tuteur1"></span></p>
+                    </div>
+                </div>
+
+                <h3>Évolution & Cotations (Bulletins)</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cours</th>
+                                <th>Note / 20</th>
+                                <th>Appréciation / Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-parent-notes">
+                            <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Aucune note enregistrée pour le moment.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VUE ESPACE ELEVE -->
+        <section id="eleve" class="view">
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
+            <div class="card" id="eleve-login-card">
+                <h2>Espace Élève - Connexion</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.95rem;">Entrez votre code matricule personnel pour consulter votre évolution.</p>
+                <div id="eleve-msg" class="msg-box"></div>
+                <div class="form-group" style="max-width: 100%; margin-bottom: 1.25rem;">
+                    <label>Votre Matricule</label>
+                    <input type="text" id="eleve-matricule-input" placeholder="Ex: 4812">
+                </div>
+                <button class="btn-submit" onclick="eleveLogin()">Accéder à mon espace</button>
+            </div>
+
+            <div class="card" id="eleve-dashboard-card" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h2>Mon Dossier : <span id="e-nom-eleve" style="color: var(--primary);"></span></h2>
+                    <button onclick="eleveLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.4rem 0.9rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Déconnexion</button>
+                </div>
+                
+                <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: 0.75rem; border: 1px solid var(--border); margin-bottom: 1.75rem; font-size: 0.95rem;">
+                    <p style="margin-bottom: 0.5rem;"><strong>Matricule :</strong> <span id="e-mat"></span></p>
+                    <p style="margin-bottom: 0.5rem;"><strong>Classe :</strong> <span id="e-classe"></span></p>
+                    <p style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem;"><strong>Statut Frais :</strong> <span id="e-statut-frais" class="badge"></span></p>
+                </div>
+
+                <h3>Mes Notes et Évolution</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cours</th>
+                                <th>Note / 20</th>
+                                <th>Appréciation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-eleve-notes">
+                            <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Aucune note enregistrée.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VUE ESPACE PROFESSEUR -->
+        <section id="prof" class="view">
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
             <div class="card" id="prof-login-card">
-                <div class="form-group">
-                    <label for="prof-code">Code Professeur (4 chiffres)</label>
-                    <input type="password" id="prof-code" maxlength="4" placeholder="••••">
+                <h2>Espace Professeur - Connexion</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.95rem;">Entrez votre code d'accès personnel à 4 chiffres.</p>
+                <div id="prof-msg" class="msg-box"></div>
+                <div class="form-group" style="max-width: 100%; margin-bottom: 1.25rem;">
+                    <label>Code d'accès (4 chiffres)</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="prof-code-input" maxlength="4" placeholder="Ex: 5892">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('prof-code-input', this)">👁️</button>
+                    </div>
                 </div>
-                <button class="btn" onclick="loginProf()">Se connecter</button>
+                <button class="btn-submit" onclick="profLogin()">Accéder à mon espace</button>
             </div>
-            <div id="prof-dashboard" style="display:none;"></div>
+
+            <div class="card" id="prof-dashboard-card" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <h2>Prof. <span id="prof-nom-affiche" style="color: var(--primary);"></span></h2>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Cours : <strong id="prof-cours-affiche" style="color: var(--text-main);"></strong></p>
+                    </div>
+                    <button onclick="profLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.4rem 0.9rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Déconnexion</button>
+                </div>
+
+                <div class="form-group" style="max-width: 100%; margin-bottom: 1.75rem;">
+                    <label>Filtrer par Classe</label>
+                    <select id="prof-filtre-classe" onchange="chargerElevesPourProf()">
+                        <option value="">-- Sélectionnez une classe --</option>
+                    </select>
+                </div>
+
+                <h3>Cotation des élèves</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Matricule</th>
+                                <th>Nom & Prénom</th>
+                                <th>Classe</th>
+                                <th>Note / 20</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-prof-cotation">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Sélectionnez une classe.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </section>
 
-        <!-- ESPACE ADMIN -->
-        <section id="admin" class="section">
-            <h2>Panneau d'Administration</h2>
+        <!-- VUE ADMINISTRATION -->
+        <section id="admin" class="view">
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
             
-            <div class="card">
-                <h3>Ajouter un Élève</h3>
-                <div class="form-group"><label>Matricule</label><input type="text" id="admin-mat"></div>
-                <div class="form-group"><label>Nom & Prénom</label><input type="text" id="admin-nom"></div>
-                <div class="form-group"><label>Classe</label><input type="text" id="admin-classe"></div>
-                <div class="form-group"><label>Nom du Parent/Tuteur</label><input type="text" id="admin-parent"></div>
-                <button class="btn" onclick="addEleve()">Enregistrer l'élève</button>
+            <!-- Modal / Formulaire de Connexion Admin -->
+            <div class="card" id="admin-login-card">
+                <h2>Connexion Administration</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.95rem;">Entrez le code maître pour accéder au panneau d'administration.</p>
+                <div id="admin-login-msg" class="msg-box"></div>
+                <div class="form-group" style="max-width: 100%; margin-bottom: 1.25rem;">
+                    <label>Code Maître</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="admin-code-input" placeholder="Code secret">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('admin-code-input', this)">👁️</button>
+                    </div>
+                </div>
+                <button class="btn-submit" onclick="validerCodeAdmin()">Se connecter</button>
             </div>
 
-            <div class="card">
-                <h3>Ajouter un Professeur</h3>
-                <div class="form-group"><label>Code (4 chiffres)</label><input type="text" id="admin-pcode" maxlength="4"></div>
-                <div class="form-group"><label>Nom & Prénom</label><input type="text" id="admin-pnom"></div>
-                <div class="form-group"><label>Cours Enseigné</label><input type="text" id="admin-pcours"></div>
-                <button class="btn" onclick="addProf()">Enregistrer le prof</button>
+            <!-- Contenu Admin réel -->
+            <div id="admin-content-area" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h2>Panneau d'Administration</h2>
+                    <button onclick="deconnexionAdmin()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.4rem 0.9rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Verrouiller l'Admin</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 1.75rem;">
+                    <div class="card">
+                        <h2>Enregistrement</h2>
+                        <div id="admin-action-msg" class="msg-box"></div>
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label>Type d'enregistrement</label>
+                            <select id="type-enregistrement" onchange="changerFormulaireType()">
+                                <option value="eleve">Élève</option>
+                                <option value="prof">Professeur</option>
+                            </select>
+                        </div>
+
+                        <form id="form-enregistrement" onsubmit="event.preventDefault(); enregistrerMembre();">
+                            <div class="form-grid">
+                                <div class="form-group"><label>Nom *</label><input type="text" id="en-nom" required></div>
+                                <div class="form-group"><label>Post-nom</label><input type="text" id="en-postnom"></div>
+                                <div class="form-group"><label>Prénom *</label><input type="text" id="en-prenom" required></div>
+                                <div class="form-group" id="group-sexe">
+                                    <label>Sexe</label>
+                                    <select id="en-sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select>
+                                </div>
+                            </div>
+
+                            <div id="champs-eleve">
+                                <div class="form-group" style="margin-bottom: 1.25rem;"><label>Classe *</label><input type="text" id="en-classe" placeholder="Ex: 6ème Scientifique"></div>
+                                <h4 style="margin: 1.5rem 0 0.75rem 0; color: var(--primary); font-size: 1.1rem;">Identité du Tuteur Principal</h4>
+                                <div class="form-grid">
+                                    <div class="form-group"><label>Nom Tuteur</label><input type="text" id="tut1-nom"></div>
+                                    <div class="form-group"><label>Prénom Tuteur</label><input type="text" id="tut1-prenom"></div>
+                                </div>
+                            </div>
+
+                            <div id="champs-prof" style="display: none;">
+                                <div class="form-group" style="margin-bottom: 1.25rem;"><label>Cours enseigné *</label><input type="text" id="en-cours" placeholder="Ex: Mathématiques"></div>
+                            </div>
+
+                            <button type="submit" class="btn-submit" style="margin-top: 1.25rem;">Enregistrer</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h2>Publier un Communiqué</h2>
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label>Message</label>
+                            <textarea id="com-texte" rows="3" placeholder="Écrivez votre communiqué..."></textarea>
+                        </div>
+                        <button class="btn-submit" onclick="publierCommunique()">Publier</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.75rem;">
+                    <h2>LISTE DES ÉLÈVES</h2>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Matricule</th><th>Élève</th><th>Classe</th><th>Parent / Tuteur</th><th>Contact / Infos</th><th>Frais</th><th>Action</th></tr></thead>
+                            <tbody id="table-eleves"><tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.75rem;">
+                    <h2>LISTE DES PROFESSEURS</h2>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Code</th><th>Nom & Prénom</th><th>Cours Enseigné</th><th>Action</th></tr></thead>
+                            <tbody id="table-profs-admin"><tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-
-            <h2>Liste des Élèves</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Matricule</th>
-                        <th>Élève</th>
-                        <th>Classe</th>
-                        <th>Parent / Tuteur</th>
-                        <th>Frais</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-eleves-list"></tbody>
-            </table>
-
-            <h2 style="margin-top: 2rem;">Liste des Professeurs</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Nom & Prénom</th>
-                        <th>Cours Enseigné</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-profs-list"></tbody>
-            </table>
         </section>
     </main>
 
-    <script>
-        // Configuration Firebase (À remplacer par tes propres identifiants Firebase)
-        const firebaseConfig = {
-            databaseURL: "https://TON-PROJET-default-rtdb.firebaseio.com/"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    <footer>
+        École de la RDC &copy; 2026 - République Démocratique du Congo
+    </footer>
 
-        function switchSection(sectionId) {
-            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(sectionId).classList.add('active');
-            event.target.classList.add('active');
-            if(sectionId === 'admin') loadAdminData();
+    <!-- SDK Firebase & Logique -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, child, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
+            authDomain: "site-publication.firebaseapp.com",
+            databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
+            projectId: "site-publication",
+            storageBucket: "site-publication.firebasestorage.app",
+            messagingSenderId: "934019778891",
+            appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let profConnecteData = null;
+
+        function showMsg(elementId, text, isError = true) {
+            const box = document.getElementById(elementId);
+            if(!box) return;
+            box.textContent = text;
+            box.className = `msg-box ${isError ? 'error' : 'success'}`;
+            box.style.display = 'block';
+            setTimeout(() => { box.style.display = 'none'; }, 4000);
         }
 
-        function checkAdmin() {
-            let pwd = prompt("Entrez le code maître administrateur :");
-            if(pwd === "pr1999") {
-                switchSection('admin');
-            } else if(pwd !== null) {
-                alert("Code incorrect !");
+        function checkAdminSession() {
+            return sessionStorage.getItem('isAdminAuth') === 'true';
+        }
+
+        window.togglePasswordVisibility = function(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                btn.textContent = "🙈";
+            } else {
+                input.type = "password";
+                btn.textContent = "👁️";
             }
         }
 
-        function addEleve() {
-            let mat = document.getElementById('admin-mat').value;
-            let nom = document.getElementById('admin-nom').value;
-            let classe = document.getElementById('admin-classe').value;
-            let parent = document.getElementById('admin-parent').value;
+        window.switchView = function(viewId, pushHistory = true) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btns button').forEach(b => b.classList.remove('active'));
+
+            document.getElementById(viewId).classList.add('active');
+            const btn = document.getElementById('btn-' + viewId);
+            if(btn) btn.classList.add('active');
+
+            if (viewId === 'admin') {
+                if (checkAdminSession()) {
+                    document.getElementById('admin-login-card').style.display = 'none';
+                    document.getElementById('admin-content-area').style.display = 'block';
+                    chargerDonneesAdmin();
+                } else {
+                    document.getElementById('admin-login-card').style.display = 'block';
+                    document.getElementById('admin-content-area').style.display = 'none';
+                }
+            }
+
+            if (pushHistory) {
+                history.pushState({ view: viewId }, "", "#" + viewId);
+            }
+            window.scrollTo(0, 0);
+        }
+
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.view) {
+                switchView(event.state.view, false);
+            } else {
+                switchView('home', false);
+            }
+        });
+
+        const initialHash = window.location.hash.replace('#', '');
+        const validViews = ['home', 'parent', 'eleve', 'prof', 'admin'];
+        if (validViews.includes(initialHash)) {
+            switchView(initialHash, false);
+        } else {
+            if (!history.state) {
+                history.replaceState({ view: 'home' }, "", "#home");
+            }
+        }
+
+        window.accederAdmin = function() {
+            switchView('admin');
+        }
+
+        window.validerCodeAdmin = function() {
+            const codeSaisi = document.getElementById('admin-code-input').value.trim();
+            if(codeSaisi === "pr1999") {
+                sessionStorage.setItem('isAdminAuth', 'true');
+                document.getElementById('admin-code-input').value = '';
+                document.getElementById('admin-login-card').style.display = 'none';
+                document.getElementById('admin-content-area').style.display = 'block';
+                chargerDonneesAdmin();
+            } else {
+                showMsg('admin-login-msg', "Code maître incorrect !", true);
+            }
+        }
+
+        window.deconnexionAdmin = function() {
+            sessionStorage.removeItem('isAdminAuth');
+            switchView('home');
+        }
+
+        window.changerFormulaireType = function() {
+            const type = document.getElementById('type-enregistrement').value;
+            if(type === 'eleve') {
+                document.getElementById('champs-eleve').style.display = 'block';
+                document.getElementById('champs-prof').style.display = 'none';
+            } else {
+                document.getElementById('champs-eleve').style.display = 'none';
+                document.getElementById('champs-prof').style.display = 'block';
+            }
+        }
+
+        window.enregistrerMembre = async function() {
+            if (!checkAdminSession()) return;
+
+            const type = document.getElementById('type-enregistrement').value;
+            const nom = document.getElementById('en-nom').value.trim();
+            const postnom = document.getElementById('en-postnom').value.trim();
+            const prenom = document.getElementById('en-prenom').value.trim();
+
+            if(!nom || !prenom) {
+                showMsg('admin-action-msg', "Veuillez remplir le nom et le prénom.", true);
+                return;
+            }
+
+            if (type === 'eleve') {
+                const classe = document.getElementById('en-classe').value.trim();
+                const sexe = document.getElementById('en-sexe').value;
+                const t1_nom = document.getElementById('tut1-nom').value.trim();
+                const t1_prenom = document.getElementById('tut1-prenom').value.trim();
+
+                if(!classe) {
+                    showMsg('admin-action-msg', "Veuillez renseigner la classe.", true);
+                    return;
+                }
+
+                const matricule = Math.floor(1000 + Math.random() * 9000).toString();
+                try {
+                    await set(ref(db, 'eleves/' + matricule), {
+                        matricule, nom, postnom, prenom, sexe, classe,
+                        tuteur1: { nom: t1_nom || "Non renseigné", prenom: t1_prenom || "" },
+                        enOrdreFrais: false,
+                        notes: {}
+                    });
+                    showMsg('admin-action-msg', `Élève enregistré ! Matricule : ${matricule}`, false);
+                    document.getElementById('form-enregistrement').reset();
+                    chargerDonneesAdmin();
+                } catch (error) { console.error(error); }
+            } else {
+                const cours = document.getElementById('en-cours').value.trim();
+                if(!cours) {
+                    showMsg('admin-action-msg', "Veuillez renseigner le cours.", true);
+                    return;
+                }
+
+                const codeAcces = Math.floor(1000 + Math.random() * 9000).toString();
+                const profId = 'prof_' + Date.now();
+                try {
+                    await set(ref(db, 'profs/' + profId), {
+                        id: profId, nom, postnom, prenom, cours, code: codeAcces
+                    });
+                    showMsg('admin-action-msg', `Professeur enregistré ! Code d'accès : ${codeAcces}`, false);
+                    document.getElementById('form-enregistrement').reset();
+                    chargerDonneesAdmin();
+                } catch (error) { console.error(error); }
+            }
+        }
+
+        window.toggleStatutFrais = async function(matricule, etatActuel) {
+            if (!checkAdminSession()) return;
+            try {
+                await update(ref(db, `eleves/${matricule}`), { enOrdreFrais: !etatActuel });
+                chargerDonneesAdmin();
+            } catch (error) { console.error(error); }
+        }
+
+        window.supprimerEleve = async function(matricule) {
+            if (!checkAdminSession()) return;
+            if (confirm("Voulez-vous vraiment supprimer cet élève ainsi que toutes ses notes ?")) {
+                try {
+                    await remove(ref(db, `eleves/${matricule}`));
+                    chargerDonneesAdmin();
+                } catch (error) { console.error(error); }
+            }
+        }
+
+        window.supprimerProf = async function(profId) {
+            if (!checkAdminSession()) return;
+            if (confirm("Supprimer ce professeur ?")) {
+                try {
+                    await remove(ref(db, `profs/${profId}`));
+                    chargerDonneesAdmin();
+                } catch (error) { console.error(error); }
+            }
+        }
+
+        async function chargerDonneesAdmin() {
+            if (!checkAdminSession()) return;
+            const dbRef = ref(db);
             
-            if(!mat || !nom) return alert("Remplissez les champs obligatoires.");
-
-            db.ref('eleves/' + mat).set({
-                nom: nom,
-                classe: classe,
-                parent: parent,
-                frais: "En ordre"
-            }, (error) => {
-                if(error) alert("Erreur");
-                else {
-                    alert("Élève ajouté avec succès !");
-                    loadAdminData();
+            try {
+                const snapEleves = await get(child(dbRef, 'eleves'));
+                const tbodyEleves = document.getElementById('table-eleves');
+                tbodyEleves.innerHTML = '';
+                if (snapEleves.exists()) {
+                    Object.values(snapEleves.val()).forEach(e => {
+                        if(!e.nom) return;
+                        const tuteurNom = e.tuteur1 ? `${e.tuteur1.nom} ${e.tuteur1.prenom || ''}` : 'Non renseigné';
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><code>${e.matricule}</code></td>
+                            <td>${e.nom} ${e.postnom || ''} ${e.prenom}</td>
+                            <td>${e.classe}</td>
+                            <td><strong>${tuteurNom}</strong></td>
+                            <td><span style="color: var(--text-muted); font-size: 0.85rem;">Espace Parent actif via matricule</span></td>
+                            <td><span class="badge ${e.enOrdreFrais ? 'success' : 'danger'} clickable-badge" onclick="toggleStatutFrais('${e.matricule}', ${e.enOrdreFrais})">${e.enOrdreFrais ? 'En ordre' : 'Bloqué'}</span></td>
+                            <td><button style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:600;" onclick="supprimerEleve('${e.matricule}')">Suppr.</button></td>
+                        `;
+                        tbodyEleves.appendChild(tr);
+                    });
+                } else {
+                    tbodyEleves.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Aucun élève.</td></tr>`;
                 }
-            });
+            } catch (err) { console.error(err); }
+
+            try {
+                const snapProfs = await get(child(dbRef, 'profs'));
+                const tbodyProfs = document.getElementById('table-profs-admin');
+                tbodyProfs.innerHTML = '';
+                if (snapProfs.exists()) {
+                    Object.values(snapProfs.val()).forEach(p => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><code style="color: var(--primary); font-weight: bold;">${p.code || 'N/A'}</code></td>
+                            <td>${p.nom} ${p.postnom || ''} ${p.prenom}</td>
+                            <td>${p.cours}</td>
+                            <td><button style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:600;" onclick="supprimerProf('${p.id}')">Suppr.</button></td>
+                        `;
+                        tbodyProfs.appendChild(tr);
+                    });
+                } else {
+                    tbodyProfs.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun professeur.</td></tr>`;
+                }
+            } catch (err) { console.error(err); }
         }
 
-        function addProf() {
-            let code = document.getElementById('admin-pcode').value;
-            let nom = document.getElementById('admin-pnom').value;
-            let cours = document.getElementById('admin-pcours').value;
+        window.parentLogin = async function() {
+            const mat = document.getElementById('parent-matricule-input').value.trim();
+            if(!mat) { showMsg('parent-msg', "Veuillez entrer un matricule.", true); return; }
+            try {
+                const snapshot = await get(child(ref(db), `eleves/${mat}`));
+                if (snapshot.exists()) {
+                    const eleve = snapshot.val();
+                    document.getElementById('parent-login-card').style.display = 'none';
+                    document.getElementById('parent-dashboard-card').style.display = 'block';
 
-            if(!code || !nom) return alert("Remplissez les champs.");
+                    document.getElementById('p-nom-eleve').textContent = `${eleve.nom} ${eleve.postnom || ''} ${eleve.prenom}`;
+                    document.getElementById('p-mat').textContent = eleve.matricule;
+                    document.getElementById('p-classe').textContent = eleve.classe;
+                    document.getElementById('p-sexe').textContent = eleve.sexe === 'M' ? 'Masculin' : 'Féminin';
+                    document.getElementById('p-tuteur1').textContent = eleve.tuteur1 ? `${eleve.tuteur1.nom} ${eleve.tuteur1.prenom}` : 'Non renseigné';
+                    
+                    const badgeFrais = document.getElementById('p-statut-frais');
+                    badgeFrais.className = `badge ${eleve.enOrdreFrais ? 'success' : 'danger'}`;
+                    badgeFrais.textContent = eleve.enOrdreFrais ? "En ordre" : "Bloqué";
 
-            db.ref('profs/' + code).set({
-                nom: nom,
-                cours: cours
-            }, (error) => {
-                if(error) alert("Erreur");
-                else {
-                    alert("Professeur enregistré !");
-                    loadAdminData();
+                    afficherNotesTableau(eleve.notes, 'table-parent-notes');
+                } else {
+                    showMsg('parent-msg', "Matricule introuvable.", true);
                 }
-            });
+            } catch (err) { console.error(err); }
         }
 
-        function loadAdminData() {
-            db.ref('eleves').on('value', (snapshot) => {
-                let tbody = document.getElementById('admin-eleves-list');
-                tbody.innerHTML = '';
-                snapshot.forEach((childSnap) => {
-                    let data = childSnap.val();
-                    tbody.innerHTML += `<tr>
-                        <td>${childSnap.key}</td>
-                        <td>${data.nom}</td>
-                        <td>${data.classe || '-'}</td>
-                        <td>${data.parent || '-'}</td>
-                        <td><span class="badge badge-success">${data.frais || 'En ordre'}</span></td>
-                        <td><button class="btn btn-danger" onclick="deleteEleve('${childSnap.key}')">Suppr.</button></td>
-                    </tr>`;
+        window.parentLogout = function() {
+            document.getElementById('parent-login-card').style.display = 'block';
+            document.getElementById('parent-dashboard-card').style.display = 'none';
+            document.getElementById('parent-matricule-input').value = '';
+        }
+
+        window.eleveLogin = async function() {
+            const mat = document.getElementById('eleve-matricule-input').value.trim();
+            if(!mat) { showMsg('eleve-msg', "Veuillez entrer votre matricule.", true); return; }
+            try {
+                const snapshot = await get(child(ref(db), `eleves/${mat}`));
+                if (snapshot.exists()) {
+                    const eleve = snapshot.val();
+                    document.getElementById('eleve-login-card').style.display = 'none';
+                    document.getElementById('eleve-dashboard-card').style.display = 'block';
+
+                    document.getElementById('e-nom-eleve').textContent = `${eleve.nom} ${eleve.postnom || ''} ${eleve.prenom}`;
+                    document.getElementById('e-mat').textContent = eleve.matricule;
+                    document.getElementById('e-classe').textContent = eleve.classe;
+                    
+                    const badgeFrais = document.getElementById('e-statut-frais');
+                    badgeFrais.className = `badge ${eleve.enOrdreFrais ? 'success' : 'danger'}`;
+                    badgeFrais.textContent = eleve.enOrdreFrais ? "En ordre" : "Bloqué";
+
+                    afficherNotesTableau(eleve.notes, 'table-eleve-notes');
+                } else {
+                    showMsg('eleve-msg', "Matricule introuvable.", true);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        window.eleveLogout = function() {
+            document.getElementById('eleve-login-card').style.display = 'block';
+            document.getElementById('eleve-dashboard-card').style.display = 'none';
+            document.getElementById('eleve-matricule-input').value = '';
+        }
+
+        function afficherNotesTableau(notesObj, elementId) {
+            const tbody = document.getElementById(elementId);
+            tbody.innerHTML = '';
+            if(notesObj && Object.keys(notesObj).length > 0) {
+                Object.entries(notesObj).forEach(([cours, note]) => {
+                    let appreciation = "Passable";
+                    if(note >= 16) appreciation = "Très Bien 🌟";
+                    else if(note >= 14) appreciation = "Bien 👍";
+                    else if(note >= 10) appreciation = "Satisfaisant";
+                    else appreciation = "Insuffisant ⚠️";
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="text-transform: capitalize;">${cours.replace(/_/g, ' ')}</td>
+                        <td><strong>${note}</strong> / 20</td>
+                        <td>${appreciation}</td>
+                    `;
+                    tbody.appendChild(tr);
                 });
-            });
-
-            db.ref('profs').on('value', (snapshot) => {
-                let tbody = document.getElementById('admin-profs-list');
-                tbody.innerHTML = '';
-                snapshot.forEach((childSnap) => {
-                    let data = childSnap.val();
-                    tbody.innerHTML += `<tr>
-                        <td>${childSnap.key}</td>
-                        <td>${data.nom}</td>
-                        <td>${data.cours}</td>
-                        <td><button class="btn btn-danger" onclick="deleteProf('${childSnap.key}')">Suppr.</button></td>
-                    </tr>`;
-                });
-            });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Aucune note disponible pour le moment.</td></tr>`;
+            }
         }
 
-        function deleteEleve(mat) {
-            if(confirm("Confirmer la suppression ?")) db.ref('eleves/' + mat).remove();
-        }
+        window.profLogin = async function() {
+            const codeSaisi = document.getElementById('prof-code-input').value.trim();
+            if(!codeSaisi || codeSaisi.length !== 4) {
+                showMsg('prof-msg', "Entrez un code à 4 chiffres.", true);
+                return;
+            }
 
-        function deleteProf(code) {
-            if(confirm("Confirmer la suppression ?")) db.ref('profs/' + code).remove();
-        }
-
-        function loginProf() {
-            let code = document.getElementById('prof-code').value;
-            db.ref('profs/' + code).once('value', (snapshot) => {
+            try {
+                const snapshot = await get(child(ref(db), 'profs'));
                 if(snapshot.exists()) {
-                    let prof = snapshot.val();
-                    document.getElementById('prof-login-card').style.display = 'none';
-                    let dash = document.getElementById('prof-dashboard');
-                    dash.style.display = 'block';
-                    dash.innerHTML = `<div class="card"><h3>Bienvenue Prof. ${prof.nom}</h3><p>Matière enseignée : <b>${prof.cours}</b></p></div>`;
-                } else {
-                    alert("Code professeur invalide.");
+                    let trouve = null;
+                    Object.values(snapshot.val()).forEach(p => { if(p.code === codeSaisi) trouve = p; });
+
+                    if(trouve) {
+                        profConnecteData = trouve;
+                        document.getElementById('prof-login-card').style.display = 'none';
+                        document.getElementById('prof-dashboard-card').style.display = 'block';
+
+                        document.getElementById('prof-nom-affiche').textContent = `${trouve.nom} ${trouve.postnom || ''} ${trouve.prenom}`;
+                        document.getElementById('prof-cours-affiche').textContent = trouve.cours;
+
+                        chargerClassesDisponiblesPourProf();
+                    } else { showMsg('prof-msg', "Code incorrect.", true); }
                 }
-            });
+            } catch(err) { console.error(err); }
         }
 
-        function consultParent() {
-            let mat = document.getElementById('parent-matricule').value;
-            db.ref('eleves/' + mat).once('value', (snapshot) => {
-                let res = document.getElementById('parent-result');
-                if(snapshot.exists()) {
-                    let d = snapshot.val();
-                    res.innerHTML = `<div class="card"><h4>${d.nom}</h4><p>Classe : ${d.classe}</p><p>Tuteur : ${d.parent}</p><p>Statut frais : <span class="badge badge-success">${d.frais}</span></p></div>`;
-                } else {
-                    res.innerHTML = `<div class="card"><p style="color:var(--danger-color)">Aucun élève trouvé avec ce matricule.</p></div>`;
-                }
-            });
+        window.profLogout = function() {
+            profConnecteData = null;
+            document.getElementById('prof-login-card').style.display = 'block';
+            document.getElementById('prof-dashboard-card').style.display = 'none';
+            document.getElementById('prof-code-input').value = '';
+            document.getElementById('table-prof-cotation').innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Sélectionnez une classe.</td></tr>`;
         }
 
-        function consultEleve() {
-            let mat = document.getElementById('eleve-matricule').value;
-            db.ref('eleves/' + mat).once('value', (snapshot) => {
-                let res = document.getElementById('eleve-result');
+        async function chargerClassesDisponiblesPourProf() {
+            try {
+                const snapshot = await get(child(ref(db), 'eleves'));
+                const selectClasse = document.getElementById('prof-filtre-classe');
+                selectClasse.innerHTML = '<option value="">-- Sélectionnez une classe --</option>';
+                
                 if(snapshot.exists()) {
-                    let d = snapshot.val();
-                    res.innerHTML = `<div class="card"><h4>Dossier de ${d.nom}</h4><p>Matricule : ${mat}</p><p>Classe : ${d.classe}</p></div>`;
-                } else {
-                    res.innerHTML = `<div class="card"><p style="color:var(--danger-color)">Matricule incorrect.</p></div>`;
+                    const classesSet = new Set();
+                    Object.values(snapshot.val()).forEach(e => { if(e.classe) classesSet.add(e.classe); });
+                    classesSet.forEach(classe => {
+                        const opt = document.createElement('option');
+                        opt.value = classe;
+                        opt.textContent = classe;
+                        selectClasse.appendChild(opt);
+                    });
                 }
-            });
+            } catch(err) { console.error(err); }
         }
+
+        window.chargerElevesPourProf = async function() {
+            const classeChoisie = document.getElementById('prof-filtre-classe').value;
+            const tbody = document.getElementById('table-prof-cotation');
+            tbody.innerHTML = '';
+
+            if(!classeChoisie) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Sélectionnez une classe.</td></tr>`;
+                return;
+            }
+
+            try {
+                const snapshot = await get(child(ref(db), 'eleves'));
+                if(snapshot.exists()) {
+                    let count = 0;
+                    Object.values(snapshot.val()).forEach(e => {
+                        if(e.classe === classeChoisie) {
+                            count++;
+                            const coursKey = profConnecteData.cours.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                            const noteActuelle = (e.notes && e.notes[coursKey]) !== undefined ? e.notes[coursKey] : '';
+
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td><code>${e.matricule}</code></td>
+                                <td>${e.nom} ${e.postnom || ''} ${e.prenom}</td>
+                                <td>${e.classe}</td>
+                                <td><input type="number" min="0" max="20" step="0.5" id="note_${e.matricule}" value="${noteActuelle}" style="width: 80px; padding: 6px;" placeholder="/20"></td>
+                                <td><button class="btn-submit" style="padding: 6px 12px; font-size: 0.85rem;" onclick="sauvegarderNote('${e.matricule}')">OK</button></td>
+                            `;
+                            tbody.appendChild(tr);
+                        }
+                    });
+                    if(count === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucun élève dans cette classe.</td></tr>`;
+                }
+            } catch(err) { console.error(err); }
+        }
+
+        window.sauvegarderNote = async function(matricule) {
+            if(!profConnecteData) return;
+            const inputVal = document.getElementById(`note_${matricule}`).value;
+            const noteNum = parseFloat(inputVal);
+
+            if(isNaN(noteNum) || noteNum < 0 || noteNum > 20) {
+                alert("Entrez une note valide entre 0 et 20.");
+                return;
+            }
+
+            const coursKey = profConnecteData.cours.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            try {
+                await update(ref(db, `eleves/${matricule}/notes`), { [coursKey]: noteNum });
+                alert("Note enregistrée !");
+            } catch(err) { console.error(err); }
+        }
+
+        window.publierCommunique = async function() {
+            if (!checkAdminSession()) return;
+            const texte = document.getElementById('com-texte').value.trim();
+            if(!texte) return;
+            const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            try {
+                await set(ref(db, 'communiques/' + Date.now()), { texte, date });
+                alert("Communiqué publié !");
+                document.getElementById('com-texte').value = '';
+                chargerCommuniques();
+            } catch (err) { console.error(err); }
+        }
+
+        async function chargerCommuniques() {
+            try {
+                const snapshot = await get(child(ref(db), 'communiques'));
+                const container = document.getElementById('public-communiques');
+                container.innerHTML = '';
+                if (snapshot.exists()) {
+                    Object.values(snapshot.val()).reverse().forEach(c => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'communique-item';
+                        itemDiv.innerHTML = `<div class="communique-date">${c.date}</div><p style="font-size: 0.95rem; line-height: 1.5;">${c.texte}</p>`;
+                        container.appendChild(itemDiv);
+                    });
+                } else {
+                    container.innerHTML = `<p style="color: var(--text-muted);">Aucun communiqué.</p>`;
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        // --- Gestion de la touche "Entrée" pour valider les formulaires de connexion ---
+        document.getElementById('parent-matricule-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') parentLogin();
+        });
+
+        document.getElementById('eleve-matricule-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') eleveLogin();
+        });
+
+        document.getElementById('prof-code-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') profLogin();
+        });
+
+        document.getElementById('admin-code-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') validerCodeAdmin();
+        });
+
+        chargerCommuniques();
     </script>
 </body>
 </html>
