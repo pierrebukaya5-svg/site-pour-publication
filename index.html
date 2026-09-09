@@ -332,16 +332,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Hash SHA-256 du code maître "pr1999"
-        const ADMIN_HASH_TARGET = "4c6b5415757d59b2a7534c568f6ff0fc44a57cb891fc953b00685b8fae929bdf";
-
-        async function hashString(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
         function checkAdminSession() {
             return sessionStorage.getItem('isAdminAuth') === 'true';
         }
@@ -366,7 +356,7 @@
             window.scrollTo(0, 0);
         }
 
-        window.accederAdmin = async function() {
+        window.accederAdmin = function() {
             if(checkAdminSession()) {
                 switchView('admin');
                 return;
@@ -374,8 +364,7 @@
 
             const codeSaisi = prompt("Entrez le code maître administrateur :");
             if(codeSaisi !== null) {
-                const hashedInput = await hashString(codeSaisi);
-                if(hashedInput === ADMIN_HASH_TARGET) {
+                if(codeSaisi === "pr1999") {
                     sessionStorage.setItem('isAdminAuth', 'true');
                     switchView('admin');
                     chargerDonneesAdmin();
@@ -504,7 +493,6 @@
                         badge.textContent = e.enOrdreFrais ? 'En ordre' : 'Bloqué';
                         badge.title = "Cliquez pour changer le statut";
                         
-                        // Action au clic sur le badge pour basculer bloqué / en ordre
                         badge.onclick = () => window.toggleStatutFrais(e.matricule, e.enOrdreFrais);
 
                         tdFrais.appendChild(badge);
