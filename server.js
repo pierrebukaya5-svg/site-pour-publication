@@ -10,7 +10,7 @@ let listeProfesseurs = [];
 app.post('/api/admin/eleve', (req, res) => {
     const { nom, classe } = req.body;
     if (!nom || !classe) {
-        return res.status(400).json({ error: "Le nom et la classe de l'élève sont obligatoires." });
+        return res.status(400).json({ error: "Nom et classe requis" });
     }
     const matricule = "MAT" + Date.now().toString().slice(-6);
     const nouvelEleve = { matricule, nom, classe, cotes: [] };
@@ -19,60 +19,38 @@ app.post('/api/admin/eleve', (req, res) => {
 });
 
 app.post('/api/admin/prof', (req, res) => {
-    const { nom, postnom, prenom, cours } = req.body;
-    if (!nom || !postnom || !prenom || !cours) {
-        return res.status(400).json({ error: "Tous les champs du professeur (nom, post-nom, prénom, cours) sont obligatoires." });
+    const { nom, code } = req.body;
+    if (!nom || !code) {
+        return res.status(400).json({ error: "Nom et code requis" });
     }
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
-    const nouveauProf = { code, nom, postnom, prenom, cours };
+    const nouveauProf = { nom, code };
     listeProfesseurs.push(nouveauProf);
     res.status(201).json(nouveauProf);
 });
 
-app.get('/api/admin/donnees', (req, res) => {
-    res.json({
-        eleves: listeEleves,
-        professeurs: listeProfesseurs
-    });
-});
-
 app.post('/api/prof/login', (req, res) => {
     const { code } = req.body;
-    if (!code) {
-        return res.status(400).json({ error: "Veuillez entrer le code d'accès à 4 chiffres." });
-    }
     const prof = listeProfesseurs.find(p => p.code === code);
     if (!prof) {
-        return res.status(401).json({ error: "Code professeur invalide ou inexistant." });
+        return res.status(401).json({ error: "Code invalide" });
     }
     res.json(prof);
 });
 
 app.post('/api/prof/cote', (req, res) => {
     const { matricule, cours, note } = req.body;
-    if (!matricule || !cours || note === undefined || note === '') {
-        return res.status(400).json({ error: "Le matricule, le cours et la note sont requis pour la cotation." });
-    }
     const eleve = listeEleves.find(e => e.matricule.toLowerCase() === matricule.toLowerCase());
     if (!eleve) {
-        return res.status(404).json({ error: "Aucun élève trouvé avec le matricule spécifié : " + matricule });
+        return res.status(404).json({ error: "Élève non trouvé" });
     }
-    const noteNum = parseFloat(note);
-    if (isNaN(noteNum) || noteNum < 0 || noteNum > 20) {
-        return res.status(400).json({ error: "La note doit être un nombre compris entre 0 et 20." });
-    }
-    eleve.cotes.push({ cours, note: noteNum });
+    eleve.cotes.push({ cours, note });
     res.json({ success: true });
 });
 
 app.get('/api/eleve/resultats/:matricule', (req, res) => {
-    const matricule = req.params.matricule;
-    if (!matricule) {
-        return res.status(400).json({ error: "Le matricule de consultation est requis." });
-    }
-    const eleve = listeEleves.find(e => e.matricule.toLowerCase() === matricule.toLowerCase());
+    const eleve = listeEleves.find(e => e.matricule.toLowerCase() === req.params.matricule.toLowerCase());
     if (!eleve) {
-        return res.status(404).json({ error: "Aucun résultat trouvé pour le matricule : " + matricule });
+        return res.status(404).json({ error: "Élève non trouvé" });
     }
     res.json(eleve);
 });
@@ -125,8 +103,6 @@ app.get('/', (req, res) => {
     </nav>
 
     <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
-        <div id="notification-flottante" class="hidden mb-6 p-4 rounded-xl text-sm border shadow-lg"></div>
-
         <section id="section-eleves-accueil" class="space-y-6">
             <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg text-center max-w-lg mx-auto">
                 <div class="bg-indigo-900/40 text-indigo-400 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">🎓</div>
@@ -155,7 +131,7 @@ app.get('/', (req, res) => {
                 <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg flex justify-between items-center">
                     <div>
                         <h2 class="text-lg font-bold text-indigo-400" id="prof-nom-affiche">Professeur</h2>
-                        <p class="text-xs text-slate-400" id="prof-cours-affiche">Interface de cotation</p>
+                        <p class="text-xs text-slate-400">Interface de cotation des élèves</p>
                     </div>
                     <button onclick="deconnexionProf()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs px-3 py-1.5 rounded-lg transition">Déconnexion</button>
                 </div>
@@ -206,46 +182,15 @@ app.get('/', (req, res) => {
 
                 <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg space-y-4">
                     <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300">Ajouter un professeur</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Nom</label>
-                            <input type="text" id="admin-prof-nom" placeholder="Nom" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-sm w-full focus:outline-none focus:border-indigo-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Post-nom</label>
-                            <input type="text" id="admin-prof-postnom" placeholder="Post-nom" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-sm w-full focus:outline-none focus:border-indigo-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Prénom</label>
-                            <input type="text" id="admin-prof-prenom" placeholder="Prénom" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-sm w-full focus:outline-none focus:border-indigo-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Cours dispensé</label>
-                            <input type="text" id="admin-prof-cours" placeholder="Ex: Mathématiques" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-sm w-full focus:outline-none focus:border-indigo-500">
-                        </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Nom du professeur</label>
+                        <input type="text" id="admin-prof-nom" placeholder="Ex: Prof. Kabeya" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-sm w-full focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Code d'accès (4 chiffres)</label>
+                        <input type="text" id="admin-prof-code" maxlength="4" placeholder="1234" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-sm w-full focus:outline-none focus:border-indigo-500">
                     </div>
                     <button onclick="adminAjouterProf()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow">Créer le compte prof</button>
-                </div>
-            </div>
-
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg space-y-6">
-                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300">Listes des enregistrements</h3>
-                    <button onclick="chargerDonneesAdmin()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-3 py-1.5 rounded-lg transition">Actualiser</button>
-                </div>
-
-                <div class="space-y-4">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Liste des Professeurs</h4>
-                    <div id="admin-liste-profs" class="overflow-x-auto">
-                        <p class="text-xs text-slate-400 italic">Chargement...</p>
-                    </div>
-                </div>
-
-                <div class="space-y-4 pt-4 border-t border-slate-700">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400">Liste des Élèves</h4>
-                    <div id="admin-liste-eleves" class="overflow-x-auto">
-                        <p class="text-xs text-slate-400 italic">Chargement...</p>
-                    </div>
                 </div>
             </div>
         </section>
@@ -256,18 +201,6 @@ app.get('/', (req, res) => {
     </footer>
 
     <script>
-        function afficherNotification(message, type = 'erreur') {
-            const notif = document.getElementById('notification-flottante');
-            notif.innerText = message;
-            notif.classList.remove('hidden');
-            if (type === 'erreur') {
-                notif.className = "mb-6 p-4 rounded-xl text-sm border shadow-lg bg-red-900/40 border-red-700 text-red-200";
-            } else {
-                notif.className = "mb-6 p-4 rounded-xl text-sm border shadow-lg bg-emerald-900/40 border-emerald-700 text-emerald-200";
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
         function changerOngletPrincipal(onglet) {
             const btnEleves = document.getElementById('btn-onglet-eleves');
             const btnProfs = document.getElementById('btn-onglet-profs');
@@ -297,7 +230,6 @@ app.get('/', (req, res) => {
                 document.getElementById('section-profs-accueil').classList.add('hidden');
                 document.getElementById('navigation-principale').classList.add('hidden');
                 document.getElementById('section-admin-dashboard').classList.add('hidden');
-                document.getElementById('notification-flottante').classList.add('hidden');
             } else {
                 document.getElementById('navigation-principale').classList.remove('hidden');
                 changerOngletPrincipal('eleves');
@@ -312,70 +244,27 @@ app.get('/', (req, res) => {
                 document.getElementById('section-eleves-accueil').classList.add('hidden');
                 document.getElementById('section-profs-accueil').classList.add('hidden');
                 document.getElementById('section-admin-dashboard').classList.remove('hidden');
-                document.getElementById('notification-flottante').classList.add('hidden');
-                chargerDonneesAdmin();
             } else {
-                afficherNotification("Mot de passe administrateur incorrect.");
+                alert("Mot de passe administrateur incorrect.");
             }
         }
 
         function deconnexionAdmin() {
             document.getElementById('section-admin-dashboard').classList.add('hidden');
             document.getElementById('navigation-principale').classList.remove('hidden');
-            document.getElementById('notification-flottante').classList.add('hidden');
             changerOngletPrincipal('eleves');
-        }
-
-        async function chargerDonneesAdmin() {
-            try {
-                const res = await fetch('/api/admin/donnees');
-                if (!res.ok) throw new Error("Impossible de récupérer les données.");
-                const data = await res.json();
-
-                const conteneurProfs = document.getElementById('admin-liste-profs');
-                if (data.professeurs && data.professeurs.length > 0) {
-                    let htmlP = '<table class="w-full text-left text-xs text-slate-300"><thead class="border-b border-slate-700 text-slate-400"><tr><th class="py-2 px-2">Code</th><th class="py-2 px-2">Nom</th><th class="py-2 px-2">Post-nom</th><th class="py-2 px-2">Prénom</th><th class="py-2 px-2">Cours</th></tr></thead><tbody>';
-                    data.professeurs.forEach(p => {
-                        htmlP += '<tr class="border-b border-slate-700/50"><td class="py-2 px-2 font-mono text-indigo-400 font-bold">' + p.code + '</td><td class="py-2 px-2">' + p.nom + '</td><td class="py-2 px-2">' + p.postnom + '</td><td class="py-2 px-2">' + p.prenom + '</td><td class="py-2 px-2">' + p.cours + '</td></tr>';
-                    });
-                    htmlP += '</tbody></table>';
-                    conteneurProfs.innerHTML = htmlP;
-                } else {
-                    conteneurProfs.innerHTML = '<p class="text-xs text-slate-400 italic">Aucun professeur enregistré.</p>';
-                }
-
-                const conteneurEleves = document.getElementById('admin-liste-eleves');
-                if (data.eleves && data.eleves.length > 0) {
-                    let htmlE = '<table class="w-full text-left text-xs text-slate-300"><thead class="border-b border-slate-700 text-slate-400"><tr><th class="py-2 px-2">Matricule</th><th class="py-2 px-2">Nom complet</th><th class="py-2 px-2">Classe</th><th class="py-2 px-2">Cotes</th></tr></thead><tbody>';
-                    data.eleves.forEach(e => {
-                        let cotesResume = e.cotes && e.cotes.length > 0 ? e.cotes.map(c => c.cours + ': ' + c.note + '/20').join(', ') : 'Aucune cote';
-                        htmlE += '<tr class="border-b border-slate-700/50"><td class="py-2 px-2 font-mono text-emerald-400 font-bold">' + e.matricule + '</td><td class="py-2 px-2">' + e.nom + '</td><td class="py-2 px-2">' + e.classe + '</td><td class="py-2 px-2 text-slate-400">' + cotesResume + '</td></tr>';
-                    });
-                    htmlE += '</tbody></table>';
-                    conteneurEleves.innerHTML = htmlE;
-                } else {
-                    conteneurEleves.innerHTML = '<p class="text-xs text-slate-400 italic">Aucun élève enregistré.</p>';
-                }
-            } catch (e) {
-                console.error(e);
-            }
         }
 
         async function chercherResultatsEleve() {
             const matricule = document.getElementById('input-matricule-recherche').value.trim();
             const conteneur = document.getElementById('conteneur-resultats-eleve');
-            document.getElementById('notification-flottante').classList.add('hidden');
-            if (!matricule) {
-                afficherNotification("Veuillez entrer un matricule valide pour effectuer la recherche.");
-                return;
-            }
+            if (!matricule) return;
 
             try {
                 const res = await fetch('/api/eleve/resultats/' + matricule);
                 if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    afficherNotification(errData.error || "Aucun élève trouvé avec le matricule " + matricule + ".");
-                    conteneur.classList.add('hidden');
+                    conteneur.innerHTML = '<div class="bg-red-900/30 border border-red-700 text-red-300 p-4 rounded-xl text-center text-sm">Aucun élève trouvé avec le matricule ' + matricule + '.</div>';
+                    conteneur.classList.remove('hidden');
                     return;
                 }
                 const data = await res.json();
@@ -408,9 +297,8 @@ app.get('/', (req, res) => {
 
         async function connexionProfesseur() {
             const code = document.getElementById('input-prof-code').value.trim();
-            document.getElementById('notification-flottante').classList.add('hidden');
             if (code.length !== 4) {
-                afficherNotification("Veuillez entrer un code professeur valide à 4 chiffres.");
+                alert("Veuillez entrer un code à 4 chiffres.");
                 return;
             }
 
@@ -421,14 +309,11 @@ app.get('/', (req, res) => {
                     body: JSON.stringify({ code })
                 });
                 if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    afficherNotification(errData.error || "Code professeur invalide.");
+                    alert("Code professeur invalide.");
                     return;
                 }
                 const data = await res.json();
-                document.getElementById('prof-nom-affiche').innerText = "Prof. " + data.prenom + " " + data.nom;
-                document.getElementById('prof-cours-affiche').innerText = "Cours dispensé : " + data.cours;
-                document.getElementById('cotation-cours').value = data.cours;
+                document.getElementById('prof-nom-affiche').innerText = data.nom || "Professeur";
                 document.getElementById('prof-login-box').classList.add('hidden');
                 document.getElementById('prof-dashboard').classList.remove('hidden');
             } catch (e) {
@@ -445,11 +330,10 @@ app.get('/', (req, res) => {
         async function soumettreCote() {
             const matricule = document.getElementById('cotation-matricule').value.trim();
             const cours = document.getElementById('cotation-cours').value.trim();
-            const note = document.getElementById('cotation-note').value;
-            document.getElementById('notification-flottante').classList.add('hidden');
+            const note = parseFloat(document.getElementById('cotation-note').value);
 
-            if (!matricule || !cours || note === '') {
-                afficherNotification("Veuillez remplir tous les champs de cotation.");
+            if (!matricule || !cours || isNaN(note)) {
+                alert("Veuillez remplir tous les champs correctement.");
                 return;
             }
 
@@ -457,15 +341,15 @@ app.get('/', (req, res) => {
                 const res = await fetch('/api/prof/cote', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ matricule, cours, note: parseFloat(note) })
+                    body: JSON.stringify({ matricule, cours, note })
                 });
                 if (res.ok) {
-                    afficherNotification("Cote enregistrée avec succès !", 'succes');
+                    alert("Cote enregistrée avec succès !");
                     document.getElementById('cotation-matricule').value = '';
+                    document.getElementById('cotation-cours').value = '';
                     document.getElementById('cotation-note').value = '';
                 } else {
-                    const errData = await res.json().catch(() => ({}));
-                    afficherNotification(errData.error || "Erreur lors de l'enregistrement de la cote.");
+                    alert("Erreur lors de l'enregistrement de la cote.");
                 }
             } catch (e) {
                 console.error(e);
@@ -475,10 +359,9 @@ app.get('/', (req, res) => {
         async function adminAjouterEleve() {
             const nom = document.getElementById('admin-eleve-nom').value.trim();
             const classe = document.getElementById('admin-eleve-classe').value.trim();
-            document.getElementById('notification-flottante').classList.add('hidden');
 
             if (!nom || !classe) {
-                afficherNotification("Veuillez renseigner le nom complet et la classe de l'élève.");
+                alert("Veuillez renseigner le nom et la classe.");
                 return;
             }
 
@@ -490,13 +373,11 @@ app.get('/', (req, res) => {
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    afficherNotification("Élève inscrit avec succès ! Matricule attribué : " + data.matricule, 'succes');
+                    alert("Élève inscrit avec succès ! Matricule attribué : " + data.matricule);
                     document.getElementById('admin-eleve-nom').value = '';
                     document.getElementById('admin-eleve-classe').value = '';
-                    chargerDonneesAdmin();
                 } else {
-                    const errData = await res.json().catch(() => ({}));
-                    afficherNotification(errData.error || "Erreur lors de l'inscription de l'élève.");
+                    alert("Erreur lors de l'inscription.");
                 }
             } catch (e) {
                 console.error(e);
@@ -505,13 +386,10 @@ app.get('/', (req, res) => {
 
         async function adminAjouterProf() {
             const nom = document.getElementById('admin-prof-nom').value.trim();
-            const postnom = document.getElementById('admin-prof-postnom').value.trim();
-            const prenom = document.getElementById('admin-prof-prenom').value.trim();
-            const cours = document.getElementById('admin-prof-cours').value.trim();
-            document.getElementById('notification-flottante').classList.add('hidden');
+            const code = document.getElementById('admin-prof-code').value.trim();
 
-            if (!nom || !postnom || !prenom || !cours) {
-                afficherNotification("Veuillez remplir tous les champs du professeur (nom, post-nom, prénom, cours).");
+            if (!nom || code.length !== 4) {
+                alert("Veuillez entrer un nom et un code valide à 4 chiffres.");
                 return;
             }
 
@@ -519,19 +397,14 @@ app.get('/', (req, res) => {
                 const res = await fetch('/api/admin/prof', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nom, postnom, prenom, cours })
+                    body: JSON.stringify({ nom, code })
                 });
                 if (res.ok) {
-                    const data = await res.json();
-                    afficherNotification("Professeur ajouté avec succès ! Code d'accès généré : " + data.code, 'succes');
+                    alert("Professeur ajouté avec succès !");
                     document.getElementById('admin-prof-nom').value = '';
-                    document.getElementById('admin-prof-postnom').value = '';
-                    document.getElementById('admin-prof-prenom').value = '';
-                    document.getElementById('admin-prof-cours').value = '';
-                    chargerDonneesAdmin();
+                    document.getElementById('admin-prof-code').value = '';
                 } else {
-                    const errData = await res.json().catch(() => ({}));
-                    afficherNotification(errData.error || "Erreur lors de l'ajout du professeur.");
+                    alert("Erreur lors de l'ajout du professeur.");
                 }
             } catch (e) {
                 console.error(e);
