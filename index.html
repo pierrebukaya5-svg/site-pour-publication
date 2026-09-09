@@ -168,6 +168,34 @@
             background-color: var(--primary-hover);
         }
 
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-back:hover {
+            border-color: var(--text-main);
+            color: var(--text-main);
+        }
+
+        .msg-box {
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .msg-box.error { background-color: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .msg-box.success { background-color: rgba(34, 197, 94, 0.2); color: var(--success); border: 1px solid var(--success); }
+
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -305,9 +333,11 @@
 
         <!-- VUE ESPACE PARENT -->
         <section id="parent" class="view">
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
             <div class="card" id="parent-login-card">
                 <h2>Espace Parent - Connexion</h2>
                 <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Entrez le code matricule de votre enfant pour accéder à son dossier complet.</p>
+                <div id="parent-msg" class="msg-box"></div>
                 <div class="form-group" style="max-width: 100%; margin-bottom: 1rem;">
                     <label>Matricule de l'enfant</label>
                     <input type="text" id="parent-matricule-input" placeholder="Ex: 4812">
@@ -353,9 +383,11 @@
 
         <!-- VUE ESPACE ELEVE -->
         <section id="eleve" class="view">
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
             <div class="card" id="eleve-login-card">
                 <h2>Espace Élève - Connexion</h2>
                 <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Entrez votre code matricule personnel pour consulter votre évolution.</p>
+                <div id="eleve-msg" class="msg-box"></div>
                 <div class="form-group" style="max-width: 100%; margin-bottom: 1rem;">
                     <label>Votre Matricule</label>
                     <input type="text" id="eleve-matricule-input" placeholder="Ex: 4812">
@@ -395,9 +427,11 @@
 
         <!-- VUE ESPACE PROFESSEUR -->
         <section id="prof" class="view">
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
             <div class="card" id="prof-login-card">
                 <h2>Espace Professeur - Connexion</h2>
                 <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Entrez votre code d'accès personnel à 4 chiffres.</p>
+                <div id="prof-msg" class="msg-box"></div>
                 <div class="form-group" style="max-width: 100%; margin-bottom: 1rem;">
                     <label>Code d'accès (4 chiffres)</label>
                     <input type="password" id="prof-code-input" maxlength="4" placeholder="Ex: 5892">
@@ -443,77 +477,95 @@
 
         <!-- VUE ADMINISTRATION -->
         <section id="admin" class="view">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
-                <h2>Administration</h2>
-                <button onclick="deconnexionAdmin()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Verrouiller</button>
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
+            
+            <!-- Modal / Formulaire de Connexion Admin s'il n'est pas authentifié -->
+            <div class="card" id="admin-login-card">
+                <h2>Connexion Administration</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Entrez le code maître pour accéder au panneau d'administration.</p>
+                <div id="admin-login-msg" class="msg-box"></div>
+                <div class="form-group" style="max-width: 100%; margin-bottom: 1rem;">
+                    <label>Code Maître</label>
+                    <input type="password" id="admin-code-input" placeholder="Code secret">
+                </div>
+                <button class="btn-submit" onclick="validerCodeAdmin()">Se connecter</button>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
-                <div class="card">
-                    <h2>Enregistrement</h2>
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label>Type d'enregistrement</label>
-                        <select id="type-enregistrement" onchange="changerFormulaireType()">
-                            <option value="eleve">Élève</option>
-                            <option value="prof">Professeur</option>
-                        </select>
-                    </div>
+            <!-- Contenu Admin réel (Masqué par défaut) -->
+            <div id="admin-content-area" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h2>Panneau d'Administration</h2>
+                    <button onclick="deconnexionAdmin()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Verrouiller l'Admin</button>
+                </div>
 
-                    <form id="form-enregistrement" onsubmit="event.preventDefault(); enregistrerMembre();">
-                        <div class="form-grid">
-                            <div class="form-group"><label>Nom *</label><input type="text" id="en-nom" required></div>
-                            <div class="form-group"><label>Post-nom</label><input type="text" id="en-postnom"></div>
-                            <div class="form-group"><label>Prénom *</label><input type="text" id="en-prenom" required></div>
-                            <div class="form-group" id="group-sexe">
-                                <label>Sexe</label>
-                                <select id="en-sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select>
-                            </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                    <div class="card">
+                        <h2>Enregistrement</h2>
+                        <div id="admin-action-msg" class="msg-box"></div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label>Type d'enregistrement</label>
+                            <select id="type-enregistrement" onchange="changerFormulaireType()">
+                                <option value="eleve">Élève</option>
+                                <option value="prof">Professeur</option>
+                            </select>
                         </div>
 
-                        <div id="champs-eleve">
-                            <div class="form-group" style="margin-bottom: 1rem;"><label>Classe *</label><input type="text" id="en-classe" placeholder="Ex: 6ème Scientifique"></div>
-                            <h4 style="margin: 1rem 0 0.5rem 0; color: var(--primary);">Identité du Tuteur Principal</h4>
+                        <form id="form-enregistrement" onsubmit="event.preventDefault(); enregistrerMembre();">
                             <div class="form-grid">
-                                <div class="form-group"><label>Nom Tuteur</label><input type="text" id="tut1-nom"></div>
-                                <div class="form-group"><label>Prénom Tuteur</label><input type="text" id="tut1-prenom"></div>
+                                <div class="form-group"><label>Nom *</label><input type="text" id="en-nom" required></div>
+                                <div class="form-group"><label>Post-nom</label><input type="text" id="en-postnom"></div>
+                                <div class="form-group"><label>Prénom *</label><input type="text" id="en-prenom" required></div>
+                                <div class="form-group" id="group-sexe">
+                                    <label>Sexe</label>
+                                    <select id="en-sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select>
+                                </div>
                             </div>
-                        </div>
 
-                        <div id="champs-prof" style="display: none;">
-                            <div class="form-group" style="margin-bottom: 1rem;"><label>Cours enseigné *</label><input type="text" id="en-cours" placeholder="Ex: Mathématiques"></div>
-                        </div>
+                            <div id="champs-eleve">
+                                <div class="form-group" style="margin-bottom: 1rem;"><label>Classe *</label><input type="text" id="en-classe" placeholder="Ex: 6ème Scientifique"></div>
+                                <h4 style="margin: 1rem 0 0.5rem 0; color: var(--primary);">Identité du Tuteur Principal</h4>
+                                <div class="form-grid">
+                                    <div class="form-group"><label>Nom Tuteur</label><input type="text" id="tut1-nom"></div>
+                                    <div class="form-group"><label>Prénom Tuteur</label><input type="text" id="tut1-prenom"></div>
+                                </div>
+                            </div>
 
-                        <button type="submit" class="btn-submit" style="margin-top: 1rem;">Enregistrer</button>
-                    </form>
-                </div>
+                            <div id="champs-prof" style="display: none;">
+                                <div class="form-group" style="margin-bottom: 1rem;"><label>Cours enseigné *</label><input type="text" id="en-cours" placeholder="Ex: Mathématiques"></div>
+                            </div>
 
-                <div class="card">
-                    <h2>Publier un Communiqué</h2>
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label>Message</label>
-                        <textarea id="com-texte" rows="3" placeholder="Écrivez votre communiqué..."></textarea>
+                            <button type="submit" class="btn-submit" style="margin-top: 1rem;">Enregistrer</button>
+                        </form>
                     </div>
-                    <button class="btn-submit" onclick="publierCommunique()">Publier</button>
-                </div>
-            </div>
 
-            <div class="card" style="margin-top: 1.5rem;">
-                <h2>LISTE DES ÉLÈVES</h2>
-                <div class="table-responsive">
-                    <table>
-                        <thead><tr><th>Matricule</th><th>Élève</th><th>Sexe</th><th>Classe</th><th>Tuteur</th><th>Frais</th></tr></thead>
-                        <tbody id="table-eleves"><tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
-                    </table>
+                    <div class="card">
+                        <h2>Publier un Communiqué</h2>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label>Message</label>
+                            <textarea id="com-texte" rows="3" placeholder="Écrivez votre communiqué..."></textarea>
+                        </div>
+                        <button class="btn-submit" onclick="publierCommunique()">Publier</button>
+                    </div>
                 </div>
-            </div>
 
-            <div class="card" style="margin-top: 1.5rem;">
-                <h2>LISTE DES PROFESSEURS</h2>
-                <div class="table-responsive">
-                    <table>
-                        <thead><tr><th>Code</th><th>Nom & Prénom</th><th>Cours Enseigné</th><th>Action</th></tr></thead>
-                        <tbody id="table-profs-admin"><tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
-                    </table>
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h2>LISTE DES ÉLÈVES</h2>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Matricule</th><th>Élève</th><th>Sexe</th><th>Classe</th><th>Tuteur</th><th>Frais</th></tr></thead>
+                            <tbody id="table-eleves"><tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h2>LISTE DES PROFESSEURS</h2>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Code</th><th>Nom & Prénom</th><th>Cours Enseigné</th><th>Action</th></tr></thead>
+                            <tbody id="table-profs-admin"><tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -543,16 +595,20 @@
 
         let profConnecteData = null;
 
+        function showMsg(elementId, text, isError = true) {
+            const box = document.getElementById(elementId);
+            if(!box) return;
+            box.textContent = text;
+            box.className = `msg-box ${isError ? 'error' : 'success'}`;
+            box.style.display = 'block';
+            setTimeout(() => { box.style.display = 'none'; }, 4000);
+        }
+
         function checkAdminSession() {
             return sessionStorage.getItem('isAdminAuth') === 'true';
         }
 
         window.switchView = function(viewId, pushHistory = true) {
-            if(viewId === 'admin' && !checkAdminSession()) {
-                alert("Accès refusé. Veuillez entrer le code maître.");
-                return;
-            }
-
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-btns button').forEach(b => b.classList.remove('active'));
 
@@ -560,27 +616,51 @@
             const btn = document.getElementById('btn-' + viewId);
             if(btn) btn.classList.add('active');
 
+            if (viewId === 'admin') {
+                if (checkAdminSession()) {
+                    document.getElementById('admin-login-card').style.display = 'none';
+                    document.getElementById('admin-content-area').style.display = 'block';
+                    chargerDonneesAdmin();
+                } else {
+                    document.getElementById('admin-login-card').style.display = 'block';
+                    document.getElementById('admin-content-area').style.display = 'none';
+                }
+            }
+
             if (pushHistory) {
                 history.pushState({ view: viewId }, "", "#" + viewId);
             }
             window.scrollTo(0, 0);
         }
 
-        window.accederAdmin = function() {
-            if(checkAdminSession()) {
-                switchView('admin');
-                return;
+        // Gestion du bouton retour physique du téléphone / navigateur
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.view) {
+                switchView(event.state.view, false);
+            } else {
+                switchView('home', false);
             }
+        });
 
-            const codeSaisi = prompt("Entrez le code maître administrateur :");
-            if(codeSaisi !== null) {
-                if(codeSaisi === "pr1999") {
-                    sessionStorage.setItem('isAdminAuth', 'true');
-                    switchView('admin');
-                    chargerDonneesAdmin();
-                } else {
-                    alert("Code maître incorrect !");
-                }
+        // Initialisation de l'état d'historique au chargement
+        if (!history.state) {
+            history.replaceState({ view: 'home' }, "", "#home");
+        }
+
+        window.accederAdmin = function() {
+            switchView('admin');
+        }
+
+        window.validerCodeAdmin = function() {
+            const codeSaisi = document.getElementById('admin-code-input').value.trim();
+            if(codeSaisi === "pr1999") {
+                sessionStorage.setItem('isAdminAuth', 'true');
+                document.getElementById('admin-code-input').value = '';
+                document.getElementById('admin-login-card').style.display = 'none';
+                document.getElementById('admin-content-area').style.display = 'block';
+                chargerDonneesAdmin();
+            } else {
+                showMsg('admin-login-msg', "Code maître incorrect !", true);
             }
         }
 
@@ -609,7 +689,7 @@
             const prenom = document.getElementById('en-prenom').value.trim();
 
             if(!nom || !prenom) {
-                alert("Veuillez remplir le nom et le prénom.");
+                showMsg('admin-action-msg', "Veuillez remplir le nom et le prénom.", true);
                 return;
             }
 
@@ -620,7 +700,7 @@
                 const t1_prenom = document.getElementById('tut1-prenom').value.trim();
 
                 if(!classe) {
-                    alert("Veuillez renseigner la classe.");
+                    showMsg('admin-action-msg', "Veuillez renseigner la classe.", true);
                     return;
                 }
 
@@ -632,14 +712,14 @@
                         enOrdreFrais: false,
                         notes: {}
                     });
-                    alert(`Élève enregistré ! Code Matricule : ${matricule}`);
+                    showMsg('admin-action-msg', `Élève enregistré ! Matricule : ${matricule}`, false);
                     document.getElementById('form-enregistrement').reset();
                     chargerDonneesAdmin();
                 } catch (error) { console.error(error); }
             } else {
                 const cours = document.getElementById('en-cours').value.trim();
                 if(!cours) {
-                    alert("Veuillez renseigner le cours.");
+                    showMsg('admin-action-msg', "Veuillez renseigner le cours.", true);
                     return;
                 }
 
@@ -649,7 +729,7 @@
                     await set(ref(db, 'profs/' + profId), {
                         id: profId, nom, postnom, prenom, cours, code: codeAcces
                     });
-                    alert(`Professeur enregistré !\n\nCode d'accès à 4 chiffres : ${codeAcces}`);
+                    showMsg('admin-action-msg', `Professeur enregistré ! Code d'accès : ${codeAcces}`, false);
                     document.getElementById('form-enregistrement').reset();
                     chargerDonneesAdmin();
                 } catch (error) { console.error(error); }
@@ -725,7 +805,7 @@
         // --- ESPACE PARENT ---
         window.parentLogin = async function() {
             const mat = document.getElementById('parent-matricule-input').value.trim();
-            if(!mat) { alert("Veuillez entrer un matricule."); return; }
+            if(!mat) { showMsg('parent-msg', "Veuillez entrer un matricule.", true); return; }
             try {
                 const snapshot = await get(child(ref(db), `eleves/${mat}`));
                 if (snapshot.exists()) {
@@ -745,7 +825,7 @@
 
                     afficherNotesTableau(eleve.notes, 'table-parent-notes');
                 } else {
-                    alert("Matricule introuvable.");
+                    showMsg('parent-msg', "Matricule introuvable.", true);
                 }
             } catch (err) { console.error(err); }
         }
@@ -759,7 +839,7 @@
         // --- ESPACE ELEVE ---
         window.eleveLogin = async function() {
             const mat = document.getElementById('eleve-matricule-input').value.trim();
-            if(!mat) { alert("Veuillez entrer votre matricule."); return; }
+            if(!mat) { showMsg('eleve-msg', "Veuillez entrer votre matricule.", true); return; }
             try {
                 const snapshot = await get(child(ref(db), `eleves/${mat}`));
                 if (snapshot.exists()) {
@@ -777,7 +857,7 @@
 
                     afficherNotesTableau(eleve.notes, 'table-eleve-notes');
                 } else {
-                    alert("Matricule introuvable.");
+                    showMsg('eleve-msg', "Matricule introuvable.", true);
                 }
             } catch (err) { console.error(err); }
         }
@@ -816,7 +896,7 @@
         window.profLogin = async function() {
             const codeSaisi = document.getElementById('prof-code-input').value.trim();
             if(!codeSaisi || codeSaisi.length !== 4) {
-                alert("Entrez un code à 4 chiffres.");
+                showMsg('prof-msg', "Entrez un code à 4 chiffres.", true);
                 return;
             }
 
@@ -835,7 +915,7 @@
                         document.getElementById('prof-cours-affiche').textContent = trouve.cours;
 
                         chargerClassesDisponiblesPourProf();
-                    } else { alert("Code incorrect."); }
+                    } else { showMsg('prof-msg', "Code incorrect.", true); }
                 }
             } catch(err) { console.error(err); }
         }
