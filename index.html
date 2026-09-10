@@ -55,7 +55,7 @@
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 1rem;
+            gap: 1.5rem;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -654,9 +654,9 @@
 
                         <form id="form-enregistrement" onsubmit="event.preventDefault(); enregistrerMembre();">
                             <div class="form-grid">
-                                <div class="form-group"><label>Nom *</label><input type="text" id="en-nom" required></div>
-                                <div class="form-group"><label>Post-nom</label><input type="text" id="en-postnom"></div>
-                                <div class="form-group"><label>Prénom *</label><input type="text" id="en-prenom" required></div>
+                                <div class="form-group"><label>Nom de l'élève *</label><input type="text" id="en-nom" required></div>
+                                <div class="form-group"><label>Post-nom de l'élève</label><input type="text" id="en-postnom"></div>
+                                <div class="form-group"><label>Prénom de l'élève *</label><input type="text" id="en-prenom" required></div>
                                 <div class="form-group" id="group-sexe">
                                     <label>Sexe</label>
                                     <select id="en-sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select>
@@ -665,10 +665,12 @@
 
                             <div id="champs-eleve">
                                 <div class="form-group" style="margin-bottom: 1.25rem;"><label>Classe *</label><input type="text" id="en-classe" placeholder="Ex: 6ème Scientifique"></div>
-                                <h4 style="margin: 1.5rem 0 0.75rem 0; color: var(--primary); font-size: 1.1rem;">Identité du Tuteur Principal</h4>
+                                
+                                <h4 style="margin: 1.5rem 0 0.75rem 0; color: var(--primary); font-size: 1.1rem;">Identité Complète du Tuteur</h4>
                                 <div class="form-grid">
-                                    <div class="form-group"><label>Nom Tuteur *</label><input type="text" id="tut1-nom" placeholder="Obligatoire pour lier le compte parent"></div>
-                                    <div class="form-group"><label>Prénom Tuteur</label><input type="text" id="tut1-prenom"></div>
+                                    <div class="form-group"><label>Nom du Tuteur *</label><input type="text" id="tut-nom" placeholder="Ex: Mukendi"></div>
+                                    <div class="form-group"><label>Post-nom du Tuteur</label><input type="text" id="tut-postnom" placeholder="Ex: Tshiamala"></div>
+                                    <div class="form-group" style="grid-column: 1 / -1;"><label>Prénom du Tuteur *</label><input type="text" id="tut-prenom" placeholder="Ex: Jean"></div>
                                 </div>
                             </div>
 
@@ -694,7 +696,7 @@
                     <h2>LISTE DES ÉLÈVES</h2>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Matricule</th><th>Élève</th><th>Classe</th><th>Parent / Tuteur</th><th>Code Parent</th><th>Frais</th><th>Action</th></tr></thead>
+                            <thead><tr><th>Matricule</th><th>Élève</th><th>Classe</th><th>Tuteur (Identité Complète)</th><th>Code Parent</th><th>Frais</th><th>Action</th></tr></thead>
                             <tbody id="table-eleves"><tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
                         </table>
                     </div>
@@ -846,39 +848,41 @@
             const prenom = document.getElementById('en-prenom').value.trim();
 
             if(!nom || !prenom) {
-                showMsg('admin-action-msg', "Veuillez remplir le nom et le prénom.", true);
+                showMsg('admin-action-msg', "Veuillez remplir le nom et le prénom de l'élève.", true);
                 return;
             }
 
             if (type === 'eleve') {
                 const classe = document.getElementById('en-classe').value.trim();
                 const sexe = document.getElementById('en-sexe').value;
-                const t1_nom = document.getElementById('tut1-nom').value.trim();
-                const t1_prenom = document.getElementById('tut1-prenom').value.trim();
+                
+                const tutNom = document.getElementById('tut-nom').value.trim();
+                const tutPostnom = document.getElementById('tut-postnom').value.trim();
+                const tutPrenom = document.getElementById('tut-prenom').value.trim();
 
-                if(!classe || !t1_nom) {
-                    showMsg('admin-action-msg', "Veuillez renseigner la classe et le nom du tuteur.", true);
+                if(!classe || !tutNom || !tutPrenom) {
+                    showMsg('admin-action-msg', "Veuillez renseigner la classe et l'identité complète du tuteur (Nom et Prénom).", true);
                     return;
                 }
 
                 const matricule = Math.floor(1000 + Math.random() * 9000).toString();
-                // Générer un code parent unique basé sur le nom du tuteur ou aléatoire si c'est la première fois, 
-                // mais pour regrouper les enfants d'un même tuteur, on peut vérifier si ce tuteur existe déjà, 
-                // ou générer un code standard. Ici, on crée un hash/code basé sur le nom du tuteur normalisé pour l'unifier, ou un code aléatoire fixe.
-                // Faisons simple et robuste : Code parent généré automatiquement (ex: PAR + 4 chiffres aléatoires, ou basé sur le nom).
-                // Pour que plusieurs enfants du même tuteur partagent le même code, on regarde si le tuteur existe déjà dans la base.
                 
                 try {
                     const dbRef = ref(db);
                     const snapEleves = await get(child(dbRef, 'eleves'));
                     let codeParentAttribue = "PAR" + Math.floor(1000 + Math.random() * 9000);
 
+                    // Recherche si ce tuteur exact existe déjà pour réutiliser son code parent
                     if (snapEleves.exists()) {
-                        const tuteurRecherche = t1_nom.toLowerCase();
+                        const tuteurNomRecherche = tutNom.toLowerCase();
+                        const tuteurPrenomRecherche = tutPrenom.toLowerCase();
+                        
                         Object.values(snapEleves.val()).forEach(e => {
-                            if (e.tuteur1 && e.tuteur1.nom && e.tuteur1.nom.toLowerCase() === tuteurRecherche) {
-                                if (e.codeParent) {
-                                    codeParentAttribue = e.codeParent; // Réutilise le même code parent pour les frères et sœurs
+                            if (e.tuteur && e.tuteur.nom && e.tuteur.prenom) {
+                                if (e.tuteur.nom.toLowerCase() === tuteurNomRecherche && e.tuteur.prenom.toLowerCase() === tuteurPrenomRecherche) {
+                                    if (e.codeParent) {
+                                        codeParentAttribue = e.codeParent;
+                                    }
                                 }
                             }
                         });
@@ -886,13 +890,17 @@
 
                     await set(ref(db, 'eleves/' + matricule), {
                         matricule, nom, postnom, prenom, sexe, classe,
-                        tuteur1: { nom: t1_nom, prenom: t1_prenom || "" },
+                        tuteur: { 
+                            nom: tutNom, 
+                            postnom: tutPostnom, 
+                            prenom: tutPrenom 
+                        },
                         codeParent: codeParentAttribue,
                         enOrdreFrais: false,
                         notes: {}
                     });
 
-                    showMsg('admin-action-msg', `Élève enregistré ! Matricule : ${matricule} | Code Parent : ${codeParentAttribue}`, false);
+                    showMsg('admin-action-msg', `Élève enregistré ! Matricule : ${matricule} | Code Parent généré : ${codeParentAttribue}`, false);
                     document.getElementById('form-enregistrement').reset();
                     chargerDonneesAdmin();
                 } catch (error) { console.error(error); }
@@ -955,14 +963,15 @@
                 if (snapEleves.exists()) {
                     Object.values(snapEleves.val()).forEach(e => {
                         if(!e.nom) return;
-                        const tuteurNom = e.tuteur1 ? `${e.tuteur1.nom} ${e.tuteur1.prenom || ''}` : 'Non renseigné';
+                        const t = e.tuteur;
+                        const tuteurIdentite = t ? `${t.nom} ${t.postnom || ''} ${t.prenom}` : 'Non renseigné';
                         const codeP = e.codeParent || 'N/A';
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td><code>${e.matricule}</code></td>
                             <td>${e.nom} ${e.postnom || ''} ${e.prenom}</td>
                             <td>${e.classe}</td>
-                            <td><strong>${tuteurNom}</strong></td>
+                            <td><strong>${tuteurIdentite}</strong></td>
                             <td><code style="color: var(--primary); font-weight: bold;">${codeP}</code></td>
                             <td><span class="badge ${e.enOrdreFrais ? 'success' : 'danger'} clickable-badge" onclick="toggleStatutFrais('${e.matricule}', ${e.enOrdreFrais})">${e.enOrdreFrais ? 'En ordre' : 'Bloqué'}</span></td>
                             <td><button style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:600;" onclick="supprimerEleve('${e.matricule}')">Suppr.</button></td>
@@ -995,7 +1004,7 @@
             } catch (err) { console.error(err); }
         }
 
-        // --- GESTION ESPACE PARENT MIS À JOUR ---
+        // --- GESTION ESPACE PARENT ---
         window.parentLogin = async function() {
             const codeParentSaisi = document.getElementById('parent-code-input').value.trim();
             if(!codeParentSaisi) { showMsg('parent-msg', "Veuillez entrer votre code parent.", true); return; }
@@ -1004,13 +1013,13 @@
                 const snapshot = await get(child(ref(db), 'eleves'));
                 if (snapshot.exists()) {
                     let enfantsTrouves = [];
-                    let nomTuteurTrouve = "";
+                    let nomTuteurComplet = "";
 
                     Object.values(snapshot.val()).forEach(eleve => {
                         if (eleve.codeParent === codeParentSaisi) {
                             enfantsTrouves.push(eleve);
-                            if (eleve.tuteur1 && eleve.tuteur1.nom) {
-                                nomTuteurTrouve = `${eleve.tuteur1.nom} ${eleve.tuteur1.prenom || ''}`;
+                            if (eleve.tuteur) {
+                                nomTuteurComplet = `${eleve.tuteur.nom} ${eleve.tuteur.postnom || ''} ${eleve.tuteur.prenom}`;
                             }
                         }
                     });
@@ -1018,7 +1027,7 @@
                     if (enfantsTrouves.length > 0) {
                         document.getElementById('parent-login-card').style.display = 'none';
                         document.getElementById('parent-dashboard-card').style.display = 'block';
-                        document.getElementById('p-nom-tuteur-titre').textContent = nomTuteurTrouve || codeParentSaisi;
+                        document.getElementById('p-nom-tuteur-titre').textContent = nomTuteurComplet || codeParentSaisi;
 
                         const tbodyEnfants = document.getElementById('table-parent-enfants');
                         tbodyEnfants.innerHTML = '';
@@ -1035,7 +1044,6 @@
                             tbodyEnfants.appendChild(tr);
                         });
 
-                        // Cacher le détail au login initial jusqu'à ce qu'il clique sur un enfant
                         document.getElementById('enfant-detail-section').style.display = 'none';
                     } else {
                         showMsg('parent-msg', "Code parent introuvable.", true);
@@ -1265,22 +1273,11 @@
             } catch (err) { console.error(err); }
         }
 
-        // --- Gestion de la touche "Entrée" pour valider les formulaires de connexion ---
-        document.getElementById('parent-code-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') parentLogin();
-        });
-
-        document.getElementById('eleve-matricule-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') eleveLogin();
-        });
-
-        document.getElementById('prof-code-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') profLogin();
-        });
-
-        document.getElementById('admin-code-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') validerCodeAdmin();
-        });
+        // Raccourcis de validation par touche "Entrée"
+        document.getElementById('parent-code-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') parentLogin(); });
+        document.getElementById('eleve-matricule-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') eleveLogin(); });
+        document.getElementById('prof-code-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') profLogin(); });
+        document.getElementById('admin-code-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') validerCodeAdmin(); });
 
         chargerCommuniques();
     </script>
