@@ -446,7 +446,7 @@
             <!-- Écran de connexion Parent -->
             <div class="card" id="parent-login-card">
                 <h2> Parent - Connexion</h2>
-                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.95rem;"> votre <strong>Code Parent</strong> personnel pour accéder au suivi de tous vos enfants.</p>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.95rem;">Entrez votre <strong>Code Parent</strong> personnel pour accéder au suivi de tous vos enfants.</p>
                 <div id="parent-msg" class="msg-box"></div>
                 <div class="form-group" style="max-width: 100%; margin-bottom: 1.25rem;">
                     <label>Code Parent</label>
@@ -672,6 +672,15 @@
                                     <div class="form-group"><label>Post-nom du Tuteur</label><input type="text" id="tut-postnom" placeholder="Ex: Tshiamala"></div>
                                     <div class="form-group" style="grid-column: 1 / -1;"><label>Prénom du Tuteur *</label><input type="text" id="tut-prenom" placeholder="Ex: Jean"></div>
                                 </div>
+
+                                <h4 style="margin: 1.5rem 0 0.75rem 0; color: var(--primary); font-size: 1.1rem;">Code d'accès Parent</h4>
+                                <div class="form-group" style="margin-bottom: 1.25rem;">
+                                    <label>Code Parent (Laisser vide pour générer automatiquement)</label>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <input type="text" id="en-codeparent" placeholder="Ex: PAR1234">
+                                        <button type="button" onclick="genererCodeAleatoireParent()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text-main); padding: 0 1rem; border-radius: 0.6rem; cursor: pointer; font-size: 0.85rem; font-weight: 600; white-space: nowrap;">Générer</button>
+                                    </div>
+                                </div>
                             </div>
 
                             <div id="champs-prof" style="display: none;">
@@ -839,6 +848,11 @@
             }
         }
 
+        window.genererCodeAleatoireParent = function() {
+            const codeAleatoire = "PAR" + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('en-codeparent').value = codeAleatoire;
+        }
+
         window.enregistrerMembre = async function() {
             if (!checkAdminSession()) return;
 
@@ -870,22 +884,29 @@
                 try {
                     const dbRef = ref(db);
                     const snapEleves = await get(child(dbRef, 'eleves'));
-                    let codeParentAttribue = "PAR" + Math.floor(1000 + Math.random() * 9000);
+                    
+                    // Récupérer la valeur saisie ou générée manuellement dans la case dédiée
+                    let codeParentAttribue = document.getElementById('en-codeparent').value.trim();
 
-                    // Recherche si ce tuteur exact existe déjà pour réutiliser son code parent
-                    if (snapEleves.exists()) {
-                        const tuteurNomRecherche = tutNom.toLowerCase();
-                        const tuteurPrenomRecherche = tutPrenom.toLowerCase();
-                        
-                        Object.values(snapEleves.val()).forEach(e => {
-                            if (e.tuteur && e.tuteur.nom && e.tuteur.prenom) {
-                                if (e.tuteur.nom.toLowerCase() === tuteurNomRecherche && e.tuteur.prenom.toLowerCase() === tuteurPrenomRecherche) {
-                                    if (e.codeParent) {
-                                        codeParentAttribue = e.codeParent;
+                    // Si la case est vide, on applique la logique automatique habituelle
+                    if (!codeParentAttribue) {
+                        codeParentAttribue = "PAR" + Math.floor(1000 + Math.random() * 9000);
+
+                        // Recherche si ce tuteur exact existe déjà pour réutiliser son code parent
+                        if (snapEleves.exists()) {
+                            const tuteurNomRecherche = tutNom.toLowerCase();
+                            const tuteurPrenomRecherche = tutPrenom.toLowerCase();
+                            
+                            Object.values(snapEleves.val()).forEach(e => {
+                                if (e.tuteur && e.tuteur.nom && e.tuteur.prenom) {
+                                    if (e.tuteur.nom.toLowerCase() === tuteurNomRecherche && e.tuteur.prenom.toLowerCase() === tuteurPrenomRecherche) {
+                                        if (e.codeParent) {
+                                            codeParentAttribue = e.codeParent;
+                                        }
                                     }
                                 }
-                            }
-                        });
+                            });
+                        }
                     }
 
                     await set(ref(db, 'eleves/' + matricule), {
@@ -900,7 +921,7 @@
                         notes: {}
                     });
 
-                    showMsg('admin-action-msg', `Élève enregistré ! Matricule : ${matricule} | Code Parent généré : ${codeParentAttribue}`, false);
+                    showMsg('admin-action-msg', `Élève enregistré ! Matricule : ${matricule} | Code Parent attribué : ${codeParentAttribue}`, false);
                     document.getElementById('form-enregistrement').reset();
                     chargerDonneesAdmin();
                 } catch (error) { console.error(error); }
