@@ -4,9 +4,19 @@ const path = require('path');
 
 const app = express();
 
-// Sécurité - corrige les 7 alertes ZAP
+// SÉCURITÉ - Correction des 17 alertes ZAP
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.gstatic.com", "https://*.firebaseio.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'", "https://*.firebaseio.com", "https://*.firebasedatabase.app"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"]
+    }
+  },
   crossOriginEmbedderPolicy: false
 }));
 
