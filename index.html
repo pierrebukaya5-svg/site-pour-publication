@@ -420,7 +420,7 @@
                 <div class="portal-links">
                     <div class="portal-box" onclick="switchView('parent')">
                         <h3 style="color: var(--primary); margin-bottom: 0.5rem; font-size: 1.15rem;">👨‍👩‍👧 Espace Parent</h3>
-                        <p style="font-size: 0.85rem; color: var(--text-muted);">Suivi des frais et évolution de l'enfant.</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Suivi des frais et évolution de vos enfants.</p>
                     </div>
                     <div class="portal-box" onclick="switchView('eleve')">
                         <h3 style="color: var(--primary); margin-bottom: 0.5rem; font-size: 1.15rem;">🎒 Espace Élève</h3>
@@ -442,49 +442,77 @@
         <!-- VUE ESPACE PARENT -->
         <section id="parent" class="view">
             <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
+            
+            <!-- Écran de connexion Parent -->
             <div class="card" id="parent-login-card">
                 <h2>Espace Parent - Connexion</h2>
-                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.95rem;">Entrez le code matricule de votre enfant pour accéder à son dossier complet.</p>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.95rem;">Entrez votre <strong>Code Parent</strong> personnel pour accéder au suivi de tous vos enfants.</p>
                 <div id="parent-msg" class="msg-box"></div>
                 <div class="form-group" style="max-width: 100%; margin-bottom: 1.25rem;">
-                    <label>Matricule de l'enfant</label>
-                    <input type="text" id="parent-matricule-input" placeholder="Ex: 4812">
+                    <label>Code Parent</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="parent-code-input" placeholder="Ex: PAR9210">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('parent-code-input', this)">👁️</button>
+                    </div>
                 </div>
                 <button class="btn-submit" onclick="parentLogin()">Se connecter</button>
             </div>
 
+            <!-- Tableau de bord Parent (Liste des enfants & détails) -->
             <div class="card" id="parent-dashboard-card" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
-                    <h2>Dossier : <span id="p-nom-eleve" style="color: var(--primary);"></span></h2>
+                    <h2>Espace Parent - Tuteur : <span id="p-nom-tuteur-titre" style="color: var(--primary);"></span></h2>
                     <button onclick="parentLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.4rem 0.9rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Déconnexion</button>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr; gap: 1.25rem; margin-bottom: 1.75rem; font-size: 0.95rem;">
-                    <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: 0.75rem; border: 1px solid var(--border);">
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Voici la liste de vos enfants enregistrés dans l'établissement :</p>
+
+                <div class="table-responsive" style="margin-bottom: 2rem;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Matricule</th>
+                                <th>Enfant</th>
+                                <th>Classe</th>
+                                <th>Statut Frais</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-parent-enfants">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Chargement de vos enfants...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Section de détail de l'enfant sélectionné -->
+                <div id="enfant-detail-section" style="display: none; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <h3>Dossier de l'élève : <span id="p-nom-eleve" style="color: var(--primary);"></span></h3>
+                        <button onclick="fermerDetailEnfant()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.3rem 0.8rem; border-radius: 0.4rem; cursor: pointer; font-size: 0.8rem;">Fermer ce dossier</button>
+                    </div>
+
+                    <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: 0.75rem; border: 1px solid var(--border); margin-bottom: 1.5rem; font-size: 0.95rem;">
                         <p style="margin-bottom: 0.5rem;"><strong>Matricule :</strong> <span id="p-mat"></span></p>
                         <p style="margin-bottom: 0.5rem;"><strong>Classe :</strong> <span id="p-classe"></span></p>
                         <p style="margin-bottom: 0.5rem;"><strong>Sexe :</strong> <span id="p-sexe"></span></p>
                         <p style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem;"><strong>Statut Frais :</strong> <span id="p-statut-frais" class="badge"></span></p>
                     </div>
-                    <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: 0.75rem; border: 1px solid var(--border);">
-                        <p><strong>Tuteur Principal :</strong> <span id="p-tuteur1"></span></p>
-                    </div>
-                </div>
 
-                <h3>Évolution & Cotations (Bulletins)</h3>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Cours</th>
-                                <th>Note / 20</th>
-                                <th>Appréciation / Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-parent-notes">
-                            <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Aucune note enregistrée pour le moment.</td></tr>
-                        </tbody>
-                    </table>
+                    <h4 style="margin-bottom: 1rem;">Évolution & Cotations (Bulletin)</h4>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cours</th>
+                                    <th>Note / 20</th>
+                                    <th>Appréciation / Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-parent-notes">
+                                <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Sélectionnez un enfant pour voir son bulletin.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -639,7 +667,7 @@
                                 <div class="form-group" style="margin-bottom: 1.25rem;"><label>Classe *</label><input type="text" id="en-classe" placeholder="Ex: 6ème Scientifique"></div>
                                 <h4 style="margin: 1.5rem 0 0.75rem 0; color: var(--primary); font-size: 1.1rem;">Identité du Tuteur Principal</h4>
                                 <div class="form-grid">
-                                    <div class="form-group"><label>Nom Tuteur</label><input type="text" id="tut1-nom"></div>
+                                    <div class="form-group"><label>Nom Tuteur *</label><input type="text" id="tut1-nom" placeholder="Obligatoire pour lier le compte parent"></div>
                                     <div class="form-group"><label>Prénom Tuteur</label><input type="text" id="tut1-prenom"></div>
                                 </div>
                             </div>
@@ -666,7 +694,7 @@
                     <h2>LISTE DES ÉLÈVES</h2>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Matricule</th><th>Élève</th><th>Classe</th><th>Parent / Tuteur</th><th>Contact / Infos</th><th>Frais</th><th>Action</th></tr></thead>
+                            <thead><tr><th>Matricule</th><th>Élève</th><th>Classe</th><th>Parent / Tuteur</th><th>Code Parent</th><th>Frais</th><th>Action</th></tr></thead>
                             <tbody id="table-eleves"><tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
                         </table>
                     </div>
@@ -828,20 +856,43 @@
                 const t1_nom = document.getElementById('tut1-nom').value.trim();
                 const t1_prenom = document.getElementById('tut1-prenom').value.trim();
 
-                if(!classe) {
-                    showMsg('admin-action-msg', "Veuillez renseigner la classe.", true);
+                if(!classe || !t1_nom) {
+                    showMsg('admin-action-msg', "Veuillez renseigner la classe et le nom du tuteur.", true);
                     return;
                 }
 
                 const matricule = Math.floor(1000 + Math.random() * 9000).toString();
+                // Générer un code parent unique basé sur le nom du tuteur ou aléatoire si c'est la première fois, 
+                // mais pour regrouper les enfants d'un même tuteur, on peut vérifier si ce tuteur existe déjà, 
+                // ou générer un code standard. Ici, on crée un hash/code basé sur le nom du tuteur normalisé pour l'unifier, ou un code aléatoire fixe.
+                // Faisons simple et robuste : Code parent généré automatiquement (ex: PAR + 4 chiffres aléatoires, ou basé sur le nom).
+                // Pour que plusieurs enfants du même tuteur partagent le même code, on regarde si le tuteur existe déjà dans la base.
+                
                 try {
+                    const dbRef = ref(db);
+                    const snapEleves = await get(child(dbRef, 'eleves'));
+                    let codeParentAttribue = "PAR" + Math.floor(1000 + Math.random() * 9000);
+
+                    if (snapEleves.exists()) {
+                        const tuteurRecherche = t1_nom.toLowerCase();
+                        Object.values(snapEleves.val()).forEach(e => {
+                            if (e.tuteur1 && e.tuteur1.nom && e.tuteur1.nom.toLowerCase() === tuteurRecherche) {
+                                if (e.codeParent) {
+                                    codeParentAttribue = e.codeParent; // Réutilise le même code parent pour les frères et sœurs
+                                }
+                            }
+                        });
+                    }
+
                     await set(ref(db, 'eleves/' + matricule), {
                         matricule, nom, postnom, prenom, sexe, classe,
-                        tuteur1: { nom: t1_nom || "Non renseigné", prenom: t1_prenom || "" },
+                        tuteur1: { nom: t1_nom, prenom: t1_prenom || "" },
+                        codeParent: codeParentAttribue,
                         enOrdreFrais: false,
                         notes: {}
                     });
-                    showMsg('admin-action-msg', `Élève enregistré ! Matricule : ${matricule}`, false);
+
+                    showMsg('admin-action-msg', `Élève enregistré ! Matricule : ${matricule} | Code Parent : ${codeParentAttribue}`, false);
                     document.getElementById('form-enregistrement').reset();
                     chargerDonneesAdmin();
                 } catch (error) { console.error(error); }
@@ -905,13 +956,14 @@
                     Object.values(snapEleves.val()).forEach(e => {
                         if(!e.nom) return;
                         const tuteurNom = e.tuteur1 ? `${e.tuteur1.nom} ${e.tuteur1.prenom || ''}` : 'Non renseigné';
+                        const codeP = e.codeParent || 'N/A';
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td><code>${e.matricule}</code></td>
                             <td>${e.nom} ${e.postnom || ''} ${e.prenom}</td>
                             <td>${e.classe}</td>
                             <td><strong>${tuteurNom}</strong></td>
-                            <td><span style="color: var(--text-muted); font-size: 0.85rem;">Espace Parent actif via matricule</span></td>
+                            <td><code style="color: var(--primary); font-weight: bold;">${codeP}</code></td>
                             <td><span class="badge ${e.enOrdreFrais ? 'success' : 'danger'} clickable-badge" onclick="toggleStatutFrais('${e.matricule}', ${e.enOrdreFrais})">${e.enOrdreFrais ? 'En ordre' : 'Bloqué'}</span></td>
                             <td><button style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:600;" onclick="supprimerEleve('${e.matricule}')">Suppr.</button></td>
                         `;
@@ -943,37 +995,81 @@
             } catch (err) { console.error(err); }
         }
 
+        // --- GESTION ESPACE PARENT MIS À JOUR ---
         window.parentLogin = async function() {
-            const mat = document.getElementById('parent-matricule-input').value.trim();
-            if(!mat) { showMsg('parent-msg', "Veuillez entrer un matricule.", true); return; }
+            const codeParentSaisi = document.getElementById('parent-code-input').value.trim();
+            if(!codeParentSaisi) { showMsg('parent-msg', "Veuillez entrer votre code parent.", true); return; }
+            
             try {
-                const snapshot = await get(child(ref(db), `eleves/${mat}`));
+                const snapshot = await get(child(ref(db), 'eleves'));
                 if (snapshot.exists()) {
-                    const eleve = snapshot.val();
-                    document.getElementById('parent-login-card').style.display = 'none';
-                    document.getElementById('parent-dashboard-card').style.display = 'block';
+                    let enfantsTrouves = [];
+                    let nomTuteurTrouve = "";
 
-                    document.getElementById('p-nom-eleve').textContent = `${eleve.nom} ${eleve.postnom || ''} ${eleve.prenom}`;
-                    document.getElementById('p-mat').textContent = eleve.matricule;
-                    document.getElementById('p-classe').textContent = eleve.classe;
-                    document.getElementById('p-sexe').textContent = eleve.sexe === 'M' ? 'Masculin' : 'Féminin';
-                    document.getElementById('p-tuteur1').textContent = eleve.tuteur1 ? `${eleve.tuteur1.nom} ${eleve.tuteur1.prenom}` : 'Non renseigné';
-                    
-                    const badgeFrais = document.getElementById('p-statut-frais');
-                    badgeFrais.className = `badge ${eleve.enOrdreFrais ? 'success' : 'danger'}`;
-                    badgeFrais.textContent = eleve.enOrdreFrais ? "En ordre" : "Bloqué";
+                    Object.values(snapshot.val()).forEach(eleve => {
+                        if (eleve.codeParent === codeParentSaisi) {
+                            enfantsTrouves.push(eleve);
+                            if (eleve.tuteur1 && eleve.tuteur1.nom) {
+                                nomTuteurTrouve = `${eleve.tuteur1.nom} ${eleve.tuteur1.prenom || ''}`;
+                            }
+                        }
+                    });
 
-                    afficherNotesTableau(eleve.notes, 'table-parent-notes');
+                    if (enfantsTrouves.length > 0) {
+                        document.getElementById('parent-login-card').style.display = 'none';
+                        document.getElementById('parent-dashboard-card').style.display = 'block';
+                        document.getElementById('p-nom-tuteur-titre').textContent = nomTuteurTrouve || codeParentSaisi;
+
+                        const tbodyEnfants = document.getElementById('table-parent-enfants');
+                        tbodyEnfants.innerHTML = '';
+
+                        enfantsTrouves.forEach(e => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td><code>${e.matricule}</code></td>
+                                <td>${e.nom} ${e.postnom || ''} ${e.prenom}</td>
+                                <td>${e.classe}</td>
+                                <td><span class="badge ${e.enOrdreFrais ? 'success' : 'danger'}">${e.enOrdreFrais ? "En ordre" : "Bloqué"}</span></td>
+                                <td><button class="btn-submit" style="padding: 4px 10px; font-size: 0.8rem;" onclick='voirDossierEnfant(${JSON.stringify(e)})'>Voir le dossier</button></td>
+                            `;
+                            tbodyEnfants.appendChild(tr);
+                        });
+
+                        // Cacher le détail au login initial jusqu'à ce qu'il clique sur un enfant
+                        document.getElementById('enfant-detail-section').style.display = 'none';
+                    } else {
+                        showMsg('parent-msg', "Code parent introuvable.", true);
+                    }
                 } else {
-                    showMsg('parent-msg', "Matricule introuvable.", true);
+                    showMsg('parent-msg', "Aucun élève enregistré dans le système.", true);
                 }
             } catch (err) { console.error(err); }
+        }
+
+        window.voirDossierEnfant = function(eleve) {
+            document.getElementById('enfant-detail-section').style.display = 'block';
+            document.getElementById('p-nom-eleve').textContent = `${eleve.nom} ${eleve.postnom || ''} ${eleve.prenom}`;
+            document.getElementById('p-mat').textContent = eleve.matricule;
+            document.getElementById('p-classe').textContent = eleve.classe;
+            document.getElementById('p-sexe').textContent = eleve.sexe === 'M' ? 'Masculin' : 'Féminin';
+            
+            const badgeFrais = document.getElementById('p-statut-frais');
+            badgeFrais.className = `badge ${eleve.enOrdreFrais ? 'success' : 'danger'}`;
+            badgeFrais.textContent = eleve.enOrdreFrais ? "En ordre" : "Bloqué";
+
+            afficherNotesTableau(eleve.notes, 'table-parent-notes');
+            window.scrollTo({ top: document.getElementById('enfant-detail-section').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        window.fermerDetailEnfant = function() {
+            document.getElementById('enfant-detail-section').style.display = 'none';
         }
 
         window.parentLogout = function() {
             document.getElementById('parent-login-card').style.display = 'block';
             document.getElementById('parent-dashboard-card').style.display = 'none';
-            document.getElementById('parent-matricule-input').value = '';
+            document.getElementById('parent-code-input').value = '';
+            document.getElementById('enfant-detail-section').style.display = 'none';
         }
 
         window.eleveLogin = async function() {
@@ -1170,7 +1266,7 @@
         }
 
         // --- Gestion de la touche "Entrée" pour valider les formulaires de connexion ---
-        document.getElementById('parent-matricule-input').addEventListener('keypress', function(e) {
+        document.getElementById('parent-code-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') parentLogin();
         });
 
