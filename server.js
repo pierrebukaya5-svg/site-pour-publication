@@ -1,32 +1,21 @@
 const express = require('express');
 const helmet = require('helmet');
 const path = require('path');
-
 const app = express();
 
-// SÉCURITÉ - Correction des 17 alertes ZAP
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.gstatic.com", "https://*.firebaseio.com"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:"],
-      connectSrc: ["'self'", "https://*.firebaseio.com", "https://*.firebasedatabase.app"],
-      objectSrc: ["'none'"],
-      frameAncestors: ["'none'"]
-    }
-  },
-  crossOriginEmbedderPolicy: false
-}));
+app.use(helmet());
+
+// BLOQUE l'accès à donnees.json
+app.use((req, res, next) => {
+  if (req.url.includes('donnees.json')) {
+    return res.status(403).send('Acces interdit');
+  }
+  next();
+});
 
 app.use(express.static(__dirname));
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+app.get('*', (req,res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log('Serveur lance sur port ' + PORT);
-});
+app.listen(PORT, () => console.log('Serveur lance sur port ' + PORT));
