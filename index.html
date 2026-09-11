@@ -541,7 +541,7 @@
             <button onclick="switchView('parent')" id="btn-parent">Parent</button>
             <button onclick="switchView('eleve')" id="btn-eleve">Élève</button>
             <button onclick="switchView('prof')" id="btn-prof">Prof</button>
-            <button onclick="accederAdmin()" id="btn-admin">Admin</button>
+            <button onclick="switchView('admin')" id="btn-admin">Admin</button>
         </nav>
     </header>
 
@@ -660,7 +660,7 @@
                         <div style="display: flex; align-items: center; gap: 0.5rem;"><strong>Statut Frais :</strong> <span id="p-statut-frais" class="badge"></span></div>
                     </div>
 
-                    <!-- NOUVELLE SECTION FRAIS CÔTÉ PARENT -->
+                    <!-- SECTION FRAIS CÔTÉ PARENT -->
                     <h4 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-main);">💰 Situation Financière & Frais Exigés</h4>
                     <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem;">
                         <div class="table-responsive" style="margin-top: 0; margin-bottom: 1rem;">
@@ -691,7 +691,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem; border-top: 1px solid var(--border); pt-3; padding-top: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
                             <div>Montant Payé : <span id="val-p-montant-paye" style="color: var(--success); font-weight: 600;">0 $</span></div>
                             <div><strong>Reste à Payer :</strong> <span id="val-p-reste-payer" style="color: var(--danger); font-weight: 700;">0 $</span></div>
                         </div>
@@ -938,15 +938,6 @@
                                     </div>
                                 </div>
 
-                                <!-- CHAMPS FINANCIERS CÔTÉ ADMIN -->
-                                <h4 style="margin: 1.25rem 0 0.75rem 0; color: var(--primary); font-size: 0.95rem;">Gestion Financière & Frais Exigés</h4>
-                                <div class="form-grid">
-                                    <div class="form-group"><label for="en-frais-scolaires">Frais Scolaires ($)</label><input type="number" id="en-frais-scolaires" placeholder="Ex: 150" value="0"></div>
-                                    <div class="form-group"><label for="en-frais-inscription">Frais d'Inscription ($)</label><input type="number" id="en-frais-inscription" placeholder="Ex: 30" value="0"></div>
-                                    <div class="form-group"><label for="en-frais-bulletin">Frais de Bulletin ($)</label><input type="number" id="en-frais-bulletin" placeholder="Ex: 10" value="0"></div>
-                                    <div class="form-group"><label for="en-montant-paye">Montant déjà Payé ($)</label><input type="number" id="en-montant-paye" placeholder="Ex: 110" value="0"></div>
-                                </div>
-                                
                                 <h4 style="margin: 1.25rem 0 0.75rem 0; color: var(--primary); font-size: 0.95rem;">Identité du Tuteur</h4>
                                 <div class="form-grid">
                                     <div class="form-group"><label for="tut-nom">Nom Tuteur *</label><input type="text" id="tut-nom" placeholder="Ex: Mukendi"></div>
@@ -990,11 +981,38 @@
                     </div>
                 </div>
 
+                <!-- NOUVELLE SECTION : GESTION GLOBALE DES FRAIS DES ÉLÈVES -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <h3 style="font-size: 1.1rem; margin: 0;">💰 Gestion Globale des Frais par Élève</h3>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Modifiez et sauvegardez directement les montants</span>
+                    </div>
+                    <div id="admin-frais-msg" class="msg-box" role="alert"></div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Matricule & Identité</th>
+                                    <th>Classe</th>
+                                    <th>Scolaires ($)</th>
+                                    <th>Inscription ($)</th>
+                                    <th>Bulletin ($)</th>
+                                    <th>Payé ($)</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-admin-frais-global">
+                                <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="card" style="margin-top: 1.5rem;">
                     <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">LISTE DES ÉLÈVES</h3>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Matricule</th><th>Élève</th><th>Classe</th><th>Tuteur</th><th>Code</th><th>Frais</th><th>Action</th></tr></thead>
+                            <thead><tr><th>Matricule</th><th>Élève</th><th>Classe</th><th>Tuteur</th><th>Code</th><th>Statut</th><th>Action</th></tr></thead>
                             <tbody id="table-eleves"><tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr></tbody>
                         </table>
                     </div>
@@ -1106,17 +1124,6 @@
             }
         }
 
-        window.accederAdmin = function() {
-            const codeSaisi = prompt("Veuillez entrer le code maître administrateur :");
-            if (codeSaisi === "pr1999") {
-                sessionStorage.setItem('isAdminAuth', 'true');
-                switchView('admin');
-            } else if (codeSaisi !== null) {
-                alert("Code erroné. Accès refusé.");
-                switchView('home');
-            }
-        }
-
         window.validerCodeAdmin = function() {
             const codeSaisi = document.getElementById('admin-code-input').value.trim();
             if(codeSaisi === "pr1999") {
@@ -1165,13 +1172,6 @@
                 const niveau = document.getElementById('en-niveau').value;
                 const option = document.getElementById('en-option').value;
                 const sexe = document.getElementById('en-sexe').value;
-                
-                const fraisScolaires = Number(document.getElementById('en-frais-scolaires').value) || 0;
-                const fraisInscription = Number(document.getElementById('en-frais-inscription').value) || 0;
-                const fraisBulletin = Number(document.getElementById('en-frais-bulletin').value) || 0;
-                const montantPaye = Number(document.getElementById('en-montant-paye').value) || 0;
-                const totalExige = fraisScolaires + fraisInscription + fraisBulletin;
-                const resteAPayer = totalExige - montantPaye;
 
                 const tutNom = document.getElementById('tut-nom').value.trim();
                 const tutPostnom = document.getElementById('tut-postnom').value.trim();
@@ -1212,15 +1212,16 @@
                         }
                     }
 
+                    // Frais initialisés par défaut à 0 (l'admin les remplira via la liste dédiée)
                     await set(ref(db, 'eleves/' + matricule), {
                         matricule, nom, postnom, prenom, sexe, classe,
                         frais: {
-                            fraisScolaires,
-                            fraisInscription,
-                            fraisBulletin,
-                            montantPaye,
-                            totalExige,
-                            resteAPayer
+                            fraisScolaires: 0,
+                            fraisInscription: 0,
+                            fraisBulletin: 0,
+                            montantPaye: 0,
+                            totalExige: 0,
+                            resteAPayer: 0
                         },
                         tuteur: { 
                             nom: tutNom, 
@@ -1286,6 +1287,34 @@
                     await remove(ref(db, `profs/${profId}`));
                     chargerDonneesAdmin();
                 } catch (error) { console.error(error); }
+            }
+        }
+
+        // Sauvegarde dynamique des frais par l'admin depuis la liste dédiée
+        window.sauvegarderFraisEleveAdmin = async function(matricule) {
+            if (!checkAdminSession()) return;
+
+            const scolaires = Number(document.getElementById(`frais_scolaires_${matricule}`).value) || 0;
+            const inscription = Number(document.getElementById(`frais_inscription_${matricule}`).value) || 0;
+            const bulletin = Number(document.getElementById(`frais_bulletin_${matricule}`).value) || 0;
+            const paye = Number(document.getElementById(`montant_paye_${matricule}`).value) || 0;
+
+            const totalExige = scolaires + inscription + bulletin;
+            const resteAPayer = totalExige - paye;
+
+            try {
+                await update(ref(db, `eleves/${matricule}/frais`), {
+                    fraisScolaires: scolaires,
+                    fraisInscription: inscription,
+                    fraisBulletin: bulletin,
+                    montantPaye: paye,
+                    totalExige: totalExige,
+                    resteAPayer: resteAPayer
+                });
+                showMsg('admin-frais-msg', `Frais mis à jour pour le matricule ${matricule} !`, false);
+            } catch (err) {
+                console.error(err);
+                showMsg('admin-frais-msg', "Erreur lors de la mise à jour.", true);
             }
         }
 
@@ -1364,13 +1393,19 @@
             try {
                 const snapEleves = await get(child(dbRef, 'eleves'));
                 const tbodyEleves = document.getElementById('table-eleves');
+                const tbodyFraisGlobal = document.getElementById('table-admin-frais-global');
+                
                 tbodyEleves.innerHTML = '';
+                tbodyFraisGlobal.innerHTML = '';
+
                 if (snapEleves.exists()) {
                     Object.values(snapEleves.val()).forEach(e => {
                         if(!e.nom) return;
                         const t = e.tuteur;
                         const tuteurIdentite = t ? `${t.nom} ${t.prenom}` : 'N/A';
                         const codeP = e.codeParent || 'N/A';
+                        
+                        // Ligne pour la liste générale des élèves
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td><code>${e.matricule}</code></td>
@@ -1382,9 +1417,24 @@
                             <td><button style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="supprimerEleve('${e.matricule}')">X</button></td>
                         `;
                         tbodyEleves.appendChild(tr);
+
+                        // Ligne pour la gestion globale des frais
+                        const f = e.frais || { fraisScolaires: 0, fraisInscription: 0, fraisBulletin: 0, montantPaye: 0 };
+                        const trFrais = document.createElement('tr');
+                        trFrais.innerHTML = `
+                            <td><strong>${e.nom} ${e.prenom}</strong><br><code>${e.matricule}</code></td>
+                            <td>${e.classe}</td>
+                            <td><input type="number" id="frais_scolaires_${e.matricule}" value="${f.fraisScolaires || 0}" style="width: 85px; padding: 6px;"></td>
+                            <td><input type="number" id="frais_inscription_${e.matricule}" value="${f.fraisInscription || 0}" style="width: 85px; padding: 6px;"></td>
+                            <td><input type="number" id="frais_bulletin_${e.matricule}" value="${f.fraisBulletin || 0}" style="width: 85px; padding: 6px;"></td>
+                            <td><input type="number" id="montant_paye_${e.matricule}" value="${f.montantPaye || 0}" style="width: 85px; padding: 6px;"></td>
+                            <td><button class="btn-submit" style="padding: 6px 10px; font-size: 0.75rem; width: auto;" onclick="sauvegarderFraisEleveAdmin('${e.matricule}')">Enregistrer</button></td>
+                        `;
+                        tbodyFraisGlobal.appendChild(trFrais);
                     });
                 } else {
                     tbodyEleves.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Aucun élève.</td></tr>`;
+                    tbodyFraisGlobal.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Aucun élève.</td></tr>`;
                 }
             } catch (err) { console.error(err); }
 
@@ -1467,7 +1517,6 @@
             badgeFrais.className = `badge ${eleve.enOrdreFrais ? 'success' : 'danger'}`;
             badgeFrais.textContent = eleve.enOrdreFrais ? "En ordre" : "Bloqué";
 
-            // Mise à jour des champs financiers dans l'onglet Parent
             const f = eleve.frais || { fraisScolaires: 0, fraisInscription: 0, fraisBulletin: 0, montantPaye: 0, totalExige: 0, resteAPayer: 0 };
             document.getElementById('val-p-frais-scolaires').textContent = (f.fraisScolaires || 0) + ' $';
             document.getElementById('val-p-frais-inscription').textContent = (f.fraisInscription || 0) + ' $';
@@ -1670,7 +1719,7 @@
             const coursKey = profConnecteData.cours.toLowerCase().replace(/[^a-z0-9]/g, '_');
             try {
                 await update(ref(db, `eleves/${matricule}/notes`), { [coursKey]: noteNum });
-                alert("Note enregistrée !");
+                showMsg('admin-action-msg', "Note enregistrée avec succès !", false);
             } catch(err) { console.error(err); }
         }
 
@@ -1681,7 +1730,7 @@
             const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
             try {
                 await set(ref(db, 'communiques/' + Date.now()), { texte, date });
-                alert("Communiqué publié !");
+                showMsg('admin-action-msg', "Communiqué publié avec succès !", false);
                 document.getElementById('com-texte').value = '';
                 chargerCommuniques();
             } catch (err) { console.error(err); }
