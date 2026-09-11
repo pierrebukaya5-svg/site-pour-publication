@@ -1,4 +1,4 @@
-p<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -660,6 +660,43 @@ p<!DOCTYPE html>
                         <div style="display: flex; align-items: center; gap: 0.5rem;"><strong>Statut Frais :</strong> <span id="p-statut-frais" class="badge"></span></div>
                     </div>
 
+                    <!-- NOUVELLE SECTION FRAIS CÔTÉ PARENT -->
+                    <h4 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-main);">💰 Situation Financière & Frais Exigés</h4>
+                    <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem;">
+                        <div class="table-responsive" style="margin-top: 0; margin-bottom: 1rem;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Type de Frais</th>
+                                        <th>Montant Exigé</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Frais Scolaires</td>
+                                        <td id="val-p-frais-scolaires">0 $</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Frais d'Inscription</td>
+                                        <td id="val-p-frais-inscription">0 $</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Frais de Bulletin</td>
+                                        <td id="val-p-frais-bulletin">0 $</td>
+                                    </tr>
+                                    <tr style="background: rgba(255, 255, 255, 0.02);">
+                                        <td><strong>Total Exigé</strong></td>
+                                        <td><strong id="val-p-total-exige">0 $</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem; border-top: 1px solid var(--border); pt-3; padding-top: 0.75rem;">
+                            <div>Montant Payé : <span id="val-p-montant-paye" style="color: var(--success); font-weight: 600;">0 $</span></div>
+                            <div><strong>Reste à Payer :</strong> <span id="val-p-reste-payer" style="color: var(--danger); font-weight: 700;">0 $</span></div>
+                        </div>
+                    </div>
+
                     <h4 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-main);">📅 Calendrier des Présences</h4>
                     <div class="table-responsive" style="margin-bottom: 1.5rem;">
                         <table>
@@ -900,6 +937,15 @@ p<!DOCTYPE html>
                                         </select>
                                     </div>
                                 </div>
+
+                                <!-- CHAMPS FINANCIERS CÔTÉ ADMIN -->
+                                <h4 style="margin: 1.25rem 0 0.75rem 0; color: var(--primary); font-size: 0.95rem;">Gestion Financière & Frais Exigés</h4>
+                                <div class="form-grid">
+                                    <div class="form-group"><label for="en-frais-scolaires">Frais Scolaires ($)</label><input type="number" id="en-frais-scolaires" placeholder="Ex: 150" value="0"></div>
+                                    <div class="form-group"><label for="en-frais-inscription">Frais d'Inscription ($)</label><input type="number" id="en-frais-inscription" placeholder="Ex: 30" value="0"></div>
+                                    <div class="form-group"><label for="en-frais-bulletin">Frais de Bulletin ($)</label><input type="number" id="en-frais-bulletin" placeholder="Ex: 10" value="0"></div>
+                                    <div class="form-group"><label for="en-montant-paye">Montant déjà Payé ($)</label><input type="number" id="en-montant-paye" placeholder="Ex: 110" value="0"></div>
+                                </div>
                                 
                                 <h4 style="margin: 1.25rem 0 0.75rem 0; color: var(--primary); font-size: 0.95rem;">Identité du Tuteur</h4>
                                 <div class="form-grid">
@@ -922,7 +968,6 @@ p<!DOCTYPE html>
                                 <h4 style="margin: 1.25rem 0 0.75rem 0; color: var(--primary); font-size: 0.95rem;">Code Parent</h4>
                                 <div class="form-group" style="margin-bottom: 1.25rem;">
                                     <label for="en-codeparent">Code (Laisser vide pour auto)</label>
-                                    <!-- Le bouton Générer a été entièrement retiré ici -->
                                     <input type="text" id="en-codeparent" placeholder="Ex: PAR1234">
                                 </div>
                             </div>
@@ -1121,6 +1166,13 @@ p<!DOCTYPE html>
                 const option = document.getElementById('en-option').value;
                 const sexe = document.getElementById('en-sexe').value;
                 
+                const fraisScolaires = Number(document.getElementById('en-frais-scolaires').value) || 0;
+                const fraisInscription = Number(document.getElementById('en-frais-inscription').value) || 0;
+                const fraisBulletin = Number(document.getElementById('en-frais-bulletin').value) || 0;
+                const montantPaye = Number(document.getElementById('en-montant-paye').value) || 0;
+                const totalExige = fraisScolaires + fraisInscription + fraisBulletin;
+                const resteAPayer = totalExige - montantPaye;
+
                 const tutNom = document.getElementById('tut-nom').value.trim();
                 const tutPostnom = document.getElementById('tut-postnom').value.trim();
                 const tutPrenom = document.getElementById('tut-prenom').value.trim();
@@ -1162,6 +1214,14 @@ p<!DOCTYPE html>
 
                     await set(ref(db, 'eleves/' + matricule), {
                         matricule, nom, postnom, prenom, sexe, classe,
+                        frais: {
+                            fraisScolaires,
+                            fraisInscription,
+                            fraisBulletin,
+                            montantPaye,
+                            totalExige,
+                            resteAPayer
+                        },
                         tuteur: { 
                             nom: tutNom, 
                             postnom: tutPostnom, 
@@ -1406,6 +1466,15 @@ p<!DOCTYPE html>
             const badgeFrais = document.getElementById('p-statut-frais');
             badgeFrais.className = `badge ${eleve.enOrdreFrais ? 'success' : 'danger'}`;
             badgeFrais.textContent = eleve.enOrdreFrais ? "En ordre" : "Bloqué";
+
+            // Mise à jour des champs financiers dans l'onglet Parent
+            const f = eleve.frais || { fraisScolaires: 0, fraisInscription: 0, fraisBulletin: 0, montantPaye: 0, totalExige: 0, resteAPayer: 0 };
+            document.getElementById('val-p-frais-scolaires').textContent = (f.fraisScolaires || 0) + ' $';
+            document.getElementById('val-p-frais-inscription').textContent = (f.fraisInscription || 0) + ' $';
+            document.getElementById('val-p-frais-bulletin').textContent = (f.fraisBulletin || 0) + ' $';
+            document.getElementById('val-p-total-exige').textContent = (f.totalExige || ((f.fraisScolaires||0)+(f.fraisInscription||0)+(f.fraisBulletin||0))) + ' $';
+            document.getElementById('val-p-montant-paye').textContent = (f.montantPaye || 0) + ' $';
+            document.getElementById('val-p-reste-payer').textContent = (f.resteAPayer || 0) + ' $';
 
             afficherPresencesTableau(eleve.presences, 'table-parent-presences');
             afficherNotesTableau(eleve.notes, 'table-parent-notes');
