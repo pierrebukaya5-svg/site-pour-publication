@@ -872,7 +872,37 @@
                             </div>
 
                             <div id="champs-eleve">
-                                <div class="form-group" style="margin-bottom: 1rem;"><label for="en-classe">Classe *</label><input type="text" id="en-classe" placeholder="Ex: 6ème Scientifique"></div>
+                                <!-- Nouveaux sélecteurs de Niveau (1 à 8) et d'Option -->
+                                <div class="form-grid" style="margin-bottom: 1rem;">
+                                    <div class="form-group">
+                                        <label for="en-niveau">Niveau *</label>
+                                        <select id="en-niveau">
+                                            <option value="">-- Niveau --</option>
+                                            <option value="1ère">1ère</option>
+                                            <option value="2ème">2ème</option>
+                                            <option value="3ème">3ème</option>
+                                            <option value="4ème">4ème</option>
+                                            <option value="5ème">5ème</option>
+                                            <option value="6ème">6ème</option>
+                                            <option value="7ème">7ème</option>
+                                            <option value="8ème">8ème</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="en-option">Option *</label>
+                                        <select id="en-option">
+                                            <option value="">-- Option / Section --</option>
+                                            <option value="Commercial Informatique">Commercial Informatique</option>
+                                            <option value="Commercial Admin">Commercial Admin</option>
+                                            <option value="Latin-Philo">Latin-Philo</option>
+                                            <option value="Math-Info">Math-Info</option>
+                                            <option value="Chimie-Biologie">Chimie-Biologie</option>
+                                            <option value="Math-Physique">Math-Physique</option>
+                                            <option value="Coupe et Couture">Coupe et Couture</option>
+                                            <option value="Électronique">Électronique</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 
                                 <h4 style="margin: 1.25rem 0 0.75rem 0; color: var(--primary); font-size: 0.95rem;">Identité du Tuteur</h4>
                                 <div class="form-grid">
@@ -1079,17 +1109,21 @@
             }
 
             if (type === 'eleve') {
-                const classe = document.getElementById('en-classe').value.trim();
+                const niveau = document.getElementById('en-niveau').value;
+                const option = document.getElementById('en-option').value;
                 const sexe = document.getElementById('en-sexe').value;
                 
                 const tutNom = document.getElementById('tut-nom').value.trim();
                 const tutPostnom = document.getElementById('tut-postnom').value.trim();
                 const tutPrenom = document.getElementById('tut-prenom').value.trim();
 
-                if(!classe || !tutNom || !tutPrenom) {
-                    showMsg('admin-action-msg', "Veuillez renseigner la classe et l'identité du tuteur.", true);
+                if(!niveau || !option || !tutNom || !tutPrenom) {
+                    showMsg('admin-action-msg', "Veuillez sélectionner le niveau, l'option et renseigner l'identité du tuteur.", true);
                     return;
                 }
+
+                // Fusion automatique du niveau et de l'option (ex: "6ème Commercial Informatique")
+                const classe = `${niveau} ${option}`;
 
                 const matricule = Math.floor(1000 + Math.random() * 9000).toString();
                 
@@ -1127,7 +1161,7 @@
                         presences: {}
                     });
 
-                    showMsg('admin-action-msg', `Élève enregistré ! Matricule : ${matricule} | Code : ${codeParentAttribue}`, false);
+                    showMsg('admin-action-msg', `Élève enregistré ! Matricule : ${matricule} | Classe : ${classe}`, false);
                     document.getElementById('form-enregistrement').reset();
                     chargerDonneesAdmin();
                     chargerClassesAdminPresence();
