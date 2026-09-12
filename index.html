@@ -757,6 +757,8 @@
                 <h2>Bienvenue sur le Portail Officiel</h2>
                 <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Consultez les actualités, suivez les progrès académiques et accédez à votre espace dédié en toute sécurité.</p>
                 
+                <p class="text-center text-green-600 mt-2" id="status" style="font-weight: bold; margin-bottom: 1rem;">Connexion à Firebase en cours...</p>
+
                 <div class="portal-links">
                     <div class="portal-box" onclick="switchView('parent')">
                         <span style="font-size: 1.5rem;" aria-hidden="true">👨‍👩‍👧</span>
@@ -773,6 +775,19 @@
                         <h3 style="color: var(--primary); margin: 0; font-size: 1rem;">Espace Prof</h3>
                         <p style="font-size: 0.8rem; color: var(--text-muted);">Cotation et gestion des listes de classes.</p>
                     </div>
+                </div>
+
+                <div class="mt-6 bg-slate-50 p-4 rounded-xl" style="background: rgba(9, 13, 22, 0.4); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; margin-top: 1.5rem;">
+                    <h2 class="font-bold mb-2" style="font-size: 1rem; margin-bottom: 0.75rem;">Ajouter un élève (Test temps réel PC -> Téléphone)</h2>
+                    <div class="flex gap-2" style="display: flex; gap: 0.75rem;">
+                        <input id="nom" placeholder="Nom de l'élève" class="flex-1 border p-2 rounded" style="flex: 1;">
+                        <button onclick="ajouterEleveFirebase()" class="bg-blue-600 text-white px-4 py-2 rounded" style="background: var(--primary); border: none; color: white; padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600;">Ajouter</button>
+                    </div>
+                </div>
+
+                <div class="mt-6" style="margin-top: 1.5rem;">
+                    <h2 class="font-bold text-lg" style="font-size: 1rem; margin-bottom: 0.75rem;">Liste des élèves en direct :</h2>
+                    <ul id="liste" class="mt-3 space-y-2" style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;"></ul>
                 </div>
 
                 <details class="info-jour-details">
@@ -1451,6 +1466,56 @@
         &copy; 2026 École de la RDC &bull; Tous droits réservés &bull; Kinshasa, RDC
     </footer>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // CONFIGURATION FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpzKhm93AJnwGsqptCBNfmWG8E4m0uJNM",
+            authDomain: "site-publication.firebaseapp.com",
+            databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
+            projectId: "site-publication",
+            storageBucket: "site-publication.firebasestorage.app",
+            messagingSenderId: "934019778891",
+            appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const elevesRef = ref(db, 'ecole6/eleves');
+
+        document.getElementById('status').innerText = "Connecté à Firebase - Temps réel actif";
+        document.getElementById('status').className = "text-center text-green-600 font-bold mt-2";
+
+        window.ajouterEleveFirebase = function() {
+            const nom = document.getElementById('nom').value;
+            if(!nom) return;
+            push(elevesRef, { nom: nom, date: new Date().toLocaleString() });
+            document.getElementById('nom').value = "";
+        }
+
+        onValue(elevesRef, (snapshot) => {
+            const data = snapshot.val();
+            const liste = document.getElementById('liste');
+            if(!liste) return;
+            liste.innerHTML = "";
+            if(!data){ liste.innerHTML = "<li class='text-gray-400' style='color: var(--text-muted);'>Aucun élève - Ajoute pour tester PC/Téléphone</li>"; return; }
+            Object.keys(data).reverse().forEach(key => {
+                const el = data[key];
+                const li = document.createElement('li');
+                li.className = "bg-white border p-3 rounded flex justify-between";
+                li.style.cssText = "background: rgba(9, 13, 22, 0.4); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;";
+                li.innerHTML = `<span>${el.nom} <small class='text-gray-400' style='color: var(--text-muted); font-size: 0.75rem; margin-left: 0.5rem;'>${el.date}</small></span> <button onclick="supprimerEleveFirebase('${key}')" class='text-red-500' style='background: transparent; border: none; color: var(--danger); cursor: pointer; font-weight: bold;'>✕</button>`;
+                liste.appendChild(li);
+            });
+        });
+
+        window.supprimerEleveFirebase = function(key){
+            remove(ref(db, 'ecole6/eleves/'+key));
+        }
+    </script>
+
     <script>
         // --- LISTE OFFICIELLE DES CLASSES ET OPTIONS DE LA RDC ---
         const CLASSES_OPTIONS_RDC = [
@@ -1496,7 +1561,7 @@
                 ],
                 fraisClasses: initialFrais,
                 communiques: [
-                    id = 1, texte = "Rappel : Clôture imminente de la période de régulation des frais scolaires pour ce trimestre.", date = "10 Septembre 2026"
+                    { id: 1, texte: "Rappel : Clôture imminente de la période de régulation des frais scolaires pour ce trimestre.", date: "10 Septembre 2026" }
                 ],
                 demandesCours: [],
                 messages: []
@@ -1813,7 +1878,7 @@
             let db = getDB();
             let p = db.profs.find(item => item.codeProf === code);
             if(!p) {
-                showMsg('prof-msg', 'Code Prof incorrect.', 'error');
+                showMsg('prof-msg', 'Code Prof invalide.', 'error');
                 return;
             }
             currentProf = p;
@@ -1824,7 +1889,6 @@
             document.getElementById('prof-adresse-val').textContent = p.adresse || '-';
             document.getElementById('prof-naissance-val').textContent = p.naissance || '-';
             document.getElementById('prof-cours-input').value = p.matiere || '';
-            initSelectClasses();
         }
 
         function profLogout() {
@@ -1835,98 +1899,114 @@
         }
 
         function changerNbInteros() {
-            let nb = parseInt(document.getElementById('prof-nb-interos').value);
+            let nb = document.getElementById('prof-nb-interos').value;
             for(let i=1; i<=4; i++) {
-                let th = document.querySelector('.th-int-' + i);
-                if(th) th.style.display = (i <= nb) ? '' : 'none';
+                document.querySelectorAll('.th-int-'+i).forEach(el => {
+                    el.style.display = i <= nb ? '' : 'none';
+                });
+                document.querySelectorAll('.td-int-'+i).forEach(el => {
+                    el.style.display = i <= nb ? '' : 'none';
+                });
             }
-            chargerElevesClasseProf();
         }
 
         function chargerElevesClasseProf() {
             let classe = document.getElementById('prof-classe-select').value;
-            let cours = document.getElementById('prof-cours-input').value.trim();
             let tbody = document.getElementById('table-prof-cotations');
-            if(!classe || !cours) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe et saisir l\'intitulé du cours.</td></tr>';
+            if(!classe) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe & option.</td></tr>';
                 return;
             }
-
             let db = getDB();
-            let eleves = db.eleves.filter(e => e.classe === classe);
-            let trim = document.getElementById('prof-trimestre-select').value;
-            let nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
-            let maxVal = document.getElementById('prof-cotation-max').value;
-            document.getElementById('th-label-total').textContent = `Total / ${maxVal}`;
-
-            if(eleves.length === 0) {
+            let elevesClasse = db.eleves.filter(e => e.classe === classe);
+            if(elevesClasse.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Aucun élève inscrit dans cette classe.</td></tr>';
                 return;
             }
 
-            let html = '';
-            eleves.forEach((e, idx) => {
-                let key = `${cours}_${trim}`;
-                let nData = (e.notes && e.notes[key]) ? e.notes[key] : { intero1: '', intero2: '', intero3: '', intero4: '', devoir: '', examen: '' };
+            let cours = document.getElementById('prof-cours-input').value.trim() || 'Matière';
+            let trimestre = document.getElementById('prof-trimestre-select').value;
+            let maxVal = document.getElementById('prof-cotation-max').value;
+            document.getElementById('th-label-total').textContent = `Total / ${maxVal}`;
 
-                html += `<tr data-mat="${e.matricule}">
+            let nbInteros = document.getElementById('prof-nb-interos').value;
+            let html = '';
+            elevesClasse.forEach(e => {
+                let key = `${cours}_${trimestre}`;
+                let n = (e.notes && e.notes[key]) || { intero1: '', intero2: '', intero3: '', intero4: '', devoir: '', examen: '', note: 0, max: maxVal, appreciation: '' };
+
+                html += `<tr data-matricule="${e.matricule}">
                     <td><code>${e.matricule}</code></td>
                     <td><strong>${e.nom} ${e.prenom}</strong> ${e.postnom || ''}</td>
-                    <td class="td-int-1" ${nbInteros < 1 ? 'style="display:none;"' : ''}><input type="number" class="inp-i1" value="${nData.intero1 !== undefined ? nData.intero1 : ''}" style="width:70px; padding:0.3rem;" min="0"></td>
-                    <td class="td-int-2" ${nbInteros < 2 ? 'style="display:none;"' : ''}><input type="number" class="inp-i2" value="${nData.intero2 !== undefined ? nData.intero2 : ''}" style="width:70px; padding:0.3rem;" min="0"></td>
-                    <td class="td-int-3" ${nbInteros < 3 ? 'style="display:none;"' : ''}><input type="number" class="inp-i3" value="${nData.intero3 !== undefined ? nData.intero3 : ''}" style="width:70px; padding:0.3rem;" min="0"></td>
-                    <td class="td-int-4" ${nbInteros < 4 ? 'style="display:none;"' : ''}><input type="number" class="inp-i4" value="${nData.intero4 !== undefined ? nData.intero4 : ''}" style="width:70px; padding:0.3rem;" min="0"></td>
-                    <td><input type="number" class="inp-dev" value="${nData.devoir !== undefined ? nData.devoir : ''}" style="width:70px; padding:0.3rem;" min="0"></td>
-                    <td><input type="number" class="inp-ex" value="${nData.examen !== undefined ? nData.examen : ''}" style="width:70px; padding:0.3rem;" min="0"></td>
-                    <td><span class="span-total">${nData.note !== undefined ? nData.note : '-'}</span> / ${maxVal}</td>
-                    <td><span class="badge success span-app">${nData.appreciation || 'En attente'}</span></td>
+                    <td class="th-int-col td-int-1"><input type="number" class="input-note input-int1" value="${n.intero1 !== undefined ? n.intero1 : ''}" placeholder="0" oninput="calculerTotalLigne(this)"></td>
+                    <td class="th-int-col td-int-2"><input type="number" class="input-note input-int2" value="${n.intero2 !== undefined ? n.intero2 : ''}" placeholder="0" oninput="calculerTotalLigne(this)"></td>
+                    <td class="th-int-col td-int-3" style="${nbInteros < 3 ? 'display:none;' : ''}"><input type="number" class="input-note input-int3" value="${n.intero3 !== undefined ? n.intero3 : ''}" placeholder="0" oninput="calculerTotalLigne(this)"></td>
+                    <td class="th-int-col td-int-4" style="${nbInteros < 4 ? 'display:none;' : ''}"><input type="number" class="input-note input-int4" value="${n.intero4 !== undefined ? n.intero4 : ''}" placeholder="0" oninput="calculerTotalLigne(this)"></td>
+                    <td><input type="number" class="input-note input-devoir" value="${n.devoir !== undefined ? n.devoir : ''}" placeholder="0" oninput="calculerTotalLigne(this)"></td>
+                    <td><input type="number" class="input-note input-examen" value="${n.examen !== undefined ? n.examen : ''}" placeholder="0" oninput="calculerTotalLigne(this)"></td>
+                    <td><strong class="span-total">${n.note || 0} / ${maxVal}</strong></td>
+                    <td><input type="text" class="input-appreciation" value="${n.appreciation || ''}" placeholder="Ex: Bien"></td>
                 </tr>`;
             });
             tbody.innerHTML = html;
+            changerNbInteros();
+        }
+
+        function calculerTotalLigne(input) {
+            let tr = input.closest('tr');
+            let nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
+            let maxVal = parseFloat(document.getElementById('prof-cotation-max').value);
+
+            let sum = 0;
+            let count = 0;
+            for(let i=1; i<=nbInteros; i++) {
+                let val = parseFloat(tr.querySelector(`.input-int${i}`).value);
+                if(!isNaN(val)) { sum += val; count++; }
+            }
+            let dev = parseFloat(tr.querySelector('.input-devoir').value);
+            if(!isNaN(dev)) { sum += dev; count++; }
+
+            let exam = parseFloat(tr.querySelector('.input-examen').value);
+            if(!isNaN(exam)) { sum += exam; count++; }
+
+            // Calcul simplifié de la moyenne ramenée au max
+            let moyenne = count > 0 ? (sum / count) : 0;
+            if(moyenne > maxVal) moyenne = maxVal;
+            tr.querySelector('.span-total').textContent = `${moyenne.toFixed(1)} / ${maxVal}`;
         }
 
         function enregistrerNotesProf() {
             let classe = document.getElementById('prof-classe-select').value;
             let cours = document.getElementById('prof-cours-input').value.trim();
-            let trim = document.getElementById('prof-trimestre-select').value;
-            let maxVal = parseFloat(document.getElementById('prof-cotation-max').value);
+            let trimestre = document.getElementById('prof-trimestre-select').value;
+            let maxVal = document.getElementById('prof-cotation-max').value;
+
             if(!classe || !cours) {
-                alert('Veuillez renseigner la classe et le cours.');
+                alert('Veuillez sélectionner une classe et renseigner l\'intitulé du cours.');
                 return;
             }
 
             let db = getDB();
-            let rows = document.querySelectorAll('#table-prof-cotations tr[data-mat]');
-            let nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
-
-            rows.forEach(row => {
-                let mat = row.getAttribute('data-mat');
+            let rows = document.querySelectorAll('#table-prof-cotations tr[data-matricule]');
+            rows.forEach(tr => {
+                let mat = tr.getAttribute('data-matricule');
                 let e = db.eleves.find(item => item.matricule === mat);
                 if(e) {
-                    let i1 = parseFloat(row.querySelector('.inp-i1').value) || 0;
-                    let i2 = parseFloat(row.querySelector('.inp-i2').value) || 0;
-                    let i3 = nbInteros >= 3 ? (parseFloat(row.querySelector('.inp-i3').value) || 0) : 0;
-                    let i4 = nbInteros >= 4 ? (parseFloat(row.querySelector('.inp-i4').value) || 0) : 0;
-                    let dev = parseFloat(row.querySelector('.inp-dev').value) || 0;
-                    let ex = parseFloat(row.querySelector('.inp-ex').value) || 0;
-
-                    let total = i1 + i2 + i3 + i4 + dev + ex;
-                    let pct = (total / maxVal) * 100;
-                    let app = 'Passable';
-                    if(pct >= 80) app = 'Excellent';
-                    else if(pct >= 70) app = 'Très Bien';
-                    else if(pct >= 60) app = 'Bien';
-                    else if(pct >= 50) app = 'Satisfaisant';
-
                     if(!e.notes) e.notes = {};
-                    e.notes[`${cours}_${trim}`] = {
-                        intero1: row.querySelector('.inp-i1').value !== '' ? i1 : undefined,
-                        intero2: row.querySelector('.inp-i2').value !== '' ? i2 : undefined,
-                        intero3: nbInteros >= 3 ? (row.querySelector('.inp-i3').value !== '' ? i3 : undefined) : undefined,
-                        intero4: nbInteros >= 4 ? (row.querySelector('.inp-i4').value !== '' ? i4 : undefined) : undefined,
-                        devoir: row.querySelector('.inp-dev').value !== '' ? dev : undefined,
-                        examen: row.querySelector('.inp-ex').value !== '' ? ex : undefined,
-                        note: total,
+                    let int1 = parseFloat(tr.querySelector('.input-int1').value) || 0;
+                    let int2 = parseFloat(tr.querySelector('.input-int2').value) || 0;
+                    let dev = parseFloat(tr.querySelector('.input-devoir').value) || 0;
+                    let exam = parseFloat(tr.querySelector('.input-examen').value) || 0;
+                    let totalText = tr.querySelector('.span-total').textContent;
+                    let noteNum = parseFloat(totalText.split('/')[0]) || 0;
+                    let app = tr.querySelector('.input-appreciation').value;
+
+                    e.notes[`${cours}_${trimestre}`] = {
+                        intero1: int1,
+                        intero2: int2,
+                        devoir: dev,
+                        examen: exam,
+                        note: noteNum,
                         max: maxVal,
                         appreciation: app
                     };
@@ -1935,12 +2015,10 @@
 
             saveDB(db);
             alert('Cotations enregistrées avec succès !');
-            chargerElevesClasseProf();
         }
 
-        // Modals Prof
+        // --- GESTION MODALS PROF ---
         function ouvrirModalAjouterCoursProf() {
-            initSelectClasses();
             document.getElementById('modal-ajouter-cours-prof').style.display = 'flex';
         }
         function fermerModalAjouterCoursProf() {
@@ -1957,18 +2035,17 @@
             if(!db.demandesCours) db.demandesCours = [];
             db.demandesCours.push({
                 id: Date.now(),
-                profNom: `${currentProf.nom} ${currentProf.postnom || ''}`,
+                prof: `${currentProf.nom} ${currentProf.postnom || ''}`,
                 cours: nomCours,
                 classe: classeCible,
                 statut: 'En attente'
             });
             saveDB(db);
-            showMsg('prof-cours-demande-msg', 'Demande envoyée à l\'administration avec succès.', 'success');
-            setTimeout(fermerModalAjouterCoursProf, 1500);
+            showMsg('prof-cours-demande-msg', 'Demande envoyée avec succès !', 'success');
+            setTimeout(() => { fermerModalAjouterCoursProf(); }, 1500);
         }
 
         function ouvrirModalModifierCodeProf() {
-            document.getElementById('nouveau-code-prof').value = '';
             document.getElementById('modal-modifier-code').style.display = 'flex';
         }
         function fermerModalModifierCodeProf() {
@@ -1985,27 +2062,21 @@
             if(p) {
                 p.codeProf = nouveauCode;
                 saveDB(db);
-                currentProf = p;
                 showMsg('prof-mod-msg', 'Code modifié avec succès !', 'success');
-                setTimeout(fermerModalModifierCodeProf, 1500);
+                setTimeout(() => { fermerModalModifierCodeProf(); }, 1500);
             }
         }
 
         // --- ESPACE ADMIN ---
         function adminLogin() {
-            let pass = document.getElementById('admin-pass-input').value;
-            if(pass === 'admin2026' || pass === 'admin') {
-                document.getElementById('admin-login-card').style.display = 'none';
-                document.getElementById('admin-dashboard-card').style.display = 'block';
-                initSelectClasses();
-                chargerAdminEleves();
-                chargerAdminProfs();
-                chargerAdminCommuniques();
-                chargerAdminDemandesCours();
-                chargerAdminMessages();
-            } else {
+            let pass = document.getElementById('admin-pass-input').value.trim();
+            if(pass !== "admin2026") {
                 showMsg('admin-msg', 'Mot de passe administrateur incorrect.', 'error');
+                return;
             }
+            document.getElementById('admin-login-card').style.display = 'none';
+            document.getElementById('admin-dashboard-card').style.display = 'block';
+            chargerDonneesAdminComplet();
         }
 
         function adminLogout() {
@@ -2014,7 +2085,15 @@
             document.getElementById('admin-login-card').style.display = 'block';
         }
 
-        // Admin : Gestion Élèves
+        function chargerDonneesAdminComplet() {
+            initSelectClasses();
+            chargerTableAdminEleves();
+            chargerTableAdminProfs();
+            chargerAdminCommuniques();
+            chargerAdminDemandesCours();
+            chargerAdminMessages();
+        }
+
         function ajouterEleve() {
             let nom = document.getElementById('add-eleve-nom').value.trim();
             let prenom = document.getElementById('add-eleve-prenom').value.trim();
@@ -2034,21 +2113,18 @@
 
             let db = getDB();
             let matricule = Math.floor(1000 + Math.random() * 9000).toString();
-            let codeParent = 'PAR' + Math.floor(1000 + Math.random() * 9000).toString();
+            let codeParent = 'PAR' + Math.floor(1000 + Math.random() * 9000);
 
             db.eleves.push({
                 matricule, nom, prenom, postnom, adresse, naissance, classe, sexe, tuteur, emailParent, telParent, codeParent,
-                montantPaye: 0, notes: {}, presences: [{ date: new Date().toISOString().split('T')[0], statut: 'Présent' }]
+                montantPaye: 0, notes: {}, presences: []
             });
             saveDB(db);
             showMsg('admin-eleve-msg', `Élève inscrit avec succès ! Matricule: ${matricule} | Code Parent: ${codeParent}`, 'success');
-            
-            // Reset form
-            ['add-eleve-nom', 'add-eleve-prenom', 'add-eleve-postnom', 'add-eleve-adresse', 'add-eleve-naissance', 'add-eleve-tuteur', 'add-eleve-email-parent', 'add-eleve-tel-parent'].forEach(id => document.getElementById(id).value = '');
-            chargerAdminEleves();
+            chargerTableAdminEleves();
         }
 
-        function chargerAdminEleves() {
+        function chargerTableAdminEleves() {
             let db = getDB();
             let tbody = document.getElementById('table-admin-eleves');
             if(db.eleves.length === 0) {
@@ -2059,53 +2135,49 @@
             db.eleves.forEach(e => {
                 let fraisConf = db.fraisClasses[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
                 let totalExige = fraisConf.scolaires + fraisConf.inscription + fraisConf.bulletin;
-                let statutBadge = (e.montantPaye || 0) >= totalExige ? '<span class="badge success">En Règle</span>' : '<span class="badge danger">Impayé</span>';
+                let paye = e.montantPaye || 0;
+                let statutBadge = paye >= totalExige ? '<span class="badge success">En Règle</span>' : '<span class="badge danger">En Attente</span>';
 
                 html += `<tr>
                     <td><code>${e.matricule}</code></td>
                     <td><strong>${e.nom} ${e.prenom}</strong> ${e.postnom || ''}</td>
                     <td>${e.classe}</td>
-                    <td>${e.naissance || '-'}<br><small style="color:var(--text-muted);">${e.adresse || ''}</small></td>
-                    <td>${e.tuteur}<br><small style="color:var(--text-muted);">${e.telParent || ''}</small></td>
+                    <td>${e.naissance || '-'}<br><small>${e.adresse || '-'}</small></td>
+                    <td>${e.tuteur}<br><small>${e.telParent || '-'}</small></td>
                     <td><code>${e.codeParent}</code></td>
                     <td>${statutBadge}</td>
                     <td>
-                        <button onclick="modifierFraisEleve('${e.matricule}')" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; margin-bottom: 0.25rem;">+ Frais</button>
-                        <button onclick="supprimerEleve('${e.matricule}')" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Supprimer</button>
+                        <button onclick="modifierPaiementAdmin('${e.matricule}')" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; margin-bottom: 0.25rem;">Régler Frais</button><br>
+                        <button onclick="supprimerEleveAdmin('${e.matricule}')" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Supprimer</button>
                     </td>
                 </tr>`;
             });
             tbody.innerHTML = html;
         }
 
-        function modifierFraisEleve(mat) {
+        function modifierPaiementAdmin(mat) {
             let db = getDB();
             let e = db.eleves.find(item => item.matricule === mat);
             if(!e) return;
             let fraisConf = db.fraisClasses[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
             let totalExige = fraisConf.scolaires + fraisConf.inscription + fraisConf.bulletin;
-            let montantSaisi = prompt(`Total exigé : ${totalExige} $.\nEntrez le montant total payé à ce jour par l'élève ${e.nom} ${e.prenom} :`, e.montantPaye || 0);
-            if(montantSaisi !== null) {
-                let m = parseFloat(montantSaisi);
-                if(!isNaN(m)) {
-                    e.montantPaye = m;
-                    saveDB(db);
-                    chargerAdminEleves();
-                    alert('Mise à jour des frais effectuée avec succès !');
-                }
+            let montant = prompt(`Entrer le montant total payé pour ${e.nom} ${e.prenom} (Total exigé : ${totalExige} $) :`, e.montantPaye || 0);
+            if(montant !== null) {
+                e.montantPaye = parseFloat(montant) || 0;
+                saveDB(db);
+                chargerTableAdminEleves();
             }
         }
 
-        function supprimerEleve(mat) {
-            if(confirm('Êtes-vous sûr de vouloir supprimer cet élève ?')) {
+        function supprimerEleveAdmin(mat) {
+            if(confirm("Voulez-vous vraiment supprimer cet élève ?")) {
                 let db = getDB();
                 db.eleves = db.eleves.filter(item => item.matricule !== mat);
                 saveDB(db);
-                chargerAdminEleves();
+                chargerTableAdminEleves();
             }
         }
 
-        // Admin : Gestion Profs
         function ajouterProf() {
             let nom = document.getElementById('add-prof-nom').value.trim();
             let postnom = document.getElementById('add-prof-postnom').value.trim();
@@ -2114,22 +2186,22 @@
             let matiere = document.getElementById('add-prof-matiere').value.trim();
 
             if(!nom || !matiere) {
-                showMsg('admin-prof-msg', 'Veuillez remplir le nom et la matière principale.', 'error');
+                showMsg('admin-prof-msg', 'Veuillez remplir le nom et la matière du professeur.', 'error');
                 return;
             }
 
             let db = getDB();
-            let codeProf = 'PROF' + Math.floor(1000 + Math.random() * 9000).toString();
+            let codeProf = 'PROF' + Math.floor(1000 + Math.random() * 9000);
             db.profs.push({
-                id: Date.now(), nom, postnom, adresse, naissance, matiere, codeProf
+                id: Date.now(),
+                nom, postnom, adresse, naissance, matiere, codeProf
             });
             saveDB(db);
-            showMsg('admin-prof-msg', `Professeur enregistré avec succès ! Code d'accès : ${codeProf}`, 'success');
-            ['add-prof-nom', 'add-prof-postnom', 'add-prof-adresse', 'add-prof-naissance', 'add-prof-matiere'].forEach(id => document.getElementById(id).value = '');
-            chargerAdminProfs();
+            showMsg('admin-prof-msg', `Professeur ajouté ! Code d'accès généré : ${codeProf}`, 'success');
+            chargerTableAdminProfs();
         }
 
-        function chargerAdminProfs() {
+        function chargerTableAdminProfs() {
             let db = getDB();
             let tbody = document.getElementById('table-admin-profs');
             if(db.profs.length === 0) {
@@ -2141,24 +2213,23 @@
                 html += `<tr>
                     <td><strong>${p.nom}</strong> ${p.postnom || ''}</td>
                     <td>${p.matiere}</td>
-                    <td>${p.naissance || '-'}<br><small style="color:var(--text-muted);">${p.adresse || ''}</small></td>
+                    <td>${p.naissance || '-'}<br><small>${p.adresse || '-'}</small></td>
                     <td><code>${p.codeProf}</code></td>
-                    <td><button onclick="supprimerProf(${p.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Supprimer</button></td>
+                    <td><button onclick="supprimerProfAdmin(${p.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Supprimer</button></td>
                 </tr>`;
             });
             tbody.innerHTML = html;
         }
 
-        function supprimerProf(id) {
-            if(confirm('Supprimer ce professeur ?')) {
+        function supprimerProfAdmin(id) {
+            if(confirm("Supprimer ce professeur ?")) {
                 let db = getDB();
                 db.profs = db.profs.filter(item => item.id !== id);
                 saveDB(db);
-                chargerAdminProfs();
+                chargerTableAdminProfs();
             }
         }
 
-        // Admin : Configuration des Frais
         function sauvegarderConfigFrais() {
             let classe = document.getElementById('config-frais-classe').value;
             let scolaires = parseFloat(document.getElementById('config-frais-scolaires').value);
@@ -2166,35 +2237,28 @@
             let bulletin = parseFloat(document.getElementById('config-frais-bulletin').value);
 
             if(!classe) {
-                showMsg('admin-frais-msg', 'Veuillez sélectionner une classe & option.', 'error');
+                showMsg('admin-frais-msg', 'Veuillez sélectionner une classe.', 'error');
                 return;
             }
-
             let db = getDB();
-            if(!db.fraisClasses) db.fraisClasses = {};
             db.fraisClasses[classe] = {
                 scolaires: !isNaN(scolaires) ? scolaires : 150,
                 inscription: !isNaN(inscription) ? inscription : 50,
                 bulletin: !isNaN(bulletin) ? bulletin : 10
             };
             saveDB(db);
-            showMsg('admin-frais-msg', 'Tarifs mis à jour avec succès pour cette classe.', 'success');
+            showMsg('admin-frais-msg', 'Tarifs mis à jour avec succès !', 'success');
         }
 
-        // Admin : Communiqués
         function ajouterCommunique() {
             let texte = document.getElementById('admin-com-texte').value.trim();
             if(!texte) {
-                showMsg('admin-com-msg', 'Veuillez rédiger le communiqué.', 'error');
+                showMsg('admin-com-msg', 'Le texte du communiqué ne peut être vide.', 'error');
                 return;
             }
             let db = getDB();
-            if(!db.communiques) db.communiques = [];
-            db.communiques.unshift({
-                id: Date.now(),
-                texte: texte,
-                date: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-            });
+            let dateStr = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            db.communiques.push({ id: Date.now(), texte, date: dateStr });
             saveDB(db);
             document.getElementById('admin-com-texte').value = '';
             showMsg('admin-com-msg', 'Communiqué publié avec succès !', 'success');
@@ -2211,14 +2275,14 @@
             }
             let html = '';
             db.communiques.forEach(com => {
-                html += `<div class="communique-item" style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+                html += `<div class="communique-item" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
                     <div>
                         <div class="communique-date">📅 ${com.date}</div>
                         <p style="font-size: 0.9rem; color: var(--text-main);">${com.texte}</p>
                     </div>
-                    <div style="display:flex; gap:0.5rem; flex-shrink:0;">
-                        <button onclick="ouvrirModalModifierCommunique(${com.id})" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Modifier</button>
-                        <button onclick="supprimerCommunique(${com.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Supprimer</button>
+                    <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                        <button onclick="ouvrirModalModifierCommunique(${com.id})" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Modifier</button>
+                        <button onclick="supprimerCommunique(${com.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Supprimer</button>
                     </div>
                 </div>`;
             });
@@ -2227,7 +2291,7 @@
 
         function supprimerCommunique(id) {
             let db = getDB();
-            db.communiques = db.communiques.filter(item => item.id !== id);
+            db.communiques = db.communiques.filter(c => c.id !== id);
             saveDB(db);
             chargerAdminCommuniques();
             chargerCommuniquesPublics();
@@ -2235,12 +2299,11 @@
 
         function ouvrirModalModifierCommunique(id) {
             let db = getDB();
-            let com = db.communiques.find(item => item.id === id);
-            if(com) {
-                document.getElementById('edit-com-id').value = com.id;
-                document.getElementById('edit-com-texte').value = com.texte;
-                document.getElementById('modal-modifier-communique').style.display = 'flex';
-            }
+            let com = db.communiques.find(c => c.id === id);
+            if(!com) return;
+            document.getElementById('edit-com-id').value = com.id;
+            document.getElementById('edit-com-texte').value = com.texte;
+            document.getElementById('modal-modifier-communique').style.display = 'flex';
         }
         function fermerModalModifierCommunique() {
             document.getElementById('modal-modifier-communique').style.display = 'none';
@@ -2248,9 +2311,8 @@
         function sauvegarderModificationCommunique() {
             let id = parseInt(document.getElementById('edit-com-id').value);
             let texte = document.getElementById('edit-com-texte').value.trim();
-            if(!texte) return;
             let db = getDB();
-            let com = db.communiques.find(item => item.id === id);
+            let com = db.communiques.find(c => c.id === id);
             if(com) {
                 com.texte = texte;
                 saveDB(db);
@@ -2260,7 +2322,6 @@
             }
         }
 
-        // Admin : Demandes de Cours
         function chargerAdminDemandesCours() {
             let db = getDB();
             let tbody = document.getElementById('table-admin-demandes-cours');
@@ -2272,13 +2333,13 @@
             db.demandesCours.forEach(d => {
                 let badge = d.statut === 'Validé' ? '<span class="badge success">Validé</span>' : '<span class="badge danger">En attente</span>';
                 html += `<tr>
-                    <td>${d.profNom}</td>
+                    <td>${d.prof}</td>
                     <td><strong>${d.cours}</strong></td>
                     <td>${d.classe}</td>
                     <td>${badge}</td>
                     <td>
-                        ${d.statut !== 'Validé' ? `<button onclick="validerDemandeCours(${d.id})" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Valider</button>` : ''}
-                        <button onclick="supprimerDemandeCours(${d.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; margin-left: 0.25rem;">Supprimer</button>
+                        <button onclick="validerDemandeCours(${d.id})" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Valider</button>
+                        <button onclick="supprimerDemandeCours(${d.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Rejeter</button>
                     </td>
                 </tr>`;
             });
@@ -2302,83 +2363,6 @@
             chargerAdminDemandesCours();
         }
 
-        // --- MESSAGERIE SÉCURISÉE PARENT-ADMIN (STYLE WHATSAPP) ---
-        let currentDiscussionTuteur = null;
-
-        function ouvrirDiscussionAdminParent() {
-            if(!currentParentCode) return;
-            let db = getDB();
-            let e = db.eleves.find(item => item.codeParent === currentParentCode);
-            if(!e) return;
-            currentDiscussionTuteur = e.tuteur;
-            document.getElementById('modal-discussion-titre').textContent = `Discussion avec Administration (${e.tuteur})`;
-            document.getElementById('wa-contact-title').textContent = 'Administration École de la RDC';
-            document.getElementById('wa-avatar-initials').textContent = 'AD';
-            chargerMessagesDiscussion();
-            document.getElementById('modal-discussion').style.display = 'flex';
-        }
-
-        function fermerModalDiscussion() {
-            document.getElementById('modal-discussion').style.display = 'none';
-            currentDiscussionTuteur = null;
-        }
-
-        function chargerMessagesDiscussion() {
-            let db = getDB();
-            let container = document.getElementById('discussion-messages-container');
-            if(!db.messages) db.messages = [];
-            
-            // Filtrer les messages de ce tuteur
-            let msgs = db.messages.filter(m => m.tuteur === currentDiscussionTuteur);
-            if(msgs.length === 0) {
-                // Message d'accueil automatique
-                msgs.push({
-                    tuteur: currentDiscussionTuteur,
-                    expediteur: 'admin',
-                    texte: 'Bonjour, bienvenue sur le canal sécurisé de l\'École de la RDC. Comment pouvons-nous vous aider concernant la scolarité de vos enfants ?',
-                    heure: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                });
-            }
-
-            let html = '';
-            msgs.forEach(m => {
-                let isOutgoing = (currentParentCode && m.expediteur === 'parent') || (!currentParentCode && m.expediteur === 'admin');
-                let cssClass = isOutgoing ? 'outgoing' : 'incoming';
-                let checks = isOutgoing ? '<span class="wa-checks" style="color:#53bdeb;">✓✓</span>' : '';
-                html += `<div class="wa-message ${cssClass}">
-                    <div class="wa-message-text">${m.texte}</div>
-                    <div class="wa-message-meta">
-                        <span>${m.heure}</span>
-                        ${checks}
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function envoyerMessageDiscussion() {
-            let texte = document.getElementById('discussion-input-texte').value.trim();
-            if(!texte) return;
-            let db = getDB();
-            if(!db.messages) db.messages = [];
-
-            let expediteur = currentParentCode ? 'parent' : 'admin';
-            db.messages.push({
-                tuteur: currentDiscussionTuteur,
-                expediteur: expediteur,
-                texte: texte,
-                heure: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
-            saveDB(db);
-            document.getElementById('discussion-input-texte').value = '';
-            chargerMessagesDiscussion();
-            if(currentParentCode) {
-                chargerAdminMessages();
-            }
-        }
-
-        // Admin : Gestion Messagerie
         function chargerAdminMessages() {
             let db = getDB();
             let tbody = document.getElementById('table-admin-messages');
@@ -2386,41 +2370,111 @@
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun message.</td></tr>';
                 return;
             }
-
+            let html = '';
             // Regrouper par tuteur
-            let tuteursMap = {};
+            let tuteurs = {};
             db.messages.forEach(m => {
-                tuteursMap[m.tuteur] = m;
+                if(!tuteurs[m.tuteur]) tuteurs[m.tuteur] = [];
+                tuteurs[m.tuteur].push(m);
             });
 
-            let html = '';
-            for(let tuteur in tuteursMap) {
-                let dernier = tuteursMap[tuteur];
+            for(let tut in tuteurs) {
+                let derniersMsgs = tuteurs[tut];
+                let dernier = derniersMsgs[derniersMsgs.length - 1];
                 html += `<tr>
-                    <td><strong>${tuteur}</strong></td>
+                    <td><strong>${tut}</strong></td>
                     <td>${dernier.texte}</td>
-                    <td>${dernier.heure}</td>
-                    <td><button onclick="repondreTuteurAdmin('${tuteur}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.2rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Ouvrir la discussion</button></td>
+                    <td>${dernier.date}</td>
+                    <td><button onclick="ouvrirDiscussionAdmin('${tut}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Ouvrir Discussion</button></td>
                 </tr>`;
             }
             tbody.innerHTML = html;
         }
 
-        function repondreTuteurAdmin(tuteurNom) {
-            currentDiscussionTuteur = tuteurNom;
+        // --- MESSAGERIE WHATSAPP ---
+        let discussionActiveTuteur = null;
+
+        function ouvrirDiscussionAdminParent() {
+            if(!currentParentCode) return;
+            let db = getDB();
+            let enfants = db.eleves.filter(e => e.codeParent === currentParentCode);
+            if(enfants.length === 0) return;
+            let tuteurNom = enfants[0].tuteur || 'Tuteur';
+            ouvrirDiscussionAdmin(tuteurNom);
+        }
+
+        function ouvrirDiscussionAdmin(tuteurNom) {
+            discussionActiveTuteur = tuteurNom;
             document.getElementById('modal-discussion-titre').textContent = `Discussion avec ${tuteurNom}`;
             document.getElementById('wa-contact-title').textContent = tuteurNom;
-            document.getElementById('wa-avatar-initials').textContent = tuteurNom.charAt(0).toUpperCase();
-            chargerMessagesDiscussion();
+            document.getElementById('wa-avatar-initials').textContent = tuteurNom.substring(0, 2).toUpperCase();
             document.getElementById('modal-discussion').style.display = 'flex';
+            rafraichirMessagesDiscussion();
+        }
+
+        function fermerModalDiscussion() {
+            document.getElementById('modal-discussion').style.display = 'none';
+            discussionActiveTuteur = null;
+        }
+
+        function envoyerMessageDiscussion() {
+            let txtArea = document.getElementById('discussion-input-texte');
+            let texte = txtArea.value.trim();
+            if(!texte || !discussionActiveTuteur) return;
+
+            let db = getDB();
+            if(!db.messages) db.messages = [];
+            let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            let dateStr = new Date().toLocaleDateString();
+
+            // Savoir si l'expéditeur est le parent ou l'admin
+            let isParent = currentParentCode !== null;
+            db.messages.push({
+                tuteur: discussionActiveTuteur,
+                texte: texte,
+                expéditeur: isParent ? 'parent' : 'admin',
+                date: `${dateStr} à ${timeStr}`
+            });
+            saveDB(db);
+            txtArea.value = '';
+            rafraichirMessagesDiscussion();
+            chargerAdminMessages();
+        }
+
+        function rafraichirMessagesDiscussion() {
+            let container = document.getElementById('discussion-messages-container');
+            if(!discussionActiveTuteur) return;
+            let db = getDB();
+            let msgs = (db.messages || []).filter(m => m.tuteur === discussionActiveTuteur);
+
+            if(msgs.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #8696a0; font-size: 0.85rem; margin-top: 2rem;">Aucun message dans cette discussion. Envoyez le premier message !</div>';
+                return;
+            }
+
+            let html = '';
+            msgs.forEach(m => {
+                let isOutgoing = currentParentCode !== null ? (m.expéditeur === 'parent') : (m.expéditeur === 'admin');
+                let cssClass = isOutgoing ? 'outgoing' : 'incoming';
+                let timeOnly = m.date.includes('à') ? m.date.split('à')[1].trim() : m.date;
+
+                html += `<div class="wa-message ${cssClass}">
+                    <div class="wa-message-text">${m.texte}</div>
+                    <div class="wa-message-meta">
+                        <span>${timeOnly}</span>
+                        ${isOutgoing ? '<span class="wa-checks" style="color: #53bdeb;">✓✓</span>' : ''}
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
         }
 
         // Initialisation globale au chargement de la page
-        window.onload = function() {
-            getDB();
+        window.addEventListener('DOMContentLoaded', () => {
             initSelectClasses();
             chargerCommuniquesPublics();
-        };
+        });
     </script>
 </body>
 </html>
