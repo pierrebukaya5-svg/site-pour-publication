@@ -894,8 +894,10 @@
                             <input type="text" id="add-eleve-nom" placeholder="Ex: Kabamba Paul">
                         </div>
                         <div class="form-group">
-                            <label for="add-eleve-classe">Classe</label>
-                            <input type="text" id="add-eleve-classe" placeholder="Ex: 6ème Commerciale">
+                            <label for="add-eleve-classe">Classe & Option</label>
+                            <select id="add-eleve-classe">
+                                <option value="">-- Sélectionner une classe & option --</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="add-eleve-sexe">Sexe</label>
@@ -918,7 +920,7 @@
                                 <tr>
                                     <th>Matricule</th>
                                     <th>Nom</th>
-                                    <th>Classe</th>
+                                    <th>Classe / Option</th>
                                     <th>Code Parent</th>
                                     <th>Statut Frais</th>
                                     <th>Actions</th>
@@ -967,12 +969,14 @@
 
                 <!-- SOUS-ONGLET CONFIG FRAIS -->
                 <div id="admin-content-frais" class="admin-tab-content" style="display: none;">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Configuration des Montants Exigés par Classe</h3>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Configuration des Montants Exigés par Classe / Option</h3>
                     <div id="admin-frais-msg" class="msg-box" role="alert"></div>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="config-frais-classe">Classe Cible</label>
-                            <input type="text" id="config-frais-classe" placeholder="Ex: 6ème Commerciale">
+                            <label for="config-frais-classe">Classe & Option Cible</label>
+                            <select id="config-frais-classe">
+                                <option value="">-- Sélectionner une classe & option --</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="config-frais-scolaires">Frais Scolaires ($)</label>
@@ -1014,24 +1018,52 @@
     </footer>
 
     <script>
+        // --- LISTE OFFICIELLE DES CLASSES (1 à 8) ET OPTIONS DE LA RDC ---
+        const CLASSES_OPTIONS_RDC = [
+            // Éducation de Base / Secondaire Général
+            "1ère Année Secondaire",
+            "2ème Année Secondaire",
+            "3ème Année Secondaire",
+            "4ème Année Secondaire",
+            // Humanités / Options RDC
+            "5ème Humanités - Commerciale et Gestion",
+            "6ème Humanités - Commerciale et Gestion",
+            "5ème Humanités - Scientifique (Math-Physique)",
+            "6ème Humanités - Scientifique (Math-Physique)",
+            "5ème Humanités - Scientifique (Bio-Chimie)",
+            "6ème Humanités - Scientifique (Bio-Chimie)",
+            "5ème Humanités - Pédagogie Générale",
+            "6ème Humanités - Pédagogie Générale",
+            "5ème Humanités - Litteraire",
+            "6ème Humanités - Litteraire",
+            "5ème Humanités - Technique Industrielle / Électricité",
+            "6ème Humanités - Technique Industrielle / Électricité",
+            "5ème Humanités - Coupe et Couture",
+            "6ème Humanités - Coupe et Couture",
+            "7ème Éducation de Base",
+            "8ème Éducation de Base"
+        ];
+
         // --- BASE DE DONNÉES LOCALE (localStorage) ---
-        const DB_KEY = "ecole_rdc_db_v3";
+        const DB_KEY = "ecole_rdc_db_v4";
 
         function getDefaultData() {
+            let initialFrais = {};
+            CLASSES_OPTIONS_RDC.forEach(c => {
+                initialFrais[c] = { scolaires: 150, inscription: 50, bulletin: 10 };
+            });
+
             return {
                 eleves: [
-                    { matricule: "4812", nom: "Kabamba Paul", classe: "6ème Commerciale", sexe: "M", tuteur: "M. Jean Kabamba", codeParent: "PAR9210", montantPaye: 180, notes: { "Mathématiques": { note: 16, appreciation: "Très Bien" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
-                    { matricule: "4813", nom: "Mukendi Sarah", classe: "6ème Commerciale", sexe: "F", tuteur: "M. Jean Kabamba", codeParent: "PAR9210", montantPaye: 210, notes: { "Mathématiques": { note: 18, appreciation: "Excellent" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
-                    { matricule: "4901", nom: "Tshisekedi David", classe: "5ème Scientifique", sexe: "M", tuteur: "Mme Marie Tshisekedi", codeParent: "PAR4412", montantPaye: 100, notes: {}, presences: [] }
+                    { matricule: "4812", nom: "Kabamba Paul", classe: "6ème Humanités - Commerciale et Gestion", sexe: "M", tuteur: "M. Jean Kabamba", codeParent: "PAR9210", montantPaye: 210, notes: { "Mathématiques": { note: 16, appreciation: "Très Bien" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
+                    { matricule: "4813", nom: "Mukendi Sarah", classe: "6ème Humanités - Commerciale et Gestion", sexe: "F", tuteur: "M. Jean Kabamba", codeParent: "PAR9210", montantPaye: 210, notes: { "Mathématiques": { note: 18, appreciation: "Excellent" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
+                    { matricule: "4901", nom: "Tshisekedi David", classe: "5ème Humanités - Scientifique (Math-Physique)", sexe: "M", tuteur: "Mme Marie Tshisekedi", codeParent: "PAR4412", montantPaye: 100, notes: {}, presences: [] }
                 ],
                 profs: [
                     { id: 1, nom: "Prof. Mukendi", matiere: "Mathématiques", codeProf: "PROF5821" },
                     { id: 2, nom: "Prof. Kabasele", matiere: "Informatique", codeProf: "PROF3392" }
                 ],
-                fraisConfig: {
-                    "6ème Commerciale": { scolaires: 150, inscription: 50, bulletin: 10 },
-                    "5ème Scientifique": { scolaires: 160, inscription: 50, bulletin: 10 }
-                },
+                fraisConfig: initialFrais,
                 communiques: [
                     { id: 1, date: "10 Septembre 2026", texte: "Rentrée scolaire effective sur toute l'étendue de la République. Les horaires sont disponibles auprès de l'administration." }
                 ],
@@ -1051,6 +1083,22 @@
 
         function saveDB(data) {
             localStorage.setItem(DB_KEY, JSON.stringify(data));
+        }
+
+        // --- REMPLISSAGE DES SELECTEURS DE CLASSES ---
+        function peuplerSelectClasses() {
+            const selects = [
+                document.getElementById('add-eleve-classe'),
+                document.getElementById('config-frais-classe')
+            ];
+
+            selects.forEach(sel => {
+                if (!sel) return;
+                const valeurActuelle = sel.value;
+                sel.innerHTML = '<option value="">-- Sélectionner une classe & option --</option>' + 
+                    CLASSES_OPTIONS_RDC.map(c => `<option value="${c}">${c}</option>`).join('');
+                if (valeurActuelle) sel.value = valeurActuelle;
+            });
         }
 
         // --- NAVIGATION ENTRE VUES ---
@@ -1147,7 +1195,6 @@
             const tbody = document.getElementById('table-parent-enfants');
             if (!parentActif) return;
             const db = getDB();
-            // Rafraîchir depuis la BD
             parentActif.enfants = db.eleves.filter(e => e.codeParent === parentActif.code);
 
             tbody.innerHTML = parentActif.enfants.map(e => {
@@ -1193,7 +1240,6 @@
             badgeFrais.className = 'badge ' + (soldeOk ? 'success' : 'danger');
             badgeFrais.textContent = soldeOk ? 'Frais Soldés' : 'Solde Incomplet';
 
-            // Présences
             const tbodyPres = document.getElementById('table-parent-presences');
             if (!e.presences || e.presences.length === 0) {
                 tbodyPres.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Aucun historique de présence.</td></tr>';
@@ -1203,7 +1249,6 @@
                 `).join('');
             }
 
-            // Notes / Bulletin
             const tbodyNotes = document.getElementById('table-parent-notes');
             const notesKeys = Object.keys(e.notes || {});
             if (notesKeys.length === 0) {
@@ -1281,7 +1326,7 @@
             document.getElementById('eleve-login-card').style.display = 'block';
         }
 
-        // --- ESPACE PROF (AVEC CODE GÉNÉRÉ ET MODIFICATION PRIVÉE & RÉCUPÉRATION) ---
+        // --- ESPACE PROF ---
         let profActif = null;
 
         function verifierSessionProf() {
@@ -1304,7 +1349,7 @@
             const db = getDB();
             const prof = db.profs.find(p => p.codeProf === code);
             if (!prof) {
-                showMsg('prof-msg', 'Code Prof incorrect ou introuvable. (Astuce : l\'Admin peut le générer pour vous ou vérifier votre code)', 'error');
+                showMsg('prof-msg', 'Code Prof incorrect ou introuvable.', 'error');
                 return;
             }
             profActif = prof;
@@ -1399,7 +1444,6 @@
             }
         }
 
-        // Modification du Code Prof en privé + Ouverture en cas de perte (Admin gère/génère)
         function ouvrirModalModifierCodeProf() {
             document.getElementById('nouveau-code-prof').value = '';
             document.getElementById('modal-modifier-code').style.display = 'flex';
@@ -1422,7 +1466,7 @@
                 saveDB(db);
                 profActif.codeProf = nouveauCode;
                 fermerModalModifierCodeProf();
-                alert('Votre code personnel a été modifié avec succès ! Utilisez-le désormais pour vos prochaines connexions.');
+                alert('Votre code personnel a été modifié avec succès !');
             }
         }
 
@@ -1467,7 +1511,6 @@
         function chargerAdminDonnees() {
             const db = getDB();
             
-            // Table Élèves
             const tbodyEleves = document.getElementById('table-admin-eleves');
             if (db.eleves.length === 0) {
                 tbodyEleves.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Aucun élève enregistré.</td></tr>';
@@ -1492,7 +1535,6 @@
                 }).join('');
             }
 
-            // Table Profs (avec code généré / réinitialisable par admin en cas de perte)
             const tbodyProfs = document.getElementById('table-admin-profs');
             if (db.profs.length === 0) {
                 tbodyProfs.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun professeur enregistré.</td></tr>';
@@ -1503,13 +1545,12 @@
                         <td>${p.matiere}</td>
                         <td><code>${p.codeProf}</code></td>
                         <td>
-                            <button onclick="regenererCodeProf(${p.id})" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;" title="Réinitialiser en cas de perte de mot de passe">Générer / Réinitialiser Code</button>
+                            <button onclick="regenererCodeProf(${p.id})" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Générer / Réinitialiser Code</button>
                         </td>
                     </tr>
                 `).join('');
             }
 
-            // Liste Communiqués Admin
             const listCom = document.getElementById('admin-list-communiques');
             if (db.communiques.length === 0) {
                 listCom.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué.</p>';
@@ -1528,7 +1569,7 @@
 
         function ajouterEleve() {
             const nom = document.getElementById('add-eleve-nom').value.trim();
-            const classe = document.getElementById('add-eleve-classe').value.trim();
+            const classe = document.getElementById('add-eleve-classe').value;
             const sexe = document.getElementById('add-eleve-sexe').value;
             const tuteur = document.getElementById('add-eleve-tuteur').value.trim();
 
@@ -1539,7 +1580,6 @@
 
             const db = getDB();
             const matricule = Math.floor(1000 + Math.random() * 9000).toString();
-            // Générer un code parent unique basé sur le tuteur s'il n'existe pas déjà
             let parentExist = db.eleves.find(e => e.tuteur.toLowerCase() === tuteur.toLowerCase());
             const codeParent = parentExist ? parentExist.codeParent : 'PAR' + Math.floor(1000 + Math.random() * 9000);
 
@@ -1608,7 +1648,6 @@
             chargerAdminDonnees();
         }
 
-        // Fonction d'administration permettant de réinitialiser/générer un nouveau code en cas de perte par le prof
         function regenererCodeProf(id) {
             const db = getDB();
             const prof = db.profs.find(p => p.id === id);
@@ -1618,24 +1657,24 @@
             prof.codeProf = nouveauCode;
             saveDB(db);
             chargerAdminDonnees();
-            alert(`Nouveau code généré pour le professeur ${prof.nom} : ${nouveauCode}\n(Transmettez ce code au professeur pour lui permettre de se connecter et d'ouvrir son compte).`);
+            alert(`Nouveau code généré pour le professeur ${prof.nom} : ${nouveauCode}`);
         }
 
         function sauvegarderConfigFrais() {
-            const classe = document.getElementById('config-frais-classe').value.trim();
+            const classe = document.getElementById('config-frais-classe').value;
             const scolaires = parseFloat(document.getElementById('config-frais-scolaires').value);
             const inscription = parseFloat(document.getElementById('config-frais-inscription').value);
             const bulletin = parseFloat(document.getElementById('config-frais-bulletin').value);
 
             if (!classe || isNaN(scolaires) || isNaN(inscription) || isNaN(bulletin)) {
-                showMsg('admin-frais-msg', 'Veuillez remplir correctement tous les champs tarifaires.', 'error');
+                showMsg('admin-frais-msg', 'Veuillez sélectionner une classe et remplir correctement tous les champs tarifaires.', 'error');
                 return;
             }
 
             const db = getDB();
             db.fraisConfig[classe] = { scolaires, inscription, bulletin };
             saveDB(db);
-            showMsg('admin-frais-msg', `Tarifs enregistrés avec succès pour la classe ${classe}.`, 'success');
+            showMsg('admin-frais-msg', `Tarifs enregistrés avec succès pour la classe : ${classe}.`, 'success');
         }
 
         function ajouterCommunique() {
@@ -1665,7 +1704,8 @@
 
         // Initialisation au chargement de la page
         window.addEventListener('DOMContentLoaded', () => {
-            getDB(); // Initialisation de la base si vide
+            getDB(); 
+            peuplerSelectClasses();
             chargerCommuniquesPublics();
         });
     </script>
