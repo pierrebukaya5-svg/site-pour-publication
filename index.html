@@ -19,7 +19,7 @@
 </style>
 </head>
 <body class="bg-black text-gray-100 min-h-screen p-3 md:p-6 font-sans">
-<div class="max-w-4xl mx-auto bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-5 md:p-8">
+<div class="max-w-5xl mx-auto bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-5 md:p-8">
 <div class="flex justify-between items-center border-b border-neutral-800 pb-4">
   <h1 class="text-2xl md:text-3xl font-extrabold text-blue-500 tracking-tight">École de la RDC 🇨🇩</h1>
   <span id="status" class="text-xs px-3 py-1 rounded-full bg-neutral-800 text-green-400 border border-neutral-700">Connexion...</span>
@@ -44,15 +44,21 @@
 </div>
 
 <!-- Navigation style Instagram (Onglets horizontaux avec icônes) -->
-<div class="flex justify-around border-b border-neutral-800 mb-6 text-sm">
-<button onclick="changerOnglet('eleves')" id="tab-eleves" class="flex-1 pb-3 text-center font-semibold ig-tab-active flex items-center justify-center gap-2">
-  <span>🎓</span> Élèves & Cotes
+<div class="flex flex-wrap justify-around border-b border-neutral-800 mb-6 text-sm gap-2">
+<button onclick="changerOnglet('eleves')" id="tab-eleves" class="flex-1 min-w-[110px] pb-3 text-center font-semibold ig-tab-active flex items-center justify-center gap-2">
+  <span>🎓</span> Élèves
 </button>
-<button onclick="changerOnglet('profs')" id="tab-profs" class="flex-1 pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
-  <span>👨‍🏫</span> Professeurs
+<button onclick="changerOnglet('profs')" id="tab-profs" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
+  <span>👨‍🏫</span> Profs
 </button>
-<button onclick="changerOnglet('presence')" id="tab-presence" class="flex-1 pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
-  <span>📋</span> Présence & Parents
+<button onclick="changerOnglet('presence')" id="tab-presence" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
+  <span>📋</span> Présence
+</button>
+<button onclick="changerOnglet('comms')" id="tab-comms" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
+  <span>📢</span> Journal
+</button>
+<button onclick="changerOnglet('frais')" id="tab-frais" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
+  <span>💰</span> Frais
 </button>
 </div>
 
@@ -91,10 +97,35 @@
 </div>
 <button onclick="ajouterPresence()" class="w-full bg-purple-600 hover:bg-purple-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Valider et publier la présence</button>
 </div>
+
+<!-- Formulaire Journal de Classe / Communications -->
+<div id="form-comms" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+<h3 class="font-semibold text-sm text-amber-400">Publier une annonce / Journal de classe</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+<input id="comm-titre" placeholder="Titre (ex: Réunion des parents)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="comm-message" placeholder="Message / Communiqué court" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+</div>
+<button onclick="ajouterComm()" class="w-full bg-amber-600 hover:bg-amber-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Diffuser l'annonce</button>
+</div>
+
+<!-- Formulaire Suivi des Frais / Minerval -->
+<div id="form-frais" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+<h3 class="font-semibold text-sm text-cyan-400">Enregistrer un paiement de frais (Minerval)</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+<input id="frais-eleve" placeholder="Nom de l'élève" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="frais-montant" placeholder="Montant payé (ex: 50$)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<select id="frais-tranche" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+  <option value="1ère Tranche / Inscription">1ère Tranche / Inscription</option>
+  <option value="2ème Tranche">2ème Tranche</option>
+  <option value="3ème Tranche">3ème Tranche</option>
+</select>
+</div>
+<button onclick="ajouterFrais()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Valider le paiement</button>
+</div>
 </div>
 
 <!-- SECTION AFFICHAGE EN DIRECT (Style Feed / Flux) -->
-<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 <!-- Feed Élèves -->
 <div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
 <h3 class="font-bold text-sm text-blue-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
@@ -116,10 +147,28 @@
 <!-- Feed Liste de Présence -->
 <div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
 <h3 class="font-bold text-sm text-purple-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
-  <span>📋 Liste de Présence</span>
+  <span>📋 Présences</span>
   <span id="count-presence" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span>
 </h3>
 <ul id="liste-presence" class="space-y-3"></ul>
+</div>
+
+<!-- Feed Journal de Classe -->
+<div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
+<h3 class="font-bold text-sm text-amber-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
+  <span>📢 Annonces / Journal</span>
+  <span id="count-comms" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span>
+</h3>
+<ul id="liste-comms" class="space-y-3"></ul>
+</div>
+
+<!-- Feed Frais Scolaires -->
+<div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4 lg:col-span-2">
+<h3 class="font-bold text-sm text-cyan-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
+  <span>💰 Suivi des Paiements (Minerval)</span>
+  <span id="count-frais" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span>
+</h3>
+<ul id="liste-frais" class="space-y-3"></ul>
 </div>
 </div>
 
@@ -146,6 +195,8 @@ const db = getDatabase(app);
 const elevesRef = ref(db, 'ecole6/eleves');
 const profsRef = ref(db, 'ecole6/profs');
 const presenceRef = ref(db, 'ecole6/presence');
+const commsRef = ref(db, 'ecole6/comms');
+const fraisRef = ref(db, 'ecole6/frais');
 
 document.getElementById('status').innerText = "✅ Connecté (Temps réel actif)";
 
@@ -168,15 +219,15 @@ window.deconnecterAdmin = function() {
   document.getElementById('auth-section').classList.remove('hidden');
 }
 
-// Navigation style Instagram
+// Navigation style Instagram avec les nouveaux onglets
 window.changerOnglet = function(onglet) {
-  ['eleves', 'profs', 'presence'].forEach(o => {
+  ['eleves', 'profs', 'presence', 'comms', 'frais'].forEach(o => {
     document.getElementById(`form-${o}`).classList.add('hidden');
     const btn = document.getElementById(`tab-${o}`);
-    btn.className = "flex-1 pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2 border-b-2 border-transparent";
+    btn.className = "flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2 border-b-2 border-transparent";
   });
   document.getElementById(`form-${onglet}`).classList.remove('hidden');
-  document.getElementById(`tab-${onglet}`).className = "flex-1 pb-3 text-center font-semibold text-blue-500 flex items-center justify-center gap-2 ig-tab-active";
+  document.getElementById(`tab-${onglet}`).className = "flex-1 min-w-[110px] pb-3 text-center font-semibold text-blue-500 flex items-center justify-center gap-2 ig-tab-active";
 }
 
 // Enregistrements Firebase
@@ -208,6 +259,25 @@ window.ajouterPresence = function() {
   push(presenceRef, { eleve, parent, statut, date: new Date().toLocaleDateString() });
   document.getElementById('presence-eleve').value = "";
   document.getElementById('presence-parent').value = "";
+}
+
+window.ajouterComm = function() {
+  const titre = document.getElementById('comm-titre').value;
+  const message = document.getElementById('comm-message').value;
+  if(!titre || !message) return alert("Veuillez remplir les champs de l'annonce.");
+  push(commsRef, { titre, message, date: new Date().toLocaleDateString() });
+  document.getElementById('comm-titre').value = "";
+  document.getElementById('comm-message').value = "";
+}
+
+window.ajouterFrais = function() {
+  const eleve = document.getElementById('frais-eleve').value;
+  const montant = document.getElementById('frais-montant').value;
+  const tranche = document.getElementById('frais-tranche').value;
+  if(!eleve || !montant) return alert("Veuillez remplir les informations de paiement.");
+  push(fraisRef, { eleve, montant, tranche, date: new Date().toLocaleDateString() });
+  document.getElementById('frais-eleve').value = "";
+  document.getElementById('frais-montant').value = "";
 }
 
 window.supprimer = function(chemin, key) {
@@ -273,6 +343,46 @@ onValue(presenceRef, (snapshot) => {
     const li = document.createElement('li');
     li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
     li.innerHTML = `<div>Élève : <strong class='text-white'>${pr.eleve}</strong><br><span class='text-neutral-400'>Parent : ${pr.parent}</span><div class='mt-1 inline-block px-2 py-0.5 rounded border text-[10px] bg-neutral-800 border-neutral-700 text-neutral-200'>${pr.statut}</div></div> <button onclick="supprimer('ecole6/presence', '${key}')" class='text-red-400 hover:text-red-300 font-bold p-1'>✕</button>`;
+    liste.appendChild(li);
+  });
+});
+
+onValue(commsRef, (snapshot) => {
+  const data = snapshot.val();
+  const liste = document.getElementById('liste-comms');
+  liste.innerHTML = "";
+  if(!data){ 
+    liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune annonce publiée.</li>"; 
+    document.getElementById('count-comms').innerText = "0";
+    return; 
+  }
+  const keys = Object.keys(data);
+  document.getElementById('count-comms').innerText = keys.length;
+  keys.reverse().forEach(key => {
+    const c = data[key];
+    const li = document.createElement('li');
+    li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+    li.innerHTML = `<div><strong class='text-amber-400 text-sm'>📢 ${c.titre}</strong><br><span class='text-neutral-300'>${c.message}</span><br><small class='text-neutral-500'>${c.date}</small></div> <button onclick="supprimer('ecole6/comms', '${key}')" class='text-red-400 hover:text-red-300 font-bold p-1'>✕</button>`;
+    liste.appendChild(li);
+  });
+});
+
+onValue(fraisRef, (snapshot) => {
+  const data = snapshot.val();
+  const liste = document.getElementById('liste-frais');
+  liste.innerHTML = "";
+  if(!data){ 
+    liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun paiement enregistré.</li>"; 
+    document.getElementById('count-frais').innerText = "0";
+    return; 
+  }
+  const keys = Object.keys(data);
+  document.getElementById('count-frais').innerText = keys.length;
+  keys.reverse().forEach(key => {
+    const f = data[key];
+    const li = document.createElement('li');
+    li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+    li.innerHTML = `<div>Élève : <strong class='text-white text-sm'>${f.eleve}</strong><br><span class='text-cyan-400'>Montant : ${f.montant}</span> • <span class='text-neutral-400'>${f.tranche}</span><br><small class='text-neutral-500'>${f.date}</small></div> <button onclick="supprimer('ecole6/frais', '${key}')" class='text-red-400 hover:text-red-300 font-bold p-1'>✕</button>`;
     liste.appendChild(li);
   });
 });
