@@ -230,6 +230,11 @@
             font-size: 0.95rem;
             width: 100%;
             transition: var(--transition);
+            text-transform: uppercase; /* Force la saisie en majuscules comme demandé */
+        }
+        
+        input[type="email"], input[type="tel"] {
+            text-transform: none; /* Conserve les emails et tels lisibles */
         }
 
         input:hover, select:hover, textarea:hover {
@@ -863,6 +868,7 @@
                         <div><strong>Matricule :</strong> <span id="p-mat"></span></div>
                         <div><strong>Postnom & Nom :</strong> <span id="p-postnom-nom"></span></div>
                         <div><strong>Lieu & Date de Naissance :</strong> <span id="p-lieudate"></span></div>
+                        <div><strong>Adresse :</strong> <span id="p-adresse"></span></div>
                         <div><strong>Classe & Option :</strong> <span id="p-classe"></span></div>
                         <div><strong>Sexe :</strong> <span id="p-sexe"></span></div>
                         <div style="display: flex; align-items: center; gap: 0.5rem;"><strong>Statut Frais :</strong> <span id="p-statut-frais" class="badge"></span></div>
@@ -968,6 +974,7 @@
                     <div><strong>Matricule :</strong> <span id="e-mat"></span></div>
                     <div><strong>Postnom & Nom :</strong> <span id="e-postnom-nom"></span></div>
                     <div><strong>Lieu & Date de Naissance :</strong> <span id="e-lieudate"></span></div>
+                    <div><strong>Adresse :</strong> <span id="e-adresse"></span></div>
                     <div><strong>Classe & Option :</strong> <span id="e-classe"></span></div>
                     <div style="display: flex; align-items: center; gap: 0.5rem;"><strong>Statut Frais :</strong> <span id="e-statut-frais" class="badge"></span></div>
                 </div>
@@ -1198,6 +1205,10 @@
                             <input type="text" id="add-eleve-lieudate" placeholder="Ex: Kinshasa, le 12/05/2010">
                         </div>
                         <div class="form-group">
+                            <label for="add-eleve-adresse">Adresse</label>
+                            <input type="text" id="add-eleve-adresse" placeholder="Ex: Av. De la paix n. 12">
+                        </div>
+                        <div class="form-group">
                             <label for="add-eleve-classe">Classe & Option</label>
                             <select id="add-eleve-classe">
                                 <option value="">-- Sélectionner une classe & option --</option>
@@ -1233,6 +1244,7 @@
                                     <th>Matricule</th>
                                     <th>Nom, Postnom & Prénom</th>
                                     <th>Lieu & Date de Naiss.</th>
+                                    <th>Adresse</th>
                                     <th>Classe / Option</th>
                                     <th>Tuteur / Contact Parent</th>
                                     <th>Code Parent</th>
@@ -1241,7 +1253,7 @@
                                 </tr>
                             </thead>
                             <tbody id="table-admin-eleves">
-                                <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucun élève.</td></tr>
+                                <tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Aucun élève.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1254,7 +1266,23 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="add-prof-nom">Nom du Professeur</label>
-                            <input type="text" id="add-prof-nom" placeholder="Ex: Prof. Mukendi">
+                            <input type="text" id="add-prof-nom" placeholder="Ex: Mukendi">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-prof-postnom">Postnom du Professeur</label>
+                            <input type="text" id="add-prof-postnom" placeholder="Ex: Paul">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-prof-prenom">Prénom du Professeur</label>
+                            <input type="text" id="add-prof-prenom" placeholder="Ex: Jean">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-prof-lieudate">Lieu et Date de Naissance</label>
+                            <input type="text" id="add-prof-lieudate" placeholder="Ex: Kinshasa, le 01/01/1980">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-prof-adresse">Adresse</label>
+                            <input type="text" id="add-prof-adresse" placeholder="Ex: Av. Commerciale n. 5">
                         </div>
                         <div class="form-group">
                             <label for="add-prof-matiere">Matière / Cours Principal</label>
@@ -1268,14 +1296,16 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Nom</th>
+                                    <th>Nom, Postnom & Prénom</th>
+                                    <th>Lieu & Date Naiss.</th>
+                                    <th>Adresse</th>
                                     <th>Matière</th>
                                     <th>Code d'Accès Généré</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody id="table-admin-profs">
-                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun professeur.</td></tr>
+                                <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Aucun professeur.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1422,39 +1452,38 @@
     </footer>
 
     <script>
-        // Logique et fonctions JS complètes intégrées
         const CLASSES_OPTIONS = [
-            "1ère Humanité Scientifique",
-            "2ème Humanité Scientifique",
-            "3ème Humanité Scientifique",
-            "4ème Humanité Scientifique",
-            "1ère Humanité Pédagogique",
-            "2ème Humanité Pédagogique",
-            "3ème Humanité Pédagogique",
-            "4ème Humanité Pédagogique",
-            "1ère Humanité Commerciale",
-            "2ème Humanité Commerciale",
-            "3ème Humanité Commerciale",
-            "4ème Humanité Commerciale"
+            "1ÈRE HUMANITÉ SCIENTIFIQUE",
+            "2ÈME HUMANITÉ SCIENTIFIQUE",
+            "3ÈME HUMANITÉ SCIENTIFIQUE",
+            "4ÈME HUMANITÉ SCIENTIFIQUE",
+            "1ÈRE HUMANITÉ PÉDAGOGIQUE",
+            "2ÈME HUMANITÉ PÉDAGOGIQUE",
+            "3ÈME HUMANITÉ PÉDAGOGIQUE",
+            "4ÈME HUMANITÉ PÉDAGOGIQUE",
+            "1ÈRE HUMANITÉ COMMERCIALE",
+            "2ÈME HUMANITÉ COMMERCIALE",
+            "3ÈME HUMANITÉ COMMERCIALE",
+            "4ÈME HUMANITÉ COMMERCIALE"
         ];
 
         let donneesEcole = {
             eleves: [
-                { matricule: "4812", nom: "Kabamba", postnom: "Jean", prenom: "Paul", lieudate: "Kinshasa, le 12/05/2010", classe: "3ème Humanité Scientifique", sexe: "M", tuteur: "M. Jean Kabamba", telParent: "+243 990 123 456", emailParent: "jean.kabamba@email.com", codeParent: "PAR9210", fraisPayes: 120 },
-                { matricule: "4813", nom: "Kabamba", postnom: "Jean", prenom: "Sarah", lieudate: "Kinshasa, le 15/08/2012", classe: "1ère Humanité Commerciale", sexe: "F", tuteur: "M. Jean Kabamba", telParent: "+243 990 123 456", emailParent: "jean.kabamba@email.com", codeParent: "PAR9210", fraisPayes: 50 },
-                { matricule: "5021", nom: "Tshisekedi", postnom: "Etienne", prenom: "David", lieudate: "Lubumbashi, le 20/03/2009", classe: "4ème Humanité Scientifique", sexe: "M", tuteur: "Mme Marie Tshisekedi", telParent: "+243 810 987 654", emailParent: "marie.tshisekedi@email.com", codeParent: "PAR5520", fraisPayes: 200 }
+                { matricule: "4812", nom: "KABAMBA", postnom: "JEAN", prenom: "PAUL", lieudate: "KINSHASA, LE 12/05/2010", adresse: "AV. DE LA PAIX N. 12", classe: "3ÈME HUMANITÉ SCIENTIFIQUE", sexe: "M", tuteur: "M. JEAN KABAMBA", telParent: "+243 990 123 456", emailParent: "jean.kabamba@email.com", codeParent: "PAR9210", fraisPayes: 120 },
+                { matricule: "4813", nom: "KABAMBA", postnom: "JEAN", prenom: "SARAH", lieudate: "KINSHASA, LE 15/08/2012", adresse: "AV. DE LA PAIX N. 12", classe: "1ÈRE HUMANITÉ COMMERCIALE", sexe: "F", tuteur: "M. JEAN KABAMBA", telParent: "+243 990 123 456", emailParent: "jean.kabamba@email.com", codeParent: "PAR9210", fraisPayes: 50 },
+                { matricule: "5021", nom: "TSHISEKEDI", postnom: "ETIENNE", prenom: "DAVID", lieudate: "LUBUMBASHI, LE 20/03/2009", adresse: "AV. COMMERCIALE N. 8", classe: "4ÈME HUMANITÉ SCIENTIFIQUE", sexe: "M", tuteur: "MME MARIE TSHISEKEDI", telParent: "+243 810 987 654", emailParent: "marie.tshisekedi@email.com", codeParent: "PAR5520", fraisPayes: 200 }
             ],
             profs: [
-                { id: 1, nom: "Prof. Mukendi", matiere: "Mathématiques", code: "PROF5821" },
-                { id: 2, nom: "Prof. Ilunga", matiere: "Informatique", code: "PROF1234" }
+                { id: 1, nom: "MUKENDI", postnom: "PAUL", prenom: "JEAN", lieudate: "KINSHASA, LE 01/01/1980", adresse: "AV. KASA-VUBU N. 10", matiere: "MATHÉMATIQUES", code: "PROF5821" },
+                { id: 2, nom: "ILUNGA", postnom: "KAZADI", prenom: "PIERRE", lieudate: "LUBUMBASHI, LE 10/05/1975", adresse: "AV. DU COMMERCE N. 4", matiere: "INFORMATIQUE", code: "PROF1234" }
             ],
             fraisConfig: {
-                "3ème Humanité Scientifique": { scolaires: 150, inscription: 50, bulletin: 10 },
-                "1ère Humanité Commerciale": { scolaires: 140, inscription: 50, bulletin: 10 },
-                "4ème Humanité Scientifique": { scolaires: 150, inscription: 50, bulletin: 10 }
+                "3ÈME HUMANITÉ SCIENTIFIQUE": { scolaires: 150, inscription: 50, bulletin: 10 },
+                "1ÈRE HUMANITÉ COMMERCIALE": { scolaires: 140, inscription: 50, bulletin: 10 },
+                "4ÈME HUMANITÉ SCIENTIFIQUE": { scolaires: 150, inscription: 50, bulletin: 10 }
             },
             communiques: [
-                { id: 1, date: "10 Septembre 2026", texte: "Rappel : Le paiement de la première tranche des frais scolaires s'effectue auprès de l'économat avant le 25 du mois en cours." }
+                { id: 1, date: "10 SEPTEMBRE 2026", texte: "RAPPEL : Le paiement de la première tranche des frais scolaires s'effectue auprès de l'économat avant le 25 du mois en cours." }
             ],
             demandesCours: [],
             notes: {},
@@ -1499,6 +1528,7 @@
             window.scrollTo(0, 0);
 
             if (viewId === 'home') chargerCommuniquesPublics();
+            if (viewId === 'admin') chargerAdminMessagesThreads();
         }
 
         function togglePasswordVisibility(inputId, btn) {
@@ -1536,7 +1566,7 @@
 
         // --- ESPACE PARENT ---
         function parentLogin() {
-            const code = document.getElementById('parent-code-input').value.trim();
+            const code = document.getElementById('parent-code-input').value.trim().toUpperCase();
             if (!code) {
                 afficherMessage('parent-msg', 'Veuillez entrer votre code parent.', 'error');
                 return;
@@ -1592,63 +1622,72 @@
             document.getElementById('p-mat').textContent = eleve.matricule;
             document.getElementById('p-postnom-nom').textContent = (eleve.postnom || '-') + ' ' + eleve.nom;
             document.getElementById('p-lieudate').textContent = eleve.lieudate || '-';
+            document.getElementById('p-adresse').textContent = eleve.adresse || '-';
             document.getElementById('p-classe').textContent = eleve.classe;
             document.getElementById('p-sexe').textContent = eleve.sexe === 'M' ? 'Masculin' : 'Féminin';
 
             const config = donneesEcole.fraisConfig[eleve.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
             const totalExige = config.scolaires + config.inscription + config.bulletin;
-            const reste = totalExige - eleve.fraisPayes;
-            const estEnOrdre = reste <= 0;
-
-            const badge = document.getElementById('p-statut-frais');
-            badge.className = 'badge ' + (estEnOrdre ? 'success' : 'danger');
-            badge.textContent = estEnOrdre ? 'En ordre' : 'Non en ordre';
-
             document.getElementById('val-p-frais-scolaires').textContent = config.scolaires + ' $';
             document.getElementById('val-p-frais-inscription').textContent = config.inscription + ' $';
             document.getElementById('val-p-frais-bulletin').textContent = config.bulletin + ' $';
             document.getElementById('val-p-total-exige').textContent = totalExige + ' $';
             document.getElementById('val-p-montant-paye').textContent = eleve.fraisPayes + ' $';
-            document.getElementById('val-p-reste-payer').textContent = Math.max(0, reste) + ' $';
+
+            const reste = totalExige - eleve.fraisPayes;
+            const resteEl = document.getElementById('val-p-reste-payer');
+            resteEl.textContent = (reste > 0 ? reste : 0) + ' $';
+
+            const statutFraisEl = document.getElementById('p-statut-frais');
+            if (eleve.fraisPayes >= totalExige) {
+                statutFraisEl.className = 'badge success';
+                statutFraisEl.textContent = 'En ordre';
+            } else {
+                statutFraisEl.className = 'badge danger';
+                statutFraisEl.textContent = 'Non en ordre';
+            }
 
             // Présences
-            const presList = donneesEcole.presences[matricule] || [];
-            const tbodyP = document.getElementById('table-parent-presences');
+            const presTbody = document.getElementById('table-parent-presences');
+            const presList = donneesEcole.presences[eleve.matricule] || [];
             if (presList.length === 0) {
-                tbodyP.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Aucun historique de présence.</td></tr>';
+                presTbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Aucun historique de présence.</td></tr>';
             } else {
-                tbodyP.innerHTML = presList.map(pr => `
+                presTbody.innerHTML = presList.map(p => `
                     <tr>
-                        <td>${pr.date}</td>
-                        <td><span class="badge ${pr.statut === 'Présent' ? 'success' : 'danger'}">${pr.statut}</span></td>
+                        <td>${p.date}</td>
+                        <td><span class="badge ${p.statut === 'Présent' ? 'success' : 'danger'}">${p.statut}</span></td>
                     </tr>
                 `).join('');
             }
 
-            // Notes
-            const notesEleve = donneesEcole.notes[matricule] || {};
-            const tbodyN = document.getElementById('table-parent-notes');
-            const keys = Object.keys(notesEleve);
-            if (keys.length === 0) {
-                tbodyN.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune note disponible pour le moment.</td></tr>';
-            } else {
-                tbodyN.innerHTML = keys.map(k => {
-                    const n = notesEleve[k];
-                    return `
-                        <tr>
-                            <td><strong>${n.cours}</strong></td>
-                            <td>${n.trimestre}</td>
-                            <td>${n.intero1 || '-'}</td>
-                            <td>${n.intero2 || '-'}</td>
-                            <td>${n.devoir || '-'}</td>
-                            <td>${n.examen || '-'}</td>
-                            <td><strong>${n.total} / ${n.max}</strong></td>
-                            <td><span class="badge ${n.total >= (n.max * 0.5) ? 'success' : 'danger'}">${n.appreciation}</span></td>
-                        </tr>
-                    `;
-                }).join('');
+            // Notes / Bulletin
+            const notesTbody = document.getElementById('table-parent-notes');
+            let notesEleve = [];
+            for (let key in donneesEcole.notes) {
+                if (key.startsWith(eleve.classe + '_')) {
+                    const dataCours = donneesEcole.notes[key];
+                    if (dataCours[eleve.matricule]) {
+                        notesEleve.push(dataCours[eleve.matricule]);
+                    }
+                }
             }
-            window.scrollTo({ top: document.getElementById('enfant-detail-section').offsetTop - 80, behavior: 'smooth' });
+            if (notesEleve.length === 0) {
+                notesTbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune note enregistrée.</td></tr>';
+            } else {
+                notesTbody.innerHTML = notesEleve.map(n => `
+                    <tr>
+                        <td><strong>${n.cours}</strong></td>
+                        <td>${n.trimestre}</td>
+                        <td>${n.intero1 || '-'}</td>
+                        <td>${n.intero2 || '-'}</td>
+                        <td>${n.devoir || '-'}</td>
+                        <td>${n.examen || '-'}</td>
+                        <td><strong>${n.total} / ${n.max}</strong></td>
+                        <td><span class="badge ${n.total >= (n.max / 2) ? 'success' : 'danger'}">${n.appreciation}</span></td>
+                    </tr>
+                `).join('');
+            }
         }
 
         function fermerDetailEnfant() {
@@ -1657,7 +1696,7 @@
 
         // --- ESPACE ELEVE ---
         function eleveLogin() {
-            const mat = document.getElementById('eleve-matricule-input').value.trim();
+            const mat = document.getElementById('eleve-matricule-input').value.trim().toUpperCase();
             if (!mat) {
                 afficherMessage('eleve-msg', 'Veuillez entrer votre matricule.', 'error');
                 return;
@@ -1670,21 +1709,52 @@
             sessionActive = { role: 'eleve', identifiant: mat };
             document.getElementById('eleve-login-card').style.display = 'none';
             document.getElementById('eleve-dashboard-card').style.display = 'block';
+
             document.getElementById('e-nom-eleve').textContent = eleve.nom + ' ' + (eleve.postnom || '') + ' ' + eleve.prenom;
             document.getElementById('e-mat').textContent = eleve.matricule;
             document.getElementById('e-postnom-nom').textContent = (eleve.postnom || '-') + ' ' + eleve.nom;
             document.getElementById('e-lieudate').textContent = eleve.lieudate || '-';
+            document.getElementById('e-adresse').textContent = eleve.adresse || '-';
             document.getElementById('e-classe').textContent = eleve.classe;
 
             const config = donneesEcole.fraisConfig[eleve.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
             const totalExige = config.scolaires + config.inscription + config.bulletin;
-            const estEnOrdre = eleve.fraisPayes >= totalExige;
+            const statutFraisEl = document.getElementById('e-statut-frais');
+            if (eleve.fraisPayes >= totalExige) {
+                statutFraisEl.className = 'badge success';
+                statutFraisEl.textContent = 'En ordre';
+            } else {
+                statutFraisEl.className = 'badge danger';
+                statutFraisEl.textContent = 'Non en ordre';
+            }
 
-            const badge = document.getElementById('e-statut-frais');
-            badge.className = 'badge ' + (estEnOrdre ? 'success' : 'danger');
-            badge.textContent = estEnOrdre ? 'En ordre' : 'Non en ordre';
-
-            chargerNotesEleve(mat);
+            // Notes élève
+            const notesTbody = document.getElementById('table-eleve-notes');
+            let notesEleve = [];
+            for (let key in donneesEcole.notes) {
+                if (key.startsWith(eleve.classe + '_')) {
+                    const dataCours = donneesEcole.notes[key];
+                    if (dataCours[eleve.matricule]) {
+                        notesEleve.push(dataCours[eleve.matricule]);
+                    }
+                }
+            }
+            if (notesEleve.length === 0) {
+                notesTbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune note disponible pour le moment.</td></tr>';
+            } else {
+                notesTbody.innerHTML = notesEleve.map(n => `
+                    <tr>
+                        <td><strong>${n.cours}</strong></td>
+                        <td>${n.trimestre}</td>
+                        <td>${n.intero1 || '-'}</td>
+                        <td>${n.intero2 || '-'}</td>
+                        <td>${n.devoir || '-'}</td>
+                        <td>${n.examen || '-'}</td>
+                        <td><strong>${n.total} / ${n.max}</strong></td>
+                        <td><span class="badge ${n.total >= (n.max / 2) ? 'success' : 'danger'}">${n.appreciation}</span></td>
+                    </tr>
+                `).join('');
+            }
         }
 
         function eleveLogout() {
@@ -1694,38 +1764,13 @@
             document.getElementById('eleve-matricule-input').value = '';
         }
 
-        function chargerNotesEleve(mat) {
-            const notesEleve = donneesEcole.notes[mat] || {};
-            const tbody = document.getElementById('table-eleve-notes');
-            const keys = Object.keys(notesEleve);
-            if (keys.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune note enregistrée.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = keys.map(k => {
-                const n = notesEleve[k];
-                return `
-                    <tr>
-                        <td><strong>${n.cours}</strong></td>
-                        <td>${n.trimestre}</td>
-                        <td>${n.intero1 || '-'}</td>
-                        <td>${n.intero2 || '-'}</td>
-                        <td>${n.devoir || '-'}</td>
-                        <td>${n.examen || '-'}</td>
-                        <td><strong>${n.total} / ${n.max}</strong></td>
-                        <td><span class="badge ${n.total >= (n.max * 0.5) ? 'success' : 'danger'}">${n.appreciation}</span></td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
         // --- ESPACE PROF ---
         let profConnecte = null;
 
         function profLogin() {
-            const code = document.getElementById('prof-code-input').value.trim();
+            const code = document.getElementById('prof-code-input').value.trim().toUpperCase();
             if (!code) {
-                afficherMessage('prof-msg', 'Veuillez entrer votre code professeur.', 'error');
+                afficherMessage('prof-msg', 'Veuillez entrer votre code prof.', 'error');
                 return;
             }
             const prof = donneesEcole.profs.find(p => p.code === code);
@@ -1737,7 +1782,7 @@
             sessionActive = { role: 'prof', identifiant: prof.id };
             document.getElementById('prof-login-card').style.display = 'none';
             document.getElementById('prof-dashboard-card').style.display = 'block';
-            document.getElementById('prof-nom-titre').textContent = prof.nom + ' (' + prof.matiere + ')';
+            document.getElementById('prof-nom-titre').textContent = prof.nom + ' ' + (prof.postnom || '') + ' ' + (prof.prenom || '') + ' (' + prof.matiere + ')';
             document.getElementById('prof-cours-input').value = prof.matiere;
         }
 
@@ -1751,23 +1796,23 @@
 
         function changerNbInteros() {
             const nb = parseInt(document.getElementById('prof-nb-interos').value);
-            document.querySelectorAll('.th-int-col').forEach(th => th.style.display = 'none');
-            for (let i = 1; i <= nb; i++) {
-                const el = document.querySelector('.th-int-' + i);
-                if (el) el.style.display = 'table-cell';
+            for (let i = 1; i <= 4; i++) {
+                document.querySelectorAll('.th-int-' + i).forEach(el => el.style.display = i <= nb ? '' : 'none');
+                document.querySelectorAll('.td-int-' + i).forEach(el => el.style.display = i <= nb ? '' : 'none');
             }
             chargerElevesClasseProf();
         }
 
         function chargerElevesClasseProf() {
             const classe = document.getElementById('prof-classe-select').value;
-            const cours = document.getElementById('prof-cours-input').value.trim();
             const trimestre = document.getElementById('prof-trimestre-select').value;
+            const cours = document.getElementById('prof-cours-input').value.trim().toUpperCase();
+            const maxVal = parseInt(document.getElementById('prof-cotation-max').value);
             const nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
-            const cotMax = parseInt(document.getElementById('prof-cotation-max').value);
-            document.getElementById('th-label-total').textContent = 'Total / ' + cotMax;
-
             const tbody = document.getElementById('table-prof-cotations');
+
+            document.getElementById('th-label-total').textContent = 'Total / ' + maxVal;
+
             if (!classe) {
                 tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe & option.</td></tr>';
                 return;
@@ -1779,117 +1824,153 @@
                 return;
             }
 
+            const keyData = classe + '_' + trimestre + '_' + cours;
+            const savedNotes = donneesEcole.notes[keyData] || {};
+
             tbody.innerHTML = elevesClasse.map(e => {
-                const key = `${cours}_${trimestre}`;
-                const notesExistantes = donneesEcole.notes[e.matricule] && donneesEcole.notes[e.matricule][key] ? donneesEcole.notes[e.matricule][key] : {};
-                
-                let tdInterosHTML = '';
-                for (let i = 1; i <= 4; i++) {
-                    const styleDisplay = i <= nbInteros ? '' : 'display:none;';
-                    const val = notesExistantes['intero' + i] !== undefined ? notesExistantes['intero' + i] : '';
-                    tdInterosHTML += `<td class="td-int-col td-int-${i}" style="${styleDisplay}"><input type="number" step="0.5" class="input-note input-int-${i}" data-mat="${e.matricule}" value="${val}" placeholder="0" oninput="calculerTotalLigne('${e.matricule}')" style="width: 60px; padding: 0.4rem;"></td>`;
-                }
-
-                const devoirVal = notesExistantes.devoir !== undefined ? notesExistantes.devoir : '';
-                const examenVal = notesExistantes.examen !== undefined ? notesExistantes.examen : '';
-                const totalVal = notesExistantes.total !== undefined ? notesExistantes.total : '-';
-
+                const n = savedNotes[e.matricule] || {};
                 return `
-                    <tr data-mat="${e.matricule}">
+                    <tr data-matricule="${e.matricule}">
                         <td><code>${e.matricule}</code></td>
                         <td><strong>${e.nom} ${e.postnom || ''} ${e.prenom}</strong></td>
-                        ${tdInterosHTML}
-                        <td><input type="number" step="0.5" class="input-note input-devoir" data-mat="${e.matricule}" value="${devoirVal}" placeholder="0" oninput="calculerTotalLigne('${e.matricule}')" style="width: 60px; padding: 0.4rem;"></td>
-                        <td><input type="number" step="0.5" class="input-note input-examen" data-mat="${e.matricule}" value="${examenVal}" placeholder="0" oninput="calculerTotalLigne('${e.matricule}')" style="width: 60px; padding: 0.4rem;"></td>
-                        <td><strong id="total-${e.matricule}">${totalVal} / ${cotMax}</strong></td>
-                        <td><span id="app-${e.matricule}" class="badge ${parseFloat(totalVal) >= (cotMax * 0.5) ? 'success' : 'danger'}">${parseFloat(totalVal) >= (cotMax * 0.5) ? 'Satisfaisant' : 'Insuffisant'}</span></td>
+                        <td class="td-int-col td-int-1"><input type="number" class="input-note input-int1" value="${n.intero1 !== undefined ? n.intero1 : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
+                        <td class="td-int-col td-int-2"><input type="number" class="input-note input-int2" value="${n.intero2 !== undefined ? n.intero2 : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
+                        <td class="td-int-col td-int-3" style="display:${nbInteros >= 3 ? '' : 'none'};"><input type="number" class="input-note input-int3" value="${n.intero3 !== undefined ? n.intero3 : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
+                        <td class="td-int-col td-int-4" style="display:${nbInteros >= 4 ? '' : 'none'};"><input type="number" class="input-note input-int4" value="${n.intero4 !== undefined ? n.intero4 : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
+                        <td><input type="number" class="input-note input-devoir" value="${n.devoir !== undefined ? n.devoir : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
+                        <td><input type="number" class="input-note input-examen" value="${n.examen !== undefined ? n.examen : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
+                        <td><strong class="span-total">${n.total !== undefined ? n.total : 0}</strong> / ${maxVal}</td>
+                        <td><span class="badge span-appreciation ${n.total >= (maxVal/2) ? 'success' : 'danger'}">${n.appreciation || 'En attente'}</span></td>
                     </tr>
                 `;
             }).join('');
         }
 
-        function calculerTotalLigne(mat) {
+        function calculerTotalLigne(inputEl) {
+            const tr = inputEl.closest('tr');
+            const maxVal = parseInt(document.getElementById('prof-cotation-max').value);
             const nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
-            let sommeInteros = 0;
-            let countInteros = 0;
+
+            let somme = 0;
+            let count = 0;
+
             for (let i = 1; i <= nbInteros; i++) {
-                const inp = document.querySelector(`tr[data-mat="${mat}"] .input-int-${i}`);
-                if (inp && inp.value !== '') {
-                    sommeInteros += parseFloat(inp.value) || 0;
-                    countInteros++;
-                }
+                const val = parseFloat(tr.querySelector('.input-int' + i).value);
+                if (!isNaN(val)) { somme += val; count++; }
             }
-            const moyenneInteros = countInteros > 0 ? (sommeInteros / countInteros) : 0;
-            const devoirInp = document.querySelector(`tr[data-mat="${mat}"] .input-devoir`);
-            const examenInp = document.querySelector(`tr[data-mat="${mat}"] .input-examen`);
-            const devoir = devoirInp && devoirInp.value !== '' ? parseFloat(devoirInp.value) || 0 : 0;
-            const examen = examenInp && examenInp.value !== '' ? parseFloat(examenInp.value) || 0 : 0;
 
-            const total = moyenneInteros + devoir + examen;
-            const cotMax = parseInt(document.getElementById('prof-cotation-max').value);
-            const totalFinal = Math.min(cotMax, Math.max(0, total)).toFixed(1);
+            const devVal = parseFloat(tr.querySelector('.input-devoir').value);
+            if (!isNaN(devVal)) { somme += devVal; count++; }
 
-            document.getElementById(`total-${mat}`).textContent = totalFinal + ' / ' + cotMax;
-            const badge = document.getElementById(`app-${mat}`);
-            const isSatis = parseFloat(totalFinal) >= (cotMax * 0.5);
-            badge.className = 'badge ' + (isSatis ? 'success' : 'danger');
-            badge.textContent = isSatis ? 'Satisfaisant' : 'Insuffisant';
+            const exVal = parseFloat(tr.querySelector('.input-examen').value);
+            if (!isNaN(exVal)) { somme += exVal; count++; }
+
+            // Calcul de la moyenne ramenée sur la cote max choisie
+            let totalFinal = count > 0 ? Math.round((somme / count) * 10) / 10 : 0;
+            if (totalFinal > maxVal) totalFinal = maxVal;
+
+            tr.querySelector('.span-total').textContent = totalFinal;
+            const badge = tr.querySelector('.span-appreciation');
+            if (totalFinal >= (maxVal / 2)) {
+                badge.className = 'badge success span-appreciation';
+                badge.textContent = 'Satisfaisant';
+            } else {
+                badge.className = 'badge danger span-appreciation';
+                badge.textContent = 'Insuffisant';
+            }
         }
 
         function enregistrerNotesProf() {
-            const cours = document.getElementById('prof-cours-input').value.trim();
+            const classe = document.getElementById('prof-classe-select').value;
             const trimestre = document.getElementById('prof-trimestre-select').value;
-            const cotMax = parseInt(document.getElementById('prof-cotation-max').value);
+            const cours = document.getElementById('prof-cours-input').value.trim().toUpperCase();
+            const maxVal = parseInt(document.getElementById('prof-cotation-max').value);
             const nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
 
-            if (!cours) {
-                alert('Veuillez spécifier l\'intitulé du cours.');
+            if (!classe || !cours) {
+                alert('Veuillez renseigner la classe et l\'intitulé du cours.');
                 return;
             }
 
-            const classe = document.getElementById('prof-classe-select').value;
-            const elevesClasse = donneesEcole.eleves.filter(e => e.classe === classe);
+            const keyData = classe + '_' + trimestre + '_' + cours;
+            if (!donneesEcole.notes[keyData]) donneesEcole.notes[keyData] = {};
 
-            elevesClasse.forEach(e => {
-                const tr = document.querySelector(`tr[data-mat="${e.matricule}"]`);
-                if (!tr) return;
+            document.querySelectorAll('#table-prof-cotations tr').forEach(tr => {
+                const mat = tr.getAttribute('data-matricule');
+                if (!mat) return;
 
-                let interosData = {};
-                for (let i = 1; i <= nbInteros; i++) {
-                    const inp = tr.querySelector(`.input-int-${i}`);
-                    interosData['intero' + i] = inp && inp.value !== '' ? parseFloat(inp.value) : null;
-                }
-                const devoirInp = tr.querySelector('.input-devoir');
-                const examenInp = tr.querySelector('.input-examen');
-                const devoir = devoirInp && devoirInp.value !== '' ? parseFloat(devoirInp.value) : null;
-                const examen = examenInp && examenInp.value !== '' ? parseFloat(examenInp.value) : null;
+                const intero1 = tr.querySelector('.input-int1').value;
+                const intero2 = tr.querySelector('.input-int2').value;
+                const intero3 = nbInteros >= 3 ? tr.querySelector('.input-int3').value : null;
+                const intero4 = nbInteros >= 4 ? tr.querySelector('.input-int4').value : null;
+                const devoir = tr.querySelector('.input-devoir').value;
+                const examen = tr.querySelector('.input-examen').value;
+                const total = parseFloat(tr.querySelector('.span-total').textContent);
+                const appreciation = tr.querySelector('.span-appreciation').textContent;
 
-                let sommeInteros = 0;
-                let countInteros = 0;
-                for (let i = 1; i <= nbInteros; i++) {
-                    if (interosData['intero' + i] !== null) {
-                        sommeInteros += interosData['intero' + i];
-                        countInteros++;
-                    }
-                }
-                const moy = countInteros > 0 ? (sommeInteros / countInteros) : 0;
-                const tot = moy + (devoir || 0) + (examen || 0);
-                const totalFinal = Math.min(cotMax, Math.max(0, tot)).toFixed(1);
-                const appreciation = parseFloat(totalFinal) >= (cotMax * 0.5) ? 'Satisfaisant' : 'Insuffisant';
-
-                if (!donneesEcole.notes[e.matricule]) donneesEcole.notes[e.matricule] = {};
-                donneesEcole.notes[e.matricule][`${cours}_${trimestre}`] = {
+                donneesEcole.notes[keyData][mat] = {
                     cours: cours,
                     trimestre: trimestre,
-                    ...interosData,
-                    devoir: devoir,
-                    examen: examen,
-                    total: totalFinal,
-                    max: cotMax,
+                    intero1: intero1 !== '' ? parseFloat(intero1) : null,
+                    intero2: intero2 !== '' ? parseFloat(intero2) : null,
+                    intero3: intero3 !== null && intero3 !== '' ? parseFloat(intero3) : null,
+                    intero4: intero4 !== null && intero4 !== '' ? parseFloat(intero4) : null,
+                    devoir: devoir !== '' ? parseFloat(devoir) : null,
+                    examen: examen !== '' ? parseFloat(examen) : null,
+                    total: total,
+                    max: maxVal,
                     appreciation: appreciation
                 };
             });
-            alert('Cotations enregistrées avec succès !');
+
+            alert('Cotations enregistrées avec succès pour le cours de ' + cours + ' !');
+        }
+
+        function ouvrirModalAjouterCoursProf() {
+            document.getElementById('modal-ajouter-cours-prof').style.display = 'flex';
+        }
+
+        function fermerModalAjouterCoursProf() {
+            document.getElementById('modal-ajouter-cours-prof').style.display = 'none';
+            document.getElementById('demande-cours-nom').value = '';
+        }
+
+        function soumettreDemandeCoursProf() {
+            const nomCours = document.getElementById('demande-cours-nom').value.trim().toUpperCase();
+            const classeCible = document.getElementById('demande-cours-classe').value;
+            if (!nomCours || !classeCible) {
+                afficherMessage('prof-cours-demande-msg', 'Veuillez remplir tous les champs.', 'error');
+                return;
+            }
+            donneesEcole.demandesCours.push({
+                id: Date.now(),
+                prof: profConnecte.nom + ' ' + (profConnecte.prenom || ''),
+                cours: nomCours,
+                classe: classeCible,
+                statut: 'En attente'
+            });
+            afficherMessage('prof-cours-demande-msg', 'Demande transmise avec succès à l\'administration.', 'success');
+            setTimeout(() => { fermerModalAjouterCoursProf(); }, 1500);
+        }
+
+        function ouvrirModalModifierCodeProf() {
+            document.getElementById('modal-modifier-code').style.display = 'flex';
+        }
+
+        function fermerModalModifierCodeProf() {
+            document.getElementById('modal-modifier-code').style.display = 'none';
+            document.getElementById('nouveau-code-prof').value = '';
+        }
+
+        function sauvegarderNouveauCodeProf() {
+            const nouveauCode = document.getElementById('nouveau-code-prof').value.trim().toUpperCase();
+            if (!nouveauCode) {
+                afficherMessage('prof-mod-msg', 'Veuillez entrer un code valide.', 'error');
+                return;
+            }
+            profConnecte.code = nouveauCode;
+            afficherMessage('prof-mod-msg', 'Code mis à jour avec succès !', 'success');
+            setTimeout(() => { fermerModalModifierCodeProf(); }, 1500);
         }
 
         // --- ESPACE ADMIN ---
@@ -1902,11 +1983,7 @@
             sessionActive = { role: 'admin', identifiant: 'admin' };
             document.getElementById('admin-login-card').style.display = 'none';
             document.getElementById('admin-dashboard-card').style.display = 'block';
-            chargerTableAdminEleves();
-            chargerTableAdminProfs();
-            chargerTableAdminDemandesCours();
-            chargerAdminCommuniques();
-            chargerAdminMessagesThreads();
+            chargerDonneesAdmin();
         }
 
         function adminLogout() {
@@ -1917,68 +1994,67 @@
         }
 
         function switchAdminTab(tabName) {
-            ['eleves', 'profs', 'frais', 'communiques', 'demandes', 'messages'].forEach(t => {
-                document.getElementById('admin-content-' + t).style.display = t === tabName ? 'block' : 'none';
-                const btn = document.getElementById('tab-admin-' + t);
-                if (btn) btn.classList.toggle('active', t === tabName);
-            });
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('#admin .nav-btns button').forEach(b => b.classList.remove('active'));
+            document.getElementById('admin-content-' + tabName).style.display = 'block';
+            document.getElementById('tab-admin-' + tabName).classList.add('active');
+
+            if (tabName === 'eleves') chargerTableAdminEleves();
+            if (tabName === 'profs') chargerTableAdminProfs();
+            if (tabName === 'communiques') chargerAdminCommuniques();
+            if (tabName === 'demandes') chargerAdminDemandesCours();
+            if (tabName === 'messages') chargerAdminMessagesThreads();
+        }
+
+        function chargerDonneesAdmin() {
+            chargerTableAdminEleves();
+            chargerTableAdminProfs();
+            chargerAdminCommuniques();
+            chargerAdminDemandesCours();
+            chargerAdminMessagesThreads();
         }
 
         function ajouterEleve() {
-            const nom = document.getElementById('add-eleve-nom').value.trim();
-            const postnom = document.getElementById('add-eleve-postnom').value.trim();
-            const prenom = document.getElementById('add-eleve-prenom').value.trim();
-            const lieudate = document.getElementById('add-eleve-lieudate').value.trim();
+            const nom = document.getElementById('add-eleve-nom').value.trim().toUpperCase();
+            const postnom = document.getElementById('add-eleve-postnom').value.trim().toUpperCase();
+            const prenom = document.getElementById('add-eleve-prenom').value.trim().toUpperCase();
+            const lieudate = document.getElementById('add-eleve-lieudate').value.trim().toUpperCase();
+            const adresse = document.getElementById('add-eleve-adresse').value.trim().toUpperCase();
             const classe = document.getElementById('add-eleve-classe').value;
             const sexe = document.getElementById('add-eleve-sexe').value;
-            const tuteur = document.getElementById('add-eleve-tuteur').value.trim();
-            const tel = document.getElementById('add-eleve-tel-parent').value.trim();
-            const email = document.getElementById('add-eleve-email-parent').value.trim();
+            const tuteur = document.getElementById('add-eleve-tuteur').value.trim().toUpperCase();
+            const emailParent = document.getElementById('add-eleve-email-parent').value.trim();
+            const telParent = document.getElementById('add-eleve-tel-parent').value.trim();
 
-            if (!nom || !prenom || !classe || !tuteur || !tel) {
+            if (!nom || !prenom || !lieudate || !adresse || !classe || !tuteur) {
                 afficherMessage('admin-eleve-msg', 'Veuillez remplir tous les champs obligatoires.', 'error');
                 return;
             }
 
             const matricule = Math.floor(1000 + Math.random() * 9000).toString();
-            // Génération ou attribution d'un code parent basé sur le nom du tuteur ou aléatoire
-            let codeParent = 'PAR' + Math.floor(1000 + Math.random() * 9000);
-            // Vérifier si ce tuteur a déjà un code
-            const existant = donneesEcole.eleves.find(e => e.tuteur.toLowerCase() === tuteur.toLowerCase());
-            if (existant) {
-                codeParent = existant.codeParent;
-            }
+            // Génération ou récupération code parent basé sur le nom du tuteur
+            const codeParent = 'PAR' + Math.floor(1000 + Math.random() * 9000);
 
             donneesEcole.eleves.push({
-                matricule,
-                nom,
-                postnom,
-                prenom,
-                lieudate,
-                classe,
-                sexe,
-                tuteur,
-                telParent: tel,
-                emailParent: email,
-                codeParent,
-                fraisPayes: 0
+                matricule, nom, postnom, prenom, lieudate, adresse, classe, sexe, tuteur, emailParent, telParent, codeParent, fraisPayes: 0
             });
 
-            afficherMessage('admin-eleve-msg', `Élève inscrit avec succès ! Matricule: ${matricule} | Code Parent: ${codeParent}`, 'success');
+            afficherMessage('admin-eleve-msg', 'Élève inscrit avec succès ! Code Parent attribué : ' + codeParent, 'success');
             document.getElementById('add-eleve-nom').value = '';
             document.getElementById('add-eleve-postnom').value = '';
             document.getElementById('add-eleve-prenom').value = '';
             document.getElementById('add-eleve-lieudate').value = '';
+            document.getElementById('add-eleve-adresse').value = '';
             document.getElementById('add-eleve-tuteur').value = '';
-            document.getElementById('add-eleve-tel-parent').value = '';
             document.getElementById('add-eleve-email-parent').value = '';
+            document.getElementById('add-eleve-tel-parent').value = '';
             chargerTableAdminEleves();
         }
 
         function chargerTableAdminEleves() {
             const tbody = document.getElementById('table-admin-eleves');
             if (donneesEcole.eleves.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucun élève enregistré.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Aucun élève enregistré.</td></tr>';
                 return;
             }
             tbody.innerHTML = donneesEcole.eleves.map(e => {
@@ -1989,59 +2065,64 @@
                     <tr>
                         <td><code>${e.matricule}</code></td>
                         <td><strong>${e.nom} ${e.postnom || ''} ${e.prenom}</strong></td>
-                        <td>${e.lieudate || '-'}</td>
+                        <td>${e.lieudate}</td>
+                        <td>${e.adresse || '-'}</td>
                         <td>${e.classe}</td>
-                        <td>${e.tuteur}<br><small style="color:var(--text-muted);">${e.telParent}</small></td>
+                        <td>${e.tuteur}<br><small style="color:var(--text-muted);">${e.telParent || ''}</small></td>
                         <td><code>${e.codeParent}</code></td>
-                        <td><span class="badge ${estEnOrdre ? 'success' : 'danger'}">${estEnOrdre ? 'En ordre' : e.fraisPayes + ' $ / ' + totalExige + ' $'}</span></td>
+                        <td><span class="badge ${estEnOrdre ? 'success' : 'danger'}">${estEnOrdre ? 'En ordre' : 'Non en ordre'}</span></td>
                         <td>
-                            <button onclick="payerFraisAdmin('${e.matricule}')" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; margin-right: 0.25rem;">+ Frais</button>
-                            <button onclick="supprimerEleve('${e.matricule}')" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Suppr.</button>
+                            <button onclick="ajouterPaiementAdmin('${e.matricule}')" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.25rem;">+ Paiement</button>
+                            <button onclick="supprimerEleve('${e.matricule}')" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; font-weight: 600;">Supprimer</button>
                         </td>
                     </tr>
                 `;
             }).join('');
         }
 
-        function payerFraisAdmin(mat) {
-            const montantStr = prompt("Entrer le montant perçu en $ :");
-            if (!montantStr) return;
-            const montant = parseFloat(montantStr);
-            if (isNaN(montant) || montant <= 0) {
-                alert('Montant invalide.');
-                return;
-            }
-            const eleve = donneesEcole.eleves.find(e => e.matricule === mat);
-            if (eleve) {
-                eleve.fraisPayes += montant;
+        function ajouterPaiementAdmin(matricule) {
+            const eleve = donneesEcole.eleves.find(e => e.matricule === matricule);
+            if (!eleve) return;
+            const montant = prompt('Entrer le montant perçu en USD pour ' + eleve.nom + ' ' + eleve.prenom + ' :');
+            if (montant && !isNaN(montant)) {
+                eleve.fraisPayes += parseFloat(montant);
                 chargerTableAdminEleves();
-                alert(`Paiement de ${montant}$ enregistré pour ${eleve.nom} ${eleve.prenom}.`);
+                alert('Paiement enregistré avec succès !');
             }
         }
 
-        function supprimerEleve(mat) {
-            if (confirm("Voulez-vous vraiment supprimer cet élève ?")) {
-                donneesEcole.eleves = donneesEcole.eleves.filter(e => e.matricule !== mat);
+        function supprimerEleve(matricule) {
+            if (confirm('Voulez-vous vraiment supprimer cet élève ?')) {
+                donneesEcole.eleves = donneesEcole.eleves.filter(e => e.matricule !== matricule);
                 chargerTableAdminEleves();
             }
         }
 
         function ajouterProf() {
-            const nom = document.getElementById('add-prof-nom').value.trim();
-            const matiere = document.getElementById('add-prof-matiere').value.trim();
-            if (!nom || !matiere) {
+            const nom = document.getElementById('add-prof-nom').value.trim().toUpperCase();
+            const postnom = document.getElementById('add-prof-postnom').value.trim().toUpperCase();
+            const prenom = document.getElementById('add-prof-prenom').value.trim().toUpperCase();
+            const lieudate = document.getElementById('add-prof-lieudate').value.trim().toUpperCase();
+            const adresse = document.getElementById('add-prof-adresse').value.trim().toUpperCase();
+            const matiere = document.getElementById('add-prof-matiere').value.trim().toUpperCase();
+
+            if (!nom || !prenom || !lieudate || !adresse || !matiere) {
                 afficherMessage('admin-prof-msg', 'Veuillez remplir tous les champs.', 'error');
                 return;
             }
+
             const code = 'PROF' + Math.floor(1000 + Math.random() * 9000);
             donneesEcole.profs.push({
-                id: donneesEcole.profs.length + 1,
-                nom,
-                matiere,
-                code
+                id: Date.now(),
+                nom, postnom, prenom, lieudate, adresse, matiere, code
             });
-            afficherMessage('admin-prof-msg', `Professeur enregistré ! Code généré : ${code}`, 'success');
+
+            afficherMessage('admin-prof-msg', 'Professeur ajouté avec succès ! Code généré : ' + code, 'success');
             document.getElementById('add-prof-nom').value = '';
+            document.getElementById('add-prof-postnom').value = '';
+            document.getElementById('add-prof-prenom').value = '';
+            document.getElementById('add-prof-lieudate').value = '';
+            document.getElementById('add-prof-adresse').value = '';
             document.getElementById('add-prof-matiere').value = '';
             chargerTableAdminProfs();
         }
@@ -2049,21 +2130,23 @@
         function chargerTableAdminProfs() {
             const tbody = document.getElementById('table-admin-profs');
             if (donneesEcole.profs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun professeur enregistré.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Aucun professeur enregistré.</td></tr>';
                 return;
             }
             tbody.innerHTML = donneesEcole.profs.map(p => `
                 <tr>
-                    <td><strong>${p.nom}</strong></td>
+                    <td><strong>${p.nom} ${p.postnom || ''} ${p.prenom}</strong></td>
+                    <td>${p.lieudate || '-'}</td>
+                    <td>${p.adresse || '-'}</td>
                     <td>${p.matiere}</td>
                     <td><code>${p.code}</code></td>
-                    <td><button onclick="supprimerProf(${p.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Suppr.</button></td>
+                    <td><button onclick="supprimerProf(${p.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; font-weight: 600;">Supprimer</button></td>
                 </tr>
             `).join('');
         }
 
         function supprimerProf(id) {
-            if (confirm("Voulez-vous supprimer ce professeur ?")) {
+            if (confirm('Voulez-vous supprimer ce professeur ?')) {
                 donneesEcole.profs = donneesEcole.profs.filter(p => p.id !== id);
                 chargerTableAdminProfs();
             }
@@ -2071,30 +2154,30 @@
 
         function sauvegarderConfigFrais() {
             const classe = document.getElementById('config-frais-classe').value;
-            const scolaires = parseFloat(document.getElementById('config-frais-scolaires').value) || 0;
-            const inscription = parseFloat(document.getElementById('config-frais-inscription').value) || 0;
-            const bulletin = parseFloat(document.getElementById('config-frais-bulletin').value) || 0;
+            const scolaires = parseFloat(document.getElementById('config-frais-scolaires').value);
+            const inscription = parseFloat(document.getElementById('config-frais-inscription').value);
+            const bulletin = parseFloat(document.getElementById('config-frais-bulletin').value);
 
-            if (!classe) {
-                afficherMessage('admin-frais-msg', 'Veuillez sélectionner une classe & option.', 'error');
+            if (!classe || isNaN(scolaires) || isNaN(inscription) || isNaN(bulletin)) {
+                afficherMessage('admin-frais-msg', 'Veuillez sélectionner une classe et renseigner tous les montants.', 'error');
                 return;
             }
 
             donneesEcole.fraisConfig[classe] = { scolaires, inscription, bulletin };
-            afficherMessage('admin-frais-msg', 'Configuration des frais enregistrée avec succès !', 'success');
+            afficherMessage('admin-frais-msg', 'Tarifs mis à jour avec succès pour la classe de ' + classe, 'success');
         }
 
         function ajouterCommunique() {
-            const texte = document.getElementById('admin-com-texte').value.trim();
+            const texte = document.getElementById('admin-com-texte').value.trim().toUpperCase();
             if (!texte) {
                 afficherMessage('admin-com-msg', 'Veuillez rédiger le communiqué.', 'error');
                 return;
             }
-            const dateStr = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            const dateStr = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
             donneesEcole.communiques.unshift({
                 id: Date.now(),
                 date: dateStr,
-                texte
+                texte: texte
             });
             document.getElementById('admin-com-texte').value = '';
             afficherMessage('admin-com-msg', 'Communiqué publié avec succès !', 'success');
@@ -2104,7 +2187,7 @@
         function chargerAdminCommuniques() {
             const container = document.getElementById('admin-list-communiques');
             if (donneesEcole.communiques.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué actif.</p>';
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué.</p>';
                 return;
             }
             container.innerHTML = donneesEcole.communiques.map(c => `
@@ -2113,7 +2196,7 @@
                         <div class="communique-date">${c.date}</div>
                         <p style="font-size: 0.9rem; color: var(--text-main);">${c.texte}</p>
                     </div>
-                    <button onclick="supprimerCommunique(${c.id})" style="background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 0.9rem;">🗑️</button>
+                    <button onclick="supprimerCommunique(${c.id})" style="background: transparent; border: none; color: var(--danger); cursor: pointer; font-weight: bold;">✕</button>
                 </div>
             `).join('');
         }
@@ -2123,26 +2206,7 @@
             chargerAdminCommuniques();
         }
 
-        function soumettreDemandeCoursProf() {
-            const nomCours = document.getElementById('demande-cours-nom').value.trim();
-            const classe = document.getElementById('demande-cours-classe').value;
-            if (!nomCours || !classe) {
-                afficherMessage('prof-cours-demande-msg', 'Veuillez remplir tous les champs.', 'error');
-                return;
-            }
-            donneesEcole.demandesCours.push({
-                id: Date.now(),
-                profNom: profConnecte.nom,
-                cours: nomCours,
-                classe: classe,
-                statut: 'En attente'
-            });
-            afficherMessage('prof-cours-demande-msg', 'Demande envoyée à l\'administration avec succès !', 'success');
-            document.getElementById('demande-cours-nom').value = '';
-            fermerModalAjouterCoursProf();
-        }
-
-        function chargerTableAdminDemandesCours() {
+        function chargerAdminDemandesCours() {
             const tbody = document.getElementById('table-admin-demandes-cours');
             if (donneesEcole.demandesCours.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucune demande en attente.</td></tr>';
@@ -2150,30 +2214,30 @@
             }
             tbody.innerHTML = donneesEcole.demandesCours.map(d => `
                 <tr>
-                    <td><strong>${d.profNom}</strong></td>
-                    <td>${d.cours}</td>
+                    <td>${d.prof}</td>
+                    <td><strong>${d.cours}</strong></td>
                     <td>${d.classe}</td>
                     <td><span class="badge ${d.statut === 'Validé' ? 'success' : 'danger'}">${d.statut}</span></td>
                     <td>
-                        ${d.statut === 'En attente' ? `<button onclick="validerDemandeCours(${d.id})" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Valider</button>` : ''}
+                        ${d.statut === 'En attente' ? `<button onclick="validerDemandeCours(${d.id})" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; font-weight: 600;">Valider</button>` : 'Validé'}
                     </td>
                 </tr>
             `).join('');
         }
 
         function validerDemandeCours(id) {
-            const d = donneesEcole.demandesCours.find(item => item.id === id);
-            if (d) {
-                d.statut = 'Validé';
-                chargerTableAdminDemandesCours();
+            const dem = donneesEcole.demandesCours.find(d => d.id === id);
+            if (dem) {
+                dem.statut = 'Validé';
+                chargerAdminDemandesCours();
             }
         }
 
-        // --- MESSAGERIE WHATSAPP ---
+        // --- MESSAGERIE PARENT <-> ADMIN SYNCHRONISÉE ET CORRIGÉE ---
         function ouvrirDiscussionAdminParent() {
             if (!currentParentCode) return;
             document.getElementById('modal-chat-parent').style.display = 'flex';
-            chargerMessagesParent();
+            chargerMessagesParentChat();
         }
 
         function fermerDiscussionAdminParent() {
@@ -2181,90 +2245,107 @@
         }
 
         function sendParentMessage() {
-            const input = document.getElementById('parent-wa-input');
-            const text = input.value.trim();
-            if (!text) return;
+            const textarea = document.getElementById('parent-wa-input');
+            const text = textarea.value.trim();
+            if (!text || !currentParentCode) return;
 
             if (!donneesEcole.messages[currentParentCode]) {
                 donneesEcole.messages[currentParentCode] = [];
             }
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             donneesEcole.messages[currentParentCode].push({
                 sender: 'parent',
-                text,
-                time: timeStr
+                text: text,
+                time: timeNow
             });
-            input.value = '';
-            chargerMessagesParent();
+
+            textarea.value = '';
+            chargerMessagesParentChat();
+            if (currentActiveParentChat === currentParentCode) {
+                chargerAdminMessagesChat(currentParentCode);
+            }
         }
 
-        function handleParentChatKeydown(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
+        function handleParentChatKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendParentMessage();
             }
         }
 
-        function chargerMessagesParent() {
+        function chargerMessagesParentChat() {
             const container = document.getElementById('parent-wa-messages');
-            const msgs = donneesEcole.messages[currentParentCode] || [];
-            if (msgs.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: #8696a0; font-size: 0.85rem; margin-top: 2rem;">Démarrez une discussion avec l\'administration de l\'école.</div>';
+            if (!currentParentCode || !donneesEcole.messages[currentParentCode] || donneesEcole.messages[currentParentCode].length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #8696a0; font-size: 0.8rem; margin-top: 2rem;">Démarrez une conversation avec l\'administration de l\'école.</div>';
                 return;
             }
-            container.innerHTML = msgs.map(m => `
+
+            container.innerHTML = donneesEcole.messages[currentParentCode].map(m => `
                 <div class="wa-message ${m.sender === 'parent' ? 'outgoing' : 'incoming'}">
                     <div class="wa-message-text">${m.text}</div>
                     <div class="wa-message-meta">
                         <span>${m.time}</span>
-                        ${m.sender === 'parent' ? '<span class="wa-checks">✓✓</span>' : ''}
+                        ${m.sender === 'parent' ? '<span class="wa-checks" style="color: #53bdeb;">✓✓</span>' : ''}
                     </div>
                 </div>
             `).join('');
             container.scrollTop = container.scrollHeight;
         }
 
-        // Admin Messaging Threads
         function chargerAdminMessagesThreads() {
             const container = document.getElementById('admin-parents-threads');
-            const codes = Object.keys(donneesEcole.messages);
-            if (codes.length === 0) {
+            const parentCodes = Object.keys(donneesEcole.messages);
+
+            if (parentCodes.length === 0) {
                 container.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">Aucune discussion active.</div>';
                 return;
             }
-            container.innerHTML = codes.map(code => {
-                const premierEleve = donneesEcole.eleves.find(e => e.codeParent === code);
-                const tuteurNom = premierEleve ? premierEleve.tuteur : `Parent (${code})`;
-                const lastMsg = donneesEcole.messages[code][donneesEcole.messages[code].length - 1];
+
+            container.innerHTML = parentCodes.map(code => {
+                const msgs = donneesEcole.messages[code];
+                const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1].text : '';
+                const eleveRef = donneesEcole.eleves.find(e => e.codeParent === code);
+                const nomTuteur = eleveRef ? eleveRef.tuteur : 'Tuteur (' + code + ')';
+
                 return `
-                    <div onclick="selectionnerParentChat('${code}')" style="padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s ease;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
-                        <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-main);">${tuteurNom}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 0.15rem;">${lastMsg ? lastMsg.text : ''}</div>
+                    <div onclick="selectionnerChatAdmin('${code}')" style="padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: var(--transition); background: ${currentActiveParentChat === code ? 'rgba(99, 102, 241, 0.15)' : 'transparent'};">
+                        <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-main);">${nomTuteur}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 0.2rem;">${lastMsg}</div>
                     </div>
                 `;
             }).join('');
         }
 
-        function selectionnerParentChat(code) {
+        function selectionnerChatAdmin(code) {
             currentActiveParentChat = code;
             document.getElementById('admin-chat-placeholder').style.display = 'none';
             document.getElementById('admin-wa-container').style.display = 'flex';
-            const premierEleve = donneesEcole.eleves.find(e => e.codeParent === code);
-            const tuteurNom = premierEleve ? premierEleve.tuteur : `Parent (${code})`;
-            document.getElementById('admin-chat-parent-name').textContent = tuteurNom;
-            document.getElementById('admin-chat-avatar').textContent = tuteurNom.charAt(0).toUpperCase();
-            chargerMessagesAdminChat();
+
+            const eleveRef = donneesEcole.eleves.find(e => e.codeParent === code);
+            const nomTuteur = eleveRef ? eleveRef.tuteur : 'Parent (' + code + ')';
+            document.getElementById('admin-chat-parent-name').textContent = nomTuteur;
+            document.getElementById('admin-chat-avatar').textContent = nomTuteur.charAt(0).toUpperCase();
+
+            chargerAdminMessagesChat(code);
+            chargerAdminMessagesThreads();
         }
 
-        function chargerMessagesAdminChat() {
+        function chargerAdminMessagesChat(code) {
             const container = document.getElementById('admin-wa-messages');
-            const msgs = donneesEcole.messages[currentActiveParentChat] || [];
+            const msgs = donneesEcole.messages[code] || [];
+
+            if (msgs.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #8696a0; font-size: 0.8rem; margin-top: 2rem;">Aucun message dans cette discussion.</div>';
+                return;
+            }
+
             container.innerHTML = msgs.map(m => `
                 <div class="wa-message ${m.sender === 'admin' ? 'outgoing' : 'incoming'}">
                     <div class="wa-message-text">${m.text}</div>
                     <div class="wa-message-meta">
                         <span>${m.time}</span>
-                        ${m.sender === 'admin' ? '<span class="wa-checks">✓✓</span>' : ''}
+                        ${m.sender === 'admin' ? '<span class="wa-checks" style="color: #53bdeb;">✓✓</span>' : ''}
                     </div>
                 </div>
             `).join('');
@@ -2272,54 +2353,36 @@
         }
 
         function sendAdminMessage() {
-            if (!currentActiveParentChat) return;
-            const input = document.getElementById('admin-wa-input');
-            const text = input.value.trim();
-            if (!text) return;
+            const textarea = document.getElementById('admin-wa-input');
+            const text = textarea.value.trim();
+            if (!text || !currentActiveParentChat) return;
 
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if (!donneesEcole.messages[currentActiveParentChat]) {
+                donneesEcole.messages[currentActiveParentChat] = [];
+            }
+
+            const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             donneesEcole.messages[currentActiveParentChat].push({
                 sender: 'admin',
-                text,
-                time: timeStr
+                text: text,
+                time: timeNow
             });
-            input.value = '';
-            chargerMessagesAdminChat();
-            chargerAdminMessagesThreads();
+
+            textarea.value = '';
+            chargerAdminMessagesChat(currentActiveParentChat);
+            if (sessionActive.role === 'parent' && currentParentCode === currentActiveParentChat) {
+                chargerMessagesParentChat();
+            }
         }
 
-        function handleAdminChatKeydown(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
+        function handleAdminChatKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendAdminMessage();
             }
         }
 
-        // Modals Profs
-        function ouvrirModalAjouterCoursProf() {
-            document.getElementById('modal-ajouter-cours-prof').style.display = 'flex';
-        }
-        function fermerModalAjouterCoursProf() {
-            document.getElementById('modal-ajouter-cours-prof').style.display = 'none';
-        }
-        function ouvrirModalModifierCodeProf() {
-            document.getElementById('modal-modifier-code').style.display = 'flex';
-        }
-        function fermerModalModifierCodeProf() {
-            document.getElementById('modal-modifier-code').style.display = 'none';
-        }
-        function sauvegarderNouveauCodeProf() {
-            const nouveauCode = document.getElementById('nouveau-code-prof').value.trim();
-            if (!nouveauCode) {
-                afficherMessage('prof-mod-msg', 'Veuillez entrer un nouveau code valide.', 'error');
-                return;
-            }
-            profConnecte.code = nouveauCode;
-            afficherMessage('prof-mod-msg', 'Code modifié avec succès !', 'success');
-            setTimeout(() => { fermerModalModifierCodeProf(); }, 1500);
-        }
-
-        // Initialisation globale
+        // Initialisation globale au chargement
         window.onload = function() {
             initialiserSelects();
             chargerCommuniquesPublics();
