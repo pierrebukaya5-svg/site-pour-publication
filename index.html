@@ -230,12 +230,11 @@
             font-size: 0.95rem;
             width: 100%;
             transition: var(--transition);
+            /* AJOUT ICI : Force la saisie en MAJUSCULES (Remplacez par lowercase si vous préférez les minuscules) */
             text-transform: uppercase;
         }
-        
-        input[type="email"], input[type="tel"] {
-            text-transform: none;
-        }
+
+        /* Si vous souhaitez forcer la valeur réelle transmise en JS, vous pouvez aussi ajouter un écouteur d'événements global */
 
         input:hover, select:hover, textarea:hover {
             border-color: rgba(148, 163, 184, 0.3);
@@ -395,6 +394,8 @@
         }
         .badge.success { background-color: var(--success-bg); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
         .badge.danger { background-color: var(--danger-bg); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.2); }
+        .clickable-badge { cursor: pointer; transition: var(--transition); }
+        .clickable-badge:hover { transform: scale(1.05); filter: brightness(1.2); }
 
         .info-jour-details {
             background: rgba(9, 13, 22, 0.4);
@@ -615,7 +616,7 @@
 
         .wa-message-text {
             margin-bottom: 0.2rem;
-            padding-right: 4.5rem;
+            padding-right: 3.5rem;
         }
 
         .wa-message-meta {
@@ -818,8 +819,12 @@
             
             <div class="card" id="parent-login-card">
                 <h2>Parent - Connexion</h2>
-                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">Entrez votre <strong>Code Parent</strong> unique pour accéder au suivi de tous vos enfants.</p>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">Entrez votre <strong>Nom de Tuteur</strong> et votre <strong>Code Parent</strong> unique pour accéder au suivi de tous vos enfants.</p>
                 <div id="parent-msg" class="msg-box" role="alert"></div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="parent-nom-input">Nom du Tuteur</label>
+                    <input type="text" id="parent-nom-input" placeholder="Ex: M. JEAN KABAMBA" autocomplete="off">
+                </div>
                 <div class="form-group" style="margin-bottom: 1.25rem;">
                     <label for="parent-code-input">Code Parent</label>
                     <div class="password-wrapper">
@@ -838,8 +843,112 @@
                         <button onclick="parentLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Déconnexion</button>
                     </div>
                 </div>
+                
+                <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Liste de vos enfants rattachés :</p>
 
-                <div id="parent-enfants-container"></div>
+                <div class="table-responsive" style="margin-bottom: 1.5rem;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Matricule</th>
+                                <th>Enfant</th>
+                                <th>Classe & Option</th>
+                                <th>Statut Frais</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-parent-enfants">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="enfant-detail-section" style="display: none; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <h3 style="font-size: 1.1rem; margin: 0;">Dossier : <span id="p-nom-eleve" style="color: var(--primary);"></span></h3>
+                        <button onclick="fermerDetailEnfant()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.3rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem;">Fermer</button>
+                    </div>
+
+                    <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem; font-size: 0.9rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+                        <div><strong>Matricule :</strong> <span id="p-mat"></span></div>
+                        <div><strong>Classe & Option :</strong> <span id="p-classe"></span></div>
+                        <div><strong>Sexe :</strong> <span id="p-sexe"></span></div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;"><strong>Statut Frais :</strong> <span id="p-statut-frais" class="badge"></span></div>
+                    </div>
+
+                    <!-- SECTION FRAIS CÔTÉ PARENT -->
+                    <h4 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-main);">💰 Situation Financière & Frais Exigés</h4>
+                    <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem;">
+                        <div class="table-responsive" style="margin-top: 0; margin-bottom: 1rem;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Type de Frais</th>
+                                        <th>Montant Exigé</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Frais Scolaires</td>
+                                        <td id="val-p-frais-scolaires">0 $</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Frais d'Inscription</td>
+                                        <td id="val-p-frais-inscription">0 $</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Frais de Bulletin</td>
+                                        <td id="val-p-frais-bulletin">0 $</td>
+                                    </tr>
+                                    <tr style="background: rgba(255, 255, 255, 0.02);">
+                                        <td><strong>Total Exigé</strong></td>
+                                        <td><strong id="val-p-total-exige">0 $</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+                            <div>Montant Payé : <span id="val-p-montant-paye" style="color: var(--success); font-weight: 600;">0 $</span></div>
+                            <div><strong>Reste à Payer :</strong> <span id="val-p-reste-payer" style="color: var(--danger); font-weight: 700;">0 $</span></div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-main);">📅 Calendrier des Présences</h4>
+                    <div class="table-responsive" style="margin-bottom: 1.5rem;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Statut de Présence</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-parent-presences">
+                                <tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Aucun historique.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-main);">Évolution & Cotations (Bulletin)</h4>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cours</th>
+                                    <th>Trimestre</th>
+                                    <th>Intero 1</th>
+                                    <th>Intero 2</th>
+                                    <th>Devoir</th>
+                                    <th>Examen</th>
+                                    <th>Total / Max</th>
+                                    <th>Appréciation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-parent-notes">
+                                <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucun bulletin.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -847,184 +956,957 @@
         <section id="eleve" class="view">
             <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
             <div class="card" id="eleve-login-card">
-                <h2>Élève - Connexion</h2>
+                <h2>Espace Élève - Connexion</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">Entrez votre code matricule personnel.</p>
                 <div id="eleve-msg" class="msg-box" role="alert"></div>
                 <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label for="eleve-code-input">Matricule ou Code Élève</label>
-                    <input type="text" id="eleve-code-input" placeholder="Ex: ELC202601">
+                    <label for="eleve-matricule-input">Votre Matricule</label>
+                    <input type="text" id="eleve-matricule-input" placeholder="Ex: 4812" autocomplete="off">
                 </div>
-                <button class="btn-submit" onclick="eleveLogin()">Consulter mon dossier</button>
+                <button class="btn-submit" onclick="eleveLogin()">Accéder à mon espace</button>
             </div>
+
             <div class="card" id="eleve-dashboard-card" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-                    <h2>Espace Élève - <span id="e-nom-eleve" style="color: var(--primary);"></span></h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h2 style="font-size: 1.15rem; margin: 0;">Mon Dossier : <span id="e-nom-eleve" style="color: var(--primary);"></span></h2>
                     <button onclick="eleveLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Déconnexion</button>
                 </div>
-                <div id="eleve-content-container"></div>
+                
+                <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem; font-size: 0.9rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+                    <div><strong>Matricule :</strong> <span id="e-mat"></span></div>
+                    <div><strong>Classe & Option :</strong> <span id="e-classe"></span></div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;"><strong>Statut Frais :</strong> <span id="e-statut-frais" class="badge"></span></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h3 style="font-size: 1.1rem; margin: 0;">Mes Notes et Évolution</h3>
+                    <button class="btn-submit" onclick="window.print()" style="width: auto; padding: 0.4rem 1rem; font-size: 0.85rem;">🖨️ Imprimer mon Bulletin</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cours</th>
+                                <th>Trimestre</th>
+                                <th>Intero 1</th>
+                                <th>Intero 2</th>
+                                <th>Devoir</th>
+                                <th>Examen</th>
+                                <th>Total / Max</th>
+                                <th>Appréciation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-eleve-notes">
+                            <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune note disponible.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
         <!-- VUE ESPACE PROF -->
         <section id="prof" class="view">
             <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
+            
             <div class="card" id="prof-login-card">
-                <h2>Professeur - Connexion</h2>
+                <h2>Espace Professeur - Connexion</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">Entrez votre <strong>Code Prof</strong> généré ou personnalisé pour accéder à vos classes.</p>
                 <div id="prof-msg" class="msg-box" role="alert"></div>
                 <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label for="prof-email-input">Email ou Code Prof</label>
-                    <input type="text" id="prof-email-input" placeholder="Ex: prof@ecoledelardc.cd">
-                </div>
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label for="prof-pass-input">Mot de passe</label>
+                    <label for="prof-code-input">Code Prof</label>
                     <div class="password-wrapper">
-                        <input type="password" id="prof-pass-input" placeholder="********">
-                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('prof-pass-input', this)">👁️</button>
+                        <input type="password" id="prof-code-input" placeholder="Ex: PROF5821" autocomplete="off">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('prof-code-input', this)" aria-label="Afficher le mot de passe">👁️</button>
                     </div>
                 </div>
-                <button class="btn-submit" onclick="profLogin()">Accéder au portail Prof</button>
+                <button class="btn-submit" onclick="profLogin()">Se connecter</button>
             </div>
+
             <div class="card" id="prof-dashboard-card" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-                    <h2>Espace Professeur</h2>
-                    <button onclick="profLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Déconnexion</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <h2 style="font-size: 1.15rem; margin: 0;">Professeur : <span id="prof-nom-titre" style="color: var(--primary);"></span></h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button onclick="ouvrirModalAjouterCoursProf()" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">+ Demander un Cours</button>
+                        <button onclick="ouvrirModalModifierCodeProf()" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Modifier mon Code</button>
+                        <button onclick="profLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Déconnexion</button>
+                    </div>
                 </div>
-                <div id="prof-content-container"></div>
+
+                <div class="form-grid" style="margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label for="prof-classe-select">Sélectionner la Classe & Option</label>
+                        <select id="prof-classe-select" onchange="chargerElevesClasseProf()">
+                            <option value="">-- Choisir une classe & option --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="prof-trimestre-select">Trimestre</label>
+                        <select id="prof-trimestre-select" onchange="chargerElevesClasseProf()">
+                            <option value="Trimestre 1">Trimestre 1</option>
+                            <option value="Trimestre 2">Trimestre 2</option>
+                            <option value="Trimestre 3">Trimestre 3</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="prof-cours-input">Intitulé du Cours / Matière</label>
+                        <input type="text" id="prof-cours-input" placeholder="Ex: MATHÉMATIQUES" oninput="chargerElevesClasseProf()">
+                    </div>
+                </div>
+
+                <!-- CONFIGURATION DU NOMBRE D'INTERROGATIONS ET DES COTATIONS MAX -->
+                <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--text-main);">⚙️ Configuration du Barème et des Évaluations</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="prof-nb-interos">Nombre d'Interrogations</label>
+                            <select id="prof-nb-interos" onchange="changerNbInteros()">
+                                <option value="1">1 Interrogation</option>
+                                <option value="2" selected>2 Interrogations</option>
+                                <option value="3">3 Interrogations</option>
+                                <option value="4">4 Interrogations</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="prof-cotation-max">Cotation Maximale (Total / Max)</label>
+                            <select id="prof-cotation-max" onchange="chargerElevesClasseProf()">
+                                <option value="10">Sur / 10</option>
+                                <option value="20" selected>Sur / 20</option>
+                                <option value="30">Sur / 30</option>
+                                <option value="50">Sur / 50</option>
+                                <option value="100">Sur / 100</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h3 style="font-size: 1.1rem; margin: 0;">Cotations des Élèves</h3>
+                    <button class="btn-submit" onclick="window.print()" style="width: auto; padding: 0.4rem 1rem; font-size: 0.85rem;">🖨️ Imprimer la Liste / Notes</button>
+                </div>
+                <div class="table-responsive" style="margin-bottom: 1.5rem;">
+                    <table>
+                        <thead>
+                            <tr id="prof-table-headers">
+                                <th>Matricule</th>
+                                <th>Élève</th>
+                                <th class="th-int-col th-int-1">Intero 1</th>
+                                <th class="th-int-col th-int-2">Intero 2</th>
+                                <th class="th-int-col th-int-3" style="display:none;">Intero 3</th>
+                                <th class="th-int-col th-int-4" style="display:none;">Intero 4</th>
+                                <th>Devoir</th>
+                                <th>Examen</th>
+                                <th id="th-label-total">Total / 20</th>
+                                <th>Appréciation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-prof-cotations">
+                            <tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe & option.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button class="btn-submit" onclick="enregistrerNotesProf()">Enregistrer les Cotations</button>
             </div>
         </section>
+
+        <!-- MODAL AJOUT COURS PROF (DEMANDE VALIDATION ADMIN) -->
+        <div id="modal-ajouter-cours-prof" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+            <div class="card" style="width: 100%; max-width: 450px; margin: 1rem;">
+                <h3>Demander l'ajout d'un cours</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Soumettez une demande de cours à l'administration pour validation.</p>
+                <div id="prof-cours-demande-msg" class="msg-box" role="alert"></div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="demande-cours-nom">Nom / Intitulé du Cours</label>
+                    <input type="text" id="demande-cours-nom" placeholder="Ex: PHYSIQUE AVANCÉE">
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="demande-cours-classe">Classe & Option Cible</label>
+                    <select id="demande-cours-classe">
+                        <option value="">-- Choisir une classe & option --</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn-submit" onclick="soumettreDemandeCoursProf()">Envoyer la Demande</button>
+                    <button type="button" onclick="fermerModalAjouterCoursProf()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.85rem 1rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; width: 100%;">Annuler</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL MODIFICATION CODE PROF (PRIVÉ) -->
+        <div id="modal-modifier-code" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+            <div class="card" style="width: 100%; max-width: 400px; margin: 1rem;">
+                <h3>Modifier mon Code d'Accès</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Définissez un nouveau code personnel et privé pour vos prochaines connexions.</p>
+                <div id="prof-mod-msg" class="msg-box" role="alert"></div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="nouveau-code-prof">Nouveau Code Privé</label>
+                    <input type="text" id="nouveau-code-prof" placeholder="Ex: moncode2026">
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn-submit" onclick="sauvegarderNouveauCodeProf()">Enregistrer</button>
+                    <button type="button" onclick="fermerModalModifierCodeProf()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.85rem 1rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; width: 100%;">Annuler</button>
+                </div>
+            </div>
+        </div>
 
         <!-- VUE ESPACE ADMIN -->
         <section id="admin" class="view">
             <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
+            
             <div class="card" id="admin-login-card">
                 <h2>Administration - Connexion</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">Accès réservé à la direction et aux gestionnaires de l'établissement.</p>
                 <div id="admin-msg" class="msg-box" role="alert"></div>
                 <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label for="admin-user-input">Identifiant Admin</label>
-                    <input type="text" id="admin-user-input" placeholder="admin">
-                </div>
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label for="admin-pass-input">Mot de passe</label>
+                    <label for="admin-pass-input">Mot de passe Administrateur</label>
                     <div class="password-wrapper">
-                        <input type="password" id="admin-pass-input" placeholder="********">
-                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('admin-pass-input', this)">👁️</button>
+                        <input type="password" id="admin-pass-input" placeholder="Mot de passe admin" autocomplete="off">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('admin-pass-input', this)" aria-label="Afficher le mot de passe">👁️</button>
                     </div>
                 </div>
-                <button class="btn-submit" onclick="adminLogin()">Se connecter</button>
+                <button class="btn-submit" onclick="adminLogin()">Connexion Administration</button>
             </div>
+
             <div class="card" id="admin-dashboard-card" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h2>Panneau d'Administration Général</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <h2 style="font-size: 1.15rem; margin: 0;">Tableau de Bord Administratif</h2>
                     <button onclick="adminLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Déconnexion</button>
                 </div>
-                <div id="admin-content-container"></div>
+
+                <div class="nav-btns" style="margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                    <button onclick="switchAdminTab('eleves')" id="tab-admin-eleves" class="active">Gestion Élèves</button>
+                    <button onclick="switchAdminTab('profs')" id="tab-admin-profs">Gestion Profs</button>
+                    <button onclick="switchAdminTab('frais')" id="tab-admin-frais">Configuration des Frais</button>
+                    <button onclick="switchAdminTab('communiques')" id="tab-admin-communiques">Communiqués</button>
+                    <button onclick="switchAdminTab('demandes')" id="tab-admin-demandes">Demandes de Cours</button>
+                    <button onclick="switchAdminTab('messages')" id="tab-admin-messages">Messagerie Parents</button>
+                </div>
+
+                <!-- SOUS-ONGLET ELEVES -->
+                <div id="admin-content-eleves" class="admin-tab-content">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Ajouter un nouvel élève</h3>
+                    <div id="admin-eleve-msg" class="msg-box" role="alert"></div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="add-eleve-nom">Nom</label>
+                            <input type="text" id="add-eleve-nom" placeholder="Ex: KABAMBA">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-eleve-prenom">Prénom</label>
+                            <input type="text" id="add-eleve-prenom" placeholder="Ex: PAUL">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-eleve-classe">Classe & Option</label>
+                            <select id="add-eleve-classe">
+                                <option value="">-- Sélectionner une classe & option --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="add-eleve-sexe">Sexe</label>
+                            <select id="add-eleve-sexe">
+                                <option value="M">Masculin</option>
+                                <option value="F">Féminin</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="add-eleve-tuteur">Nom du Tuteur / Parent</label>
+                            <input type="text" id="add-eleve-tuteur" placeholder="Ex: M. JEAN KABAMBA">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-eleve-email-parent">Adresse Mail du Parent (Optionnel)</label>
+                            <input type="email" id="add-eleve-email-parent" placeholder="Ex: parent@email.com">
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="add-eleve-tel-parent">Numéro de Téléphone du Parent</label>
+                            <input type="tel" id="add-eleve-tel-parent" placeholder="Ex: +243 990 000 000">
+                        </div>
+                    </div>
+                    <button class="btn-submit" onclick="ajouterEleve()" style="margin-bottom: 2rem;">Inscrire l'élève</button>
+
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Liste des Élèves Enregistrés</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Matricule</th>
+                                    <th>Nom & Prénom</th>
+                                    <th>Classe / Option</th>
+                                    <th>Tuteur / Contact Parent</th>
+                                    <th>Code Parent</th>
+                                    <th>Statut Frais</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-admin-eleves">
+                                <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Aucun élève.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SOUS-ONGLET PROFS -->
+                <div id="admin-content-profs" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Ajouter un Professeur</h3>
+                    <div id="admin-prof-msg" class="msg-box" role="alert"></div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="add-prof-nom">Nom du Professeur</label>
+                            <input type="text" id="add-prof-nom" placeholder="Ex: PROF. MUKENDI">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-prof-matiere">Matière / Cours Principal</label>
+                            <input type="text" id="add-prof-matiere" placeholder="Ex: INFORMATIQUE">
+                        </div>
+                    </div>
+                    <button class="btn-submit" onclick="ajouterProf()" style="margin-bottom: 2rem;">Enregistrer le Professeur</button>
+
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Liste des Professeurs & Codes Générés</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Matière</th>
+                                    <th>Code d'Accès Généré</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-admin-profs">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun professeur.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SOUS-ONGLET CONFIG FRAIS -->
+                <div id="admin-content-frais" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Configuration des Montants Exigés par Classe / Option</h3>
+                    <div id="admin-frais-msg" class="msg-box" role="alert"></div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="config-frais-classe">Classe & Option Cible</label>
+                            <select id="config-frais-classe">
+                                <option value="">-- Sélectionner une classe & option --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="config-frais-scolaires">Frais Scolaires ($)</label>
+                            <input type="number" id="config-frais-scolaires" placeholder="Ex: 150">
+                        </div>
+                        <div class="form-group">
+                            <label for="config-frais-inscription">Frais d'Inscription ($)</label>
+                            <input type="number" id="config-frais-inscription" placeholder="Ex: 50">
+                        </div>
+                        <div class="form-group">
+                            <label for="config-frais-bulletin">Frais de Bulletin ($)</label>
+                            <input type="number" id="config-frais-bulletin" placeholder="Ex: 10">
+                        </div>
+                    </div>
+                    <button class="btn-submit" onclick="sauvegarderConfigFrais()">Enregistrer les Tarifs</button>
+                </div>
+
+                <!-- SOUS-ONGLET COMMUNIQUES -->
+                <div id="admin-content-communiques" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Publier et Modifier un Communiqué Important</h3>
+                    <div id="admin-com-msg" class="msg-box" role="alert"></div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="admin-com-texte">Contenu du Communiqué</label>
+                        <textarea id="admin-com-texte" rows="4" placeholder="Rédigez l'annonce officielle ici..."></textarea>
+                    </div>
+                    <button class="btn-submit" onclick="ajouterCommunique()" style="margin-bottom: 2rem;">Publier / Ajouter</button>
+
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Communiqués Actifs</h3>
+                    <div id="admin-list-communiques">
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué.</p>
+                    </div>
+                </div>
+
+                <!-- SOUS-ONGLET DEMANDES DE COURS -->
+                <div id="admin-content-demandes" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Validation des Demandes de Cours des Professeurs</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Professeur</th>
+                                    <th>Cours Demandé</th>
+                                    <th>Classe / Option</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-admin-demandes-cours">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucune demande en attente.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SOUS-ONGLET MESSAGERIE PARENTS -->
+                <div id="admin-content-messages" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Boîte de Dialogue avec les Parents / Tuteurs</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tuteur</th>
+                                    <th>Dernier Message / Discussion</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-admin-messages">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun message.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
 
+    <!-- MODAL MODIFICATION COMMUNIQUE (ADMIN) -->
+    <div id="modal-modifier-communique" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="card" style="width: 100%; max-width: 450px; margin: 1rem;">
+            <h3>Modifier le Communiqué</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Mettez à jour le contenu de ce communiqué important.</p>
+            <input type="hidden" id="edit-com-id">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="edit-com-texte">Texte du Communiqué</label>
+                <textarea id="edit-com-texte" rows="4" style="width: 100%;"></textarea>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="btn-submit" onclick="sauvegarderModificationCommunique()">Enregistrer</button>
+                <button type="button" onclick="fermerModalModifierCommunique()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.85rem 1rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; width: 100%;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DISCUSSION PARENT-ADMIN (STYLE WHATSAPP PROFESSIONNEL) -->
+    <div id="modal-discussion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="card" style="width: 100%; max-width: 600px; margin: 1rem; padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h3 id="modal-discussion-titre" style="margin:0; font-size: 1.1rem;">Discussion Sécurisée</h3>
+                <button type="button" onclick="fermerModalDiscussion()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer;">✕</button>
+            </div>
+            
+            <!-- Conteneur style WhatsApp -->
+            <div class="wa-chat-container">
+                <div class="wa-chat-header">
+                    <div class="wa-chat-header-info">
+                        <div class="wa-avatar" id="wa-avatar-initials">AD</div>
+                        <div>
+                            <div class="wa-contact-name" id="wa-contact-title">Administration École de la RDC</div>
+                            <div class="wa-contact-status">en ligne</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="discussion-messages-container" class="wa-messages-list">
+                    <!-- Les bulles de messages WhatsApp s'afficheront ici dynamiquement -->
+                </div>
+
+                <div class="wa-chat-input-area">
+                    <textarea id="discussion-input-texte" rows="1" placeholder="Tapez un message..." onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); envoyerMessageDiscussion(); }"></textarea>
+                    <button class="wa-send-btn" onclick="envoyerMessageDiscussion()" aria-label="Envoyer">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer>
-        <p>&copy; 2026 École de la RDC. Tous droits réservés. Gestion Scolaire Numérique & PWA.</p>
+        &copy; 2026 École de la RDC &bull; Tous droits réservés &bull; Kinshasa, RDC
     </footer>
 
     <script>
-        // Logique et scripts intégrés de mise à jour pour l'application
+        // --- LISTE OFFICIELLE DES CLASSES (1 à 8) ET OPTIONS DE LA RDC ---
+        const CLASSES_OPTIONS_RDC = [
+            "1ère Année Secondaire",
+            "2ème Année Secondaire",
+            "3ème Année Secondaire",
+            "4ème Année Secondaire",
+            "5ème Humanités - Commerciale et Gestion",
+            "6ème Humanités - Commerciale et Gestion",
+            "5ème Humanités - Scientifique (Math-Physique)",
+            "6ème Humanités - Scientifique (Math-Physique)",
+            "5ème Humanités - Scientifique (Bio-Chimie)",
+            "6ème Humanités - Scientifique (Bio-Chimie)",
+            "5ème Humanités - Pédagogie Générale",
+            "6ème Humanités - Pédagogie Générale",
+            "5ème Humanités - Litteraire",
+            "6ème Humanités - Litteraire",
+            "5ème Humanités - Technique Industrielle / Électricité",
+            "6ème Humanités - Technique Industrielle / Électricité",
+            "5ème Humanités - Coupe et Couture",
+            "6ème Humanités - Coupe et Couture",
+            "7ème Éducation de Base",
+            "8ème Éducation de Base"
+        ];
+
+        // --- BASE DE DONNÉES LOCALE (localStorage) ---
+        const DB_KEY = "ecole_rdc_db_v8";
+
+        function getDefaultData() {
+            let initialFrais = {};
+            CLASSES_OPTIONS_RDC.forEach(c => {
+                initialFrais[c] = { scolaires: 150, inscription: 50, bulletin: 10 };
+            });
+
+            return {
+                eleves: [
+                    { matricule: "4812", nom: "KABAMBA", prenom: "PAUL", classe: "6ème Humanités - Commerciale et Gestion", sexe: "M", tuteur: "M. JEAN KABAMBA", emailParent: "jean.kabamba@email.com", telParent: "+243 990 123 456", codeParent: "PAR9210", montantPaye: 210, notes: { "MATHÉMATIQUES_Trimestre 1": { intero1: 15, intero2: 17, intero3: undefined, intero4: undefined, devoir: 16, examen: 16, note: 16, max: 20, appreciation: "TRÈS BIEN" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
+                    { matricule: "4813", nom: "MUKENDI", prenom: "SARAH", classe: "6ème Humanités - Commerciale et Gestion", sexe: "F", tuteur: "M. JEAN KABAMBA", emailParent: "jean.kabamba@email.com", telParent: "+243 990 123 456", codeParent: "PAR9210", montantPaye: 210, notes: { "MATHÉMATIQUES_Trimestre 1": { intero1: 18, intero2: 19, intero3: undefined, intero4: undefined, devoir: 18, examen: 18, note: 18, max: 20, appreciation: "EXCELLENT" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
+                    { matricule: "4901", nom: "TSHISEKEDI", prenom: "DAVID", classe: "5ème Humanités - Scientifique (Math-Physique)", sexe: "M", tuteur: "MME MARIE TSHISEKEDI", emailParent: "", telParent: "+243 810 987 654", codeParent: "PAR4412", montantPaye: 100, notes: {}, presences: [] }
+                ],
+                profs: [
+                    { id: 1, nom: "PROF. MUKENDI", matiere: "MATHÉMATIQUES", codeProf: "PROF5821" },
+                    { id: 2, nom: "PROF. KABASELE", matiere: "INFORMATIQUE", codeProf: "PROF3392" }
+                ],
+                fraisConfig: initialFrais,
+                communiques: [
+                    { id: 1, date: "10 Septembre 2026", texte: "RENTRÉE SCOLAIRE EFFECTIVE SUR TOUTE L'ÉTENDUE DE LA RÉPUBLIQUE. LES HORAIRES SONT DISPONIBLES AUPRÈS DE L'ADMINISTRATION." }
+                ],
+                demandesCours: [],
+                discussions: [],
+                adminPass: "admin2026"
+            };
+        }
+
+        function getDB() {
+            const data = localStorage.getItem(DB_KEY);
+            if (!data) {
+                const initial = getDefaultData();
+                saveDB(initial);
+                return initial;
+            }
+            return JSON.parse(data);
+        }
+
+        function saveDB(data) {
+            localStorage.setItem(DB_KEY, JSON.stringify(data));
+        }
+
+        // --- REMPLISSAGE DES SELECTEURS DE CLASSES ---
+        function peuplerSelectClasses() {
+            const selects = [
+                document.getElementById('add-eleve-classe'),
+                document.getElementById('config-frais-classe'),
+                document.getElementById('demande-cours-classe')
+            ];
+
+            selects.forEach(sel => {
+                if (!sel) return;
+                const valeurActuelle = sel.value;
+                sel.innerHTML = '<option value="">-- Sélectionner une classe & option --</option>' + 
+                    CLASSES_OPTIONS_RDC.map(c => `<option value="${c}">${c}</option>`).join('');
+                if (valeurActuelle) sel.value = valeurActuelle;
+            });
+        }
+
+        // --- NAVIGATION ENTRE VUES ---
         function switchView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-btns button').forEach(b => b.classList.remove('active'));
+            
             document.getElementById(viewId).classList.add('active');
             const btn = document.getElementById('btn-' + viewId);
             if (btn) btn.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            window.scrollTo(0, 0);
+
+            if (viewId === 'home') {
+                chargerCommuniquesPublics();
+            } else if (viewId === 'prof') {
+                verifierSessionProf();
+            } else if (viewId === 'admin') {
+                verifierSessionAdmin();
+            }
         }
 
         function togglePasswordVisibility(inputId, btn) {
             const input = document.getElementById(inputId);
             if (input.type === 'password') {
                 input.type = 'text';
-                if(btn) btn.textContent = '🔒';
+                btn.textContent = '🙈';
             } else {
                 input.type = 'password';
-                if(btn) btn.textContent = '👁️';
+                btn.textContent = '👁️';
             }
         }
 
-        // Fonctions d'authentification et gestion dynamique des espaces
-        function parentLogin() {
-            const code = document.getElementById('parent-code-input').value.trim();
-            const msg = document.getElementById('parent-msg');
-            if(!code) {
-                msg.textContent = "Veuillez entrer un code parent valide.";
-                msg.className = "msg-box error";
-                msg.style.display = "block";
+        function showMsg(elementId, text, type) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.textContent = text;
+            el.className = 'msg-box ' + type;
+            el.style.display = 'block';
+            setTimeout(() => {
+                if (el.textContent === text) el.style.display = 'none';
+            }, 5000);
+        }
+
+        // --- ACCUEIL ---
+        function chargerCommuniquesPublics() {
+            const db = getDB();
+            const container = document.getElementById('public-communiques');
+            if (!container) return;
+            if (db.communiques.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué récent.</p>';
                 return;
             }
+            container.innerHTML = db.communiques.map(c => `
+                <div class="communique-item">
+                    <div class="communique-date">${c.date}</div>
+                    <p style="font-size: 0.9rem; color: var(--text-main);">${c.texte}</p>
+                </div>
+            `).join('');
+        }
+
+        // --- ESPACE PARENT ---
+        let parentActif = null;
+        let tuteurDiscussionActif = null;
+
+        function parentLogin() {
+            const nomTuteur = document.getElementById('parent-nom-input').value.trim();
+            const code = document.getElementById('parent-code-input').value.trim();
+            if (!nomTuteur || !code) {
+                showMsg('parent-msg', 'Veuillez entrer votre Nom de Tuteur et votre Code Parent.', 'error');
+                return;
+            }
+            const db = getDB();
+            const enfants = db.eleves.filter(e => e.codeParent === code && e.tuteur.toLowerCase() === nomTuteur.toLowerCase());
+            if (enfants.length === 0) {
+                showMsg('parent-msg', 'Nom de tuteur ou Code Parent incorrect / introuvable.', 'error');
+                return;
+            }
+            parentActif = { code, tuteur: enfants[0].tuteur, enfants };
             document.getElementById('parent-login-card').style.display = 'none';
             document.getElementById('parent-dashboard-card').style.display = 'block';
-            document.getElementById('p-nom-tuteur-titre').textContent = "Tuteur Principal (" + code.toUpperCase() + ")";
-            document.getElementById('parent-enfants-container').innerHTML = '<p style="color:var(--text-muted);">Données des enfants rattachés chargées avec succès.</p>';
+            document.getElementById('p-nom-tuteur-titre').textContent = parentActif.tuteur;
+            
+            chargerTableauEnfantsParent();
         }
 
         function parentLogout() {
-            document.getElementById('parent-login-card').style.display = 'block';
-            document.getElementById('parent-dashboard-card').style.display = 'none';
+            parentActif = null;
+            document.getElementById('parent-nom-input').value = '';
             document.getElementById('parent-code-input').value = '';
+            document.getElementById('parent-dashboard-card').style.display = 'none';
+            document.getElementById('parent-login-card').style.display = 'block';
+            document.getElementById('enfant-detail-section').style.display = 'none';
+        }
+
+        function chargerTableauEnfantsParent() {
+            const tbody = document.getElementById('table-parent-enfants');
+            if (!parentActif) return;
+            const db = getDB();
+            parentActif.enfants = db.eleves.filter(e => e.codeParent === parentActif.code);
+
+            tbody.innerHTML = parentActif.enfants.map(e => {
+                const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+                const totalExige = (e.montantTotalExige !== undefined ? e.montantTotalExige : (config.scolaires + config.inscription + config.bulletin));
+                const reste = Math.max(0, totalExige - e.montantPaye);
+                const soldeOk = e.montantPaye >= totalExige;
+                const nomComplet = `${e.nom || ''} ${e.prenom || ''}`.trim();
+                return `
+                    <tr>
+                        <td><code>${e.matricule}</code></td>
+                        <td><strong>${nomComplet}</strong></td>
+                        <td>${e.classe}</td>
+                        <td><span class="badge ${soldeOk ? 'success' : 'danger'}">${soldeOk ? 'Soldé' : 'Payé: ' + e.montantPaye + '$ | Reste: ' + reste + '$'}</span></td>
+                        <td><button onclick="voirDetailEnfant('${e.matricule}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem;">Dossier</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function voirDetailEnfant(mat) {
+            const db = getDB();
+            const e = db.eleves.find(item => item.matricule === mat);
+            if (!e) return;
+
+            document.getElementById('enfant-detail-section').style.display = 'block';
+            document.getElementById('p-nom-eleve').textContent = `${e.nom || ''} ${e.prenom || ''}`.trim();
+            document.getElementById('p-mat').textContent = e.matricule;
+            document.getElementById('p-classe').textContent = e.classe;
+            document.getElementById('p-sexe').textContent = e.sexe === 'M' ? 'Masculin' : 'Féminin';
+
+            const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+            const totalExige = (e.montantTotalExige !== undefined ? e.montantTotalExige : (config.scolaires + config.inscription + config.bulletin));
+            const reste = Math.max(0, totalExige - e.montantPaye);
+            const soldeOk = e.montantPaye >= totalExige;
+
+            document.getElementById('val-p-frais-scolaires').textContent = config.scolaires + ' $';
+            document.getElementById('val-p-frais-inscription').textContent = config.inscription + ' $';
+            document.getElementById('val-p-frais-bulletin').textContent = config.bulletin + ' $';
+            document.getElementById('val-p-total-exige').textContent = totalExige + ' $';
+            document.getElementById('val-p-montant-paye').textContent = e.montantPaye + ' $';
+            document.getElementById('val-p-reste-payer').textContent = reste + ' $';
+
+            const badgeFrais = document.getElementById('p-statut-frais');
+            badgeFrais.className = 'badge ' + (soldeOk ? 'success' : 'danger');
+            badgeFrais.textContent = soldeOk ? 'Frais Soldés' : `Payé: ${e.montantPaye}$ | Reste: ${reste}$`;
+
+            const tbodyPres = document.getElementById('table-parent-presences');
+            if (!e.presences || e.presences.length === 0) {
+                tbodyPres.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Aucun historique de présence.</td></tr>';
+            } else {
+                tbodyPres.innerHTML = e.presences.map(p => `
+                    <tr><td>${p.date}</td><td><span class="badge success">${p.statut}</span></td></tr>
+                `).join('');
+            }
+
+            const tbodyNotes = document.getElementById('table-parent-notes');
+            const notesKeys = Object.keys(e.notes || {});
+            if (notesKeys.length === 0) {
+                tbodyNotes.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune cotation enregistrée pour le moment.</td></tr>';
+            } else {
+                tbodyNotes.innerHTML = notesKeys.map(key => {
+                    const n = e.notes[key];
+                    const parts = key.split('_');
+                    const cours = parts[0];
+                    const trimestre = parts[1] || 'Trimestre 1';
+                    const maxVal = n.max || 20;
+                    return `
+                        <tr>
+                            <td><strong>${cours}</strong></td>
+                            <td>${trimestre}</td>
+                            <td>${n.intero1 !== undefined ? n.intero1 : '-'}</td>
+                            <td>${n.intero2 !== undefined ? n.intero2 : '-'}</td>
+                            <td>${n.devoir !== undefined ? n.devoir : '-'}</td>
+                            <td>${n.examen !== undefined ? n.examen : '-'}</td>
+                            <td><strong>${n.note !== undefined ? n.note : '-'} / ${maxVal}</strong></td>
+                            <td>${n.appreciation || '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            window.scrollTo({ top: document.getElementById('enfant-detail-section').offsetTop - 80, behavior: 'smooth' });
+        }
+
+        function fermerDetailEnfant() {
+            document.getElementById('enfant-detail-section').style.display = 'none';
+        }
+
+        // --- GESTION DE LA MESSAGERIE (STYLE WHATSAPP) ---
+        function ouvrirDiscussionAdminParent() {
+            if (!parentActif) return;
+            tuteurDiscussionActif = parentActif.tuteur;
+            document.getElementById('modal-discussion-titre').textContent = `Discussion avec l'Administration (${parentActif.tuteur})`;
+            document.getElementById('wa-avatar-initials').textContent = parentActif.tuteur.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase() || 'TP';
+            document.getElementById('wa-contact-title').textContent = 'Administration École de la RDC';
+            document.getElementById('modal-discussion').style.display = 'flex';
+            chargerMessagesDiscussion();
+        }
+
+        function ouvrirDiscussionAdminDepuisAdmin(tuteurNom) {
+            tuteurDiscussionActif = tuteurNom;
+            document.getElementById('modal-discussion-titre').textContent = `Discussion avec ${tuteurNom}`;
+            document.getElementById('wa-avatar-initials').textContent = tuteurNom.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase() || 'T';
+            document.getElementById('wa-contact-title').textContent = tuteurNom;
+            document.getElementById('modal-discussion').style.display = 'flex';
+            chargerMessagesDiscussion();
+        }
+
+        function fermerModalDiscussion() {
+            document.getElementById('modal-discussion').style.display = 'none';
+            tuteurDiscussionActif = null;
+        }
+
+        function chargerMessagesDiscussion() {
+            const container = document.getElementById('discussion-messages-container');
+            if (!tuteurDiscussionActif) return;
+            const db = getDB();
+            const disc = db.discussions.find(d => d.tuteur === tuteurDiscussionActif);
+            
+            if (!disc || !disc.messages || disc.messages.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #8696a0; margin: auto; font-size: 0.85rem; padding: 2rem;">
+                        <p>🔒 Les messages sont sécurisés avec l'administration de l'École de la RDC.</p>
+                        <p style="margin-top: 0.5rem;">Commencez la discussion ci-dessous.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const estAdminConnecte = document.getElementById('admin-dashboard-card').style.display === 'block';
+
+            container.innerHTML = disc.messages.map(m => {
+                let estSortant = false;
+                if (estAdminConnecte) {
+                    estSortant = (m.expediteur === 'admin');
+                } else {
+                    estSortant = (m.expediteur === 'parent');
+                }
+
+                return `
+                    <div class="wa-message ${estSortant ? 'outgoing' : 'incoming'}">
+                        <div class="wa-message-text">${m.texte}</div>
+                        <div class="wa-message-meta">
+                            <span>${m.heure}</span>
+                            ${estSortant ? '<span class="wa-checks" style="color: #53bdeb;" title="Lu">✓✓</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function envoyerMessageDiscussion() {
+            const input = document.getElementById('discussion-input-texte');
+            const texte = input.value.trim();
+            if (!texte || !tuteurDiscussionActif) return;
+
+            const db = getDB();
+            let disc = db.discussions.find(d => d.tuteur === tuteurDiscussionActif);
+            
+            const now = new Date();
+            const heureStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            const dateStr = now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            const estAdminConnecte = document.getElementById('admin-dashboard-card').style.display === 'block';
+            const expediteur = estAdminConnecte ? 'admin' : 'parent';
+
+            if (!disc) {
+                disc = { tuteur: tuteurDiscussionActif, dernierMessage: texte, date: dateStr, messages: [] };
+                db.discussions.push(disc);
+            }
+
+            disc.messages.push({
+                expediteur: expediteur,
+                texte: texte,
+                heure: heureStr,
+                date: dateStr
+            });
+            disc.dernierMessage = texte;
+            disc.date = dateStr;
+
+            saveDB(db);
+            input.value = '';
+            chargerMessagesDiscussion();
+
+            if (document.getElementById('admin-dashboard-card').style.display === 'block') {
+                chargerTableauMessagesAdmin();
+            }
         }
 
         function eleveLogin() {
-            const code = document.getElementById('eleve-code-input').value.trim();
-            const msg = document.getElementById('eleve-msg');
-            if(!code) {
-                msg.textContent = "Veuillez entrer votre matricule.";
-                msg.className = "msg-box error";
-                msg.style.display = "block";
+            const mat = document.getElementById('eleve-matricule-input').value.trim();
+            if (!mat) {
+                showMsg('eleve-msg', 'Veuillez entrer votre numéro de matricule.', 'error');
                 return;
             }
+            const db = getDB();
+            const e = db.eleves.find(item => item.matricule === mat);
+            if (!e) {
+                showMsg('eleve-msg', 'Matricule introuvable dans la base de données.', 'error');
+                return;
+            }
+
             document.getElementById('eleve-login-card').style.display = 'none';
             document.getElementById('eleve-dashboard-card').style.display = 'block';
-            document.getElementById('e-nom-eleve').textContent = code.toUpperCase();
-            document.getElementById('eleve-content-container').innerHTML = '<p style="color:var(--text-muted);">Bulletin et statut financier actualisés.</p>';
+            document.getElementById('e-nom-eleve').textContent = `${e.nom || ''} ${e.prenom || ''}`.trim();
+            document.getElementById('e-mat').textContent = e.matricule;
+            document.getElementById('e-classe').textContent = e.classe;
+
+            const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+            const totalExige = (e.montantTotalExige !== undefined ? e.montantTotalExige : (config.scolaires + config.inscription + config.bulletin));
+            const reste = Math.max(0, totalExige - e.montantPaye);
+            const soldeOk = e.montantPaye >= totalExige;
+
+            const badgeFrais = document.getElementById('e-statut-frais');
+            badgeFrais.className = 'badge ' + (soldeOk ? 'success' : 'danger');
+            badgeFrais.textContent = soldeOk ? 'Frais Soldés' : `Payé: ${e.montantPaye}$ | Reste: ${reste}$`;
+
+            const tbodyNotes = document.getElementById('table-eleve-notes');
+            const notesKeys = Object.keys(e.notes || {});
+            if (notesKeys.length === 0) {
+                tbodyNotes.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune cotation enregistrée pour le moment.</td></tr>';
+            } else {
+                tbodyNotes.innerHTML = notesKeys.map(key => {
+                    const n = e.notes[key];
+                    const parts = key.split('_');
+                    const cours = parts[0];
+                    const trimestre = parts[1] || 'Trimestre 1';
+                    const maxVal = n.max || 20;
+                    return `
+                        <tr>
+                            <td><strong>${cours}</strong></td>
+                            <td>${trimestre}</td>
+                            <td>${n.intero1 !== undefined ? n.intero1 : '-'}</td>
+                            <td>${n.intero2 !== undefined ? n.intero2 : '-'}</td>
+                            <td>${n.devoir !== undefined ? n.devoir : '-'}</td>
+                            <td>${n.examen !== undefined ? n.examen : '-'}</td>
+                            <td><strong>${n.note !== undefined ? n.note : '-'} / ${maxVal}</strong></td>
+                            <td>${n.appreciation || '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
         }
 
         function eleveLogout() {
-            document.getElementById('eleve-login-card').style.display = 'block';
+            document.getElementById('eleve-matricule-input').value = '';
             document.getElementById('eleve-dashboard-card').style.display = 'none';
-            document.getElementById('eleve-code-input').value = '';
+            document.getElementById('eleve-login-card').style.display = 'block';
         }
 
+        let profActif = null;
+
         function profLogin() {
+            const code = document.getElementById('prof-code-input').value.trim();
+            if (!code) {
+                showMsg('prof-msg', 'Veuillez entrer votre Code Prof.', 'error');
+                return;
+            }
+            const db = getDB();
+            const p = db.profs.find(item => item.codeProf === code);
+            if (!p) {
+                showMsg('prof-msg', 'Code Prof incorrect ou introuvable.', 'error');
+                return;
+            }
+            profActif = p;
             document.getElementById('prof-login-card').style.display = 'none';
             document.getElementById('prof-dashboard-card').style.display = 'block';
-            document.getElementById('prof-content-container').innerHTML = '<p style="color:var(--text-muted);">Interface de cotation prête.</p>';
+            document.getElementById('prof-nom-titre').textContent = `${p.nom} (${p.matiere})`;
+            document.getElementById('prof-cours-input').value = p.matiere;
+
+            peuplerSelectClassesProf();
         }
 
         function profLogout() {
-            document.getElementById('prof-login-card').style.display = 'block';
+            profActif = null;
+            document.getElementById('prof-code-input').value = '';
             document.getElementById('prof-dashboard-card').style.display = 'none';
+            document.getElementById('prof-login-card').style.display = 'block';
         }
 
-        function adminLogin() {
-            document.getElementById('admin-login-card').style.display = 'none';
-            document.getElementById('admin-dashboard-card').style.display = 'block';
-            document.getElementById('admin-content-container').innerHTML = '<p style="color:var(--text-muted);">Tableau de bord administrateur chargé.</p>';
+        function verifierSessionProf() {
+            if (!profActif) {
+                document.getElementById('prof-dashboard-card').style.display = 'none';
+                document.getElementById('prof-login-card').style.display = 'block';
+            }
         }
 
-        function adminLogout() {
-            document.getElementById('admin-login-card').style.display = 'block';
-            document.getElementById('admin-dashboard-card').style.display = 'none';
+        function peuplerSelectClassesProf() {
+            const sel = document.getElementById('prof-classe-select');
+            const selDemande = document.getElementById('demande-cours-classe');
+            if (!sel) return;
+
+            const optionsHtml = '<option value="">-- Choisir une classe & option --</option>' + 
+                CLASSES_OPTIONS_RDC.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            sel.innerHTML = optionsHtml;
+            if (selDemande) selDemande.innerHTML = optionsHtml;
         }
 
-        function ouvrirDiscussionAdminParent() {
-            alert("Ouverture de la messagerie instantanée sécurisée avec l'administration.");
+        function verifierSessionAdmin() {
+            // Logique de vérification admin simplifiée
         }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('public-communiques').innerHTML = `
-                <div class="communique-item">
-                    <div class="communique-date">12 Septembre 2026</div>
-                    <strong>Rentrée Scolaire et Paiements</strong>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Le calendrier des examens et le recouvrement des frais trimestriels sont disponibles sur vos espaces respectifs.</p>
-                </div>
-            `;
-        });
     </script>
 </body>
 </html>
