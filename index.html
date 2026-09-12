@@ -3,19 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>École de la RDC - Administration Pro</title>
+<title>École de la RDC - Portail Pro</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
-  tailwind.config = {
-    darkMode: 'class',
-  }
+  tailwind.config = { darkMode: 'class' }
 </script>
 <style>
-  /* Style de navigation épuré inspiré d'Instagram */
-  .ig-tab-active {
-    border-bottom: 2px solid #3b82f6;
-    color: #3b82f6;
-  }
+  .ig-tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
 </style>
 </head>
 <body class="bg-black text-gray-100 min-h-screen p-3 md:p-6 font-sans">
@@ -25,55 +19,91 @@
   <span id="status" class="text-xs px-3 py-1 rounded-full bg-neutral-800 text-green-400 border border-neutral-700">Connexion...</span>
 </div>
 
-<!-- SECTION AUTHENTIFICATION ADMIN -->
-<div id="auth-section" class="mt-6 bg-neutral-800 border border-neutral-700 p-5 rounded-xl">
-<h2 class="font-bold text-amber-400 mb-1 flex items-center gap-2">🔒 Espace Sécurisé Administrateur</h2>
-<p class="text-xs text-neutral-400 mb-3">Saisissez le code administrateur (<code class="bg-neutral-900 px-1 py-0.5 rounded text-amber-300">pr1999</code>) pour accéder aux enregistrements.</p>
-<div class="flex gap-2">
-<input type="password" id="admin-code" placeholder="Code admin (ex: pr1999)" class="flex-1 bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500">
-<button onclick="verifierAdmin()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">Se connecter</button>
-</div>
-<p id="auth-error" class="text-red-400 text-xs mt-2 hidden">Code administrateur incorrect.</p>
+<!-- SECTION CHOIX DE CONNEXION (ACCUEIL) -->
+<div id="choix-portail" class="mt-6 space-y-4">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Bouton Accès Admin -->
+    <div class="bg-neutral-800 border border-neutral-700 p-6 rounded-xl text-center space-y-3">
+      <h2 class="font-bold text-amber-400 text-lg">🔒 Espace Administrateur</h2>
+      <p class="text-xs text-neutral-400">Gérez les inscriptions, cotes, presences et générez les codes d'accès.</p>
+      <input type="password" id="admin-code-input" placeholder="Code admin (pr1999)" class="w-full bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:border-amber-500">
+      <button onclick="verifierAdmin()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-lg text-sm font-semibold transition">Se connecter Admin</button>
+      <p id="auth-error" class="text-red-400 text-xs hidden">Code administrateur incorrect.</p>
+    </div>
+
+    <!-- Bouton Accès Élève -->
+    <div class="bg-neutral-800 border border-neutral-700 p-6 rounded-xl text-center space-y-3">
+      <h2 class="font-bold text-blue-400 text-lg">🎓 Espace Élève / Parent</h2>
+      <p class="text-xs text-neutral-400">Entrez votre code d'accès personnel généré par l'administration.</p>
+      <input type="text" id="eleve-code-input" placeholder="Entrez votre code élève (ex: ELEV-1234)" class="w-full bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white uppercase focus:outline-none focus:border-blue-500">
+      <button onclick="verifierEleve()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-semibold transition">Consulter mon dossier</button>
+      <p id="eleve-auth-error" class="text-red-400 text-xs hidden">Code élève introuvable.</p>
+    </div>
+  </div>
 </div>
 
-<!-- PANEL ADMINISTRATEUR & NAVIGATION TYPE INSTAGRAM -->
+<!-- PANEL ADMINISTRATEUR -->
 <div id="admin-panel" class="mt-6 hidden">
 <div class="flex justify-between items-center bg-neutral-800 px-4 py-3 rounded-xl border border-neutral-700 mb-6">
-  <span class="text-xs text-green-400 font-medium">⚡ Mode Administrateur Actif</span>
-  <button onclick="deconnecterAdmin()" class="text-xs text-red-400 hover:underline">Verrouiller</button>
+  <span class="text-xs text-amber-400 font-medium">⚡ Mode Administrateur Actif</span>
+  <button onclick="deconnecter()" class="text-xs text-red-400 hover:underline">Déconnexion</button>
 </div>
 
-<!-- Navigation style Instagram (Onglets horizontaux avec icônes) -->
+<!-- Navigation Admin -->
 <div class="flex flex-wrap justify-around border-b border-neutral-800 mb-6 text-sm gap-2">
-<button onclick="changerOnglet('eleves')" id="tab-eleves" class="flex-1 min-w-[110px] pb-3 text-center font-semibold ig-tab-active flex items-center justify-center gap-2">
-  <span>🎓</span> Élèves
-</button>
-<button onclick="changerOnglet('profs')" id="tab-profs" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
-  <span>👨‍🏫</span> Profs
-</button>
-<button onclick="changerOnglet('presence')" id="tab-presence" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
-  <span>📋</span> Présence
-</button>
-<button onclick="changerOnglet('comms')" id="tab-comms" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
-  <span>📢</span> Journal
-</button>
-<button onclick="changerOnglet('frais')" id="tab-frais" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
-  <span>💰</span> Frais
-</button>
+<button onclick="changerOngletAdmin('inscriptions')" id="tab-inscriptions" class="flex-1 min-w-[110px] pb-3 text-center font-semibold ig-tab-active flex items-center justify-center gap-2"><span>📝</span> Inscriptions</button>
+<button onclick="changerOngletAdmin('eleves-admin')" id="tab-eleves-admin" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>📊</span> Cotes</button>
+<button onclick="changerOngletAdmin('profs')" id="tab-profs" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>👨‍🏫</span> Profs</button>
+<button onclick="changerOngletAdmin('comms')" id="tab-comms" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>📢</span> Annonces</button>
+<button onclick="changerOngletAdmin('frais')" id="tab-frais" class="flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>💰</span> Frais</button>
 </div>
 
-<!-- Formulaire Élèves (Cotes données par le prof) -->
-<div id="form-eleves" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800">
-<h3 class="font-semibold text-sm text-blue-400">Ajouter un élève et ses cotes par cours</h3>
+<!-- Formulaire Inscription Élève (Fiche complète RDC) -->
+<div id="form-inscriptions" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800">
+<h3 class="font-semibold text-sm text-amber-400">Fiche d'enregistrement et génération du code d'accès</h3>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-<input id="eleve-nom" placeholder="Nom complet de l'élève" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
-<input id="eleve-cours" placeholder="Matière / Cours (ex: Mathématiques)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
-<input id="eleve-cote" type="number" placeholder="Cote attribuée (ex: 16/20)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="insc-nom" placeholder="NOM (en majuscules)" oninput="this.value = this.value.toUpperCase()" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white uppercase">
+<input id="insc-postnom" placeholder="POST-NOM (en majuscules)" oninput="this.value = this.value.toUpperCase()" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white uppercase">
+<input id="insc-prenom" placeholder="Prénom" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="insc-adresse" placeholder="Adresse complète" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="insc-naissance" type="date" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<select id="insc-classe" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+  <option value="">Sélectionner la classe (1-8)</option>
+  <option value="1ère Année">1ère Année</option>
+  <option value="2ème Année">2ème Année</option>
+  <option value="3ème Année">3ème Année</option>
+  <option value="4ème Année">4ème Année</option>
+  <option value="5ème Année">5ème Année</option>
+  <option value="6ème Année">6ème Année</option>
+  <option value="7ème Année">7ème Année (Éducation de base)</option>
+  <option value="8ème Année">8ème Année (Éducation de base)</option>
+</select>
+<select id="insc-option" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white md:col-span-3">
+  <option value="Tronc Commun">Tronc Commun / Général</option>
+  <option value="Scientifique (Math-Physique)">Scientifique (Math-Physique)</option>
+  <option value="Scientifique (Bio-Chimie)">Scientifique (Bio-Chimie)</option>
+  <option value="Commerciale et Gestion">Commerciale et Gestion</option>
+  <option value="Pédagogie Générale">Pédagogie Générale</option>
+  <option value="Coupe et Couture">Coupe et Couture</option>
+  <option value="Electricité / Mécanique">Electricité / Mécanique / Technique</option>
+  <option value="Littéraire">Littéraire / Humanités Humanistes</option>
+</select>
 </div>
-<button onclick="ajouterEleve()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Enregistrer l'élève et sa cote</button>
+<button onclick="enregistrerEleve()" class="w-full bg-amber-600 hover:bg-amber-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Générer le Code d'Accès et Enregistrer</button>
 </div>
 
-<!-- Formulaire Professeurs -->
+<!-- Formulaire Cotes -->
+<div id="form-eleves-admin" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+<h3 class="font-semibold text-sm text-blue-400">Attribuer une cote à un élève</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+<input id="cote-elevenom" placeholder="Nom complet de l'élève" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="cote-cours" placeholder="Matière / Cours (ex: Mathématiques)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="cote-valeur" type="number" placeholder="Cote (ex: 16/20)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+</div>
+<button onclick="ajouterCote()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Enregistrer la cote</button>
+</div>
+
+<!-- Formulaire Profs -->
 <div id="form-profs" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
 <h3 class="font-semibold text-sm text-emerald-400">Enregistrer un Professeur</h3>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -83,37 +113,22 @@
 <button onclick="ajouterProf()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Enregistrer le professeur</button>
 </div>
 
-<!-- Formulaire Validation de Présence Administrateur -->
-<div id="form-presence" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
-<h3 class="font-semibold text-sm text-purple-400">Confirmation de présence (Admin -> Parents)</h3>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-<input id="presence-eleve" placeholder="Nom de l'élève" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
-<input id="presence-parent" placeholder="Nom du parent à notifier" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
-<select id="presence-statut" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
-  <option value="✅ Présent(e) confirmé(e) par l'Admin">✅ Présent(e) en classe</option>
-  <option value="❌ Absent(e) signalé(e)">❌ Absent(e)</option>
-  <option value="⚠️ En retard">⚠️ En retard</option>
-</select>
-</div>
-<button onclick="ajouterPresence()" class="w-full bg-purple-600 hover:bg-purple-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Valider et publier la présence</button>
-</div>
-
-<!-- Formulaire Journal de Classe / Communications -->
+<!-- Formulaire Annonces -->
 <div id="form-comms" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
-<h3 class="font-semibold text-sm text-amber-400">Publier une annonce / Journal de classe</h3>
+<h3 class="font-semibold text-sm text-purple-400">Diffuser une annonce / Journal</h3>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
 <input id="comm-titre" placeholder="Titre (ex: Réunion des parents)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
-<input id="comm-message" placeholder="Message / Communiqué court" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="comm-message" placeholder="Message court" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
 </div>
-<button onclick="ajouterComm()" class="w-full bg-amber-600 hover:bg-amber-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Diffuser l'annonce</button>
+<button onclick="ajouterComm()" class="w-full bg-purple-600 hover:bg-purple-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Publier l'annonce</button>
 </div>
 
-<!-- Formulaire Suivi des Frais / Minerval -->
+<!-- Formulaire Frais -->
 <div id="form-frais" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
-<h3 class="font-semibold text-sm text-cyan-400">Enregistrer un paiement de frais (Minerval)</h3>
+<h3 class="font-semibold text-sm text-cyan-400">Enregistrer un paiement de frais</h3>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
 <input id="frais-eleve" placeholder="Nom de l'élève" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
-<input id="frais-montant" placeholder="Montant payé (ex: 50$)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="frais-montant" placeholder="Montant (ex: 50$)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
 <select id="frais-tranche" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
   <option value="1ère Tranche / Inscription">1ère Tranche / Inscription</option>
   <option value="2ème Tranche">2ème Tranche</option>
@@ -122,57 +137,62 @@
 </div>
 <button onclick="ajouterFrais()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Valider le paiement</button>
 </div>
-</div>
 
-<!-- SECTION AFFICHAGE EN DIRECT (Style Feed / Flux) -->
-<div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-<!-- Feed Élèves -->
-<div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
-<h3 class="font-bold text-sm text-blue-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
-  <span>🎓 Élèves & Cotes</span>
-  <span id="count-eleves" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span>
-</h3>
-<ul id="liste-eleves" class="space-y-3"></ul>
-</div>
-
-<!-- Feed Profs -->
-<div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
-<h3 class="font-bold text-sm text-emerald-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
-  <span>👨‍🏫 Professeurs</span>
-  <span id="count-profs" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span>
-</h3>
-<ul id="liste-profs" class="space-y-3"></ul>
-</div>
-
-<!-- Feed Liste de Présence -->
-<div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
-<h3 class="font-bold text-sm text-purple-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
-  <span>📋 Présences</span>
-  <span id="count-presence" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span>
-</h3>
-<ul id="liste-presence" class="space-y-3"></ul>
-</div>
-
-<!-- Feed Journal de Classe -->
-<div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
-<h3 class="font-bold text-sm text-amber-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
-  <span>📢 Annonces / Journal</span>
-  <span id="count-comms" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span>
-</h3>
-<ul id="liste-comms" class="space-y-3"></ul>
-</div>
-
-<!-- Feed Frais Scolaires -->
-<div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4 lg:col-span-2">
-<h3 class="font-bold text-sm text-cyan-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
-  <span>💰 Suivi des Paiements (Minerval)</span>
-  <span id="count-frais" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span>
-</h3>
-<ul id="liste-frais" class="space-y-3"></ul>
+<!-- Feeds Admin (pour tout voir) -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
+    <h3 class="font-bold text-sm text-amber-400 mb-3 border-b border-neutral-700 pb-2 flex justify-between"><span>📝 Élèves Enregistrés & Codes</span><span id="count-eleves-inscrits" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span></h3>
+    <ul id="liste-eleves-inscrits" class="space-y-3"></ul>
+  </div>
+  <div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
+    <h3 class="font-bold text-sm text-blue-400 mb-3 border-b border-neutral-700 pb-2 flex justify-between"><span>📊 Cotes Attribuées</span><span id="count-cotes" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span></h3>
+    <ul id="liste-cotes" class="space-y-3"></ul>
+  </div>
+  <div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
+    <h3 class="font-bold text-sm text-cyan-400 mb-3 border-b border-neutral-700 pb-2 flex justify-between"><span>💰 Paiements Frais</span><span id="count-frais" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span></h3>
+    <ul id="liste-frais" class="space-y-3"></ul>
+  </div>
 </div>
 </div>
 
-<p class="text-[11px] text-center mt-10 text-neutral-500">Base connectée : site-publication-default-rtdb • Mode Temps Réel Multi-appareils (PC / Téléphone)</p>
+<!-- PANEL ÉLÈVE / PARENT (Style Onglets Google) -->
+<div id="eleve-panel" class="mt-6 hidden">
+<div class="flex justify-between items-center bg-neutral-800 px-4 py-3 rounded-xl border border-neutral-700 mb-6">
+  <div>
+    <span class="text-xs text-blue-400 font-medium">🎓 Espace Élève Connecté :</span>
+    <h2 id="eleve-info-nom" class="font-bold text-white text-base">Nom de l'élève</h2>
+    <span id="eleve-info-details" class="text-xs text-neutral-400">Classe / Option</span>
+  </div>
+  <button onclick="deconnecter()" class="text-xs text-red-400 hover:underline">Déconnexion</button>
+</div>
+
+<!-- Navigation de type Google Onglets pour l'élève -->
+<div class="flex flex-wrap justify-around border-b border-neutral-800 mb-6 text-sm gap-2">
+<button onclick="changerOngletEleve('cotes')" id="tab-eleve-cotes" class="flex-1 min-w-[120px] pb-3 text-center font-semibold ig-tab-active flex items-center justify-center gap-2"><span>📊</span> Mes Cotes</button>
+<button onclick="changerOngletEleve('frais')" id="tab-eleve-frais" class="flex-1 min-w-[120px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>💰</span> Suivi des Frais</button>
+<button onclick="changerOngletEleve('annonces')" id="tab-eleve-annonces" class="flex-1 min-w-[120px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>📢</span> Annonces École</button>
+</div>
+
+<!-- Contenu Onglet Cotes de l'élève -->
+<div id="vue-eleve-cotes" class="space-y-3 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800">
+  <h3 class="font-semibold text-sm text-blue-400 mb-3">Relevé de mes cotes par cours</h3>
+  <ul id="eleve-liste-cotes" class="space-y-2"></ul>
+</div>
+
+<!-- Contenu Onglet Frais de l'élève -->
+<div id="vue-eleve-frais" class="space-y-3 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+  <h3 class="font-semibold text-sm text-cyan-400 mb-3">Historique des paiements des frais scolaires</h3>
+  <ul id="eleve-liste-frais" class="space-y-2"></ul>
+</div>
+
+<!-- Contenu Onglet Annonces de l'élève -->
+<div id="vue-eleve-annonces" class="space-y-3 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+  <h3 class="font-semibold text-sm text-purple-400 mb-3">Communications et actualités de l'école</h3>
+  <ul id="eleve-liste-annonces" class="space-y-2"></ul>
+</div>
+</div>
+
+<p class="text-[11px] text-center mt-10 text-neutral-500">Base connectée : site-publication-default-rtdb • Mode Temps Réel</p>
 </div>
 
 <script type="module">
@@ -192,177 +212,185 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const elevesRef = ref(db, 'ecole6/eleves');
+const elevesInscritsRef = ref(db, 'ecole6/inscriptions');
+const cotesRef = ref(db, 'ecole6/cotes');
 const profsRef = ref(db, 'ecole6/profs');
-const presenceRef = ref(db, 'ecole6/presence');
 const commsRef = ref(db, 'ecole6/comms');
 const fraisRef = ref(db, 'ecole6/frais');
 
 document.getElementById('status').innerText = "✅ Connecté (Temps réel actif)";
 
-// Sécurité Admin
+let eleveActuelSession = null;
+
+// Vérification Admin
 window.verifierAdmin = function() {
-  const code = document.getElementById('admin-code').value;
-  const errorMsg = document.getElementById('auth-error');
-  if (code === "pr1999") {
-    document.getElementById('auth-section').classList.add('hidden');
+  const code = document.getElementById('admin-code-input').value;
+  if(code === "pr1999") {
+    document.getElementById('choix-portail').classList.add('hidden');
     document.getElementById('admin-panel').classList.remove('hidden');
-    errorMsg.classList.add('hidden');
-    document.getElementById('admin-code').value = "";
+    document.getElementById('auth-error').classList.add('hidden');
+    document.getElementById('admin-code-input').value = "";
   } else {
-    errorMsg.classList.remove('hidden');
+    document.getElementById('auth-error').classList.remove('hidden');
   }
 }
 
-window.deconnecterAdmin = function() {
-  document.getElementById('admin-panel').classList.add('hidden');
-  document.getElementById('auth-section').classList.remove('hidden');
+// Connexion Élève via son Code Généré
+window.verifierEleve = function() {
+  const codeSaisi = document.getElementById('eleve-code-input').value.trim().toUpperCase();
+  const errorMsg = document.getElementById('eleve-auth-error');
+  if(!codeSaisi) return;
+
+  onValue(elevesInscritsRef, (snapshot) => {
+    const data = snapshot.val();
+    if(!data) { errorMsg.classList.remove('hidden'); return; }
+    let trouve = null;
+    Object.keys(data).forEach(key => {
+      if(data[key].codeAcces === codeSaisi) {
+        trouve = data[key];
+      }
+    });
+
+    if(trouve) {
+      eleveActuelSession = trouve;
+      document.getElementById('choix-portail').classList.add('hidden');
+      document.getElementById('eleve-panel').classList.remove('hidden');
+      document.getElementById('eleve-info-nom',).innerText = `${trouve.nom} ${trouve.postnom} ${trouve.prenom}`;
+      document.getElementById('eleve-info-details').innerText = `Classe : ${trouve.classe} • Option : ${trouve.option}`;
+      errorMsg.classList.add('hidden');
+      chargerDonneesEleveConnecte(trouve.nom + " " + trouve.postnom);
+    } else {
+      errorMsg.classList.remove('hidden');
+    }
+  }, { onlyOnce: true });
 }
 
-// Navigation style Instagram avec les nouveaux onglets
-window.changerOnglet = function(onglet) {
-  ['eleves', 'profs', 'presence', 'comms', 'frais'].forEach(o => {
+window.deconnecter = function() {
+  document.getElementById('admin-panel').classList.add('hidden');
+  document.getElementById('eleve-panel').classList.add('hidden');
+  document.getElementById('choix-portail').classList.remove('hidden');
+  eleveActuelSession = null;
+  document.getElementById('eleve-code-input').value = "";
+}
+
+// Navigation Admin
+window.changerOngletAdmin = function(onglet) {
+  ['inscriptions', 'eleves-admin', 'profs', 'comms', 'frais'].forEach(o => {
     document.getElementById(`form-${o}`).classList.add('hidden');
-    const btn = document.getElementById(`tab-${o}`);
-    btn.className = "flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2 border-b-2 border-transparent";
+    document.getElementById(`tab-${o}`).className = "flex-1 min-w-[110px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2 border-b-2 border-transparent";
   });
   document.getElementById(`form-${onglet}`).classList.remove('hidden');
-  document.getElementById(`tab-${onglet}`).className = "flex-1 min-w-[110px] pb-3 text-center font-semibold text-blue-500 flex items-center justify-center gap-2 ig-tab-active";
+  document.getElementById(`tab-${onglet}`).className = "flex-1 min-w-[110px] pb-3 text-center font-semibold text-amber-400 flex items-center justify-center gap-2 ig-tab-active";
 }
 
-// Enregistrements Firebase
-window.ajouterEleve = function() {
-  const nom = document.getElementById('eleve-nom').value;
-  const cours = document.getElementById('eleve-cours').value;
-  const cote = document.getElementById('eleve-cote').value;
-  if(!nom || !cours || !cote) return alert("Veuillez remplir tous les champs de l'élève.");
-  push(elevesRef, { nom, cours, cote, date: new Date().toLocaleDateString() });
-  document.getElementById('eleve-nom').value = "";
-  document.getElementById('eleve-cours').value = "";
-  document.getElementById('eleve-cote').value = "";
+// Navigation Élève (style onglets Google)
+window.changerOngletEleve = function(onglet) {
+  ['cotes', 'frais', 'annonces'].forEach(o => {
+    document.getElementById(`vue-eleve-${o}`).classList.add('hidden');
+    document.getElementById(`tab-eleve-${o}`).className = "flex-1 min-w-[120px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2 border-b-2 border-transparent";
+  });
+  document.getElementById(`vue-eleve-${onglet}`).classList.remove('hidden');
+  document.getElementById(`tab-eleve-${onglet}`).className = "flex-1 min-w-[120px] pb-3 text-center font-semibold text-blue-400 flex items-center justify-center gap-2 ig-tab-active";
+}
+
+// Inscription élève et génération automatique d'un code unique
+window.enregistrerEleve = function() {
+  const nom = document.getElementById('insc-nom').value.trim();
+  const postnom = document.getElementById('insc-postnom').value.trim();
+  const prenom = document.getElementById('insc-prenom').value.trim();
+  const adresse = document.getElementById('insc-adresse').value.trim();
+  const naissance = document.getElementById('insc-naissance').value;
+  const classe = document.getElementById('insc-classe').value;
+  const option = document.getElementById('insc-option').value;
+
+  if(!nom || !postnom || !prenom || !adresse || !naissance || !classe) {
+    return alert("Veuillez remplir tous les champs de la fiche d'inscription !");
+  }
+
+  const codeAcces = "ELEV-" + Math.floor(1000 + Math.random() * 9000);
+  push(elevesInscritsRef, { nom, postnom, prenom, adresse, naissance, classe, option, codeAcces, date: new Date().toLocaleDateString() });
+  
+  alert(`Élève enregistré avec succès !\nCode d'accès généré pour l'élève : ${codeAcces}`);
+  
+  document.getElementById('insc-nom').value = "";
+  document.getElementById('insc-postnom').value = "";
+  document.getElementById('insc-prenom').value = "";
+  document.getElementById('insc-adresse').value = "";
+  document.getElementById('insc-naissance').value = "";
+}
+
+window.ajouterCote = function() {
+  const nom = document.getElementById('cote-elevenom').value.trim();
+  const cours = document.getElementById('cote-cours').value.trim();
+  const valeur = document.getElementById('cote-valeur').value.trim();
+  if(!nom || !cours || !valeur) return alert("Remplissez tous les champs des cotes.");
+  push(cotesRef, { nom, cours, valeur, date: new Date().toLocaleDateString() });
+  document.getElementById('cote-elevenom').value = "";
+  document.getElementById('cote-cours').value = "";
+  document.getElementById('cote-valeur').value = "";
 }
 
 window.ajouterProf = function() {
-  const nom = document.getElementById('prof-nom').value;
-  const cours = document.getElementById('prof-cours').value;
-  if(!nom || !cours) return alert("Veuillez remplir tous les champs du professeur.");
-  push(profsRef, { nom, cours, date: new Date().toLocaleDateString() });
+  const nom = document.getElementById('prof-nom').value.trim();
+  const cours = document.getElementById('prof-cours').value.trim();
+  if(!nom || !cours) return alert("Remplissez tous les champs du professeur.");
+  push(profsRef, { nom, cours });
   document.getElementById('prof-nom').value = "";
   document.getElementById('prof-cours').value = "";
 }
 
-window.ajouterPresence = function() {
-  const eleve = document.getElementById('presence-eleve').value;
-  const parent = document.getElementById('presence-parent').value;
-  const statut = document.getElementById('presence-statut').value;
-  if(!eleve || !parent) return alert("Veuillez remplir les informations de présence.");
-  push(presenceRef, { eleve, parent, statut, date: new Date().toLocaleDateString() });
-  document.getElementById('presence-eleve').value = "";
-  document.getElementById('presence-parent').value = "";
-}
-
 window.ajouterComm = function() {
-  const titre = document.getElementById('comm-titre').value;
-  const message = document.getElementById('comm-message').value;
-  if(!titre || !message) return alert("Veuillez remplir les champs de l'annonce.");
+  const titre = document.getElementById('comm-titre').value.trim();
+  const message = document.getElementById('comm-message').value.trim();
+  if(!titre || !message) return alert("Remplissez tous les champs de l'annonce.");
   push(commsRef, { titre, message, date: new Date().toLocaleDateString() });
   document.getElementById('comm-titre').value = "";
   document.getElementById('comm-message').value = "";
 }
 
 window.ajouterFrais = function() {
-  const eleve = document.getElementById('frais-eleve').value;
-  const montant = document.getElementById('frais-montant').value;
+  const eleve = document.getElementById('frais-eleve').value.trim();
+  const montant = document.getElementById('frais-montant').value.trim();
   const tranche = document.getElementById('frais-tranche').value;
-  if(!eleve || !montant) return alert("Veuillez remplir les informations de paiement.");
+  if(!eleve || !montant) return alert("Remplissez tous les champs de paiement.");
   push(fraisRef, { eleve, montant, tranche, date: new Date().toLocaleDateString() });
   document.getElementById('frais-eleve').value = "";
   document.getElementById('frais-montant').value = "";
 }
 
 window.supprimer = function(chemin, key) {
-  if(confirm("Voulez-vous supprimer cet élément ?")) {
-    remove(ref(db, `${chemin}/${key}`));
-  }
+  if(confirm("Supprimer cet élément ?")) remove(ref(db, `${chemin}/${key}`));
 }
 
-// Écouteurs en direct Firebase
-onValue(elevesRef, (snapshot) => {
+// Listeners en direct pour l'Admin
+onValue(elevesInscritsRef, (snapshot) => {
   const data = snapshot.val();
-  const liste = document.getElementById('liste-eleves');
+  const liste = document.getElementById('liste-eleves-inscrits');
   liste.innerHTML = "";
-  if(!data){ 
-    liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun élève enregistré.</li>"; 
-    document.getElementById('count-eleves').innerText = "0";
-    return; 
-  }
+  if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun élève inscrit.</li>"; document.getElementById('count-eleves-inscrits').innerText = "0"; return; }
   const keys = Object.keys(data);
-  document.getElementById('count-eleves').innerText = keys.length;
+  document.getElementById('count-eleves-inscrits').innerText = keys.length;
   keys.reverse().forEach(key => {
     const el = data[key];
     const li = document.createElement('li');
     li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
-    li.innerHTML = `<div><strong class='text-white text-sm'>${el.nom}</strong><br><span class='text-neutral-400'>📚 ${el.cours} : <strong class='text-blue-400'>${el.cote}</strong></span></div> <button onclick="supprimer('ecole6/eleves', '${key}')" class='text-red-400 hover:text-red-300 font-bold p-1'>✕</button>`;
+    li.innerHTML = `<div><strong class='text-white text-sm'>${el.nom} ${el.postnom} ${el.prenom}</strong><br><span class='text-neutral-400'>${el.classe} - ${el.option}</span><br><span class='text-amber-400 font-mono font-bold'>Code : ${el.codeAcces}</span></div> <button onclick="supprimer('ecole6/inscriptions', '${key}')" class='text-red-400 font-bold p-1'>✕</button>`;
     liste.appendChild(li);
   });
 });
 
-onValue(profsRef, (snapshot) => {
+onValue(cotesRef, (snapshot) => {
   const data = snapshot.val();
-  const liste = document.getElementById('liste-profs');
+  const liste = document.getElementById('liste-cotes');
   liste.innerHTML = "";
-  if(!data){ 
-    liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun professeur enregistré.</li>"; 
-    document.getElementById('count-profs').innerText = "0";
-    return; 
-  }
+  if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune cote.</li>"; document.getElementById('count-cotes').innerText = "0"; return; }
   const keys = Object.keys(data);
-  document.getElementById('count-profs').innerText = keys.length;
-  keys.reverse().forEach(key => {
-    const p = data[key];
-    const li = document.createElement('li');
-    li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
-    li.innerHTML = `<div><strong class='text-white text-sm'>${p.nom}</strong><br><span class='text-neutral-400'>Matière : ${p.cours}</span></div> <button onclick="supprimer('ecole6/profs', '${key}')" class='text-red-400 hover:text-red-300 font-bold p-1'>✕</button>`;
-    liste.appendChild(li);
-  });
-});
-
-onValue(presenceRef, (snapshot) => {
-  const data = snapshot.val();
-  const liste = document.getElementById('liste-presence');
-  liste.innerHTML = "";
-  if(!data){ 
-    liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune présence validée.</li>"; 
-    document.getElementById('count-presence').innerText = "0";
-    return; 
-  }
-  const keys = Object.keys(data);
-  document.getElementById('count-presence').innerText = keys.length;
-  keys.reverse().forEach(key => {
-    const pr = data[key];
-    const li = document.createElement('li');
-    li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
-    li.innerHTML = `<div>Élève : <strong class='text-white'>${pr.eleve}</strong><br><span class='text-neutral-400'>Parent : ${pr.parent}</span><div class='mt-1 inline-block px-2 py-0.5 rounded border text-[10px] bg-neutral-800 border-neutral-700 text-neutral-200'>${pr.statut}</div></div> <button onclick="supprimer('ecole6/presence', '${key}')" class='text-red-400 hover:text-red-300 font-bold p-1'>✕</button>`;
-    liste.appendChild(li);
-  });
-});
-
-onValue(commsRef, (snapshot) => {
-  const data = snapshot.val();
-  const liste = document.getElementById('liste-comms');
-  liste.innerHTML = "";
-  if(!data){ 
-    liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune annonce publiée.</li>"; 
-    document.getElementById('count-comms').innerText = "0";
-    return; 
-  }
-  const keys = Object.keys(data);
-  document.getElementById('count-comms').innerText = keys.length;
+  document.getElementById('count-cotes').innerText = keys.length;
   keys.reverse().forEach(key => {
     const c = data[key];
     const li = document.createElement('li');
     li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
-    li.innerHTML = `<div><strong class='text-amber-400 text-sm'>📢 ${c.titre}</strong><br><span class='text-neutral-300'>${c.message}</span><br><small class='text-neutral-500'>${c.date}</small></div> <button onclick="supprimer('ecole6/comms', '${key}')" class='text-red-400 hover:text-red-300 font-bold p-1'>✕</button>`;
+    li.innerHTML = `<div><strong class='text-white'>${c.nom}</strong><br><span class='text-neutral-400'>📚 ${c.cours} : <strong class='text-blue-400'>${c.valeur}</strong></span></div> <button onclick="supprimer('ecole6/cotes', '${key}')" class='text-red-400 font-bold p-1'>✕</button>`;
     liste.appendChild(li);
   });
 });
@@ -371,21 +399,75 @@ onValue(fraisRef, (snapshot) => {
   const data = snapshot.val();
   const liste = document.getElementById('liste-frais');
   liste.innerHTML = "";
-  if(!data){ 
-    liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun paiement enregistré.</li>"; 
-    document.getElementById('count-frais').innerText = "0";
-    return; 
-  }
+  if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun paiement.</li>"; document.getElementById('count-frais').innerText = "0"; return; }
   const keys = Object.keys(data);
   document.getElementById('count-frais').innerText = keys.length;
   keys.reverse().forEach(key => {
     const f = data[key];
     const li = document.createElement('li');
     li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
-    li.innerHTML = `<div>Élève : <strong class='text-white text-sm'>${f.eleve}</strong><br><span class='text-cyan-400'>Montant : ${f.montant}</span> • <span class='text-neutral-400'>${f.tranche}</span><br><small class='text-neutral-500'>${f.date}</small></div> <button onclick="supprimer('ecole6/frais', '${key}')" class='text-red-400 hover:text-red-300 font-bold p-1'>✕</button>`;
+    li.innerHTML = `<div><strong class='text-white'>${f.eleve}</strong><br><span class='text-cyan-400'>${f.montant}</span> (${f.tranche})</div> <button onclick="supprimer('ecole6/frais', '${key}')" class='text-red-400 font-bold p-1'>✕</button>`;
     liste.appendChild(li);
   });
 });
+
+// Charger les données filtrées pour l'élève connecté
+function chargerDonneesEleveConnecte(nomRecherche) {
+  // Cotes de l'élève
+  onValue(cotesRef, (snapshot) => {
+    const data = snapshot.val();
+    const liste = document.getElementById('eleve-liste-cotes');
+    liste.innerHTML = "";
+    if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune cote disponible pour le moment.</li>"; return; }
+    let trouve = false;
+    Object.keys(data).forEach(key => {
+      const c = data[key];
+      if(c.nom.toLowerCase() === nomRecherche.toLowerCase()) {
+        trouve = true;
+        const li = document.createElement('li');
+        li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+        li.innerHTML = `<span class='text-white font-medium'>📚 ${c.cours}</span> <strong class='text-blue-400 text-sm'>${c.valeur}</strong>`;
+        liste.appendChild(li);
+      }
+    });
+    if(!trouve) liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune cote attribuée pour l'instant.</li>";
+  });
+
+  // Frais de l'élève
+  onValue(fraisRef, (snapshot) => {
+    const data = snapshot.val();
+    const liste = document.getElementById('eleve-liste-frais');
+    liste.innerHTML = "";
+    if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun paiement enregistré.</li>"; return; }
+    let trouve = false;
+    Object.keys(data).forEach(key => {
+      const f = data[key];
+      if(f.eleve.toLowerCase() === nomRecherche.toLowerCase()) {
+        trouve = true;
+        const li = document.createElement('li');
+        li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+        li.innerHTML = `<div><strong class='text-cyan-400 font-medium'>Montant : ${f.montant}</strong><br><span class='text-neutral-300'>Tranche : ${f.tranche}</span></div><small class='text-neutral-500'>${f.date}</small>`;
+        liste.appendChild(li);
+      }
+    });
+    if(!trouve) liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun paiement enregistré à votre nom.</li>";
+  });
+
+  // Annonces générales pour l'élève
+  onValue(commsRef, (snapshot) => {
+    const data = snapshot.val();
+    const liste = document.getElementById('eleve-liste-annonces');
+    liste.innerHTML = "";
+    if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune annonce pour le moment.</li>"; return; }
+    Object.keys(data).reverse().forEach(key => {
+      const a = data[key];
+      const li = document.createElement('li');
+      li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg space-y-1 text-xs";
+      li.innerHTML = `<strong class='text-purple-400 text-sm'>📢 ${a.titre}</strong><p class='text-neutral-300'>${a.message}</p><small class='text-neutral-500'>Publié le ${a.date}</small>`;
+      liste.appendChild(li);
+    });
+  });
+}
 </script>
 </body>
 </html>
