@@ -1059,12 +1059,10 @@
     <script>
         // --- LISTE OFFICIELLE DES CLASSES (1 à 8) ET OPTIONS DE LA RDC ---
         const CLASSES_OPTIONS_RDC = [
-            // Éducation de Base / Secondaire Général
             "1ère Année Secondaire",
             "2ème Année Secondaire",
             "3ème Année Secondaire",
             "4ème Année Secondaire",
-            // Humanités / Options RDC
             "5ème Humanités - Commerciale et Gestion",
             "6ème Humanités - Commerciale et Gestion",
             "5ème Humanités - Scientifique (Math-Physique)",
@@ -1479,13 +1477,6 @@
 
         function calculerTotalLigne(input) {
             const tr = input.closest('tr');
-            const int1 = parseFloat(tr.querySelector('.input-int1').value) || 0;
-            const int2 = parseFloat(tr.querySelector('.input-int2').value) || 0;
-            const dev = parseFloat(tr.querySelector('.input-dev').value) || 0;
-            const ex = parseFloat(tr.querySelector('.input-ex').value) || 0;
-            
-            // Calcul d'une moyenne pondérée ou somme ramenée sur /20 (ex: Intero1 + Intero2 + Devoir + Examen divisé par 4 ou pondéré)
-            // Ici faisons une moyenne simple des éléments saisis non nuls ou sur 4 composants
             const vals = [
                 tr.querySelector('.input-int1').value !== '' ? parseFloat(tr.querySelector('.input-int1').value) : null,
                 tr.querySelector('.input-int2').value !== '' ? parseFloat(tr.querySelector('.input-int2').value) : null,
@@ -1650,8 +1641,8 @@
                             <td><code>${e.codeParent}</code></td>
                             <td><span class="badge ${soldeOk ? 'success' : 'danger'}">${soldeOk ? 'Soldé' : 'Payé: ' + e.montantPaye + '$ | Reste: ' + reste + '$'}</span></td>
                             <td>
-                                <button onclick="modifierFraisEleve('${e.matricule}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; margin-right: 0.25rem;" title="Modifier les frais de cet élève">⚙️ Frais</button>
-                                <button onclick="ajouterPaiementAdmin('${e.matricule}')" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; margin-right: 0.25rem;" title="Ajouter un paiement">+ Paiement</button>
+                                <button onclick="modifierFraisEleve('${e.matricule}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; margin-right: 0.25rem;" title="Définir le montant des frais">⚙️ Frais</button>
+                                <button onclick="ajouterPaiementAdmin('${e.matricule}')" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; margin-right: 0.25rem;" title="Enregistrer un versement">+ Paiement</button>
                                 <button onclick="supprimerEleve('${e.matricule}')" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button>
                             </td>
                         </tr>
@@ -1702,7 +1693,7 @@
             const config = db.fraisConfig[eleve.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
             const defTotal = eleve.montantTotalExige !== undefined ? eleve.montantTotalExige : (config.scolaires + config.inscription + config.bulletin);
 
-            const nouveauTotalStr = prompt(`Modifier le montant total des frais exigés pour l'élève ${eleve.nom} (${eleve.classe}) :`, defTotal);
+            const nouveauTotalStr = prompt(`Définir le montant total des frais exigés par l'administration pour l'élève ${eleve.nom} (${eleve.classe}) :`, defTotal);
             if (nouveauTotalStr === null) return;
             const nouveauTotal = parseFloat(nouveauTotalStr);
 
@@ -1714,7 +1705,7 @@
             eleve.montantTotalExige = nouveauTotal;
             saveDB(db);
             chargerAdminDonnees();
-            alert(`Montant total des frais mis à jour à ${nouveauTotal} $ pour ${eleve.nom}. Les parents verront le montant payé et le reste exact.`);
+            alert(`Montant total des frais défini à ${nouveauTotal} $ par l'administration pour ${eleve.nom}. Le site informe automatiquement les parents et élèves de leur situation financière.`);
         }
 
         function ajouterEleve() {
@@ -1766,7 +1757,7 @@
         }
 
         function ajouterPaiementAdmin(mat) {
-            const montantStr = prompt('Entrez le montant perçu ($) :');
+            const montantStr = prompt('Entrez le montant versé ($) :');
             if (!montantStr) return;
             const montant = parseFloat(montantStr);
             if (isNaN(montant) || montant <= 0) {
@@ -1779,7 +1770,7 @@
                 eleve.montantPaye = (eleve.montantPaye || 0) + montant;
                 saveDB(db);
                 chargerAdminDonnees();
-                alert(`Paiement de ${montant} $ enregistré pour ${eleve.nom}. Le parent sera notifié du montant payé et du reste à payer.`);
+                alert(`Paiement de ${montant} $ enregistré. Le site informe à présent le parent et l'élève de la mise à jour de leur solde.`);
             }
         }
 
@@ -1828,7 +1819,7 @@
             const db = getDB();
             db.fraisConfig[classe] = { scolaires, inscription, bulletin };
             saveDB(db);
-            showMsg('admin-frais-msg', `Tarifs enregistrés avec succès pour la classe : ${classe}.`, 'success');
+            showMsg('admin-frais-msg', `Tarifs configurés par l'administration pour la classe : ${classe}.`, 'success');
         }
 
         function ajouterCommunique() {
@@ -1887,12 +1878,11 @@
             chargerAdminDonnees();
         }
 
-        // Initialisation au chargement de la page
-        window.addEventListener('DOMContentLoaded', () => {
-            getDB(); 
+        // Initialisation globale au chargement de la page
+        window.onload = function() {
             peuplerSelectClasses();
             chargerCommuniquesPublics();
-        });
+        };
     </script>
 </body>
 </html>
