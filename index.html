@@ -3,25 +3,87 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>École de la RDC</title>
+<title>École de la RDC - Gestion Administrative</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 min-h-screen p-4">
-<div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+<div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6">
 <h1 class="text-3xl font-bold text-center text-blue-700">École de la RDC 🇨🇩</h1>
 <p class="text-center text-green-600 mt-2" id="status">Connexion à Firebase...</p>
 
-<div class="mt-6 bg-slate-50 p-4 rounded-xl">
-<h2 class="font-bold mb-2">Ajouter un élève (Test temps réel PC -> Téléphone)</h2>
+<!-- SECTION AUTHENTIFICATION ADMIN -->
+<div id="auth-section" class="mt-6 bg-amber-50 border border-amber-200 p-4 rounded-xl">
+<h2 class="font-bold text-amber-800 mb-2">🔒 Espace Sécurisé - Administrateur</h2>
+<p class="text-sm text-gray-600 mb-3">Entrez le code administrateur pour débloquer l'enregistrement des élèves, professeurs et parents.</p>
 <div class="flex gap-2">
-<input id="nom" placeholder="Nom de l'élève" class="flex-1 border p-2 rounded">
-<button onclick="ajouter()" class="bg-blue-600 text-white px-4 py-2 rounded">Ajouter</button>
+<input type="password" id="admin-code" placeholder="Code Administrateur (ex: pr1999)" class="flex-1 border p-2 rounded">
+<button onclick="verifierAdmin()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded font-medium">Se connecter</button>
+</div>
+<p id="auth-error" class="text-red-500 text-sm mt-2 hidden">Code administrateur incorrect.</p>
+</div>
+
+<!-- SECTION FORMULAIRE SAISIE (CACHÉE PAR DÉFAUT) -->
+<div id="admin-panel" class="mt-6 bg-slate-50 p-5 rounded-xl border hidden">
+<div class="flex justify-between items-center mb-4">
+<h2 class="font-bold text-lg text-blue-800">📝 Enregistrement (Mode Administrateur Actif)</h2>
+<button onclick="deconnecterAdmin()" class="text-sm text-red-600 hover:underline">Verrouiller / Quitter</button>
+</div>
+
+<!-- Onglets pour basculer entre Élève, Prof, Parent -->
+<div class="flex border-b mb-4">
+<button onclick="changerOnglet('eleves')" id="tab-eleves" class="px-4 py-2 font-semibold text-blue-600 border-b-2 border-blue-600">Élèves</button>
+<button onclick="changerOnglet('profs')" id="tab-profs" class="px-4 py-2 font-semibold text-gray-500">Professeurs</button>
+<button onclick="changerOnglet('parents')" id="tab-parents" class="px-4 py-2 font-semibold text-gray-500">Parents</button>
+</div>
+
+<!-- Formulaire Élève -->
+<div id="form-eleves" class="space-y-3">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+<input id="eleve-nom" placeholder="Nom complet de l'élève" class="border p-2 rounded bg-white">
+<input id="eleve-classe" placeholder="Classe (ex: 6ème Humaines)" class="border p-2 rounded bg-white">
+</div>
+<button onclick="ajouterEleve()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded font-medium">Ajouter l'élève</button>
+</div>
+
+<!-- Formulaire Professeur -->
+<div id="form-profs" class="space-y-3 hidden">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+<input id="prof-nom" placeholder="Nom complet du professeur" class="border p-2 rounded bg-white">
+<input id="prof-cours" placeholder="Matière enseignée (ex: Mathématiques)" class="border p-2 rounded bg-white">
+</div>
+<button onclick="ajouterProf()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded font-medium">Ajouter le professeur</button>
+</div>
+
+<!-- Formulaire Parent -->
+<div id="form-parents" class="space-y-3 hidden">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+<input id="parent-nom" placeholder="Nom du parent" class="border p-2 rounded bg-white">
+<input id="parent-eleve" placeholder="Nom de l'élève associé" class="border p-2 rounded bg-white">
+<input id="parent-tel" placeholder="Téléphone de contact" class="border p-2 rounded bg-white">
+</div>
+<button onclick="ajouterParent()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded font-medium">Enregistrer le parent</button>
 </div>
 </div>
 
-<div class="mt-6">
-<h2 class="font-bold text-lg">Liste des élèves en direct :</h2>
-<ul id="liste" class="mt-3 space-y-2"></ul>
+<!-- SECTION AFFICHAGE EN DIRECT -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Liste Élèves -->
+<div class="bg-white border rounded-xl p-4 shadow-sm">
+<h3 class="font-bold text-md text-blue-700 mb-3 border-b pb-2">👨‍🎓 Élèves en direct</h3>
+<ul id="liste-eleves" class="space-y-2"></ul>
+</div>
+
+<!-- Liste Profs -->
+<div class="bg-white border rounded-xl p-4 shadow-sm">
+<h3 class="font-bold text-md text-green-700 mb-3 border-b pb-2">👨‍🏫 Professeurs</h3>
+<ul id="liste-profs" class="space-y-2"></ul>
+</div>
+
+<!-- Liste Parents -->
+<div class="bg-white border rounded-xl p-4 shadow-sm">
+<h3 class="font-bold text-md text-purple-700 mb-3 border-b pb-2">👪 Parents</h3>
+<ul id="liste-parents" class="space-y-2"></ul>
+</div>
 </div>
 
 <p class="text-xs text-center mt-8 text-gray-400">Base connectée : site-publication-default-rtdb</p>
@@ -31,7 +93,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// TA VRAIE CONFIG - Tirée de ta capture
 const firebaseConfig = {
   apiKey: "AIzaSyDpzKhm93AJnwGsqptCBNfmWG8E4m0uJNM",
   authDomain: "site-publication.firebaseapp.com",
@@ -44,35 +105,121 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
 const elevesRef = ref(db, 'ecole6/eleves');
+const profsRef = ref(db, 'ecole6/profs');
+const parentsRef = ref(db, 'ecole6/parents');
 
 document.getElementById('status').innerText = "✅ Connecté à Firebase - Temps réel actif";
-document.getElementById('status').className = "text-center text-green-600 font-bold mt-2";
 
-window.ajouter = function() {
-  const nom = document.getElementById('nom').value;
-  if(!nom) return;
-  push(elevesRef, { nom: nom, date: new Date().toLocaleString() });
-  document.getElementById('nom').value = "";
+// Gestion de la sécurité Admin
+window.verifierAdmin = function() {
+  const code = document.getElementById('admin-code').value;
+  const errorMsg = document.getElementById('auth-error');
+  if (code === "pr1999") {
+    document.getElementById('auth-section').classList.add('hidden');
+    document.getElementById('admin-panel').classList.remove('hidden');
+    errorMsg.classList.add('hidden');
+    document.getElementById('admin-code').value = "";
+  } else {
+    errorMsg.classList.remove('hidden');
+  }
 }
 
+window.deconnecterAdmin = function() {
+  document.getElementById('admin-panel').classList.add('hidden');
+  document.getElementById('auth-section').classList.remove('hidden');
+}
+
+// Gestion des onglets
+window.changerOnglet = function(onglet) {
+  ['eleves', 'profs', 'parents'].forEach(o => {
+    document.getElementById(`form-${o}`).classList.add('hidden');
+    document.getElementById(`tab-${o}`).className = "px-4 py-2 font-semibold text-gray-500 border-b-2 border-transparent";
+  });
+  document.getElementById(`form-${onglet}`).classList.remove('hidden');
+  document.getElementById(`tab-${onglet}`).className = "px-4 py-2 font-semibold text-blue-600 border-b-2 border-blue-600";
+}
+
+// Fonctions d'ajout
+window.ajouterEleve = function() {
+  const nom = document.getElementById('eleve-nom').value;
+  const classe = document.getElementById('eleve-classe').value;
+  if(!nom || !classe) return alert("Veuillez remplir tous les champs.");
+  push(elevesRef, { nom, classe, date: new Date().toLocaleDateString() });
+  document.getElementById('eleve-nom').value = "";
+  document.getElementById('eleve-classe').value = "";
+}
+
+window.ajouterProf = function() {
+  const nom = document.getElementById('prof-nom').value;
+  const cours = document.getElementById('prof-cours').value;
+  if(!nom || !cours) return alert("Veuillez remplir tous les champs.");
+  push(profsRef, { nom, cours, date: new Date().toLocaleDateString() });
+  document.getElementById('prof-nom').value = "";
+  document.getElementById('prof-cours').value = "";
+}
+
+window.ajouterParent = function() {
+  const nom = document.getElementById('parent-nom').value;
+  const eleve = document.getElementById('parent-eleve').value;
+  const tel = document.getElementById('parent-tel').value;
+  if(!nom || !eleve || !tel) return alert("Veuillez remplir tous les champs.");
+  push(parentsRef, { nom, eleve, tel, date: new Date().toLocaleDateString() });
+  document.getElementById('parent-nom').value = "";
+  document.getElementById('parent-eleve').value = "";
+  document.getElementById('parent-tel').value = "";
+}
+
+// Fonctions de suppression
+window.supprimer = function(chemin, key) {
+  if(confirm("Voulez-vous vraiment supprimer cet élément ?")) {
+    remove(ref(db, `${chemin}/${key}`));
+  }
+}
+
+// Écouteurs en temps réel Firebase
 onValue(elevesRef, (snapshot) => {
   const data = snapshot.val();
-  const liste = document.getElementById('liste');
+  const liste = document.getElementById('liste-eleves');
   liste.innerHTML = "";
-  if(!data){ liste.innerHTML = "<li class='text-gray-400'>Aucun élève - Ajoute pour tester PC/Téléphone</li>"; return; }
+  if(!data){ liste.innerHTML = "<li class='text-gray-400 text-sm'>Aucun élève enregistré.</li>"; return; }
   Object.keys(data).reverse().forEach(key => {
     const el = data[key];
     const li = document.createElement('li');
-    li.className = "bg-white border p-3 rounded flex justify-between";
-    li.innerHTML = `<span>${el.nom} <small class='text-gray-400'>${el.date}</small></span> <button onclick="supp('${key}')" class='text-red-500'>X</button>`;
+    li.className = "bg-slate-50 border p-2 rounded flex justify-between items-center text-sm";
+    li.innerHTML = `<div><strong>${el.nom}</strong><br><span class='text-xs text-gray-500'>Classe : ${el.classe}</span></div> <button onclick="supprimer('ecole6/eleves', '${key}')" class='text-red-500 font-bold px-2'>✕</button>`;
     liste.appendChild(li);
   });
 });
 
-window.supp = function(key){
-  remove(ref(db, 'ecole6/eleves/'+key));
-}
+onValue(profsRef, (snapshot) => {
+  const data = snapshot.val();
+  const liste = document.getElementById('liste-profs');
+  liste.innerHTML = "";
+  if(!data){ liste.innerHTML = "<li class='text-gray-400 text-sm'>Aucun professeur enregistré.</li>"; return; }
+  Object.keys(data).reverse().forEach(key => {
+    const p = data[key];
+    const li = document.createElement('li');
+    li.className = "bg-slate-50 border p-2 rounded flex justify-between items-center text-sm";
+    li.innerHTML = `<div><strong>${p.nom}</strong><br><span class='text-xs text-gray-500'>Cours : ${p.cours}</span></div> <button onclick="supprimer('ecole6/profs', '${key}')" class='text-red-500 font-bold px-2'>✕</button>`;
+    liste.appendChild(li);
+  });
+});
+
+onValue(parentsRef, (snapshot) => {
+  const data = snapshot.val();
+  const liste = document.getElementById('liste-parents');
+  liste.innerHTML = "";
+  if(!data){ liste.innerHTML = "<li class='text-gray-400 text-sm'>Aucun parent enregistré.</li>"; return; }
+  Object.keys(data).reverse().forEach(key => {
+    const pr = data[key];
+    const li = document.createElement('li');
+    li.className = "bg-slate-50 border p-2 rounded flex justify-between items-center text-sm";
+    li.innerHTML = `<div><strong>${pr.nom}</strong><br><span class='text-xs text-gray-500'>Élève : ${pr.eleve} | Tél : ${pr.tel}</span></div> <button onclick="supprimer('ecole6/parents', '${key}')" class='text-red-500 font-bold px-2'>✕</button>`;
+    liste.appendChild(li);
+  });
+});
 </script>
 </body>
 </html>
