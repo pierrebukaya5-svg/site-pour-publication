@@ -1,92 +1,129 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>École de la RDC - Gestion Administrative</title>
+<title>École de la RDC - Administration</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+  }
+</script>
+<style>
+  /* Style épuré type Instagram (icônes et barres de navigation bas/haut) */
+  .ig-tab-active {
+    border-bottom: 2px solid #3b82f6;
+    color: #3b82f6;
+  }
+</style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4">
-<div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6">
-<h1 class="text-3xl font-bold text-center text-blue-700">École de la RDC 🇨🇩</h1>
-<p class="text-center text-green-600 mt-2" id="status">Connexion à Firebase...</p>
+<body class="bg-black text-gray-100 min-h-screen p-3 md:p-6 font-sans">
+<div class="max-w-4xl mx-auto bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-5 md:p-8">
+<div class="flex justify-between items-center border-b border-neutral-800 pb-4">
+  <h1 class="text-2xl md:text-3xl font-extrabold text-blue-500 tracking-tight">École de la RDC 🇨🇩</h1>
+  <span id="status" class="text-xs px-3 py-1 rounded-full bg-neutral-800 text-green-400 border border-neutral-700">Connexion...</span>
+</div>
 
 <!-- SECTION AUTHENTIFICATION ADMIN -->
-<div id="auth-section" class="mt-6 bg-amber-50 border border-amber-200 p-4 rounded-xl">
-<h2 class="font-bold text-amber-800 mb-2">🔒 Espace Sécurisé - Administrateur</h2>
-<p class="text-sm text-gray-600 mb-3">Entrez le code administrateur pour débloquer l'enregistrement des élèves, professeurs et parents.</p>
+<div id="auth-section" class="mt-6 bg-neutral-800 border border-neutral-700 p-5 rounded-xl">
+<h2 class="font-bold text-amber-400 mb-1 flex items-center gap-2">🔒 Espace Sécurisé Administrateur</h2>
+<p class="text-xs text-neutral-400 mb-3">Saisissez le code administrateur (<code class="bg-neutral-900 px-1 py-0.5 rounded text-amber-300">pr1999</code>) pour modifier les enregistrements.</p>
 <div class="flex gap-2">
-<input type="password" id="admin-code" placeholder="Code Administrateur (ex: pr1999)" class="flex-1 border p-2 rounded">
-<button onclick="verifierAdmin()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded font-medium">Se connecter</button>
+<input type="password" id="admin-code" placeholder="Code admin (ex: pr1999)" class="flex-1 bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500">
+<button onclick="verifierAdmin()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">Se connecter</button>
 </div>
-<p id="auth-error" class="text-red-500 text-sm mt-2 hidden">Code administrateur incorrect.</p>
-</div>
-
-<!-- SECTION FORMULAIRE SAISIE (CACHÉE PAR DÉFAUT) -->
-<div id="admin-panel" class="mt-6 bg-slate-50 p-5 rounded-xl border hidden">
-<div class="flex justify-between items-center mb-4">
-<h2 class="font-bold text-lg text-blue-800">📝 Enregistrement (Mode Administrateur Actif)</h2>
-<button onclick="deconnecterAdmin()" class="text-sm text-red-600 hover:underline">Verrouiller / Quitter</button>
+<p id="auth-error" class="text-red-400 text-xs mt-2 hidden">Code administrateur incorrect.</p>
 </div>
 
-<!-- Onglets pour basculer entre Élève, Prof, Parent -->
-<div class="flex border-b mb-4">
-<button onclick="changerOnglet('eleves')" id="tab-eleves" class="px-4 py-2 font-semibold text-blue-600 border-b-2 border-blue-600">Élèves</button>
-<button onclick="changerOnglet('profs')" id="tab-profs" class="px-4 py-2 font-semibold text-gray-500">Professeurs</button>
-<button onclick="changerOnglet('parents')" id="tab-parents" class="px-4 py-2 font-semibold text-gray-500">Parents</button>
+<!-- PANEL ADMINISTRATEUR & NAVIGATION TYPE INSTAGRAM -->
+<div id="admin-panel" class="mt-6 hidden">
+<div class="flex justify-between items-center bg-neutral-800 px-4 py-3 rounded-xl border border-neutral-700 mb-6">
+  <span class="text-xs text-green-400 font-medium">⚡ Mode Administrateur Actif</span>
+  <button onclick="deconnecterAdmin()" class="text-xs text-red-400 hover:underline">Verrouiller</button>
 </div>
 
-<!-- Formulaire Élève -->
-<div id="form-eleves" class="space-y-3">
-<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-<input id="eleve-nom" placeholder="Nom complet de l'élève" class="border p-2 rounded bg-white">
-<input id="eleve-classe" placeholder="Classe (ex: 6ème Humaines)" class="border p-2 rounded bg-white">
-</div>
-<button onclick="ajouterEleve()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded font-medium">Ajouter l'élève</button>
-</div>
-
-<!-- Formulaire Professeur -->
-<div id="form-profs" class="space-y-3 hidden">
-<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-<input id="prof-nom" placeholder="Nom complet du professeur" class="border p-2 rounded bg-white">
-<input id="prof-cours" placeholder="Matière enseignée (ex: Mathématiques)" class="border p-2 rounded bg-white">
-</div>
-<button onclick="ajouterProf()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded font-medium">Ajouter le professeur</button>
+<!-- Style de navigation Instagram (Barre d'onglets épurée avec icônes) -->
+<div class="flex justify-around border-b border-neutral-800 mb-6 text-sm">
+<button onclick="changerOnglet('eleves')" id="tab-eleves" class="flex-1 pb-3 text-center font-semibold ig-tab-active flex items-center justify-center gap-2">
+  <span>🎓</span> Élèves & Notes
+</button>
+<button onclick="changerOnglet('profs')" id="tab-profs" class="flex-1 pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
+  <span>👨‍🏫</span> Professeurs
+</button>
+<button onclick="changerOnglet('parents')" id="tab-parents" class="flex-1 pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2">
+  <span>👪</span> Parents & Présence
+</button>
 </div>
 
-<!-- Formulaire Parent -->
-<div id="form-parents" class="space-y-3 hidden">
+<!-- Formulaire Élèves (avec attribution des cotes par matière) -->
+<div id="form-eleves" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800">
+<h3 class="font-semibold text-sm text-blue-400">Enregistrer un élève et attribuer une cote</h3>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-<input id="parent-nom" placeholder="Nom du parent" class="border p-2 rounded bg-white">
-<input id="parent-eleve" placeholder="Nom de l'élève associé" class="border p-2 rounded bg-white">
-<input id="parent-tel" placeholder="Téléphone de contact" class="border p-2 rounded bg-white">
+<input id="eleve-nom" placeholder="Nom complet de l'élève" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="eleve-cours" placeholder="Matière / Cours (ex: Math)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="eleve-cote" type="number" placeholder="Cote / Note (sur 20 ou 100)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
 </div>
-<button onclick="ajouterParent()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded font-medium">Enregistrer le parent</button>
+<button onclick="ajouterEleve()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Enregistrer l'élève et sa cote</button>
+</div>
+
+<!-- Formulaire Professeurs -->
+<div id="form-profs" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+<h3 class="font-semibold text-sm text-emerald-400">Ajouter un Professeur</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+<input id="prof-nom" placeholder="Nom du professeur" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="prof-cours" placeholder="Cours dispensé" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+</div>
+<button onclick="ajouterProf()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Enregistrer le professeur</button>
+</div>
+
+<!-- Formulaire Parents & Confirmation de présence -->
+<div id="form-parents" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+<h3 class="font-semibold text-sm text-purple-400">Suivi des Parents & Fiche de Présence</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+<input id="parent-nom" placeholder="Nom du parent" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="parent-eleve" placeholder="Nom de l'élève concerné" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<select id="parent-presence" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+  <option value="Présent(e) en classe">Présent(e) confirmé(e)</option>
+  <option value="Absent(e)">Absent(e)</option>
+  <option value="Retard">En retard</option>
+</select>
+</div>
+<button onclick="ajouterParent()" class="w-full bg-purple-600 hover:bg-purple-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Notifier le parent et confirmer la présence</button>
 </div>
 </div>
 
-<!-- SECTION AFFICHAGE EN DIRECT -->
+<!-- SECTION AFFICHAGE EN DIRECT (Flux style Instagram Feed) -->
 <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-<!-- Liste Élèves -->
-<div class="bg-white border rounded-xl p-4 shadow-sm">
-<h3 class="font-bold text-md text-blue-700 mb-3 border-b pb-2">👨‍🎓 Élèves en direct</h3>
-<ul id="liste-eleves" class="space-y-2"></ul>
+<!-- Feed Élèves -->
+<div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
+<h3 class="font-bold text-sm text-blue-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
+  <span>🎓 Élèves & Notes</span>
+  <span id="count-eleves" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span>
+</h3>
+<ul id="liste-eleves" class="space-y-3"></ul>
 </div>
 
-<!-- Liste Profs -->
-<div class="bg-white border rounded-xl p-4 shadow-sm">
-<h3 class="font-bold text-md text-green-700 mb-3 border-b pb-2">👨‍🏫 Professeurs</h3>
-<ul id="liste-profs" class="space-y-2"></ul>
+<!-- Feed Profs -->
+<div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
+<h3 class="font-bold text-sm text-emerald-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
+  <span>👨‍🏫 Professeurs</span>
+  <span id="count-profs" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span>
+</h3>
+<ul id="liste-profs" class="space-y-3"></ul>
 </div>
 
-<!-- Liste Parents -->
-<div class="bg-white border rounded-xl p-4 shadow-sm">
-<h3 class="font-bold text-md text-purple-700 mb-3 border-b pb-2">👪 Parents</h3>
-<ul id="liste-parents" class="space-y-2"></ul>
+<!-- Feed Parents & Présences -->
+<div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
+<h3 class="font-bold text-sm text-purple-400 mb-3 border-b border-neutral-700 pb-2 flex items-center justify-between">
+  <span>👪 Parents & Présences</span>
+  <span id="count-parents" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span>
+</h3>
+<ul id="liste-parents" class="space-y-3"></ul>
 </div>
 </div>
 
-<p class="text-xs text-center mt-8 text-gray-400">Base connectée : site-publication-default-rtdb</p>
+<p class="text-[11px] text-center mt-10 text-neutral-500">Base connectée : site-publication-default-rtdb • Mode Temps Réel Multi-appareils</p>
 </div>
 
 <script type="module">
@@ -110,9 +147,9 @@ const elevesRef = ref(db, 'ecole6/eleves');
 const profsRef = ref(db, 'ecole6/profs');
 const parentsRef = ref(db, 'ecole6/parents');
 
-document.getElementById('status').innerText = "✅ Connecté à Firebase - Temps réel actif";
+document.getElementById('status').innerText = "✅ Connecté (Temps réel)";
 
-// Gestion de la sécurité Admin
+// Sécurité Admin
 window.verifierAdmin = function() {
   const code = document.getElementById('admin-code').value;
   const errorMsg = document.getElementById('auth-error');
@@ -131,24 +168,27 @@ window.deconnecterAdmin = function() {
   document.getElementById('auth-section').classList.remove('hidden');
 }
 
-// Gestion des onglets
+// Navigation style Instagram
 window.changerOnglet = function(onglet) {
   ['eleves', 'profs', 'parents'].forEach(o => {
     document.getElementById(`form-${o}`).classList.add('hidden');
-    document.getElementById(`tab-${o}`).className = "px-4 py-2 font-semibold text-gray-500 border-b-2 border-transparent";
+    const btn = document.getElementById(`tab-${o}`);
+    btn.className = "flex-1 pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2 border-b-2 border-transparent";
   });
   document.getElementById(`form-${onglet}`).classList.remove('hidden');
-  document.getElementById(`tab-${onglet}`).className = "px-4 py-2 font-semibold text-blue-600 border-b-2 border-blue-600";
+  document.getElementById(`tab-${onglet}`).className = "flex-1 pb-3 text-center font-semibold text-blue-500 flex items-center justify-center gap-2 ig-tab-active";
 }
 
-// Fonctions d'ajout
+// Actions d'écriture Firebase
 window.ajouterEleve = function() {
   const nom = document.getElementById('eleve-nom').value;
-  const classe = document.getElementById('eleve-classe').value;
-  if(!nom || !classe) return alert("Veuillez remplir tous les champs.");
-  push(elevesRef, { nom, classe, date: new Date().toLocaleDateString() });
+  const cours = document.getElementById('eleve-cours').value;
+  const cote = document.getElementById('eleve-cote').value;
+  if(!nom || !cours || !cote) return alert("Veuillez remplir tous les champs.");
+  push(elevesRef, { nom, cours, cote, date: new Date().toLocaleDateString() });
   document.getElementById('eleve-nom').value = "";
-  document.getElementById('eleve-classe').value = "";
+  document.getElementById('eleve-cours').value = "";
+  document.getElementById('eleve-cote').value = "";
 }
 
 window.ajouterProf = function() {
@@ -163,32 +203,36 @@ window.ajouterProf = function() {
 window.ajouterParent = function() {
   const nom = document.getElementById('parent-nom').value;
   const eleve = document.getElementById('parent-eleve').value;
-  const tel = document.getElementById('parent-tel').value;
-  if(!nom || !eleve || !tel) return alert("Veuillez remplir tous les champs.");
-  push(parentsRef, { nom, eleve, tel, date: new Date().toLocaleDateString() });
+  const presence = document.getElementById('parent-presence').value;
+  if(!nom || !eleve) return alert("Veuillez remplir les informations.");
+  push(parentsRef, { nom, eleve, presence, date: new Date().toLocaleDateString() });
   document.getElementById('parent-nom').value = "";
   document.getElementById('parent-eleve').value = "";
-  document.getElementById('parent-tel').value = "";
 }
 
-// Fonctions de suppression
 window.supprimer = function(chemin, key) {
-  if(confirm("Voulez-vous vraiment supprimer cet élément ?")) {
+  if(confirm("Confirmer la suppression ?")) {
     remove(ref(db, `${chemin}/${key}`));
   }
 }
 
-// Écouteurs en temps réel Firebase
+// Écouteurs en direct Firebase avec mise à jour des compteurs
 onValue(elevesRef, (snapshot) => {
   const data = snapshot.val();
   const liste = document.getElementById('liste-eleves');
   liste.innerHTML = "";
-  if(!data){ liste.innerHTML = "<li class='text-gray-400 text-sm'>Aucun élève enregistré.</li>"; return; }
-  Object.keys(data).reverse().forEach(key => {
+  if(!data){ 
+    liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun élève enregistré.</li>"; 
+    document.getElementById('count-eleves').innerText = "0";
+    return; 
+  }
+  const keys = Object.keys(data);
+  document.getElementById('count-eleves').innerText = keys.length;
+  keys.reverse().forEach(key => {
     const el = data[key];
     const li = document.createElement('li');
-    li.className = "bg-slate-50 border p-2 rounded flex justify-between items-center text-sm";
-    li.innerHTML = `<div><strong>${el.nom}</strong><br><span class='text-xs text-gray-500'>Classe : ${el.classe}</span></div> <button onclick="supprimer('ecole6/eleves', '${key}')" class='text-red-500 font-bold px-2'>✕</button>`;
+    li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+    li.innerHTML = `<div><strong class='text-white text-sm'>${el.nom}</strong><br><span class='text-neutral-400'>📚 ${el.cours} : <strong class='text-blue-400'>${el.cote}/20</strong></span></div> <button onclick="supprimer('ecole6/eleves', '${key}')" class='text-red-400 hover:text-red-300 font-bold p-1'>✕</button>`;
     liste.appendChild(li);
   });
 });
@@ -197,12 +241,18 @@ onValue(profsRef, (snapshot) => {
   const data = snapshot.val();
   const liste = document.getElementById('liste-profs');
   liste.innerHTML = "";
-  if(!data){ liste.innerHTML = "<li class='text-gray-400 text-sm'>Aucun professeur enregistré.</li>"; return; }
-  Object.keys(data).reverse().forEach(key => {
+  if(!data){ 
+    liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun professeur enregistré.</li>"; 
+    document.getElementById('count-profs').innerText = "0";
+    return; 
+  }
+  const keys = Object.keys(data);
+  document.getElementById('count-profs').innerText = keys.length;
+  keys.reverse().forEach(key => {
     const p = data[key];
     const li = document.createElement('li');
-    li.className = "bg-slate-50 border p-2 rounded flex justify-between items-center text-sm";
-    li.innerHTML = `<div><strong>${p.nom}</strong><br><span class='text-xs text-gray-500'>Cours : ${p.cours}</span></div> <button onclick="supprimer('ecole6/profs', '${key}')" class='text-red-500 font-bold px-2'>✕</button>`;
+    li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+    li.innerHTML = `<div><strong class='text-white text-sm'>${p.nom}</strong><br><span class='text-neutral-400'>Matière : ${p.cours}</span></div> <button onclick="supprimer('ecole6/profs', '${key}')" class='text-red-400 hover:text-red-300 font-bold p-1'>✕</button>`;
     liste.appendChild(li);
   });
 });
@@ -211,12 +261,19 @@ onValue(parentsRef, (snapshot) => {
   const data = snapshot.val();
   const liste = document.getElementById('liste-parents');
   liste.innerHTML = "";
-  if(!data){ liste.innerHTML = "<li class='text-gray-400 text-sm'>Aucun parent enregistré.</li>"; return; }
-  Object.keys(data).reverse().forEach(key => {
+  if(!data){ 
+    liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune présence validée.</li>"; 
+    document.getElementById('count-parents').innerText = "0";
+    return; 
+  }
+  const keys = Object.keys(data);
+  document.getElementById('count-parents').innerText = keys.length;
+  keys.reverse().forEach(key => {
     const pr = data[key];
+    const badgeColor = pr.presence.includes('Présent') ? 'text-green-400 bg-green-950/40 border-green-900' : 'text-amber-400 bg-amber-950/40 border-amber-900';
     const li = document.createElement('li');
-    li.className = "bg-slate-50 border p-2 rounded flex justify-between items-center text-sm";
-    li.innerHTML = `<div><strong>${pr.nom}</strong><br><span class='text-xs text-gray-500'>Élève : ${pr.eleve} | Tél : ${pr.tel}</span></div> <button onclick="supprimer('ecole6/parents', '${key}')" class='text-red-500 font-bold px-2'>✕</button>`;
+    li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+    li.innerHTML = `<div>Parent : <strong class='text-white'>${pr.nom}</strong><br>Élève : <span class='text-neutral-300'>${pr.eleve}</span><div class='mt-1 inline-block px-2 py-0.5 rounded border ${badgeColor}'>${pr.presence}</div></div> <button onclick="supprimer('ecole6/parents', '${key}')" class='text-red-400 hover:text-red-300 font-bold p-1'>✕</button>`;
     liste.appendChild(li);
   });
 });
