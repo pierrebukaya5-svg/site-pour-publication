@@ -1745,6 +1745,80 @@
             document.getElementById('enfant-detail-section').style.display = 'none';
         }
 
+        // --- GESTION DE LA DISCUSSION PARENT-ADMIN ---
+        function ouvrirDiscussionAdminParent() {
+            if (!parentActif) return;
+            tuteurDiscussionActif = parentActif.nom;
+            document.getElementById('modal-discussion-titre').textContent = `Discussion avec Administration (${parentActif.nom})`;
+            document.getElementById('wa-contact-title').textContent = "Administration École de la RDC";
+            document.getElementById('wa-avatar-initials').textContent = "AD";
+            document.getElementById('modal-discussion').style.display = 'flex';
+            chargerMessagesDiscussion();
+        }
+
+        function fermerModalDiscussion() {
+            document.getElementById('modal-discussion').style.display = 'none';
+            tuteurDiscussionActif = null;
+        }
+
+        function chargerMessagesDiscussion() {
+            if (!tuteurDiscussionActif) return;
+            const db = getDB();
+            const container = document.getElementById('discussion-messages-container');
+            const disc = db.discussions.find(d => d.tuteur === tuteurDiscussionActif);
+            
+            if (!disc || !disc.messages || disc.messages.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #8696a0; font-size: 0.8rem; margin: auto; padding: 2rem;">
+                        🔒 Les messages sont sécurisés et gérés avec l'administration de l'École de la RDC.<br>Démarrez la conversation ci-dessous.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = disc.messages.map(m => {
+                const isOutgoing = (parentActif && m.expediteur === parentActif.nom) || (adminConnecte && m.expediteur === 'Administration');
+                return `
+                    <div class="wa-message ${isOutgoing ? 'outgoing' : 'incoming'}">
+                        <div class="wa-message-text">${m.texte}</div>
+                        <div class="wa-message-meta">
+                            <span>${m.heure}</span>
+                            ${isOutgoing ? '<span class="wa-checks" style="color: #79c7b2;">✓✓</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function envoyerMessageDiscussion() {
+            const input = document.getElementById('discussion-input-texte');
+            const texte = input.value.trim();
+            if (!texte || !tuteurDiscussionActif) return;
+
+            const now = new Date();
+            const heure = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            const expediteur = parentActif ? parentActif.nom : 'Administration';
+
+            const db = getDB();
+            let disc = db.discussions.find(d => d.tuteur === tuteurDiscussionActif);
+            if (!disc) {
+                disc = { tuteur: tuteurDiscussionActif, dernierMessage: texte, date: now.toLocaleDateString(), messages: [] };
+                db.discussions.push(disc);
+            }
+
+            disc.messages.push({ expediteur, texte, heure });
+            disc.dernierMessage = texte;
+            disc.date = now.toLocaleDateString();
+            saveDB(db);
+
+            input.value = '';
+            chargerMessagesDiscussion();
+            if (adminConnecte) {
+                chargerTableauMessagesAdmin();
+            }
+        }
+
         // --- ESPACE ELEVE ---
         let eleveActif = null;
 
@@ -1810,6 +1884,639 @@
             document.getElementById('eleve-dashboard-card').style.display = 'none';
             document.getElementById('eleve-login-card').style.display = 'block';
             document.getElementById('eleve-matricule-input').value = '';
+        }
+
+        // --- ESPACE PROFESSEUR ---
+        let profActif = null;
+
+        function verifierSessionProf() {
+            if (profActif) {
+                document.getElementById('prof-login-card').style.display = 'none';
+                document.getElementById('prof-dashboard-card').style.display = 'block';
+            } else {
+                document.getElementById('prof-login-card').style.display = 'block';
+                document.getElementById('prof-dashboard-card').style.display = 'none';
+            }
+        }
+
+        function profLogin() {
+            const code = document.getElementById('prof-code-input').value.trim();
+            if (!code) {
+                showMsg('prof-msg', 'Veuillez entrer votre Code Prof.', 'error');
+                return;
+            }
+            const db = getDB();
+            const prof = db.profs.find(p => p.codeProf === code);
+            if (!prof) {
+                showMsg('prof-msg', 'Code Prof invalide. Veuillez vérifier votre code d\'accès.', 'error');
+                return;
+            }
+            profActif = prof;
+            document.getElementById('prof-login-card').style.display = 'none';
+            document.getElementById('prof-dashboard-card').style.display = 'block';
+            document.getElementById('prof-nom-titre').textContent = `${prof.nom} ${prof.postnom || ''}`;
+            document.getElementById('prof-postnom-val').textContent = prof.postnom || 'Non renseigné';
+            document.getElementById('prof-adresse-val').textContent = prof.adresse || 'Non renseignée';
+            document.getElementById('prof-naissance-val').textContent = prof.naissance || 'Non renseigné';
+            document.getElementById('prof-cours-input').value = prof.matiere || '';
+            peuplerSelectClasses();
+        }
+
+        function profLogout() {
+            profActif = null;
+            document.getElementById('prof-dashboard-card').style.display = 'none';
+            document.getElementById('prof-login-card').style.display = 'block';
+            document.getElementById('prof-code-input').value = '';
+        }
+
+        function changerNbInteros() {
+            const nb = parseInt(document.getElementById('prof-nb-interos').value);
+            for (let i = 1; i <= 4; i++) {
+                const th = document.querySelector(`.th-int-${i}`);
+                if (th) {
+                    th.style.display = i <= nb ? '' : 'none';
+                }
+            }
+            chargerElevesClasseProf();
+        }
+
+        function chargerElevesClasseProf() {
+            if (!profActif) return;
+            const classe = document.getElementById('prof-classe-select').value;
+            const cours = document.getElementById('prof-cours-input').value.trim();
+            const trimestre = document.getElementById('prof-trimestre-select').value;
+            const nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
+            const cotationMax = parseInt(document.getElementById('prof-cotation-max').value);
+            
+            document.getElementById('th-label-total').textContent = `Total / ${cotationMax}`;
+
+            const tbody = document.getElementById('table-prof-cotations');
+            if (!classe || !cours) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe & option et indiquer le nom du cours.</td></tr>';
+                return;
+            }
+
+            const db = getDB();
+            const elevesClasse = db.eleves.filter(e => e.classe === classe);
+            if (elevesClasse.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Aucun élève inscrit dans cette classe & option.</td></tr>';
+                return;
+            }
+
+            const noteKey = `${cours}_${trimestre}`;
+            tbody.innerHTML = elevesClasse.map(e => {
+                const noteData = (e.notes && e.notes[noteKey]) || {};
+                let interosInputs = '';
+                for (let i = 1; i <= 4; i++) {
+                    const val = noteData[`intero${i}`] !== undefined ? noteData[`intero${i}`] : '';
+                    interosInputs += `<td class="th-int-col th-int-${i}" ${i > nbInteros ? 'style="display:none;"' : ''}><input type="number" step="0.5" class="input-note-int-${i}" data-mat="${e.matricule}" value="${val}" style="width: 70px; padding: 0.4rem;" oninput="calculerTotalLigne('${e.matricule}')"></td>`;
+                }
+
+                const devoirVal = noteData.devoir !== undefined ? noteData.devoir : '';
+                const examenVal = noteData.examen !== undefined ? noteData.examen : '';
+                const totalVal = noteData.note !== undefined ? noteData.note : '';
+                const appreciationVal = noteData.appreciation || '';
+
+                return `
+                    <tr data-mat="${e.matricule}">
+                        <td><code>${e.matricule}</code></td>
+                        <td><strong>${e.nom} ${e.prenom} ${e.postnom || ''}</strong></td>
+                        ${interosInputs}
+                        <td><input type="number" step="0.5" class="input-note-devoir" data-mat="${e.matricule}" value="${devoirVal}" style="width: 70px; padding: 0.4rem;" oninput="calculerTotalLigne('${e.matricule}')"></td>
+                        <td><input type="number" step="0.5" class="input-note-examen" data-mat="${e.matricule}" value="${examenVal}" style="width: 70px; padding: 0.4rem;" oninput="calculerTotalLigne('${e.matricule}')"></td>
+                        <td><strong class="span-total-ligne" data-mat="${e.matricule}">${totalVal !== '' ? totalVal + ' / ' + cotationMax : '-'}</strong></td>
+                        <td><input type="text" class="input-appreciation" data-mat="${e.matricule}" value="${appreciationVal}" placeholder="Ex: Bien" style="width: 120px; padding: 0.4rem;"></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function calculerTotalLigne(matricule) {
+            const tr = document.querySelector(`tr[data-mat="${matricule}"]`);
+            if (!tr) return;
+            const nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
+            const cotationMax = parseInt(document.getElementById('prof-cotation-max').value);
+
+            let sommeInteros = 0;
+            let countInteros = 0;
+            for (let i = 1; i <= nbInteros; i++) {
+                const input = tr.querySelector(`.input-note-int-${i}`);
+                if (input && input.value !== '') {
+                    sommeInteros += parseFloat(input.value) || 0;
+                    countInteros++;
+                }
+            }
+            const moyenneInteros = countInteros > 0 ? (sommeInteros / countInteros) : 0;
+
+            const devoirInput = tr.querySelector('.input-note-devoir');
+            const devoir = (devoirInput && devoirInput.value !== '') ? parseFloat(devoirInput.value) || 0 : 0;
+
+            const examenInput = tr.querySelector('.input-note-examen');
+            const examen = (examenInput && examenInput.value !== '') ? parseFloat(examenInput.value) || 0 : 0;
+
+            // Formule standard : (Moyenne Interrogations + Devoir + Examen) ramené sur le barème max choisi
+            const brutTotal = moyenneInteros + devoir + examen;
+            // Si le total brut dépasse, on l'estime proportionnellement ou on additionne simplement selon les barèmes RDC
+            const totalFinal = Math.min(cotationMax, Math.max(0, parseFloat(brutTotal.toFixed(1))));
+
+            const spanTotal = tr.querySelector('.span-total-ligne');
+            if (spanTotal) {
+                spanTotal.textContent = totalFinal + ' / ' + cotationMax;
+            }
+
+            const inputApp = tr.querySelector('.input-appreciation');
+            if (inputApp && !inputApp.value) {
+                let pct = (totalFinal / cotationMax) * 100;
+                if (pct >= 80) inputApp.value = "Excellent";
+                else if (pct >= 65) inputApp.value = "Très Bien";
+                else if (pct >= 50) inputApp.value = "Bien";
+                else if (pct >= 40) inputApp.value = "Assez Bien";
+                else inputApp.value = "Insuffisant";
+            }
+        }
+
+        function enregistrerNotesProf() {
+            if (!profActif) return;
+            const classe = document.getElementById('prof-classe-select').value;
+            const cours = document.getElementById('prof-cours-input').value.trim();
+            const trimestre = document.getElementById('prof-trimestre-select').value;
+            const cotationMax = parseInt(document.getElementById('prof-cotation-max').value);
+            const nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
+
+            if (!classe || !cours) {
+                alert("Veuillez sélectionner une classe et renseigner le nom du cours.");
+                return;
+            }
+
+            const db = getDB();
+            const rows = document.querySelectorAll('#table-prof-cotations tr[data-mat]');
+            const noteKey = `${cours}_${trimestre}`;
+
+            rows.forEach(tr => {
+                const mat = tr.getAttribute('data-mat');
+                const eleve = db.eleves.find(e => e.matricule === mat);
+                if (!eleve) return;
+
+                if (!eleve.notes) eleve.notes = {};
+
+                let interosVals = {};
+                for (let i = 1; i <= nbInteros; i++) {
+                    const inp = tr.querySelector(`.input-note-int-${i}`);
+                    interosVals[`intero${i}`] = (inp && inp.value !== '') ? parseFloat(inp.value) : undefined;
+                }
+
+                const devoirInp = tr.querySelector('.input-note-devoir');
+                const examenInp = tr.querySelector('.input-note-examen');
+                const spanTotal = tr.querySelector('.span-total-ligne');
+                const appInp = tr.querySelector('.input-appreciation');
+
+                const totalVal = spanTotal ? parseFloat(spanTotal.textContent.split('/')[0]) : 0;
+
+                eleve.notes[noteKey] = {
+                    ...interosVals,
+                    devoir: (devoirInp && devoirInp.value !== '') ? parseFloat(devoirInp.value) : undefined,
+                    examen: (examenInp && examenInp.value !== '') ? parseFloat(examenInp.value) : undefined,
+                    note: totalVal,
+                    max: cotationMax,
+                    appreciation: appInp ? appInp.value : ''
+                };
+            });
+
+            saveDB(db);
+            alert("Cotations enregistrées avec succès pour tous les élèves de la classe !");
+        }
+
+        function ouvrirModalAjouterCoursProf() {
+            peuplerSelectClasses();
+            document.getElementById('modal-ajouter-cours-prof').style.display = 'flex';
+        }
+
+        function fermerModalAjouterCoursProf() {
+            document.getElementById('modal-ajouter-cours-prof').style.display = 'none';
+        }
+
+        function soumettreDemandeCoursProf() {
+            if (!profActif) return;
+            const nomCours = document.getElementById('demande-cours-nom').value.trim();
+            const classe = document.getElementById('demande-cours-classe').value;
+
+            if (!nomCours || !classe) {
+                showMsg('prof-cours-demande-msg', 'Veuillez remplir tous les champs.', 'error');
+                return;
+            }
+
+            const db = getDB();
+            db.demandesCours.push({
+                id: Date.now(),
+                profNom: `${profActif.nom} ${profActif.postnom || ''}`,
+                cours: nomCours,
+                classe: classe,
+                statut: 'En attente'
+            });
+            saveDB(db);
+
+            showMsg('prof-cours-demande-msg', 'Demande envoyée à l\'administration avec succès.', 'success');
+            setTimeout(() => {
+                fermerModalAjouterCoursProf();
+                document.getElementById('demande-cours-nom').value = '';
+            }, 1500);
+        }
+
+        function ouvrirModalModifierCodeProf() {
+            document.getElementById('modal-modifier-code').style.display = 'flex';
+        }
+
+        function fermerModalModifierCodeProf() {
+            document.getElementById('modal-modifier-code').style.display = 'none';
+        }
+
+        function sauvegarderNouveauCodeProf() {
+            if (!profActif) return;
+            const nouveauCode = document.getElementById('nouveau-code-prof').value.trim();
+            if (!nouveauCode) {
+                showMsg('prof-mod-msg', 'Veuillez entrer un code valide.', 'error');
+                return;
+            }
+
+            const db = getDB();
+            const prof = db.profs.find(p => p.id === profActif.id);
+            if (prof) {
+                prof.codeProf = nouveauCode;
+                saveDB(db);
+                profActif = prof;
+                showMsg('prof-mod-msg', 'Code mis à jour avec succès !', 'success');
+                setTimeout(() => {
+                    fermerModalModifierCodeProf();
+                    document.getElementById('nouveau-code-prof').value = '';
+                }, 1500);
+            }
+        }
+
+        // --- ESPACE ADMINISTRATION ---
+        let adminConnecte = false;
+
+        function verifierSessionAdmin() {
+            if (adminConnecte) {
+                document.getElementById('admin-login-card').style.display = 'none';
+                document.getElementById('admin-dashboard-card').style.display = 'block';
+                chargerDonneesAdmin();
+            } else {
+                document.getElementById('admin-login-card').style.display = 'block';
+                document.getElementById('admin-dashboard-card').style.display = 'none';
+            }
+        }
+
+        function adminLogin() {
+            const pass = document.getElementById('admin-pass-input').value.trim();
+            const db = getDB();
+            if (pass !== (db.adminPass || "admin2026")) {
+                showMsg('admin-msg', 'Mot de passe administrateur incorrect.', 'error');
+                return;
+            }
+            adminConnecte = true;
+            document.getElementById('admin-pass-input').value = '';
+            verifierSessionAdmin();
+        }
+
+        function adminLogout() {
+            adminConnecte = false;
+            verifierSessionAdmin();
+        }
+
+        function switchAdminTab(tabName) {
+            ['eleves', 'profs', 'frais', 'communiques', 'demandes', 'messages'].forEach(t => {
+                const content = document.getElementById(`admin-content-${t}`);
+                const btn = document.getElementById(`tab-admin-${t}`);
+                if (content) content.style.display = (t === tabName) ? 'block' : 'none';
+                if (btn) btn.className = (t === tabName) ? 'active' : '';
+            });
+            chargerDonneesAdmin(tabName);
+        }
+
+        function chargerDonneesAdmin(tab = 'eleves') {
+            peuplerSelectClasses();
+            if (tab === 'eleves') chargerTableauAdminEleves();
+            else if (tab === 'profs') chargerTableauAdminProfs();
+            else if (tab === 'communiques') chargerTableauAdminCommuniques();
+            else if (tab === 'demandes') chargerTableauAdminDemandes();
+            else if (tab === 'messages') chargerTableauMessagesAdmin();
+        }
+
+        function ajouterEleve() {
+            const nom = document.getElementById('add-eleve-nom').value.trim();
+            const prenom = document.getElementById('add-eleve-prenom').value.trim();
+            const postnom = document.getElementById('add-eleve-postnom').value.trim();
+            const adresse = document.getElementById('add-eleve-adresse').value.trim();
+            const naissance = document.getElementById('add-eleve-naissance').value.trim();
+            const classe = document.getElementById('add-eleve-classe').value;
+            const sexe = document.getElementById('add-eleve-sexe').value;
+            const tuteur = document.getElementById('add-eleve-tuteur').value.trim();
+            const emailParent = document.getElementById('add-eleve-email-parent').value.trim();
+            const telParent = document.getElementById('add-eleve-tel-parent').value.trim();
+
+            if (!nom || !prenom || !classe || !tuteur) {
+                showMsg('admin-eleve-msg', 'Veuillez remplir les champs obligatoires (Nom, Prénom, Classe, Tuteur).', 'error');
+                return;
+            }
+
+            const db = getDB();
+            const matricule = Math.floor(1000 + Math.random() * 9000).toString();
+            const codeParent = 'PAR' + Math.floor(1000 + Math.random() * 9000);
+
+            db.eleves.push({
+                matricule, nom, prenom, postnom, adresse, naissance, classe, sexe, tuteur, emailParent, telParent, codeParent,
+                montantPaye: 0, notes: {}, presences: [{ date: new Date().toISOString().split('T')[0], statut: 'Présent' }]
+            });
+            saveDB(db);
+
+            showMsg('admin-eleve-msg', `Élève inscrit avec succès ! Matricule : ${matricule} | Code Parent : ${codeParent}`, 'success');
+            document.getElementById('add-eleve-nom').value = '';
+            document.getElementById('add-eleve-prenom').value = '';
+            document.getElementById('add-eleve-postnom').value = '';
+            document.getElementById('add-eleve-adresse').value = '';
+            document.getElementById('add-eleve-naissance').value = '';
+            document.getElementById('add-eleve-tuteur').value = '';
+            document.getElementById('add-eleve-email-parent').value = '';
+            document.getElementById('add-eleve-tel-parent').value = '';
+            chargerTableauAdminEleves();
+        }
+
+        function chargerTableauAdminEleves() {
+            const db = getDB();
+            const tbody = document.getElementById('table-admin-eleves');
+            if (db.eleves.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucun élève enregistré.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = db.eleves.map(e => {
+                const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+                const totalExige = config.scolaires + config.inscription + config.bulletin;
+                const estEnOrdre = (e.montantPaye || 0) >= totalExige;
+
+                return `
+                    <tr>
+                        <td><code>${e.matricule}</code></td>
+                        <td><strong>${e.nom} ${e.prenom} ${e.postnom || ''}</strong></td>
+                        <td>${e.classe}</td>
+                        <td><small>${e.naissance || '-'}<br>${e.adresse || '-'}</small></td>
+                        <td>${e.tuteur}<br><small>${e.telParent || ''}</small></td>
+                        <td><code>${e.codeParent}</code></td>
+                        <td>
+                            <span class="badge ${estEnOrdre ? 'success' : 'danger'} clickable-badge" onclick="modifierPaiementFrais('${e.matricule}')" title="Cliquer pour modifier le montant payé">
+                                ${e.montantPaye || 0}$ / ${totalExige}$ (${estEnOrdre ? 'En Ordre' : 'Incomplet'})
+                            </span>
+                        </td>
+                        <td>
+                            <button onclick="supprimerEleve('${e.matricule}')" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function modifierPaiementFrais(matricule) {
+            const db = getDB();
+            const eleve = db.eleves.find(e => e.matricule === matricule);
+            if (!eleve) return;
+
+            const config = db.fraisConfig[eleve.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+            const totalExige = config.scolaires + config.inscription + config.bulletin;
+
+            const saisie = prompt(`Modifier le montant payé par l'élève ${eleve.nom} ${eleve.prenom} (Total exigé : ${totalExige} $) :`, eleve.montantPaye || 0);
+            if (saisie !== null) {
+                const montant = parseFloat(saisie);
+                if (!isNaN(montant)) {
+                    eleve.montantPaye = montant;
+                    saveDB(db);
+                    chargerTableauAdminEleves();
+                }
+            }
+        }
+
+        function supprimerEleve(matricule) {
+            if (!confirm("Voulez-vous vraiment supprimer cet élève ?")) return;
+            const db = getDB();
+            db.eleves = db.eleves.filter(e => e.matricule !== matricule);
+            saveDB(db);
+            chargerTableauAdminEleves();
+        }
+
+        function ajouterProf() {
+            const nom = document.getElementById('add-prof-nom').value.trim();
+            const postnom = document.getElementById('add-prof-postnom').value.trim();
+            const adresse = document.getElementById('add-prof-adresse').value.trim();
+            const naissance = document.getElementById('add-prof-naissance').value.trim();
+            const matiere = document.getElementById('add-prof-matiere').value.trim();
+
+            if (!nom || !matiere) {
+                showMsg('admin-prof-msg', 'Veuillez remplir le nom du professeur et la matière.', 'error');
+                return;
+            }
+
+            const db = getDB();
+            const codeProf = 'PROF' + Math.floor(1000 + Math.random() * 9000);
+
+            db.profs.push({
+                id: Date.now(),
+                nom, postnom, adresse, naissance, matiere, codeProf
+            });
+            saveDB(db);
+
+            showMsg('admin-prof-msg', `Professeur enregistré avec succès ! Code d'accès : ${codeProf}`, 'success');
+            document.getElementById('add-prof-nom').value = '';
+            document.getElementById('add-prof-postnom').value = '';
+            document.getElementById('add-prof-adresse').value = '';
+            document.getElementById('add-prof-naissance').value = '';
+            document.getElementById('add-prof-matiere').value = '';
+            chargerTableauAdminProfs();
+        }
+
+        function chargerTableauAdminProfs() {
+            const db = getDB();
+            const tbody = document.getElementById('table-admin-profs');
+            if (db.profs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucun professeur enregistré.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = db.profs.map(p => `
+                <tr>
+                    <td><strong>${p.nom} ${p.postnom || ''}</strong></td>
+                    <td>${p.matiere}</td>
+                    <td><small>${p.naissance || '-'}<br>${p.adresse || '-'}</small></td>
+                    <td><code>${p.codeProf}</code></td>
+                    <td>
+                        <button onclick="supprimerProf(${p.id})" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function supprimerProf(id) {
+            if (!confirm("Voulez-vous vraiment supprimer ce professeur ?")) return;
+            const db = getDB();
+            db.profs = db.profs.filter(p => p.id !== id);
+            saveDB(db);
+            chargerTableauAdminProfs();
+        }
+
+        function sauvegarderConfigFrais() {
+            const classe = document.getElementById('config-frais-classe').value;
+            const scolaires = parseFloat(document.getElementById('config-frais-scolaires').value);
+            const inscription = parseFloat(document.getElementById('config-frais-inscription').value);
+            const bulletin = parseFloat(document.getElementById('config-frais-bulletin').value);
+
+            if (!classe || isNaN(scolaires) || isNaN(inscription) || isNaN(bulletin)) {
+                showMsg('admin-frais-msg', 'Veuillez sélectionner une classe & option et remplir tous les montants.', 'error');
+                return;
+            }
+
+            const db = getDB();
+            if (!db.fraisConfig) db.fraisConfig = {};
+            db.fraisConfig[classe] = { scolaires, inscription, bulletin };
+            saveDB(db);
+
+            showMsg('admin-frais-msg', 'Tarifs des frais mis à jour avec succès pour ' + classe, 'success');
+        }
+
+        function ajouterCommunique() {
+            const texte = document.getElementById('admin-com-texte').value.trim();
+            if (!texte) {
+                showMsg('admin-com-msg', 'Veuillez rédiger le contenu du communiqué.', 'error');
+                return;
+            }
+
+            const db = getDB();
+            const dateStr = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            db.communiques.unshift({
+                id: Date.now(),
+                date: dateStr,
+                texte: texte
+            });
+            saveDB(db);
+
+            showMsg('admin-com-msg', 'Communiqué publié avec succès.', 'success');
+            document.getElementById('admin-com-texte').value = '';
+            chargerTableauAdminCommuniques();
+        }
+
+        function chargerTableauAdminCommuniques() {
+            const db = getDB();
+            const container = document.getElementById('admin-list-communiques');
+            if (db.communiques.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué.</p>';
+                return;
+            }
+
+            container.innerHTML = db.communiques.map(c => `
+                <div class="communique-item" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                    <div>
+                        <div class="communique-date">${c.date}</div>
+                        <p style="font-size: 0.9rem; color: var(--text-main);">${c.texte}</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                        <button onclick="ouvrirModalModifierCommunique(${c.id})" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Modifier</button>
+                        <button onclick="supprimerCommunique(${c.id})" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function ouvrirModalModifierCommunique(id) {
+            const db = getDB();
+            const com = db.communiques.find(c => c.id === id);
+            if (!com) return;
+            document.getElementById('edit-com-id').value = com.id;
+            document.getElementById('edit-com-texte').value = com.texte;
+            document.getElementById('modal-modifier-communique').style.display = 'flex';
+        }
+
+        function fermerModalModifierCommunique() {
+            document.getElementById('modal-modifier-communique').style.display = 'none';
+        }
+
+        function sauvegarderModificationCommunique() {
+            const id = parseInt(document.getElementById('edit-com-id').value);
+            const texte = document.getElementById('edit-com-texte').value.trim();
+            if (!texte) return;
+
+            const db = getDB();
+            const com = db.communiques.find(c => c.id === id);
+            if (com) {
+                com.texte = texte;
+                saveDB(db);
+                fermerModalModifierCommunique();
+                chargerTableauAdminCommuniques();
+            }
+        }
+
+        function supprimerCommunique(id) {
+            if (!confirm("Voulez-vous supprimer ce communiqué ?")) return;
+            const db = getDB();
+            db.communiques = db.communiques.filter(c => c.id !== id);
+            saveDB(db);
+            chargerTableauAdminCommuniques();
+        }
+
+        function chargerTableauAdminDemandes() {
+            const db = getDB();
+            const tbody = document.getElementById('table-admin-demandes-cours');
+            if (!db.demandesCours || db.demandesCours.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucune demande en attente.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = db.demandesCours.map(d => `
+                <tr>
+                    <td><strong>${d.profNom}</strong></td>
+                    <td>${d.cours}</td>
+                    <td>${d.classe}</td>
+                    <td><span class="badge ${d.statut === 'Validé' ? 'success' : 'danger'}">${d.statut}</span></td>
+                    <td>
+                        ${d.statut === 'En attente' ? `<button onclick="validerDemandeCours(${d.id})" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Valider</button>` : 'Validé'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function validerDemandeCours(id) {
+            const db = getDB();
+            const demande = db.demandesCours.find(d => d.id === id);
+            if (demande) {
+                demande.statut = 'Validé';
+                saveDB(db);
+                chargerTableauAdminDemandes();
+            }
+        }
+
+        function chargerTableauMessagesAdmin() {
+            const db = getDB();
+            const tbody = document.getElementById('table-admin-messages');
+            if (!db.discussions || db.discussions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucune discussion active.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = db.discussions.map(disc => `
+                <tr>
+                    <td><strong>${disc.tuteur}</strong></td>
+                    <td>${disc.dernierMessage || '...'}</td>
+                    <td><small>${disc.date || ''}</small></td>
+                    <td>
+                        <button onclick="ouvrirDiscussionAdminParTuteur('${disc.tuteur}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Ouvrir Chat</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function ouvrirDiscussionAdminParTuteur(tuteurNom) {
+            tuteurDiscussionActif = tuteurNom;
+            document.getElementById('modal-discussion-titre').textContent = `Discussion Administration - ${tuteurNom}`;
+            document.getElementById('wa-contact-title').textContent = tuteurNom;
+            document.getElementById('wa-avatar-initials').textContent = tuteurNom.substring(0, 2).toUpperCase();
+            document.getElementById('modal-discussion').style.display = 'flex';
+            chargerMessagesDiscussion();
         }
 
         // --- INITIALISATION AU CHARGEMENT ---
