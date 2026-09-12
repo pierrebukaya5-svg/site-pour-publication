@@ -1,85 +1,242 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>École de la RDC - Gestion Avancée</title>
+<title>École de la RDC - Portail Pro</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { darkMode: 'class' }
+</script>
+<style>
+  .ig-tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
+</style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4">
-<div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6">
-    <h1 class="text-3xl font-bold text-center text-blue-700">École de la RDC </h1>
-    <p class="text-center text-green-600 font-bold mt-2" id="status">Connexion à Firebase...</p>
+<body class="bg-black text-gray-100 min-h-screen p-3 md:p-6 font-sans">
+<div class="max-w-5xl mx-auto bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-5 md:p-8">
+<div class="flex justify-between items-center border-b border-neutral-800 pb-4">
+  <h1 class="text-2xl md:text-3xl font-extrabold text-blue-500 tracking-tight">École de la RDC 🇨🇩</h1>
+  <span id="status" class="text-xs px-3 py-1 rounded-full bg-neutral-800 text-green-400 border border-neutral-700">Connexion...</span>
+</div>
 
-    <!-- Section 1: Demande de Cours par un Enseignant -->
-    <div class="mt-6 bg-slate-50 p-4 rounded-xl border">
-        <h2 class="font-bold mb-2 text-blue-800">Demander l'ajout d'un cours (Enseignant)</h2>
-        <div class="flex gap-2">
-            <input id="nomCours" placeholder="Nom du cours (ex: Mathématiques)" class="flex-1 border p-2 rounded">
-            <button onclick="demanderCours()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Soumettre</button>
-        </div>
+<!-- SECTION CHOIX DE CONNEXION (ACCUEIL) -->
+<div id="choix-portail" class="mt-6 space-y-4">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Bouton Accès Admin -->
+    <div class="bg-neutral-800 border border-neutral-700 p-6 rounded-xl text-center space-y-3">
+      <h2 class="font-bold text-amber-400 text-lg">🔒 Espace Administrateur</h2>
+      <p class="text-xs text-neutral-400">Gérez les inscriptions, cotes, messages et codes d'accès.</p>
+      <input type="password" id="admin-code-input" placeholder="Code admin (pr1999)" class="w-full bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:border-amber-500">
+      <button onclick="verifierAdmin()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-lg text-sm font-semibold transition">Se connecter Admin</button>
+      <p id="auth-error" class="text-red-400 text-xs hidden">Code administrateur incorrect.</p>
     </div>
 
-    <!-- Section 2: Validation Admin (Liste des cours en attente) -->
-    <div class="mt-6 bg-amber-50 p-4 rounded-xl border border-amber-200">
-        <h2 class="font-bold mb-2 text-amber-800">Validation Admin (Cours en attente)</h2>
-        <ul id="listeCoursAttente" class="space-y-2"></ul>
+    <!-- Bouton Accès Tuteur / Parent -->
+    <div class="bg-neutral-800 border border-neutral-700 p-6 rounded-xl text-center space-y-3">
+      <h2 class="font-bold text-blue-400 text-lg">🎓 Espace Tuteur / Parent</h2>
+      <p class="text-xs text-neutral-400">Entrez votre code tuteur unique pour voir vos enfants et discuter avec l'Admin.</p>
+      <input type="text" id="eleve-code-input" placeholder="Entrez votre code tuteur (ex: TUT-1234)" class="w-full bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white uppercase focus:outline-none focus:border-blue-500">
+      <button onclick="verifierEleve()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-semibold transition">Consulter mon dossier</button>
+      <p id="eleve-auth-error" class="text-red-400 text-xs hidden">Code tuteur introuvable.</p>
     </div>
+  </div>
+</div>
 
-    <!-- Section 3: Configuration des Notes et Barèmes (Par Trimestre) -->
-    <div class="mt-6 bg-slate-50 p-4 rounded-xl border">
-        <h2 class="font-bold mb-2 text-slate-800">Configuration des Cotations (Max)</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div>
-                <label class="text-xs text-gray-600">Max Interrogation</label>
-                <input id="maxInterro" type="number" value="10" class="w-full border p-2 rounded">
-            </div>
-            <div>
-                <label class="text-xs text-gray-600">Max Devoir</label>
-                <input id="maxDevoir" type="number" value="10" class="w-full border p-2 rounded">
-            </div>
-            <div>
-                <label class="text-xs text-gray-600">Max Examen</label>
-                <input id="maxExamen" type="number" value="50" class="w-full border p-2 rounded">
-            </div>
-            <div>
-                <label class="text-xs text-gray-600">Max Conduite</label>
-                <input id="maxConduite" type="number" value="20" class="w-full border p-2 rounded">
-            </div>
-        </div>
-    </div>
+<!-- PANEL ADMINISTRATEUR -->
+<div id="admin-panel" class="mt-6 hidden">
+<div class="flex justify-between items-center bg-neutral-800 px-4 py-3 rounded-xl border border-neutral-700 mb-6">
+  <span class="text-xs text-amber-400 font-medium">⚡ Mode Administrateur Actif</span>
+  <button onclick="deconnecter()" class="text-xs text-red-400 hover:underline">Déconnexion</button>
+</div>
 
-    <!-- Section 4: Fiche de Cote / Gestion des Élèves -->
-    <div class="mt-6">
-        <h2 class="font-bold text-lg mb-2">Fiche de Cote & Gestion des Élèves</h2>
-        <div class="flex gap-2 mb-4">
-            <input id="nomEleve" placeholder="Nom de l'élève" class="flex-1 border p-2 rounded">
-            <button onclick="ajouterEleve()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Ajouter Élève</button>
-        </div>
-        
-        <div class="overflow-x-auto">
-            <table class="w-full border-collapse border border-gray-300 text-sm">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="border p-2">Élève</th>
-                        <th class="border p-2">Interro</th>
-                        <th class="border p-2">Devoir</th>
-                        <th class="border p-2">Examen</th>
-                        <th class="border p-2">Conduite</th>
-                        <th class="border p-2">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="listeElevesNotes"></tbody>
-            </table>
-        </div>
-    </div>
+<!-- Navigation Admin -->
+<div class="flex flex-wrap justify-around border-b border-neutral-800 mb-6 text-sm gap-2">
+<button onclick="changerOngletAdmin('inscriptions')" id="tab-inscriptions" class="flex-1 min-w-[100px] pb-3 text-center font-semibold ig-tab-active flex items-center justify-center gap-2"><span>📝</span> Inscriptions</button>
+<button onclick="changerOngletAdmin('eleves-admin')" id="tab-eleves-admin" class="flex-1 min-w-[100px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>📊</span> Cotes</button>
+<button onclick="changerOngletAdmin('profs')" id="tab-profs" class="flex-1 min-w-[100px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>👨‍🏫</span> Profs</button>
+<button onclick="changerOngletAdmin('comms')" id="tab-comms" class="flex-1 min-w-[100px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>📢</span> Annonces</button>
+<button onclick="changerOngletAdmin('frais')" id="tab-frais" class="flex-1 min-w-[100px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>💰</span> Frais</button>
+<button onclick="changerOngletAdmin('chat')" id="tab-chat" class="flex-1 min-w-[100px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>💬</span> Messages</button>
+</div>
 
-    <p class="text-xs text-center mt-8 text-gray-400">Base connectée : site-publication-default-rtdb</p>
+<!-- Formulaire Inscription Élève & Tuteur -->
+<div id="form-inscriptions" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800">
+<h3 class="font-semibold text-sm text-amber-400">1. Informations de l'Élève (Génération auto du Code Élève)</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+<input id="insc-nom" placeholder="NOM DE L'ENFANT (MAJUSCULES)" oninput="this.value = this.value.toUpperCase()" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white uppercase">
+<input id="insc-postnom" placeholder="POST-NOM (MAJUSCULES)" oninput="this.value = this.value.toUpperCase()" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white uppercase">
+<input id="insc-prenom" placeholder="Prénom" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="insc-adresse" placeholder="Adresse complète de l'élève" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="insc-naissance" placeholder="Date de naissance (ex: 12/05/2010)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<select id="insc-classe" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+  <option value="">Sélectionner la classe (1-8)</option>
+  <option value="1ère Année">1ère Année</option>
+  <option value="2ème Année">2ème Année</option>
+  <option value="3ème Année">3ème Année</option>
+  <option value="4ème Année">4ème Année</option>
+  <option value="5ème Année">5ème Année</option>
+  <option value="6ème Année">6ème Année</option>
+  <option value="7ème Année">7ème Année (Éducation de base)</option>
+  <option value="8ème Année">8ème Année (Éducation de base)</option>
+</select>
+<select id="insc-option" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white md:col-span-3">
+  <option value="Tronc Commun">Tronc Commun / Général</option>
+  <option value="Scientifique (Math-Physique)">Scientifique (Math-Physique)</option>
+  <option value="Scientifique (Bio-Chimie)">Scientifique (Bio-Chimie)</option>
+  <option value="Commerciale et Gestion">Commerciale et Gestion</option>
+  <option value="Pédagogie Générale">Pédagogie Générale</option>
+  <option value="Coupe et Couture">Coupe et Couture</option>
+  <option value="Electricité / Mécanique">Electricité / Mécanique / Technique</option>
+  <option value="Littéraire">Littéraire / Humanités Humanistes</option>
+</select>
+</div>
+
+<h3 class="font-semibold text-sm text-blue-400 pt-2">2. Informations du Tuteur / Parent</h3>
+<p class="text-xs text-neutral-400">Si le tuteur possède déjà un numéro de téléphone enregistré, l'enfant sera automatiquement rattaché à son compte unique.</p>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+<input id="tuteur-nom" placeholder="NOM DU TUTEUR (MAJUSCULES)" oninput="this.value = this.value.toUpperCase()" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white uppercase">
+<input id="tuteur-postnom" placeholder="POST-NOM TUTEUR (MAJUSCULES)" oninput="this.value = this.value.toUpperCase()" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white uppercase">
+<input id="tuteur-adresse" placeholder="Adresse du tuteur" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="tuteur-tel" placeholder="N° de Téléphone du tuteur" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+</div>
+
+<button onclick="enregistrerEleve()" class="w-full bg-amber-600 hover:bg-amber-700 text-white p-2.5 rounded-lg text-sm font-semibold transition mt-2">Enregistrer l'élève et générer les codes</button>
+</div>
+
+<!-- Formulaire Cotes -->
+<div id="form-eleves-admin" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+<h3 class="font-semibold text-sm text-blue-400">Attribuer une cote à un élève</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+<input id="cote-elevenom" placeholder="Nom complet de l'élève" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="cote-cours" placeholder="Matière / Cours (ex: Mathématiques)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="cote-valeur" placeholder="Cote (ex: 16/20)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+</div>
+<button onclick="ajouterCote()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Enregistrer la cote</button>
+</div>
+
+<!-- Formulaire Profs -->
+<div id="form-profs" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+<h3 class="font-semibold text-sm text-emerald-400">Enregistrer un Professeur</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+<input id="prof-nom" placeholder="Nom du professeur" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="prof-cours" placeholder="Cours dispensé" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+</div>
+<button onclick="ajouterProf()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Enregistrer le professeur</button>
+</div>
+
+<!-- Formulaire Annonces -->
+<div id="form-comms" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+<h3 class="font-semibold text-sm text-purple-400">Diffuser une annonce / Journal</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+<input id="comm-titre" placeholder="Titre (ex: Réunion des parents)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="comm-message" placeholder="Message court" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+</div>
+<button onclick="ajouterComm()" class="w-full bg-purple-600 hover:bg-purple-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Publier l'annonce</button>
+</div>
+
+<!-- Formulaire Frais -->
+<div id="form-frais" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+<h3 class="font-semibold text-sm text-cyan-400">Enregistrer un paiement de frais</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+<input id="frais-eleve" placeholder="Nom de l'élève" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="frais-montant" placeholder="Montant (ex: 50$)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<select id="frais-tranche" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+  <option value="1ère Tranche / Inscription">1ère Tranche / Inscription</option>
+  <option value="2ème Tranche">2ème Tranche</option>
+  <option value="3ème Tranche">3ème Tranche</option>
+</select>
+</div>
+<button onclick="ajouterFrais()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Valider le paiement</button>
+</div>
+
+<!-- Panneau Chat Admin -->
+<div id="form-chat" class="space-y-4 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+  <h3 class="font-semibold text-sm text-amber-400 mb-2">Boîte de discussion avec les Parents / Tuteurs</h3>
+  <div id="admin-chat-box" class="h-64 overflow-y-auto bg-neutral-900 border border-neutral-700 p-3 rounded-lg space-y-2 text-xs"></div>
+  <div class="flex gap-2">
+    <input id="admin-chat-input" placeholder="Répondre aux tuteurs..." class="flex-1 bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+    <button onclick="envoyerMessageAdmin()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">Envoyer</button>
+  </div>
+</div>
+
+<!-- Feeds Admin -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
+    <h3 class="font-bold text-sm text-amber-400 mb-3 border-b border-neutral-700 pb-2 flex justify-between"><span>📝 Inscriptions & Codes</span><span id="count-eleves-inscrits" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span></h3>
+    <ul id="liste-eleves-inscrits" class="space-y-3"></ul>
+  </div>
+  <div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
+    <h3 class="font-bold text-sm text-blue-400 mb-3 border-b border-neutral-700 pb-2 flex justify-between"><span>📊 Cotes Attribuées</span><span id="count-cotes" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span></h3>
+    <ul id="liste-cotes" class="space-y-3"></ul>
+  </div>
+  <div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
+    <h3 class="font-bold text-sm text-cyan-400 mb-3 border-b border-neutral-700 pb-2 flex justify-between"><span>💰 Paiements Frais</span><span id="count-frais" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span></h3>
+    <ul id="liste-frais" class="space-y-3"></ul>
+  </div>
+</div>
+</div>
+
+<!-- PANEL TUTEUR / PARENT -->
+<div id="eleve-panel" class="mt-6 hidden">
+<div class="flex justify-between items-center bg-neutral-800 px-4 py-3 rounded-xl border border-neutral-700 mb-6">
+  <div>
+    <span class="text-xs text-blue-400 font-medium">🎓 Espace Tuteur Connecté :</span>
+    <h2 id="tuteur-info-nom" class="font-bold text-white text-base">Nom du Tuteur</h2>
+    <span id="tuteur-info-details" class="text-xs text-neutral-400">Téléphone / Code Tuteur</span>
+  </div>
+  <button onclick="deconnecter()" class="text-xs text-red-400 hover:underline">Déconnexion</button>
+</div>
+
+<!-- Navigation Google Onglets Tuteur -->
+<div class="flex flex-wrap justify-around border-b border-neutral-800 mb-6 text-sm gap-2">
+<button onclick="changerOngletEleve('enfants')" id="tab-eleve-enfants" class="flex-1 min-w-[100px] pb-3 text-center font-semibold ig-tab-active flex items-center justify-center gap-2"><span>👶</span> Mes Enfants</button>
+<button onclick="changerOngletEleve('cotes')" id="tab-eleve-cotes" class="flex-1 min-w-[100px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>📊</span> Suivi Cotes</button>
+<button onclick="changerOngletEleve('frais')" id="tab-eleve-frais" class="flex-1 min-w-[100px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>💰</span> Frais</button>
+<button onclick="changerOngletEleve('annonces')" id="tab-eleve-annonces" class="flex-1 min-w-[100px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>📢</span> Annonces</button>
+<button onclick="changerOngletEleve('chat')" id="tab-eleve-chat" class="flex-1 min-w-[100px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>💬</span> Discussion Admin</button>
+</div>
+
+<!-- Contenu Liste des Enfants du Tuteur (Avec Code Élève individuel) -->
+<div id="vue-eleve-enfants" class="space-y-3 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800">
+  <h3 class="font-semibold text-sm text-blue-400 mb-3">Enfants rattachés à votre compte (avec codes d'accès individuels)</h3>
+  <ul id="tuteur-liste-enfants" class="space-y-2"></ul>
+</div>
+
+<!-- Contenu Cotes de tous les enfants -->
+<div id="vue-eleve-cotes" class="space-y-3 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+  <h3 class="font-semibold text-sm text-blue-400 mb-3">Relevé des cotes par cours de vos enfants</h3>
+  <ul id="eleve-liste-cotes" class="space-y-2"></ul>
+</div>
+
+<!-- Contenu Frais de tous les enfants -->
+<div id="vue-eleve-frais" class="space-y-3 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+  <h3 class="font-semibold text-sm text-cyan-400 mb-3">Historique des paiements des frais scolaires</h3>
+  <ul id="eleve-liste-frais" class="space-y-2"></ul>
+</div>
+
+<!-- Contenu Annonces -->
+<div id="vue-eleve-annonces" class="space-y-3 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+  <h3 class="font-semibold text-sm text-purple-400 mb-3">Communications et actualités de l'école</h3>
+  <ul id="eleve-liste-annonces" class="space-y-2"></ul>
+</div>
+
+<!-- Contenu Chat / Boîte de dialogue Tuteur -->
+<div id="vue-eleve-chat" class="space-y-3 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
+  <h3 class="font-semibold text-sm text-blue-400 mb-2">Échanger avec l'administration de l'école</h3>
+  <div id="tuteur-chat-box" class="h-64 overflow-y-auto bg-neutral-900 border border-neutral-700 p-3 rounded-lg space-y-2 text-xs"></div>
+  <div class="flex gap-2">
+    <input id="tuteur-chat-input" placeholder="Écrire un message à l'administration..." class="flex-1 bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+    <button onclick="envoyerMessageTuteur()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">Envoyer</button>
+  </div>
+</div>
+</div>
+
+<p class="text-[11px] text-center mt-10 text-neutral-500">Base connectée : site-publication-default-rtdb • Mode Temps Réel</p>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDpzKhm93AJnwGsqptCBNfmWG8E4m0uJNM",
@@ -94,100 +251,377 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const coursRef = ref(db, 'ecole6/cours');
-const elevesRef = ref(db, 'ecole6/eleves_notes');
+const elevesInscritsRef = ref(db, 'ecole6/inscriptions');
+const cotesRef = ref(db, 'ecole6/cotes');
+const profsRef = ref(db, 'ecole6/profs');
+const commsRef = ref(db, 'ecole6/comms');
+const fraisRef = ref(db, 'ecole6/frais');
+const chatRef = ref(db, 'ecole6/chat');
 
-document.getElementById('status').innerText = " Connecté à Firebase - Temps réel actif";
+document.getElementById('status').innerText = "✅ Connecté (Temps réel actif)";
 
-// 1. Demande de cours
-window.demanderCours = function() {
-    const nomCours = document.getElementById('nomCours').value;
-    if(!nomCours) return;
-    push(coursRef, { nom: nomCours, statut: 'en_attente', date: new Date().toLocaleDateString() });
-    document.getElementById('nomCours').value = "";
+let tuteurActuelSession = null;
+
+window.verifierAdmin = function() {
+  const code = document.getElementById('admin-code-input').value;
+  if(code === "pr1999") {
+    document.getElementById('choix-portail').classList.add('hidden');
+    document.getElementById('admin-panel').classList.remove('hidden');
+    document.getElementById('auth-error').classList.add('hidden');
+    document.getElementById('admin-code-input').value = "";
+  } else {
+    document.getElementById('auth-error').classList.remove('hidden');
+  }
 }
 
-// 2. Admin valide le cours
-window.validerCours = function(key) {
-    update(ref(db, `ecole6/cours/${key}`), { statut: 'valide' });
-}
+window.verifierEleve = function() {
+  const codeSaisi = document.getElementById('eleve-code-input').value.trim().toUpperCase();
+  const errorMsg = document.getElementById('eleve-auth-error');
+  if(!codeSaisi) return;
 
-// Supprimer un cours
-window.supprimerCours = function(key) {
-    remove(ref(db, `ecole6/cours/${key}`));
-}
-
-// 3. Ajouter un élève dans la fiche de cote
-window.ajouterEleve = function() {
-    const nom = document.getElementById('nomEleve').value;
-    if(!nom) return;
-    push(elevesRef, { 
-        nom: nom, 
-        interro: 0, 
-        devoir: 0, 
-        examen: 0, 
-        conduite: 20 
-    });
-    document.getElementById('nomEleve').value = "";
-}
-
-// Mettre à jour une note spécifique d'un élève en direct
-window.mettreAJourNote = function(key, champ, valeur) {
-    const updates = {};
-    updates[champ] = Number(valeur);
-    update(ref(db, `ecole6/eleves_notes/${key}`), updates);
-}
-
-// Supprimer un élève
-window.supprimerEleve = function(key) {
-    remove(ref(db, `ecole6/eleves_notes/${key}`));
-}
-
-// Écouteur en temps réel pour les cours
-onValue(coursRef, (snapshot) => {
+  onValue(elevesInscritsRef, (snapshot) => {
     const data = snapshot.val();
-    const liste = document.getElementById('listeCoursAttente');
+    if(!data) { errorMsg.classList.remove('hidden'); return; }
+    let tuteurTrouve = null;
+    let enfantsDuTuteur = [];
+
+    Object.keys(data).forEach(key => {
+      const el = data[key];
+      if(el.codeTuteur === codeSaisi) {
+        if(!tuteurTrouve) {
+          tuteurTrouve = {
+            nom: el.tuteurNom,
+            postnom: el.tuteurPostnom,
+            adresse: el.tuteurAdresse,
+            telephone: el.tuteurTel,
+            code: el.codeTuteur
+          };
+        }
+        enfantsDuTuteur.push(el);
+      }
+    });
+
+    if(tuteurTrouve) {
+      tuteurActuelSession = { info: tuteurTrouve, enfants: enfantsDuTuteur };
+      document.getElementById('choix-portail').classList.add('hidden');
+      document.getElementById('eleve-panel').classList.remove('hidden');
+      document.getElementById('tuteur-info-nom').innerText = `Tuteur : ${tuteurTrouve.nom} ${tuteurTrouve.postnom}`;
+      document.getElementById('tuteur-info-details').innerText = `Tél : ${tuteurTrouve.telephone} • Code Tuteur : ${tuteurTrouve.code} • Enfants : ${enfantsDuTuteur.length}`;
+      errorMsg.classList.add('hidden');
+      chargerDonneesTuteurConnecte(enfantsDuTuteur, tuteurTrouve);
+    } else {
+      errorMsg.classList.remove('hidden');
+    }
+  }, { onlyOnce: true });
+}
+
+window.deconnecter = function() {
+  document.getElementById('admin-panel').classList.add('hidden');
+  document.getElementById('eleve-panel').classList.add('hidden');
+  document.getElementById('choix-portail').classList.remove('hidden');
+  tuteurActuelSession = null;
+  document.getElementById('eleve-code-input').value = "";
+}
+
+window.changerOngletAdmin = function(onglet) {
+  ['inscriptions', 'eleves-admin', 'profs', 'comms', 'frais', 'chat'].forEach(o => {
+    document.getElementById(`form-${o}`).classList.add('hidden');
+    document.getElementById(`tab-${o}`).className = "flex-1 min-w-[100px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2 border-b-2 border-transparent";
+  });
+  document.getElementById(`form-${onglet}`).classList.remove('hidden');
+  document.getElementById(`tab-${onglet}`).className = "flex-1 min-w-[100px] pb-3 text-center font-semibold text-amber-400 flex items-center justify-center gap-2 ig-tab-active";
+}
+
+window.changerOngletEleve = function(onglet) {
+  ['enfants', 'cotes', 'frais', 'annonces', 'chat'].forEach(o => {
+    document.getElementById(`vue-eleve-${o}`).classList.add('hidden');
+    document.getElementById(`tab-eleve-${o}`).className = "flex-1 min-w-[100px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2 border-b-2 border-transparent";
+  });
+  document.getElementById(`vue-eleve-${onglet}`).classList.remove('hidden');
+  document.getElementById(`tab-eleve-${onglet}`).className = "flex-1 min-w-[100px] pb-3 text-center font-semibold text-blue-400 flex items-center justify-center gap-2 ig-tab-active";
+}
+
+// Enregistrement Élève + Génération code unique enfant + Code unique tuteur
+window.enregistrerEleve = function() {
+  const nom = document.getElementById('insc-nom').value.trim();
+  const postnom = document.getElementById('insc-postnom').value.trim();
+  const prenom = document.getElementById('insc-prenom').value.trim();
+  const adresse = document.getElementById('insc-adresse').value.trim();
+  const naissance = document.getElementById('insc-naissance').value.trim();
+  const classe = document.getElementById('insc-classe').value;
+  const option = document.getElementById('insc-option').value;
+
+  const tuteurNom = document.getElementById('tuteur-nom').value.trim();
+  const tuteurPostnom = document.getElementById('tuteur-postnom').value.trim();
+  const tuteurAdresse = document.getElementById('tuteur-adresse').value.trim();
+  const tuteurTel = document.getElementById('tuteur-tel').value.trim();
+
+  if(!nom || !postnom || !prenom || !adresse || !naissance || !classe || !tuteurNom || !tuteurTel) {
+    return alert("Veuillez remplir tous les champs obligatoires (élève et tuteur) !");
+  }
+
+  onValue(elevesInscritsRef, (snapshot) => {
+    const data = snapshot.val();
+    let codeTuteurExistant = null;
+
+    if(data) {
+      Object.keys(data).forEach(key => {
+        const item = data[key];
+        if(item.tuteurTel === tuteurTel) {
+          codeTuteurExistant = item.codeTuteur;
+        }
+      });
+    }
+
+    const codeTuteurFinal = codeTuteurExistant || ("TUT-" + Math.floor(1000 + Math.random() * 9000));
+    const codeEleveUnique = "EVC-" + Math.floor(10000 + Math.random() * 90000);
+
+    push(elevesInscritsRef, {
+      nom, postnom, prenom, adresse, naissance, classe, option,
+      tuteurNom, tuteurPostnom, tuteurAdresse, tuteurTel,
+      codeTuteur: codeTuteurFinal,
+      codeEleve: codeEleveUnique,
+      date: new Date().toLocaleDateString()
+    });
+    
+    alert(`Enregistrement réussi !\n\nEnfant : ${nom} ${postnom} (Code: ${codeEleveUnique})\nTuteur : ${tuteurNom} (Code Tuteur: ${codeTuteurFinal})`);
+    
+    document.getElementById('insc-nom').value = "";
+    document.getElementById('insc-postnom').value = "";
+    document.getElementById('insc-prenom').value = "";
+    document.getElementById('insc-adresse').value = "";
+    document.getElementById('insc-naissance').value = "";
+  }, { onlyOnce: true });
+}
+
+window.ajouterCote = function() {
+  const nom = document.getElementById('cote-elevenom').value.trim();
+  const cours = document.getElementById('cote-cours').value.trim();
+  const valeur = document.getElementById('cote-valeur').value.trim();
+  if(!nom || !cours || !valeur) return alert("Remplissez tous les champs des cotes.");
+  push(cotesRef, { nom, cours, valeur, date: new Date().toLocaleDateString() });
+  document.getElementById('cote-elevenom').value = "";
+  document.getElementById('cote-cours').value = "";
+  document.getElementById('cote-valeur').value = "";
+}
+
+window.ajouterProf = function() {
+  const nom = document.getElementById('prof-nom').value.trim();
+  const cours = document.getElementById('prof-cours').value.trim();
+  if(!nom || !cours) return alert("Remplissez tous les champs du professeur.");
+  push(profsRef, { nom, cours });
+  document.getElementById('prof-nom').value = "";
+  document.getElementById('prof-cours').value = "";
+}
+
+window.ajouterComm = function() {
+  const titre = document.getElementById('comm-titre').value.trim();
+  const message = document.getElementById('comm-message').value.trim();
+  if(!titre || !message) return alert("Remplissez tous les champs de l'annonce.");
+  push(commsRef, { titre, message, date: new Date().toLocaleDateString() });
+  document.getElementById('comm-titre').value = "";
+  document.getElementById('comm-message').value = "";
+}
+
+window.ajouterFrais = function() {
+  const eleve = document.getElementById('frais-eleve').value.trim();
+  const montant = document.getElementById('frais-montant').value.trim();
+  const tranche = document.getElementById('frais-tranche').value;
+  if(!eleve || !montant) return alert("Remplissez tous les champs de paiement.");
+  push(fraisRef, { eleve, montant, tranche, date: new Date().toLocaleDateString() });
+  document.getElementById('frais-eleve').value = "";
+  document.getElementById('frais-montant').value = "";
+}
+
+window.supprimer = function(chemin, key) {
+  if(confirm("Supprimer cet élément ?")) remove(ref(db, `${chemin}/${key}`));
+}
+
+// Envoi de messages Chat
+window.envoyerMessageAdmin = function() {
+  const input = document.getElementById('admin-chat-input');
+  const message = input.value.trim();
+  if(!message) return;
+  push(chatRef, {
+    auteur: "Administration",
+    type: "admin",
+    texte: message,
+    date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  });
+  input.value = "";
+}
+
+window.envoyerMessageTuteur = function() {
+  const input = document.getElementById('tuteur-chat-input');
+  const message = input.value.trim();
+  if(!message || !tuteurActuelSession) return;
+  push(chatRef, {
+    auteur: `${tuteurActuelSession.info.nom} ${tuteurActuelSession.info.postnom} (Tuteur)`,
+    codeTuteur: tuteurActuelSession.info.code,
+    type: "tuteur",
+    texte: message,
+    date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  });
+  input.value = "";
+}
+
+// Écoute temps réel du Chat pour Admin et Tuteur
+onValue(chatRef, (snapshot) => {
+  const data = snapshot.val();
+  const adminChatBox = document.getElementById('admin-chat-box');
+  const tuteurChatBox = document.getElementById('tuteur-chat-box');
+  adminChatBox.innerHTML = "";
+  tuteurChatBox.innerHTML = "";
+
+  if(!data) {
+    adminChatBox.innerHTML = "<p class='text-neutral-500 italic'>Aucun message dans la discussion.</p>";
+    tuteurChatBox.innerHTML = "<p class='text-neutral-500 italic'>Aucun message dans la discussion.</p>";
+    return;
+  }
+
+  Object.keys(data).forEach(key => {
+    const m = data[key];
+    const isOwner = tuteurActuelSession && m.codeTuteur === tuteurActuelSession.info.code;
+    const isAdminMsg = m.type === "admin";
+
+    // Rendu Admin
+    const divAdmin = document.createElement('div');
+    divAdmin.className = `p-2 rounded-lg ${isAdminMsg ? 'bg-amber-950/40 border border-amber-900/50 text-amber-200 text-right' : 'bg-neutral-900 text-white'}`;
+    divAdmin.innerHTML = `<strong class='text-xs block ${isAdminMsg ? 'text-amber-400' : 'text-blue-400'}'>${m.auteur} (${m.date})</strong><span class='text-sm'>${m.texte}</span>`;
+    adminChatBox.appendChild(divAdmin);
+
+    // Rendu Tuteur (affiche tous les messages généraux ou ses propres messages)
+    if(isAdminMsg || isOwner || m.type === "tuteur") {
+      const divTuteur = document.createElement('div');
+      divTuteur.className = `p-2 rounded-lg ${isAdminMsg ? 'bg-neutral-900 border border-neutral-700 text-white' : 'bg-blue-950/40 border border-blue-900/50 text-blue-200 text-right'}`;
+      divTuteur.innerHTML = `<strong class='text-xs block ${isAdminMsg ? 'text-amber-400' : 'text-blue-400'}'>${m.auteur} (${m.date})</strong><span class='text-sm'>${m.texte}</span>`;
+      tuteurChatBox.appendChild(divTuteur);
+    }
+  });
+
+  adminChatBox.scrollTop = adminChatBox.scrollHeight;
+  tuteurChatBox.scrollTop = tuteurChatBox.scrollHeight;
+});
+
+onValue(elevesInscritsRef, (snapshot) => {
+  const data = snapshot.val();
+  const liste = document.getElementById('liste-eleves-inscrits');
+  liste.innerHTML = "";
+  if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun élève inscrit.</li>"; document.getElementById('count-eleves-inscrits').innerText = "0"; return; }
+  const keys = Object.keys(data);
+  document.getElementById('count-eleves-inscrits').innerText = keys.length;
+  keys.reverse().forEach(key => {
+    const el = data[key];
+    const li = document.createElement('li');
+    li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+    li.innerHTML = `<div><strong class='text-white text-sm'>${el.nom} ${el.postnom} ${el.prenom}</strong><br><span class='text-neutral-400'>${el.classe} - ${el.option}</span><br><span class='text-cyan-400 font-mono font-bold'>Code Élève : ${el.codeEleve}</span><br><span class='text-blue-400'>Tuteur : ${el.tuteurNom} (${el.tuteurTel})</span><br><span class='text-amber-400 font-mono font-bold'>Code Tuteur : ${el.codeTuteur}</span></div> <button onclick="supprimer('ecole6/inscriptions', '${key}')" class='text-red-400 font-bold p-1'>✕</button>`;
+    liste.appendChild(li);
+  });
+});
+
+onValue(cotesRef, (snapshot) => {
+  const data = snapshot.val();
+  const liste = document.getElementById('liste-cotes');
+  liste.innerHTML = "";
+  if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune cote.</li>"; document.getElementById('count-cotes').innerText = "0"; return; }
+  const keys = Object.keys(data);
+  document.getElementById('count-cotes').innerText = keys.length;
+  keys.reverse().forEach(key => {
+    const c = data[key];
+    const li = document.createElement('li');
+    li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+    li.innerHTML = `<div><strong class='text-white'>${c.nom}</strong><br><span class='text-neutral-400'>📚 ${c.cours} : <strong class='text-blue-400'>${c.valeur}</strong></span></div> <button onclick="supprimer('ecole6/cotes', '${key}')" class='text-red-400 font-bold p-1'>✕</button>`;
+    liste.appendChild(li);
+  });
+});
+
+onValue(fraisRef, (snapshot) => {
+  const data = snapshot.val();
+  const liste = document.getElementById('liste-frais');
+  liste.innerHTML = "";
+  if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun paiement.</li>"; document.getElementById('count-frais').innerText = "0"; return; }
+  const keys = Object.keys(data);
+  document.getElementById('count-frais').innerText = keys.length;
+  keys.reverse().forEach(key => {
+    const f = data[key];
+    const li = document.createElement('li');
+    li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+    li.innerHTML = `<div><strong class='text-white'>${f.eleve}</strong><br><span class='text-cyan-400'>${f.montant}</span> (${f.tranche})</div> <button onclick="supprimer('ecole6/frais', '${key}')" class='text-red-400 font-bold p-1'>✕</button>`;
+    liste.appendChild(li);
+  });
+});
+
+// Charger les données pour tous les enfants rattachés au tuteur connecté
+function chargerDonneesTuteurConnecte(enfants, tuteur) {
+  const listeEnfants = document.getElementById('tuteur-liste-enfants');
+  listeEnfants.innerHTML = "";
+  enfants.forEach(e => {
+    const li = document.createElement('li');
+    li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+    li.innerHTML = `<div><strong class='text-white text-sm'>👶 ${e.nom} ${e.postnom} ${e.prenom}</strong><br><span class='text-neutral-400'>Classe : ${e.classe} • Option : ${e.option}</span><br><span class='text-cyan-400 font-mono font-bold mt-1 inline-block'>Code Personnel de l'Enfant : ${e.codeEleve}</span></div>`;
+    listeEnfants.appendChild(li);
+  });
+
+  const nomsEnfants = enfants.map(e => (e.nom + " " + e.postnom).toLowerCase());
+  const nomsCompletsEnfants = enfants.map(e => (e.nom + " " + e.postnom + " " + e.prenom).toLowerCase());
+
+  // Cotes
+  onValue(cotesRef, (snapshot) => {
+    const data = snapshot.val();
+    const liste = document.getElementById('eleve-liste-cotes');
     liste.innerHTML = "";
-    if(!data) {
-        liste.innerHTML = "<li class='text-gray-400 text-sm'>Aucune demande de cours en attente.</li>";
-        return;
-    }
+    if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune cote disponible.</li>"; return; }
+    let trouve = false;
     Object.keys(data).forEach(key => {
-        const c = data[key];
+      const c = data[key];
+      const nomEleveCote = c.nom.toLowerCase();
+      if(nomsEnfants.some(n => nomEleveCote.includes(n)) || nomsCompletsEnfants.some(n => nomEleveCote.includes(n))) {
+        trouve = true;
         const li = document.createElement('li');
-        li.className = "bg-white border p-2 rounded flex justify-between items-center text-sm";
-        li.innerHTML = `<span><b>${c.nom}</b> - <span class="${c.statut === 'valide' ? 'text-green-600' : 'text-amber-600'}">${c.statut}</span></span> 
-                        <div>
-                            ${c.statut === 'en_attente' ? `<button onclick="validerCours('${key}')" class='bg-green-500 text-white px-2 py-1 rounded mr-1 text-xs'>Valider</button>` : ''}
-                            <button onclick="supprimerCours('${key}')" class='text-red-500 font-bold px-1'>X</button>
-                        </div>`;
+        li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+        li.innerHTML = `<div><strong class='text-blue-400'>${c.nom}</strong><br><span class='text-white font-medium'>📚 ${c.cours}</span></div> <strong class='text-blue-400 text-sm'>${c.valeur}</strong>`;
         liste.appendChild(li);
+      }
     });
-});
+    if(!trouve) liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune cote enregistrée pour vos enfants.</li>";
+  });
 
-// Écouteur en temps réel pour la fiche de cotes des élèves
-onValue(elevesRef, (snapshot) => {
+  // Frais
+  onValue(fraisRef, (snapshot) => {
     const data = snapshot.val();
-    const tbody = document.getElementById('listeElevesNotes');
-    tbody.innerHTML = "";
-    if(!data) {
-        tbody.innerHTML = "<tr><td colspan='6' class='text-center text-gray-400 p-3'>Aucun élève enregistré.</td></tr>";
-        return;
-    }
+    const liste = document.getElementById('eleve-liste-frais');
+    liste.innerHTML = "";
+    if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun paiement enregistré.</li>"; return; }
+    let trouve = false;
     Object.keys(data).forEach(key => {
-        const e = data[key];
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="border p-2 font-medium">${e.nom}</td>
-            <td class="border p-2"><input type="number" value="${e.interro || 0}" onchange="mettreAJourNote('${key}', 'interro', this.value)" class="w-16 border p-1 rounded text-center"></td>
-            <td class="border p-2"><input type="number" value="${e.devoir || 0}" onchange="mettreAJourNote('${key}', 'devoir', this.value)" class="w-16 border p-1 rounded text-center"></td>
-            <td class="border p-2"><input type="number" value="${e.examen || 0}" onchange="mettreAJourNote('${key}', 'examen', this.value)" class="w-16 border p-1 rounded text-center"></td>
-            <td class="border p-2"><input type="number" value="${e.conduite || 0}" onchange="mettreAJourNote('${key}', 'conduite', this.value)" class="w-16 border p-1 rounded text-center"></td>
-            <td class="border p-2 text-center"><button onclick="supprimerEleve('${key}')" class="text-red-500 font-bold">X</button></td>
-        `;
-        tbody.appendChild(tr);
+      const f = data[key];
+      const nomEleveFrais = f.eleve.toLowerCase();
+      if(nomsEnfants.some(n => nomEleveFrais.includes(n)) || nomsCompletsEnfants.some(n => nomEleveFrais.includes(n))) {
+        trouve = true;
+        const li = document.createElement('li');
+        li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg flex justify-between items-center text-xs";
+        li.innerHTML = `<div><strong class='text-white'>${f.eleve}</strong><br><span class='text-cyan-400 font-medium'>Montant : ${f.montant}</span> (${f.tranche})</div><small class='text-neutral-500'>${f.date}</small>`;
+        liste.appendChild(li);
+      }
     });
-});
+    if(!trouve) liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun paiement enregistré pour vos enfants.</li>";
+  });
+
+  // Annonces
+  onValue(commsRef, (snapshot) => {
+    const data = snapshot.val();
+    const liste = document.getElementById('eleve-liste-annonces');
+    liste.innerHTML = "";
+    if(!data) { liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune annonce pour le moment.</li>"; return; }
+    Object.keys(data).reverse().forEach(key => {
+      const a = data[key];
+      const li = document.createElement('li');
+      li.className = "bg-neutral-900 border border-neutral-700/60 p-3 rounded-lg space-y-1 text-xs";
+      li.innerHTML = `<strong class='text-purple-400 text-sm'>📢 ${a.titre}</strong><p class='text-neutral-300'>${a.message}</p><small class='text-neutral-500'>Publié le ${a.date}</small>`;
+      liste.appendChild(li);
+    });
+  });
+}
 </script>
 </body>
 </html>
