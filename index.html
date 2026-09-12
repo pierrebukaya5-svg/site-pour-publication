@@ -25,7 +25,7 @@
     <!-- Bouton Accès Admin -->
     <div class="bg-neutral-800 border border-neutral-700 p-6 rounded-xl text-center space-y-3">
       <h2 class="font-bold text-amber-400 text-lg">🔒 Espace Administrateur</h2>
-      <p class="text-xs text-neutral-400">Gérez les inscriptions, cotes, presences et générez les codes d'accès.</p>
+      <p class="text-xs text-neutral-400">Gérez les inscriptions, cotes et générez les codes d'accès.</p>
       <input type="password" id="admin-code-input" placeholder="Code admin (pr1999)" class="w-full bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:border-amber-500">
       <button onclick="verifierAdmin()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-lg text-sm font-semibold transition">Se connecter Admin</button>
       <p id="auth-error" class="text-red-400 text-xs hidden">Code administrateur incorrect.</p>
@@ -66,7 +66,7 @@
 <input id="insc-postnom" placeholder="POST-NOM (en majuscules)" oninput="this.value = this.value.toUpperCase()" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white uppercase">
 <input id="insc-prenom" placeholder="Prénom" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
 <input id="insc-adresse" placeholder="Adresse complète" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
-<input id="insc-naissance" type="date" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="insc-naissance" placeholder="Date de naissance (ex: 12/05/2010)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
 <select id="insc-classe" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
   <option value="">Sélectionner la classe (1-8)</option>
   <option value="1ère Année">1ère Année</option>
@@ -98,7 +98,7 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
 <input id="cote-elevenom" placeholder="Nom complet de l'élève" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
 <input id="cote-cours" placeholder="Matière / Cours (ex: Mathématiques)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
-<input id="cote-valeur" type="number" placeholder="Cote (ex: 16/20)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
+<input id="cote-valeur" placeholder="Cote (ex: 16/20)" class="bg-neutral-900 border border-neutral-700 p-2.5 rounded-lg text-sm text-white">
 </div>
 <button onclick="ajouterCote()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Enregistrer la cote</button>
 </div>
@@ -138,7 +138,7 @@
 <button onclick="ajouterFrais()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white p-2.5 rounded-lg text-sm font-semibold transition">Valider le paiement</button>
 </div>
 
-<!-- Feeds Admin (pour tout voir) -->
+<!-- Feeds Admin -->
 <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
   <div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
     <h3 class="font-bold text-sm text-amber-400 mb-3 border-b border-neutral-700 pb-2 flex justify-between"><span>📝 Élèves Enregistrés & Codes</span><span id="count-eleves-inscrits" class="text-xs bg-neutral-900 px-2 py-0.5 rounded text-neutral-400">0</span></h3>
@@ -155,7 +155,7 @@
 </div>
 </div>
 
-<!-- PANEL ÉLÈVE / PARENT (Style Onglets Google) -->
+<!-- PANEL ÉLÈVE / PARENT -->
 <div id="eleve-panel" class="mt-6 hidden">
 <div class="flex justify-between items-center bg-neutral-800 px-4 py-3 rounded-xl border border-neutral-700 mb-6">
   <div>
@@ -166,26 +166,26 @@
   <button onclick="deconnecter()" class="text-xs text-red-400 hover:underline">Déconnexion</button>
 </div>
 
-<!-- Navigation de type Google Onglets pour l'élève -->
+<!-- Navigation Google Onglets Élève -->
 <div class="flex flex-wrap justify-around border-b border-neutral-800 mb-6 text-sm gap-2">
 <button onclick="changerOngletEleve('cotes')" id="tab-eleve-cotes" class="flex-1 min-w-[120px] pb-3 text-center font-semibold ig-tab-active flex items-center justify-center gap-2"><span>📊</span> Mes Cotes</button>
 <button onclick="changerOngletEleve('frais')" id="tab-eleve-frais" class="flex-1 min-w-[120px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>💰</span> Suivi des Frais</button>
 <button onclick="changerOngletEleve('annonces')" id="tab-eleve-annonces" class="flex-1 min-w-[120px] pb-3 text-center font-semibold text-neutral-400 flex items-center justify-center gap-2"><span>📢</span> Annonces École</button>
 </div>
 
-<!-- Contenu Onglet Cotes de l'élève -->
+<!-- Contenu Cotes -->
 <div id="vue-eleve-cotes" class="space-y-3 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800">
   <h3 class="font-semibold text-sm text-blue-400 mb-3">Relevé de mes cotes par cours</h3>
   <ul id="eleve-liste-cotes" class="space-y-2"></ul>
 </div>
 
-<!-- Contenu Onglet Frais de l'élève -->
+<!-- Contenu Frais -->
 <div id="vue-eleve-frais" class="space-y-3 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
   <h3 class="font-semibold text-sm text-cyan-400 mb-3">Historique des paiements des frais scolaires</h3>
   <ul id="eleve-liste-frais" class="space-y-2"></ul>
 </div>
 
-<!-- Contenu Onglet Annonces de l'élève -->
+<!-- Contenu Annonces -->
 <div id="vue-eleve-annonces" class="space-y-3 bg-neutral-800/50 p-4 rounded-xl border border-neutral-800 hidden">
   <h3 class="font-semibold text-sm text-purple-400 mb-3">Communications et actualités de l'école</h3>
   <ul id="eleve-liste-annonces" class="space-y-2"></ul>
@@ -222,7 +222,6 @@ document.getElementById('status').innerText = "✅ Connecté (Temps réel actif)
 
 let eleveActuelSession = null;
 
-// Vérification Admin
 window.verifierAdmin = function() {
   const code = document.getElementById('admin-code-input').value;
   if(code === "pr1999") {
@@ -235,7 +234,6 @@ window.verifierAdmin = function() {
   }
 }
 
-// Connexion Élève via son Code Généré
 window.verifierEleve = function() {
   const codeSaisi = document.getElementById('eleve-code-input').value.trim().toUpperCase();
   const errorMsg = document.getElementById('eleve-auth-error');
@@ -255,7 +253,7 @@ window.verifierEleve = function() {
       eleveActuelSession = trouve;
       document.getElementById('choix-portail').classList.add('hidden');
       document.getElementById('eleve-panel').classList.remove('hidden');
-      document.getElementById('eleve-info-nom',).innerText = `${trouve.nom} ${trouve.postnom} ${trouve.prenom}`;
+      document.getElementById('eleve-info-nom').innerText = `${trouve.nom} ${trouve.postnom} ${trouve.prenom}`;
       document.getElementById('eleve-info-details').innerText = `Classe : ${trouve.classe} • Option : ${trouve.option}`;
       errorMsg.classList.add('hidden');
       chargerDonneesEleveConnecte(trouve.nom + " " + trouve.postnom);
@@ -273,7 +271,6 @@ window.deconnecter = function() {
   document.getElementById('eleve-code-input').value = "";
 }
 
-// Navigation Admin
 window.changerOngletAdmin = function(onglet) {
   ['inscriptions', 'eleves-admin', 'profs', 'comms', 'frais'].forEach(o => {
     document.getElementById(`form-${o}`).classList.add('hidden');
@@ -283,7 +280,6 @@ window.changerOngletAdmin = function(onglet) {
   document.getElementById(`tab-${onglet}`).className = "flex-1 min-w-[110px] pb-3 text-center font-semibold text-amber-400 flex items-center justify-center gap-2 ig-tab-active";
 }
 
-// Navigation Élève (style onglets Google)
 window.changerOngletEleve = function(onglet) {
   ['cotes', 'frais', 'annonces'].forEach(o => {
     document.getElementById(`vue-eleve-${o}`).classList.add('hidden');
@@ -293,13 +289,12 @@ window.changerOngletEleve = function(onglet) {
   document.getElementById(`tab-eleve-${onglet}`).className = "flex-1 min-w-[120px] pb-3 text-center font-semibold text-blue-400 flex items-center justify-center gap-2 ig-tab-active";
 }
 
-// Inscription élève et génération automatique d'un code unique
 window.enregistrerEleve = function() {
   const nom = document.getElementById('insc-nom').value.trim();
   const postnom = document.getElementById('insc-postnom').value.trim();
   const prenom = document.getElementById('insc-prenom').value.trim();
   const adresse = document.getElementById('insc-adresse').value.trim();
-  const naissance = document.getElementById('insc-naissance').value;
+  const naissance = document.getElementById('insc-naissance').value.trim();
   const classe = document.getElementById('insc-classe').value;
   const option = document.getElementById('insc-option').value;
 
@@ -362,7 +357,6 @@ window.supprimer = function(chemin, key) {
   if(confirm("Supprimer cet élément ?")) remove(ref(db, `${chemin}/${key}`));
 }
 
-// Listeners en direct pour l'Admin
 onValue(elevesInscritsRef, (snapshot) => {
   const data = snapshot.val();
   const liste = document.getElementById('liste-eleves-inscrits');
@@ -411,9 +405,7 @@ onValue(fraisRef, (snapshot) => {
   });
 });
 
-// Charger les données filtrées pour l'élève connecté
 function chargerDonneesEleveConnecte(nomRecherche) {
-  // Cotes de l'élève
   onValue(cotesRef, (snapshot) => {
     const data = snapshot.val();
     const liste = document.getElementById('eleve-liste-cotes');
@@ -433,7 +425,6 @@ function chargerDonneesEleveConnecte(nomRecherche) {
     if(!trouve) liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucune cote attribuée pour l'instant.</li>";
   });
 
-  // Frais de l'élève
   onValue(fraisRef, (snapshot) => {
     const data = snapshot.val();
     const liste = document.getElementById('eleve-liste-frais');
@@ -453,7 +444,6 @@ function chargerDonneesEleveConnecte(nomRecherche) {
     if(!trouve) liste.innerHTML = "<li class='text-neutral-500 text-xs italic'>Aucun paiement enregistré à votre nom.</li>";
   });
 
-  // Annonces générales pour l'élève
   onValue(commsRef, (snapshot) => {
     const data = snapshot.val();
     const liste = document.getElementById('eleve-liste-annonces');
