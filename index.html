@@ -651,8 +651,12 @@
             
             <div class="card" id="parent-login-card">
                 <h2>Parent - Connexion</h2>
-                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">Entrez votre <strong>Code Parent</strong> unique pour accéder au suivi de tous vos enfants.</p>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">Entrez votre <strong>Nom de Tuteur</strong> et votre <strong>Code Parent</strong> unique pour accéder au suivi de tous vos enfants.</p>
                 <div id="parent-msg" class="msg-box" role="alert"></div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="parent-nom-input">Nom du Tuteur</label>
+                    <input type="text" id="parent-nom-input" placeholder="Ex: M. Jean Kabamba" autocomplete="off">
+                </div>
                 <div class="form-group" style="margin-bottom: 1.25rem;">
                     <label for="parent-code-input">Code Parent</label>
                     <div class="password-wrapper">
@@ -666,7 +670,10 @@
             <div class="card" id="parent-dashboard-card" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
                     <h2 style="font-size: 1.15rem; margin: 0;">Tuteur : <span id="p-nom-tuteur-titre" style="color: var(--primary);"></span></h2>
-                    <button onclick="parentLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: var(--transition);">Déconnexion</button>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button onclick="ouvrirDiscussionAdminParent()" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">💬 Contacter Admin</button>
+                        <button onclick="parentLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Déconnexion</button>
+                    </div>
                 </div>
                 
                 <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Liste de vos enfants rattachés :</p>
@@ -851,6 +858,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
                     <h2 style="font-size: 1.15rem; margin: 0;">Professeur : <span id="prof-nom-titre" style="color: var(--primary);"></span></h2>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button onclick="ouvrirModalAjouterCoursProf()" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">+ Demander un Cours</button>
                         <button onclick="ouvrirModalModifierCodeProf()" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Modifier mon Code</button>
                         <button onclick="profLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Déconnexion</button>
                     </div>
@@ -933,6 +941,29 @@
             </div>
         </section>
 
+        <!-- MODAL AJOUT COURS PROF (DEMANDE VALIDATION ADMIN) -->
+        <div id="modal-ajouter-cours-prof" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+            <div class="card" style="width: 100%; max-width: 450px; margin: 1rem;">
+                <h3>Demander l'ajout d'un cours</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Soumettez une demande de cours à l'administration pour validation.</p>
+                <div id="prof-cours-demande-msg" class="msg-box" role="alert"></div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="demande-cours-nom">Nom / Intitulé du Cours</label>
+                    <input type="text" id="demande-cours-nom" placeholder="Ex: Physique Avancée">
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="demande-cours-classe">Classe & Option Cible</label>
+                    <select id="demande-cours-classe">
+                        <option value="">-- Choisir une classe & option --</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn-submit" onclick="soumettreDemandeCoursProf()">Envoyer la Demande</button>
+                    <button type="button" onclick="fermerModalAjouterCoursProf()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.85rem 1rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; width: 100%;">Annuler</button>
+                </div>
+            </div>
+        </div>
+
         <!-- MODAL MODIFICATION CODE PROF (PRIVÉ) -->
         <div id="modal-modifier-code" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
             <div class="card" style="width: 100%; max-width: 400px; margin: 1rem;">
@@ -979,6 +1010,8 @@
                     <button onclick="switchAdminTab('profs')" id="tab-admin-profs">Gestion Profs</button>
                     <button onclick="switchAdminTab('frais')" id="tab-admin-frais">Configuration des Frais</button>
                     <button onclick="switchAdminTab('communiques')" id="tab-admin-communiques">Communiqués</button>
+                    <button onclick="switchAdminTab('demandes')" id="tab-admin-demandes">Demandes de Cours</button>
+                    <button onclick="switchAdminTab('messages')" id="tab-admin-messages">Messagerie Parents</button>
                 </div>
 
                 <!-- SOUS-ONGLET ELEVES -->
@@ -1119,6 +1152,47 @@
                         <p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué.</p>
                     </div>
                 </div>
+
+                <!-- SOUS-ONGLET DEMANDES DE COURS -->
+                <div id="admin-content-demandes" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Validation des Demandes de Cours des Professeurs</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Professeur</th>
+                                    <th>Cours Demandé</th>
+                                    <th>Classe / Option</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-admin-demandes-cours">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucune demande en attente.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SOUS-ONGLET MESSAGERIE PARENTS -->
+                <div id="admin-content-messages" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Boîte de Dialogue avec les Parents / Tuteurs</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tuteur</th>
+                                    <th>Dernier Message / Discussion</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-admin-messages">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun message.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -1137,6 +1211,23 @@
                 <button class="btn-submit" onclick="sauvegarderModificationCommunique()">Enregistrer</button>
                 <button type="button" onclick="fermerModalModifierCommunique()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.85rem 1rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; width: 100%;">Annuler</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL DISCUSSION PARENT-ADMIN -->
+    <div id="modal-discussion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="card" style="width: 100%; max-width: 550px; margin: 1rem; display: flex; flexDirection: column; max-height: 85vh;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 id="modal-discussion-titre" style="margin:0;">Discussion avec l'Administration</h3>
+                <button type="button" onclick="fermerModalDiscussion()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer;">✕</button>
+            </div>
+            <div id="discussion-messages-container" style="flex: 1; overflow-y: auto; background: rgba(9, 13, 22, 0.6); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1rem; max-height: 300px; display: flex; flex-direction: column; gap: 0.75rem;">
+                <!-- Les messages s'afficheront ici -->
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <textarea id="discussion-input-texte" rows="2" placeholder="Écrivez votre message ici..."></textarea>
+            </div>
+            <button class="btn-submit" onclick="envoyerMessageDiscussion()">Envoyer le message</button>
         </div>
     </div>
 
@@ -1170,7 +1261,7 @@
         ];
 
         // --- BASE DE DONNÉES LOCALE (localStorage) ---
-        const DB_KEY = "ecole_rdc_db_v7";
+        const DB_KEY = "ecole_rdc_db_v8";
 
         function getDefaultData() {
             let initialFrais = {};
@@ -1192,6 +1283,8 @@
                 communiques: [
                     { id: 1, date: "10 Septembre 2026", texte: "Rentrée scolaire effective sur toute l'étendue de la République. Les horaires sont disponibles auprès de l'administration." }
                 ],
+                demandesCours: [],
+                discussions: [],
                 adminPass: "admin2026"
             };
         }
@@ -1214,7 +1307,8 @@
         function peuplerSelectClasses() {
             const selects = [
                 document.getElementById('add-eleve-classe'),
-                document.getElementById('config-frais-classe')
+                document.getElementById('config-frais-classe'),
+                document.getElementById('demande-cours-classe')
             ];
 
             selects.forEach(sel => {
@@ -1287,17 +1381,19 @@
 
         // --- ESPACE PARENT ---
         let parentActif = null;
+        let tuteurDiscussionActif = null;
 
         function parentLogin() {
+            const nomTuteur = document.getElementById('parent-nom-input').value.trim();
             const code = document.getElementById('parent-code-input').value.trim();
-            if (!code) {
-                showMsg('parent-msg', 'Veuillez entrer votre Code Parent.', 'error');
+            if (!nomTuteur || !code) {
+                showMsg('parent-msg', 'Veuillez entrer votre Nom de Tuteur et votre Code Parent.', 'error');
                 return;
             }
             const db = getDB();
-            const enfants = db.eleves.filter(e => e.codeParent === code);
+            const enfants = db.eleves.filter(e => e.codeParent === code && e.tuteur.toLowerCase() === nomTuteur.toLowerCase());
             if (enfants.length === 0) {
-                showMsg('parent-msg', 'Code Parent incorrect ou introuvable.', 'error');
+                showMsg('parent-msg', 'Nom de tuteur ou Code Parent incorrect / introuvable.', 'error');
                 return;
             }
             parentActif = { code, tuteur: enfants[0].tuteur, enfants };
@@ -1310,6 +1406,7 @@
 
         function parentLogout() {
             parentActif = null;
+            document.getElementById('parent-nom-input').value = '';
             document.getElementById('parent-code-input').value = '';
             document.getElementById('parent-dashboard-card').style.display = 'none';
             document.getElementById('parent-login-card').style.display = 'block';
@@ -1407,6 +1504,63 @@
 
         function fermerDetailEnfant() {
             document.getElementById('enfant-detail-section').style.display = 'none';
+        }
+
+        function ouvrirDiscussionAdminParent() {
+            if (!parentActif) return;
+            tuteurDiscussionActif = parentActif.tuteur;
+            document.getElementById('modal-discussion-titre').textContent = `Discussion avec l'Administration (${tuteurDiscussionActif})`;
+            chargerMessagesDiscussion();
+            document.getElementById('modal-discussion').style.display = 'flex';
+        }
+
+        function fermerModalDiscussion() {
+            document.getElementById('modal-discussion').style.display = 'none';
+        }
+
+        function chargerMessagesDiscussion() {
+            const db = getDB();
+            const container = document.getElementById('discussion-messages-container');
+            const discussionsTuteur = db.discussions.filter(d => d.tuteur.toLowerCase() === tuteurDiscussionActif.toLowerCase());
+            
+            if (discussionsTuteur.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">Aucun message échangé pour l\'instant. Envoyez un message à la direction.</p>';
+                return;
+            }
+
+            container.innerHTML = discussionsTuteur.map(d => {
+                const isAdmin = d.expediteur === 'admin';
+                const alignStyle = isAdmin ? 'align-self: flex-start; background: rgba(99, 102, 241, 0.15); border: 1px solid var(--primary);' : 'align-self: flex-end; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success);';
+                const emetteurNom = isAdmin ? 'Administration' : d.tuteur;
+                return `
+                    <div style="${alignStyle} padding: 0.75rem; border-radius: var(--radius-sm); max-width: 80%; width: 100%;">
+                        <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.25rem;">${emetteurNom} • ${d.date}</div>
+                        <p style="font-size: 0.9rem; color: var(--text-main);">${d.texte}</p>
+                    </div>
+                `;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function envoyerMessageDiscussion() {
+            const texte = document.getElementById('discussion-input-texte').value.trim();
+            if (!texte || !tuteurDiscussionActif) return;
+
+            const db = getDB();
+            const expediteur = parentActif ? 'parent' : 'admin';
+            db.discussions.push({
+                id: Date.now(),
+                tuteur: tuteurDiscussionActif,
+                expediteur: expediteur,
+                texte: texte,
+                date: new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})
+            });
+            saveDB(db);
+            document.getElementById('discussion-input-texte').value = '';
+            chargerMessagesDiscussion();
+            if (sessionStorage.getItem('admin_logged') === 'true') {
+                chargerTableauMessagesAdmin();
+            }
         }
 
         // --- ESPACE ELEVE ---
@@ -1521,6 +1675,40 @@
             `).join('');
             
             chargerElevesClasseProf();
+        }
+
+        function ouvrirModalAjouterCoursProf() {
+            document.getElementById('demande-cours-nom').value = '';
+            const select = document.getElementById('demande-cours-classe');
+            select.innerHTML = '<option value="">-- Choisir une classe & option --</option>' + 
+                CLASSES_OPTIONS_RDC.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('modal-ajouter-cours-prof').style.display = 'flex';
+        }
+
+        function fermerModalAjouterCoursProf() {
+            document.getElementById('modal-ajouter-cours-prof').style.display = 'none';
+        }
+
+        function soumettreDemandeCoursProf() {
+            const nomCours = document.getElementById('demande-cours-nom').value.trim();
+            const classeCible = document.getElementById('demande-cours-classe').value;
+
+            if (!nomCours || !classeCible) {
+                showMsg('prof-cours-demande-msg', 'Veuillez remplir tous les champs.', 'error');
+                return;
+            }
+
+            const db = getDB();
+            db.demandesCours.push({
+                id: Date.now(),
+                profNom: profActif.nom,
+                cours: nomCours,
+                classe: classeCible,
+                statut: 'En attente'
+            });
+            saveDB(db);
+            fermerModalAjouterCoursProf();
+            alert('Votre demande d\'ajout de cours a été transmise à l\'administration pour validation.');
         }
 
         function changerNbInteros() {
@@ -1812,35 +2000,103 @@
                         </div>
                         <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
                             <button onclick="ouvrirModalModifierCommunique(${c.id})" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Modifier</button>
-                            <button onclick="supprimerCommunique(${c.id})" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button>
+                            <button onclick="supprimerCommunique(${c.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button>
                         </div>
                     </div>
                 `).join('');
             }
+
+            chargerTableauDemandesCoursAdmin();
+            chargerTableauMessagesAdmin();
         }
 
-        function modifierFraisEleve(mat) {
+        function chargerTableauDemandesCoursAdmin() {
             const db = getDB();
-            const eleve = db.eleves.find(e => e.matricule === mat);
-            if (!eleve) return;
-
-            const config = db.fraisConfig[eleve.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-            const defTotal = eleve.montantTotalExige !== undefined ? eleve.montantTotalExige : (config.scolaires + config.inscription + config.bulletin);
-
-            const nomComplet = `${eleve.nom || ''} ${eleve.prenom || ''}`.trim();
-            const nouveauTotalStr = prompt(`Définir le montant total des frais exigés par l'administration pour l'élève ${nomComplet} (${eleve.classe}) :`, defTotal);
-            if (nouveauTotalStr === null) return;
-            const nouveauTotal = parseFloat(nouveauTotalStr);
-
-            if (isNaN(nouveauTotal) || nouveauTotal < 0) {
-                alert('Montant invalide.');
+            const tbody = document.getElementById('table-admin-demandes-cours');
+            if (!db.demandesCours || db.demandesCours.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucune demande de cours.</td></tr>';
                 return;
             }
 
-            eleve.montantTotalExige = nouveauTotal;
-            saveDB(db);
-            chargerAdminDonnees();
-            alert(`Montant total des frais défini à ${nouveauTotal} $ par l'administration pour ${nomComplet}. Le site informe automatiquement les parents et élèves de leur situation financière.`);
+            tbody.innerHTML = db.demandesCours.map(d => {
+                const badgeStyle = d.statut === 'Validé' ? 'success' : d.statut === 'Refusé' ? 'danger' : '';
+                return `
+                    <tr>
+                        <td><strong>${d.profNom}</strong></td>
+                        <td>${d.cours}</td>
+                        <td>${d.classe}</td>
+                        <td><span class="badge ${badgeStyle}">${d.statut}</span></td>
+                        <td>
+                            ${d.statut === 'En attente' ? `
+                                <button onclick="validerDemandeCours(${d.id})" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; margin-right: 0.25rem;">Valider</button>
+                                <button onclick="refuserDemandeCours(${d.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Refuser</button>
+                            ` : '<span>-</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function validerDemandeCours(id) {
+            const db = getDB();
+            const d = db.demandesCours.find(item => item.id === id);
+            if (d) {
+                d.statut = 'Validé';
+                saveDB(db);
+                chargerAdminDonnees();
+            }
+        }
+
+        function refuserDemandeCours(id) {
+            const db = getDB();
+            const d = db.demandesCours.find(item => item.id === id);
+            if (d) {
+                d.statut = 'Refusé';
+                saveDB(db);
+                chargerAdminDonnees();
+            }
+        }
+
+        function chargerTableauMessagesAdmin() {
+            const db = getDB();
+            const tbody = document.getElementById('table-admin-messages');
+            
+            // Regrouper les messages par tuteur
+            const tuteursMap = {};
+            db.discussions.forEach(d => {
+                if (!tuteursMap[d.tuteur]) {
+                    tuteursMap[d.tuteur] = [];
+                }
+                tuteursMap[d.tuteur].push(d);
+            });
+
+            const tuteursKeys = Object.keys(tuteursMap);
+            if (tuteursKeys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun message de parent.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = tuteursKeys.map(tuteur => {
+                const msgs = tuteursMap[tuteur];
+                const dernierMsg = msgs[msgs.length - 1];
+                return `
+                    <tr>
+                        <td><strong>${tuteur}</strong></td>
+                        <td>${dernierMsg.texte}</td>
+                        <td>${dernierMsg.date}</td>
+                        <td>
+                            <button onclick="ouvrirDiscussionAdmin('${tuteur}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem;">Ouvrir la discussion</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function ouvrirDiscussionAdmin(tuteur) {
+            tuteurDiscussionActif = tuteur;
+            document.getElementById('modal-discussion-titre').textContent = `Discussion avec ${tuteurDiscussionActif}`;
+            chargerMessagesDiscussion();
+            document.getElementById('modal-discussion').style.display = 'flex';
         }
 
         function ajouterEleve() {
@@ -1853,26 +2109,23 @@
             const telParent = document.getElementById('add-eleve-tel-parent').value.trim();
 
             if (!nom || !prenom || !classe || !tuteur || !telParent) {
-                showMsg('admin-eleve-msg', 'Veuillez remplir les champs obligatoires (Nom, Prénom, Classe & Option, Tuteur, Téléphone du parent).', 'error');
+                showMsg('admin-eleve-msg', 'Veuillez remplir tous les champs obligatoires.', 'error');
                 return;
             }
 
             const db = getDB();
-            const matricule = Math.floor(1000 + Math.random() * 9000).toString();
             
-            let parentExist = db.eleves.find(e => e.tuteur && e.tuteur.toLowerCase() === tuteur.toLowerCase());
-            let codeParent;
-            if (parentExist && parentExist.codeParent) {
-                codeParent = parentExist.codeParent;
-            } else {
-                codeParent = 'PAR' + Math.floor(1000 + Math.random() * 9000);
+            // Vérifier si un code parent existe déjà pour ce tuteur exact, sinon en générer un nouveau
+            let codeParent = 'PAR' + Math.floor(1000 + Math.random() * 9000);
+            const eleveExistant = db.eleves.find(e => e.tuteur.toLowerCase() === tuteur.toLowerCase());
+            if (eleveExistant) {
+                codeParent = eleveExistant.codeParent;
             }
 
-            const config = db.fraisConfig[classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-            const montantTotalExige = config.scolaires + config.inscription + config.bulletin;
+            const nouveauMatricule = String(Math.floor(4000 + Math.random() * 5000));
 
             db.eleves.push({
-                matricule,
+                matricule: nouveauMatricule,
                 nom,
                 prenom,
                 classe,
@@ -1882,65 +2135,55 @@
                 telParent,
                 codeParent,
                 montantPaye: 0,
-                montantTotalExige,
                 notes: {},
-                presences: [{ date: new Date().toISOString().split('T')[0], statut: "Présent" }]
+                presences: []
             });
 
             saveDB(db);
+            
             document.getElementById('add-eleve-nom').value = '';
             document.getElementById('add-eleve-prenom').value = '';
             document.getElementById('add-eleve-classe').value = '';
             document.getElementById('add-eleve-tuteur').value = '';
             document.getElementById('add-eleve-email-parent').value = '';
             document.getElementById('add-eleve-tel-parent').value = '';
-            showMsg('admin-eleve-msg', `Élève inscrit avec succès ! Matricule: ${matricule} | Code Parent unique attribué: ${codeParent}`, 'success');
+
+            showMsg('admin-eleve-msg', `Élève inscrit avec succès ! Matricule: ${nouveauMatricule} | Code Parent: ${codeParent}`, 'success');
             chargerAdminDonnees();
         }
 
         function supprimerEleve(mat) {
-            if (!confirm('Voulez-vous vraiment supprimer cet élève ?')) return;
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cet élève ?')) return;
             const db = getDB();
             db.eleves = db.eleves.filter(e => e.matricule !== mat);
             saveDB(db);
             chargerAdminDonnees();
         }
 
-        function ajouterPaiementAdmin(mat) {
-            const montantStr = prompt('Entrez le montant versé ($) :');
-            if (!montantStr) return;
-            const montant = parseFloat(montantStr);
-            if (isNaN(montant) || montant <= 0) {
-                alert('Montant invalide.');
-                return;
-            }
-            const db = getDB();
-            const eleve = db.eleves.find(e => e.matricule === mat);
-            if (eleve) {
-                eleve.montantPaye = (eleve.montantPaye || 0) + montant;
-                saveDB(db);
-                chargerAdminDonnees();
-                const nomComplet = `${eleve.nom || ''} ${eleve.prenom || ''}`.trim();
-                alert(`Paiement de ${montant} $ enregistré pour ${nomComplet}. Le site informe à présent le parent et l'élève de la mise à jour de leur solde.`);
-            }
-        }
-
         function ajouterProf() {
             const nom = document.getElementById('add-prof-nom').value.trim();
             const matiere = document.getElementById('add-prof-matiere').value.trim();
+
             if (!nom || !matiere) {
                 showMsg('admin-prof-msg', 'Veuillez remplir tous les champs.', 'error');
                 return;
             }
-            const db = getDB();
-            const id = db.profs.length > 0 ? Math.max(...db.profs.map(p => p.id)) + 1 : 1;
-            const codeProf = 'PROF' + Math.floor(1000 + Math.random() * 9000);
 
-            db.profs.push({ id, nom, matiere, codeProf });
+            const db = getDB();
+            const codeProf = 'PROF' + Math.floor(1000 + Math.random() * 9000);
+            const nouveauId = db.profs.length > 0 ? Math.max(...db.profs.map(p => p.id)) + 1 : 1;
+
+            db.profs.push({
+                id: nouveauId,
+                nom,
+                matiere,
+                codeProf
+            });
+
             saveDB(db);
             document.getElementById('add-prof-nom').value = '';
             document.getElementById('add-prof-matiere').value = '';
-            showMsg('admin-prof-msg', `Professeur ajouté ! Code généré : ${codeProf}`, 'success');
+            showMsg('admin-prof-msg', `Professeur enregistré ! Code d'accès généré : ${codeProf}`, 'success');
             chargerAdminDonnees();
         }
 
@@ -1948,12 +2191,11 @@
             const db = getDB();
             const prof = db.profs.find(p => p.id === id);
             if (!prof) return;
-
             const nouveauCode = 'PROF' + Math.floor(1000 + Math.random() * 9000);
             prof.codeProf = nouveauCode;
             saveDB(db);
+            alert(`Nouveau code généré pour ${prof.nom} : ${nouveauCode}`);
             chargerAdminDonnees();
-            alert(`Nouveau code généré pour le professeur ${prof.nom} : ${nouveauCode}`);
         }
 
         function sauvegarderConfigFrais() {
@@ -1963,14 +2205,48 @@
             const bulletin = parseFloat(document.getElementById('config-frais-bulletin').value);
 
             if (!classe || isNaN(scolaires) || isNaN(inscription) || isNaN(bulletin)) {
-                showMsg('admin-frais-msg', 'Veuillez sélectionner une classe & option et remplir tous les montants.', 'error');
+                showMsg('admin-frais-msg', 'Veuillez sélectionner une classe et entrer des montants valides.', 'error');
                 return;
             }
 
             const db = getDB();
             db.fraisConfig[classe] = { scolaires, inscription, bulletin };
             saveDB(db);
-            showMsg('admin-frais-msg', 'Configuration des frais enregistrée avec succès pour ' + classe + ' !', 'success');
+            showMsg('admin-frais-msg', 'Tarifs mis à jour avec succès pour la classe ' + classe + ' !', 'success');
+        }
+
+        function modifierFraisEleve(mat) {
+            const db = getDB();
+            const e = db.eleves.find(item => item.matricule === mat);
+            if (!e) return;
+            const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+            const totalDefaut = config.scolaires + config.inscription + config.bulletin;
+            const actuel = e.montantTotalExige !== undefined ? e.montantTotalExige : totalDefaut;
+
+            const saisie = prompt(`Définir le montant total exigé pour l'élève ${e.nom} ${e.prenom} (Défaut classe : ${totalDefaut}$):`, actuel);
+            if (saisie !== null) {
+                const val = parseFloat(saisie);
+                if (!isNaN(val)) {
+                    e.montantTotalExige = val;
+                    saveDB(db);
+                    chargerAdminDonnees();
+                }
+            }
+        }
+
+        function ajouterPaiementAdmin(mat) {
+            const db = getDB();
+            const e = db.eleves.find(item => item.matricule === mat);
+            if (!e) return;
+            const saisie = prompt(`Enregistrer un montant payé (en $) pour ${e.nom} ${e.prenom} (Actuellement payé : ${e.montantPaye}$):`, '50');
+            if (saisie !== null) {
+                const val = parseFloat(saisie);
+                if (!isNaN(val)) {
+                    e.montantPaye += val;
+                    saveDB(db);
+                    chargerAdminDonnees();
+                }
+            }
         }
 
         function ajouterCommunique() {
@@ -1979,13 +2255,16 @@
                 showMsg('admin-com-msg', 'Le texte du communiqué ne peut pas être vide.', 'error');
                 return;
             }
-
             const db = getDB();
-            const id = db.communiques.length > 0 ? Math.max(...db.communiques.map(c => c.id)) + 1 : 1;
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            const dateStr = new Date().toLocaleDateString('fr-FR', options);
+            const nouveauId = db.communiques.length > 0 ? Math.max(...db.communiques.map(c => c.id)) + 1 : 1;
+            const dateStr = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-            db.communiques.unshift({ id, date: dateStr, texte });
+            db.communiques.unshift({
+                id: nouveauId,
+                date: dateStr,
+                texte: texte
+            });
+
             saveDB(db);
             document.getElementById('admin-com-texte').value = '';
             showMsg('admin-com-msg', 'Communiqué publié avec succès !', 'success');
@@ -1993,7 +2272,6 @@
         }
 
         function supprimerCommunique(id) {
-            if (!confirm('Voulez-vous supprimer ce communiqué ?')) return;
             const db = getDB();
             db.communiques = db.communiques.filter(c => c.id !== id);
             saveDB(db);
@@ -2002,11 +2280,10 @@
 
         function ouvrirModalModifierCommunique(id) {
             const db = getDB();
-            const com = db.communiques.find(c => c.id === id);
-            if (!com) return;
-
-            document.getElementById('edit-com-id').value = com.id;
-            document.getElementById('edit-com-texte').value = com.texte;
+            const c = db.communiques.find(item => item.id === id);
+            if (!c) return;
+            document.getElementById('edit-com-id').value = c.id;
+            document.getElementById('edit-com-texte').value = c.texte;
             document.getElementById('modal-modifier-communique').style.display = 'flex';
         }
 
@@ -2017,25 +2294,21 @@
         function sauvegarderModificationCommunique() {
             const id = parseInt(document.getElementById('edit-com-id').value);
             const texte = document.getElementById('edit-com-texte').value.trim();
-            if (!texte) {
-                alert('Le texte ne peut pas être vide.');
-                return;
-            }
+            if (!texte) return;
 
             const db = getDB();
-            const com = db.communiques.find(c => c.id === id);
-            if (com) {
-                com.texte = texte;
+            const c = db.communiques.find(item => item.id === id);
+            if (c) {
+                c.texte = texte;
                 saveDB(db);
                 fermerModalModifierCommunique();
                 chargerAdminDonnees();
-                alert('Communiqué mis à jour avec succès !');
             }
         }
 
         // --- INITIALISATION AU CHARGEMENT DE LA PAGE ---
         window.addEventListener('DOMContentLoaded', () => {
-            getDB(); // Initialisation de la base si inexistante
+            getDB(); // Initialisation de la base si vide
             peuplerSelectClasses();
             chargerCommuniquesPublics();
         });
