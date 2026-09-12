@@ -1,13 +1,1587 @@
-const db = getDB();
-            const enfants = db.eleves.filter(e => e.codeParent === code && e.tuteur.toLowerCase() === nomTuteur.toLowerCase());
-            if (enfants.length === 0) {
-                showMsg('parent-msg', 'Aucun enfant trouvé pour ce tuteur et ce code parent.', 'error');
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>École de la RDC</title>
+    <!-- Lien vers le fichier Manifest pour l'installation PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#090d16">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.25);
+            --bg-dark: #090d16;
+            --bg-card: #131c2e;
+            --bg-card-hover: #192640;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #1e293b;
+            --border-focus: #4f46e5;
+            --danger: #f43f5e;
+            --danger-bg: rgba(244, 63, 94, 0.1);
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, transparent 40%),
+                linear-gradient(225deg, rgba(234, 179, 8, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 50% 0%, #1a2744 0%, var(--bg-dark) 75%);
+            background-attachment: fixed;
+            line-height: 1.5;
+        }
+
+        header {
+            background-color: rgba(19, 28, 46, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        @media (min-width: 768px) {
+            header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 2rem;
+            }
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .header-brand { justify-content: flex-start; }
+        }
+
+        .school-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-btns {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+            scrollbar-width: none;
+        }
+
+        .nav-btns::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-btns button {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .nav-btns button:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--text-main);
+            border-color: var(--primary);
+        }
+
+        .nav-btns button.active {
+            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 14px var(--primary-glow);
+        }
+
+        main {
+            flex: 1;
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            main { padding: 2.5rem 2rem; }
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        @media (min-width: 768px) {
+            .card { padding: 2rem; margin-bottom: 2rem; }
+        }
+
+        h2, h3 {
+            color: var(--text-main);
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        h2 { font-size: 1.35rem; margin-bottom: 1rem; }
+        h3 { font-size: 1.1rem; margin-bottom: 1rem; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .form-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input, select, textarea {
+            background-color: rgba(9, 13, 22, 0.6);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem 1rem;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            width: 100%;
+            transition: var(--transition);
+        }
+
+        input:hover, select:hover, textarea:hover {
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            background-color: rgba(9, 13, 22, 0.9);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-wrapper input {
+            padding-right: 3rem;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 0.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .toggle-password:hover {
+            color: var(--text-main);
+        }
+
+        button.btn-submit {
+            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+            color: white;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px var(--primary-glow);
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button.btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--primary-glow);
+            filter: brightness(1.1);
+        }
+
+        button.btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+        
+        .btn-back:hover {
+            border-color: var(--text-main);
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .msg-box {
+            padding: 0.9rem 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+            display: none;
+            font-weight: 500;
+            animation: fadeIn 0.2s ease;
+        }
+        .msg-box.error { background-color: var(--danger-bg); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.2); }
+        .msg-box.success { background-color: var(--success-bg); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: rgba(9, 13, 22, 0.4);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        th {
+            background-color: rgba(9, 13, 22, 0.7);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.8px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            letter-spacing: 0.3px;
+        }
+        .badge.success { background-color: var(--success-bg); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .badge.danger { background-color: var(--danger-bg); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.2); }
+        .clickable-badge { cursor: pointer; transition: var(--transition); }
+        .clickable-badge:hover { transform: scale(1.05); filter: brightness(1.2); }
+
+        .info-jour-details {
+            background: rgba(9, 13, 22, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin: 1.5rem 0;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        .info-jour-details:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+        .info-jour-summary {
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--primary);
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            list-style: none;
+        }
+        .info-jour-summary::-webkit-details-marker { display: none; }
+        .info-jour-summary:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+        .info-jour-content {
+            padding: 0 1.25rem 1.25rem 1.25rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+        }
+
+        .communique-item {
+            background: rgba(9, 13, 22, 0.4);
+            border-left: 3px solid var(--primary);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            border: 1px solid var(--border);
+            border-left-width: 3px;
+            transition: var(--transition);
+        }
+        .communique-item:hover {
+            background: rgba(9, 13, 22, 0.6);
+            border-color: rgba(99, 102, 241, 0.3);
+            border-left-width: 3px;
+        }
+
+        .communique-date {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 0.35rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .portal-links {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .portal-links { grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+        }
+
+        .portal-box {
+            background: rgba(9, 13, 22, 0.4);
+            border: 1px solid var(--border);
+            padding: 1.5rem 1.25rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .portal-box:hover {
+            border-color: var(--primary);
+            background: var(--bg-card-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px var(--primary-glow);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .info-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .info-card {
+            background: rgba(9, 13, 22, 0.4);
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background-color: var(--bg-card);
+        }
+
+        code {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        /* --- STLES WHATSAPP PROFESSIONNEL POUR LA MESSAGERIE --- */
+        .wa-chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 480px;
+            background: #0b141a;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .wa-chat-header {
+            background: #202c33;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .wa-chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .wa-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), #00a884);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .wa-contact-name {
+            color: #e9edef;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .wa-contact-status {
+            color: #8696a0;
+            font-size: 0.75rem;
+        }
+
+        .wa-messages-list {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background-color: #0b141a;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0);
+            background-size: 24px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .wa-message {
+            max-width: 75%;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            position: relative;
+            word-wrap: break-word;
+            line-height: 1.4;
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+            animation: fadeIn 0.2s ease;
+        }
+
+        .wa-message.incoming {
+            background-color: #202c33;
+            color: #e9edef;
+            align-self: flex-start;
+            border-top-left-radius: 0;
+        }
+
+        .wa-message.outgoing {
+            background-color: #005c4b;
+            color: #e9edef;
+            align-self: flex-end;
+            border-top-right-radius: 0;
+        }
+
+        .wa-message-text {
+            margin-bottom: 0.2rem;
+            padding-right: 3.5rem; /* Espace pour l'heure et les coches */
+        }
+
+        .wa-message-meta {
+            font-size: 0.65rem;
+            color: #8696a0;
+            float: right;
+            margin-top: -0.2rem;
+            margin-left: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            user-select: none;
+        }
+
+        .wa-message.outgoing .wa-message-meta {
+            color: #79c7b2;
+        }
+
+        .wa-checks {
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .wa-chat-input-area {
+            background: #202c33;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .wa-chat-input-area textarea {
+            flex: 1;
+            background: #2a3942;
+            border: none;
+            border-radius: 8px;
+            padding: 0.65rem 1rem;
+            color: #e9edef;
+            font-size: 0.9rem;
+            resize: none;
+            max-height: 100px;
+            min-height: 40px;
+        }
+
+        .wa-chat-input-area textarea:focus {
+            outline: none;
+            box-shadow: none;
+            background: #2a3942;
+            border-color: transparent;
+        }
+
+        .wa-send-btn {
+            background: #00a884;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .wa-send-btn:hover {
+            filter: brightness(1.1);
+            transform: scale(1.05);
+        }
+
+        /* --- STYLES D'IMPRESSION --- */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                background-image: none !important;
+            }
+            header, footer, .nav-btns, .btn-back, button, .no-print {
+                display: none !important;
+            }
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+            .table-responsive {
+                border: 1px solid #ccc !important;
+                background: white !important;
+            }
+            table {
+                width: 100% !important;
+                color: black !important;
+            }
+            th {
+                background-color: #f1f5f9 !important;
+                color: black !important;
+                border-bottom: 2px solid #ccc !important;
+            }
+            td {
+                border-bottom: 1px solid #eee !important;
+                color: black !important;
+            }
+            input, select {
+                border: none !important;
+                background: transparent !important;
+                color: black !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-brand">
+            <svg class="school-logo" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#007fff" d="M0 0h900v600H0z"/>
+                <path fill="#ce1126" d="m0 600 900-400v-200L0 400z"/>
+                <path fill="#007fff" d="m0 600 900-366V0L0 566z"/>
+                <path fill="#f7d618" d="m0 600 900-333v-67L0 533z"/>
+                <path fill="#ce1126" d="m0 600 900-300v-50L0 550z"/>
+                <path fill="#f7d618" d="m302.2 121.2-59.2 43.1 22.6-69.5-59.2-43.1h73.2l22.6-69.5 22.6 69.5h73.2l-59.2 43.1 22.6 69.5z"/>
+            </svg>
+            <h1>École de la RDC</h1>
+        </div>
+        <nav class="nav-btns" aria-label="Navigation principale">
+            <button onclick="switchView('home')" id="btn-home" class="active">Accueil</button>
+            <button onclick="switchView('parent')" id="btn-parent">Parent</button>
+            <button onclick="switchView('eleve')" id="btn-eleve">Élève</button>
+            <button onclick="switchView('prof')" id="btn-prof">Prof</button>
+            <button onclick="switchView('admin')" id="btn-admin">Admin</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- VUE ACCUEIL -->
+        <section id="home" class="view active">
+            <div class="card">
+                <h2>Bienvenue sur le Portail Officiel</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Consultez les actualités, suivez les progrès académiques et accédez à votre espace dédié en toute sécurité.</p>
+                
+                <div class="portal-links">
+                    <div class="portal-box" onclick="switchView('parent')">
+                        <span style="font-size: 1.5rem;" aria-hidden="true">👨‍👩‍👧</span>
+                        <h3 style="color: var(--primary); margin: 0; font-size: 1rem;">Espace Parent</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Suivi des frais, présences et évolution de vos enfants.</p>
+                    </div>
+                    <div class="portal-box" onclick="switchView('eleve')">
+                        <span style="font-size: 1.5rem;" aria-hidden="true">🎒</span>
+                        <h3 style="color: var(--primary); margin: 0; font-size: 1rem;">Espace Élève</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Consultez votre bulletin et statut de frais.</p>
+                    </div>
+                    <div class="portal-box" onclick="switchView('prof')">
+                        <span style="font-size: 1.5rem;" aria-hidden="true">👨‍🏫</span>
+                        <h3 style="color: var(--primary); margin: 0; font-size: 1rem;">Espace Prof</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Cotation et gestion des listes de classes.</p>
+                    </div>
+                </div>
+
+                <details class="info-jour-details">
+                    <summary class="info-jour-summary">
+                        <span>💡</span> Info du jour : Rappel important
+                    </summary>
+                    <div class="info-jour-content">
+                        Les inscriptions et la régulation des frais scolaires pour le compte du trimestre en cours se clôturent bientôt. Pensez à consulter régulièrement vos espaces dédiés pour suivre la progression de vos enfants.
+                    </div>
+                </details>
+
+                <h3 style="margin-top: 2rem;">📢 Communiqués Récents</h3>
+                <div id="public-communiques">
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Chargement des communiqués...</p>
+                </div>
+
+                <div class="card" style="margin-top: 2rem; margin-bottom: 0;">
+                    <h3 style="margin-bottom: 1rem;">ℹ️ Informations de l'École</h3>
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <strong style="color: var(--text-main); display: block; margin-bottom: 0.25rem;">📍 Adresse</strong>
+                            Kinshasa, République Démocratique du Congo
+                        </div>
+                        <div class="info-card">
+                            <strong style="color: var(--text-main); display: block; margin-bottom: 0.25rem;">📞 Contacts</strong>
+                            Tél : +243 000 000 000<br>Email : contact@ecoledelardc.cd
+                        </div>
+                        <div class="info-card">
+                            <strong style="color: var(--text-main); display: block; margin-bottom: 0.25rem;">🕒 Heures d'ouverture</strong>
+                            Lundi - Vendredi : 07h30 - 15h30
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VUE ESPACE PARENT -->
+        <section id="parent" class="view">
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
+            
+            <div class="card" id="parent-login-card">
+                <h2>Parent - Connexion</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">Entrez votre <strong>Nom de Tuteur</strong> et votre <strong>Code Parent</strong> unique pour accéder au suivi de tous vos enfants.</p>
+                <div id="parent-msg" class="msg-box" role="alert"></div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="parent-nom-input">Nom du Tuteur</label>
+                    <input type="text" id="parent-nom-input" placeholder="Ex: M. Jean Kabamba" autocomplete="off">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="parent-code-input">Code Parent</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="parent-code-input" placeholder="Ex: PAR9210" autocomplete="off">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('parent-code-input', this)" aria-label="Afficher le mot de passe">👁️</button>
+                    </div>
+                </div>
+                <button class="btn-submit" onclick="parentLogin()">Se connecter</button>
+            </div>
+
+            <div class="card" id="parent-dashboard-card" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <h2 style="font-size: 1.15rem; margin: 0;">Tuteur : <span id="p-nom-tuteur-titre" style="color: var(--primary);"></span></h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button onclick="ouvrirDiscussionAdminParent()" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">💬 Contacter Admin</button>
+                        <button onclick="parentLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Déconnexion</button>
+                    </div>
+                </div>
+                
+                <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Liste de vos enfants rattachés :</p>
+
+                <div class="table-responsive" style="margin-bottom: 1.5rem;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Matricule</th>
+                                <th>Enfant</th>
+                                <th>Classe & Option</th>
+                                <th>Statut Frais</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-parent-enfants">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="enfant-detail-section" style="display: none; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <h3 style="font-size: 1.1rem; margin: 0;">Dossier : <span id="p-nom-eleve" style="color: var(--primary);"></span></h3>
+                        <button onclick="fermerDetailEnfant()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.3rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem;">Fermer</button>
+                    </div>
+
+                    <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem; font-size: 0.9rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+                        <div><strong>Matricule :</strong> <span id="p-mat"></span></div>
+                        <div><strong>Classe & Option :</strong> <span id="p-classe"></span></div>
+                        <div><strong>Sexe :</strong> <span id="p-sexe"></span></div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;"><strong>Statut Frais :</strong> <span id="p-statut-frais" class="badge"></span></div>
+                    </div>
+
+                    <!-- SECTION FRAIS CÔTÉ PARENT -->
+                    <h4 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-main);">💰 Situation Financière & Frais Exigés</h4>
+                    <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem;">
+                        <div class="table-responsive" style="margin-top: 0; margin-bottom: 1rem;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Type de Frais</th>
+                                        <th>Montant Exigé</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Frais Scolaires</td>
+                                        <td id="val-p-frais-scolaires">0 $</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Frais d'Inscription</td>
+                                        <td id="val-p-frais-inscription">0 $</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Frais de Bulletin</td>
+                                        <td id="val-p-frais-bulletin">0 $</td>
+                                    </tr>
+                                    <tr style="background: rgba(255, 255, 255, 0.02);">
+                                        <td><strong>Total Exigé</strong></td>
+                                        <td><strong id="val-p-total-exige">0 $</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+                            <div>Montant Payé : <span id="val-p-montant-paye" style="color: var(--success); font-weight: 600;">0 $</span></div>
+                            <div><strong>Reste à Payer :</strong> <span id="val-p-reste-payer" style="color: var(--danger); font-weight: 700;">0 $</span></div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-main);">📅 Calendrier des Présences</h4>
+                    <div class="table-responsive" style="margin-bottom: 1.5rem;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Statut de Présence</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-parent-presences">
+                                <tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Aucun historique.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-main);">Évolution & Cotations (Bulletin)</h4>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cours</th>
+                                    <th>Trimestre</th>
+                                    <th>Intero 1</th>
+                                    <th>Intero 2</th>
+                                    <th>Devoir</th>
+                                    <th>Examen</th>
+                                    <th>Total / Max</th>
+                                    <th>Appréciation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-parent-notes">
+                                <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucun bulletin.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VUE ESPACE ELEVE -->
+        <section id="eleve" class="view">
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
+            <div class="card" id="eleve-login-card">
+                <h2>Espace Élève - Connexion</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">Entrez votre code matricule personnel.</p>
+                <div id="eleve-msg" class="msg-box" role="alert"></div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="eleve-matricule-input">Votre Matricule</label>
+                    <input type="text" id="eleve-matricule-input" placeholder="Ex: 4812" autocomplete="off">
+                </div>
+                <button class="btn-submit" onclick="eleveLogin()">Accéder à mon espace</button>
+            </div>
+
+            <div class="card" id="eleve-dashboard-card" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h2 style="font-size: 1.15rem; margin: 0;">Mon Dossier : <span id="e-nom-eleve" style="color: var(--primary);"></span></h2>
+                    <button onclick="eleveLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Déconnexion</button>
+                </div>
+                
+                <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem; font-size: 0.9rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+                    <div><strong>Matricule :</strong> <span id="e-mat"></span></div>
+                    <div><strong>Classe & Option :</strong> <span id="e-classe"></span></div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;"><strong>Statut Frais :</strong> <span id="e-statut-frais" class="badge"></span></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h3 style="font-size: 1.1rem; margin: 0;">Mes Notes et Évolution</h3>
+                    <button class="btn-submit" onclick="window.print()" style="width: auto; padding: 0.4rem 1rem; font-size: 0.85rem;">🖨️ Imprimer mon Bulletin</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cours</th>
+                                <th>Trimestre</th>
+                                <th>Intero 1</th>
+                                <th>Intero 2</th>
+                                <th>Devoir</th>
+                                <th>Examen</th>
+                                <th>Total / Max</th>
+                                <th>Appréciation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-eleve-notes">
+                            <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune note disponible.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VUE ESPACE PROF -->
+        <section id="prof" class="view">
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
+            
+            <div class="card" id="prof-login-card">
+                <h2>Espace Professeur - Connexion</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">Entrez votre <strong>Code Prof</strong> généré ou personnalisé pour accéder à vos classes.</p>
+                <div id="prof-msg" class="msg-box" role="alert"></div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="prof-code-input">Code Prof</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="prof-code-input" placeholder="Ex: PROF5821" autocomplete="off">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('prof-code-input', this)" aria-label="Afficher le mot de passe">👁️</button>
+                    </div>
+                </div>
+                <button class="btn-submit" onclick="profLogin()">Se connecter</button>
+            </div>
+
+            <div class="card" id="prof-dashboard-card" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <h2 style="font-size: 1.15rem; margin: 0;">Professeur : <span id="prof-nom-titre" style="color: var(--primary);"></span></h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button onclick="ouvrirModalAjouterCoursProf()" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">+ Demander un Cours</button>
+                        <button onclick="ouvrirModalModifierCodeProf()" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Modifier mon Code</button>
+                        <button onclick="profLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Déconnexion</button>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label for="prof-classe-select">Sélectionner la Classe & Option</label>
+                        <select id="prof-classe-select" onchange="chargerElevesClasseProf()">
+                            <option value="">-- Choisir une classe & option --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="prof-trimestre-select">Trimestre</label>
+                        <select id="prof-trimestre-select" onchange="chargerElevesClasseProf()">
+                            <option value="Trimestre 1">Trimestre 1</option>
+                            <option value="Trimestre 2">Trimestre 2</option>
+                            <option value="Trimestre 3">Trimestre 3</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="prof-cours-input">Intitulé du Cours / Matière</label>
+                        <input type="text" id="prof-cours-input" placeholder="Ex: Mathématiques" oninput="chargerElevesClasseProf()">
+                    </div>
+                </div>
+
+                <!-- CONFIGURATION DU NOMBRE D'INTERROGATIONS ET DES COTATIONS MAX -->
+                <div style="background: rgba(9, 13, 22, 0.4); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--text-main);">⚙️ Configuration du Barème et des Évaluations</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="prof-nb-interos">Nombre d'Interrogations</label>
+                            <select id="prof-nb-interos" onchange="changerNbInteros()">
+                                <option value="1">1 Interrogation</option>
+                                <option value="2" selected>2 Interrogations</option>
+                                <option value="3">3 Interrogations</option>
+                                <option value="4">4 Interrogations</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="prof-cotation-max">Cotation Maximale (Total / Max)</label>
+                            <select id="prof-cotation-max" onchange="chargerElevesClasseProf()">
+                                <option value="10">Sur / 10</option>
+                                <option value="20" selected>Sur / 20</option>
+                                <option value="30">Sur / 30</option>
+                                <option value="50">Sur / 50</option>
+                                <option value="100">Sur / 100</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h3 style="font-size: 1.1rem; margin: 0;">Cotations des Élèves</h3>
+                    <button class="btn-submit" onclick="window.print()" style="width: auto; padding: 0.4rem 1rem; font-size: 0.85rem;">🖨️ Imprimer la Liste / Notes</button>
+                </div>
+                <div class="table-responsive" style="margin-bottom: 1.5rem;">
+                    <table>
+                        <thead>
+                            <tr id="prof-table-headers">
+                                <th>Matricule</th>
+                                <th>Élève</th>
+                                <th class="th-int-col th-int-1">Intero 1</th>
+                                <th class="th-int-col th-int-2">Intero 2</th>
+                                <th class="th-int-col th-int-3" style="display:none;">Intero 3</th>
+                                <th class="th-int-col th-int-4" style="display:none;">Intero 4</th>
+                                <th>Devoir</th>
+                                <th>Examen</th>
+                                <th id="th-label-total">Total / 20</th>
+                                <th>Appréciation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-prof-cotations">
+                            <tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe & option.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button class="btn-submit" onclick="enregistrerNotesProf()">Enregistrer les Cotations</button>
+            </div>
+        </section>
+
+        <!-- MODAL AJOUT COURS PROF (DEMANDE VALIDATION ADMIN) -->
+        <div id="modal-ajouter-cours-prof" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+            <div class="card" style="width: 100%; max-width: 450px; margin: 1rem;">
+                <h3>Demander l'ajout d'un cours</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Soumettez une demande de cours à l'administration pour validation.</p>
+                <div id="prof-cours-demande-msg" class="msg-box" role="alert"></div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="demande-cours-nom">Nom / Intitulé du Cours</label>
+                    <input type="text" id="demande-cours-nom" placeholder="Ex: Physique Avancée">
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="demande-cours-classe">Classe & Option Cible</label>
+                    <select id="demande-cours-classe">
+                        <option value="">-- Choisir une classe & option --</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn-submit" onclick="soumettreDemandeCoursProf()">Envoyer la Demande</button>
+                    <button type="button" onclick="fermerModalAjouterCoursProf()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.85rem 1rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; width: 100%;">Annuler</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL MODIFICATION CODE PROF (PRIVÉ) -->
+        <div id="modal-modifier-code" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+            <div class="card" style="width: 100%; max-width: 400px; margin: 1rem;">
+                <h3>Modifier mon Code d'Accès</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Définissez un nouveau code personnel et privé pour vos prochaines connexions.</p>
+                <div id="prof-mod-msg" class="msg-box" role="alert"></div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="nouveau-code-prof">Nouveau Code Privé</label>
+                    <input type="text" id="nouveau-code-prof" placeholder="Ex: moncode2026">
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn-submit" onclick="sauvegarderNouveauCodeProf()">Enregistrer</button>
+                    <button type="button" onclick="fermerModalModifierCodeProf()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.85rem 1rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; width: 100%;">Annuler</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VUE ESPACE ADMIN -->
+        <section id="admin" class="view">
+            <button class="btn-back" onclick="switchView('home')">&#8592; Retour à l'accueil</button>
+            
+            <div class="card" id="admin-login-card">
+                <h2>Administration - Connexion</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">Accès réservé à la direction et aux gestionnaires de l'établissement.</p>
+                <div id="admin-msg" class="msg-box" role="alert"></div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="admin-pass-input">Mot de passe Administrateur</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="admin-pass-input" placeholder="Mot de passe admin" autocomplete="off">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('admin-pass-input', this)" aria-label="Afficher le mot de passe">👁️</button>
+                    </div>
+                </div>
+                <button class="btn-submit" onclick="adminLogin()">Connexion Administration</button>
+            </div>
+
+            <div class="card" id="admin-dashboard-card" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <h2 style="font-size: 1.15rem; margin: 0;">Tableau de Bord Administratif</h2>
+                    <button onclick="adminLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Déconnexion</button>
+                </div>
+
+                <div class="nav-btns" style="margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                    <button onclick="switchAdminTab('eleves')" id="tab-admin-eleves" class="active">Gestion Élèves</button>
+                    <button onclick="switchAdminTab('profs')" id="tab-admin-profs">Gestion Profs</button>
+                    <button onclick="switchAdminTab('frais')" id="tab-admin-frais">Configuration des Frais</button>
+                    <button onclick="switchAdminTab('communiques')" id="tab-admin-communiques">Communiqués</button>
+                    <button onclick="switchAdminTab('demandes')" id="tab-admin-demandes">Demandes de Cours</button>
+                    <button onclick="switchAdminTab('messages')" id="tab-admin-messages">Messagerie Parents</button>
+                </div>
+
+                <!-- SOUS-ONGLET ELEVES -->
+                <div id="admin-content-eleves" class="admin-tab-content">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Ajouter un nouvel élève</h3>
+                    <div id="admin-eleve-msg" class="msg-box" role="alert"></div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="add-eleve-nom">Nom</label>
+                            <input type="text" id="add-eleve-nom" placeholder="Ex: Kabamba">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-eleve-prenom">Prénom</label>
+                            <input type="text" id="add-eleve-prenom" placeholder="Ex: Paul">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-eleve-classe">Classe & Option</label>
+                            <select id="add-eleve-classe">
+                                <option value="">-- Sélectionner une classe & option --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="add-eleve-sexe">Sexe</label>
+                            <select id="add-eleve-sexe">
+                                <option value="M">Masculin</option>
+                                <option value="F">Féminin</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="add-eleve-tuteur">Nom du Tuteur / Parent</label>
+                            <input type="text" id="add-eleve-tuteur" placeholder="Ex: M. Jean Kabamba">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-eleve-email-parent">Adresse Mail du Parent (Optionnel)</label>
+                            <input type="email" id="add-eleve-email-parent" placeholder="Ex: parent@email.com">
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="add-eleve-tel-parent">Numéro de Téléphone du Parent</label>
+                            <input type="tel" id="add-eleve-tel-parent" placeholder="Ex: +243 990 000 000">
+                        </div>
+                    </div>
+                    <button class="btn-submit" onclick="ajouterEleve()" style="margin-bottom: 2rem;">Inscrire l'élève</button>
+
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Liste des Élèves Enregistrés</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Matricule</th>
+                                    <th>Nom & Prénom</th>
+                                    <th>Classe / Option</th>
+                                    <th>Tuteur / Contact Parent</th>
+                                    <th>Code Parent</th>
+                                    <th>Statut Frais</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-admin-eleves">
+                                <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Aucun élève.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SOUS-ONGLET PROFS -->
+                <div id="admin-content-profs" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Ajouter un Professeur</h3>
+                    <div id="admin-prof-msg" class="msg-box" role="alert"></div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="add-prof-nom">Nom du Professeur</label>
+                            <input type="text" id="add-prof-nom" placeholder="Ex: Prof. Mukendi">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-prof-matiere">Matière / Cours Principal</label>
+                            <input type="text" id="add-prof-matiere" placeholder="Ex: Informatique">
+                        </div>
+                    </div>
+                    <button class="btn-submit" onclick="ajouterProf()" style="margin-bottom: 2rem;">Enregistrer le Professeur</button>
+
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Liste des Professeurs & Codes Générés</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Matière</th>
+                                    <th>Code d'Accès Généré</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-admin-profs">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun professeur.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SOUS-ONGLET CONFIG FRAIS -->
+                <div id="admin-content-frais" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Configuration des Montants Exigés par Classe / Option</h3>
+                    <div id="admin-frais-msg" class="msg-box" role="alert"></div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="config-frais-classe">Classe & Option Cible</label>
+                            <select id="config-frais-classe">
+                                <option value="">-- Sélectionner une classe & option --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="config-frais-scolaires">Frais Scolaires ($)</label>
+                            <input type="number" id="config-frais-scolaires" placeholder="Ex: 150">
+                        </div>
+                        <div class="form-group">
+                            <label for="config-frais-inscription">Frais d'Inscription ($)</label>
+                            <input type="number" id="config-frais-inscription" placeholder="Ex: 50">
+                        </div>
+                        <div class="form-group">
+                            <label for="config-frais-bulletin">Frais de Bulletin ($)</label>
+                            <input type="number" id="config-frais-bulletin" placeholder="Ex: 10">
+                        </div>
+                    </div>
+                    <button class="btn-submit" onclick="sauvegarderConfigFrais()">Enregistrer les Tarifs</button>
+                </div>
+
+                <!-- SOUS-ONGLET COMMUNIQUES -->
+                <div id="admin-content-communiques" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Publier et Modifier un Communiqué Important</h3>
+                    <div id="admin-com-msg" class="msg-box" role="alert"></div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="admin-com-texte">Contenu du Communiqué</label>
+                        <textarea id="admin-com-texte" rows="4" placeholder="Rédigez l'annonce officielle ici..."></textarea>
+                    </div>
+                    <button class="btn-submit" onclick="ajouterCommunique()" style="margin-bottom: 2rem;">Publier / Ajouter</button>
+
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Communiqués Actifs</h3>
+                    <div id="admin-list-communiques">
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué.</p>
+                    </div>
+                </div>
+
+                <!-- SOUS-ONGLET DEMANDES DE COURS -->
+                <div id="admin-content-demandes" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Validation des Demandes de Cours des Professeurs</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Professeur</th>
+                                    <th>Cours Demandé</th>
+                                    <th>Classe / Option</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-admin-demandes-cours">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucune demande en attente.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SOUS-ONGLET MESSAGERIE PARENTS -->
+                <div id="admin-content-messages" class="admin-tab-content" style="display: none;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Boîte de Dialogue avec les Parents / Tuteurs</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tuteur</th>
+                                    <th>Dernier Message / Discussion</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-admin-messages">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun message.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL MODIFICATION COMMUNIQUE (ADMIN) -->
+    <div id="modal-modifier-communique" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="card" style="width: 100%; max-width: 450px; margin: 1rem;">
+            <h3>Modifier le Communiqué</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Mettez à jour le contenu de ce communiqué important.</p>
+            <input type="hidden" id="edit-com-id">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="edit-com-texte">Texte du Communiqué</label>
+                <textarea id="edit-com-texte" rows="4" style="width: 100%;"></textarea>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="btn-submit" onclick="sauvegarderModificationCommunique()">Enregistrer</button>
+                <button type="button" onclick="fermerModalModifierCommunique()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.85rem 1rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; width: 100%;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DISCUSSION PARENT-ADMIN (STYLE WHATSAPP PROFESSIONNEL) -->
+    <div id="modal-discussion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="card" style="width: 100%; max-width: 600px; margin: 1rem; padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h3 id="modal-discussion-titre" style="margin:0; font-size: 1.1rem;">Discussion Sécurisée</h3>
+                <button type="button" onclick="fermerModalDiscussion()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer;">✕</button>
+            </div>
+            
+            <!-- Conteneur style WhatsApp -->
+            <div class="wa-chat-container">
+                <div class="wa-chat-header">
+                    <div class="wa-chat-header-info">
+                        <div class="wa-avatar" id="wa-avatar-initials">AD</div>
+                        <div>
+                            <div class="wa-contact-name" id="wa-contact-title">Administration École de la RDC</div>
+                            <div class="wa-contact-status">en ligne</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="discussion-messages-container" class="wa-messages-list">
+                    <!-- Les bulles de messages WhatsApp s'afficheront ici dynamiquement -->
+                </div>
+
+                <div class="wa-chat-input-area">
+                    <textarea id="discussion-input-texte" rows="1" placeholder="Tapez un message..." onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); envoyerMessageDiscussion(); }"></textarea>
+                    <button class="wa-send-btn" onclick="envoyerMessageDiscussion()" aria-label="Envoyer">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 École de la RDC &bull; Tous droits réservés &bull; Kinshasa, RDC
+    </footer>
+
+    <script>
+        // --- LISTE OFFICIELLE DES CLASSES (1 à 8) ET OPTIONS DE LA RDC ---
+        const CLASSES_OPTIONS_RDC = [
+            "1ère Année Secondaire",
+            "2ème Année Secondaire",
+            "3ème Année Secondaire",
+            "4ème Année Secondaire",
+            "5ème Humanités - Commerciale et Gestion",
+            "6ème Humanités - Commerciale et Gestion",
+            "5ème Humanités - Scientifique (Math-Physique)",
+            "6ème Humanités - Scientifique (Math-Physique)",
+            "5ème Humanités - Scientifique (Bio-Chimie)",
+            "6ème Humanités - Scientifique (Bio-Chimie)",
+            "5ème Humanités - Pédagogie Générale",
+            "6ème Humanités - Pédagogie Générale",
+            "5ème Humanités - Litteraire",
+            "6ème Humanités - Litteraire",
+            "5ème Humanités - Technique Industrielle / Électricité",
+            "6ème Humanités - Technique Industrielle / Électricité",
+            "5ème Humanités - Coupe et Couture",
+            "6ème Humanités - Coupe et Couture",
+            "7ème Éducation de Base",
+            "8ème Éducation de Base"
+        ];
+
+        // --- BASE DE DONNÉES LOCALE (localStorage) ---
+        const DB_KEY = "ecole_rdc_db_v8";
+
+        function getDefaultData() {
+            let initialFrais = {};
+            CLASSES_OPTIONS_RDC.forEach(c => {
+                initialFrais[c] = { scolaires: 150, inscription: 50, bulletin: 10 };
+            });
+
+            return {
+                eleves: [
+                    { matricule: "4812", nom: "Kabamba", prenom: "Paul", classe: "6ème Humanités - Commerciale et Gestion", sexe: "M", tuteur: "M. Jean Kabamba", emailParent: "jean.kabamba@email.com", telParent: "+243 990 123 456", codeParent: "PAR9210", montantPaye: 210, notes: { "Mathématiques_Trimestre 1": { intero1: 15, intero2: 17, intero3: undefined, intero4: undefined, devoir: 16, examen: 16, note: 16, max: 20, appreciation: "Très Bien" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
+                    { matricule: "4813", nom: "Mukendi", prenom: "Sarah", classe: "6ème Humanités - Commerciale et Gestion", sexe: "F", tuteur: "M. Jean Kabamba", emailParent: "jean.kabamba@email.com", telParent: "+243 990 123 456", codeParent: "PAR9210", montantPaye: 210, notes: { "Mathématiques_Trimestre 1": { intero1: 18, intero2: 19, intero3: undefined, intero4: undefined, devoir: 18, examen: 18, note: 18, max: 20, appreciation: "Excellent" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
+                    { matricule: "4901", nom: "Tshisekedi", prenom: "David", classe: "5ème Humanités - Scientifique (Math-Physique)", sexe: "M", tuteur: "Mme Marie Tshisekedi", emailParent: "", telParent: "+243 810 987 654", codeParent: "PAR4412", montantPaye: 100, notes: {}, presences: [] }
+                ],
+                profs: [
+                    { id: 1, nom: "Prof. Mukendi", matiere: "Mathématiques", codeProf: "PROF5821" },
+                    { id: 2, nom: "Prof. Kabasele", matiere: "Informatique", codeProf: "PROF3392" }
+                ],
+                fraisConfig: initialFrais,
+                communiques: [
+                    { id: 1, date: "10 Septembre 2026", texte: "Rentrée scolaire effective sur toute l'étendue de la République. Les horaires sont disponibles auprès de l'administration." }
+                ],
+                demandesCours: [],
+                discussions: [],
+                adminPass: "admin2026"
+            };
+        }
+
+        function getDB() {
+            const data = localStorage.getItem(DB_KEY);
+            if (!data) {
+                const initial = getDefaultData();
+                saveDB(initial);
+                return initial;
+            }
+            return JSON.parse(data);
+        }
+
+        function saveDB(data) {
+            localStorage.setItem(DB_KEY, JSON.stringify(data));
+        }
+
+        // --- REMPLISSAGE DES SELECTEURS DE CLASSES ---
+        function peuplerSelectClasses() {
+            const selects = [
+                document.getElementById('add-eleve-classe'),
+                document.getElementById('config-frais-classe'),
+                document.getElementById('demande-cours-classe')
+            ];
+
+            selects.forEach(sel => {
+                if (!sel) return;
+                const valeurActuelle = sel.value;
+                sel.innerHTML = '<option value="">-- Sélectionner une classe & option --</option>' + 
+                    CLASSES_OPTIONS_RDC.map(c => `<option value="${c}">${c}</option>`).join('');
+                if (valeurActuelle) sel.value = valeurActuelle;
+            });
+        }
+
+        // --- NAVIGATION ENTRE VUES ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btns button').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(viewId).classList.add('active');
+            const btn = document.getElementById('btn-' + viewId);
+            if (btn) btn.classList.add('active');
+            
+            window.scrollTo(0, 0);
+
+            if (viewId === 'home') {
+                chargerCommuniquesPublics();
+            } else if (viewId === 'prof') {
+                verifierSessionProf();
+            } else if (viewId === 'admin') {
+                verifierSessionAdmin();
+            }
+        }
+
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+            }
+        }
+
+        function showMsg(elementId, text, type) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.textContent = text;
+            el.className = 'msg-box ' + type;
+            el.style.display = 'block';
+            setTimeout(() => {
+                if (el.textContent === text) el.style.display = 'none';
+            }, 5000);
+        }
+
+        // --- ACCUEIL ---
+        function chargerCommuniquesPublics() {
+            const db = getDB();
+            const container = document.getElementById('public-communiques');
+            if (!container) return;
+            if (db.communiques.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué récent.</p>';
                 return;
             }
-            parentActif = { nomTuteur: nomTuteur, code: code, enfants: enfants };
+            container.innerHTML = db.communiques.map(c => `
+                <div class="communique-item">
+                    <div class="communique-date">${c.date}</div>
+                    <p style="font-size: 0.9rem; color: var(--text-main);">${c.texte}</p>
+                </div>
+            `).join('');
+        }
+
+        // --- ESPACE PARENT ---
+        let parentActif = null;
+        let tuteurDiscussionActif = null;
+
+        function parentLogin() {
+            const nomTuteur = document.getElementById('parent-nom-input').value.trim();
+            const code = document.getElementById('parent-code-input').value.trim();
+            if (!nomTuteur || !code) {
+                showMsg('parent-msg', 'Veuillez entrer votre Nom de Tuteur et votre Code Parent.', 'error');
+                return;
+            }
+            const db = getDB();
+            const enfants = db.eleves.filter(e => e.codeParent === code && e.tuteur.toLowerCase() === nomTuteur.toLowerCase());
+            if (enfants.length === 0) {
+                showMsg('parent-msg', 'Nom de tuteur ou Code Parent incorrect / introuvable.', 'error');
+                return;
+            }
+            parentActif = { code, tuteur: enfants[0].tuteur, enfants };
             document.getElementById('parent-login-card').style.display = 'none';
             document.getElementById('parent-dashboard-card').style.display = 'block';
-            document.getElementById('p-nom-tuteur-titre').textContent = nomTuteur;
+            document.getElementById('p-nom-tuteur-titre').textContent = parentActif.tuteur;
+            
             chargerTableauEnfantsParent();
         }
 
@@ -21,84 +1595,76 @@ const db = getDB();
         }
 
         function chargerTableauEnfantsParent() {
+            const tbody = document.getElementById('table-parent-enfants');
             if (!parentActif) return;
             const db = getDB();
-            // Actualiser les données des enfants du tuteur
-            parentActif.enfants = db.eleves.filter(e => e.codeParent === parentActif.code && e.tuteur.toLowerCase() === parentActif.nomTuteur.toLowerCase());
-            const tbody = document.getElementById('table-parent-enfants');
-            if (parentActif.enfants.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucun enfant enregistré.</td></tr>';
-                return;
-            }
+            parentActif.enfants = db.eleves.filter(e => e.codeParent === parentActif.code);
 
             tbody.innerHTML = parentActif.enfants.map(e => {
-                const configFrais = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-                const totalExige = configFrais.scolaires + configFrais.inscription + configFrais.bulletin;
-                const estEnOrdre = e.montantPaye >= totalExige;
-                const badgeClass = estEnOrdre ? 'success' : 'danger';
-                const badgeText = estEnOrdre ? 'En ordre' : 'Non en ordre';
-
+                const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+                const totalExige = (e.montantTotalExige !== undefined ? e.montantTotalExige : (config.scolaires + config.inscription + config.bulletin));
+                const reste = Math.max(0, totalExige - e.montantPaye);
+                const soldeOk = e.montantPaye >= totalExige;
+                const nomComplet = `${e.nom || ''} ${e.prenom || ''}`.trim();
                 return `
                     <tr>
                         <td><code>${e.matricule}</code></td>
-                        <td><strong>${e.nom} ${e.prenom}</strong></td>
+                        <td><strong>${nomComplet}</strong></td>
                         <td>${e.classe}</td>
-                        <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-                        <td><button onclick="voirDetailEnfantParent('${e.matricule}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Consulter</button></td>
+                        <td><span class="badge ${soldeOk ? 'success' : 'danger'}">${soldeOk ? 'Soldé' : 'Payé: ' + e.montantPaye + '$ | Reste: ' + reste + '$'}</span></td>
+                        <td><button onclick="voirDetailEnfant('${e.matricule}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem;">Dossier</button></td>
                     </tr>
                 `;
             }).join('');
         }
 
-        function voirDetailEnfantParent(matricule) {
+        function voirDetailEnfant(mat) {
             const db = getDB();
-            const enfant = db.eleves.find(e => e.matricule === matricule);
-            if (!enfant) return;
+            const e = db.eleves.find(item => item.matricule === mat);
+            if (!e) return;
 
             document.getElementById('enfant-detail-section').style.display = 'block';
-            document.getElementById('p-nom-eleve').textContent = `${enfant.nom} ${enfant.prenom}`;
-            document.getElementById('p-mat').textContent = enfant.matricule;
-            document.getElementById('p-classe').textContent = enfant.classe;
-            document.getElementById('p-sexe').textContent = enfant.sexe === 'M' ? 'Masculin' : 'Féminin';
+            document.getElementById('p-nom-eleve').textContent = `${e.nom || ''} ${e.prenom || ''}`.trim();
+            document.getElementById('p-mat').textContent = e.matricule;
+            document.getElementById('p-classe').textContent = e.classe;
+            document.getElementById('p-sexe').textContent = e.sexe === 'M' ? 'Masculin' : 'Féminin';
 
-            const configFrais = db.fraisConfig[enfant.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-            const totalExige = configFrais.scolaires + configFrais.inscription + configFrais.bulletin;
-            const restePayer = Math.max(0, totalExige - (enfant.montantPaye || 0));
-            const estEnOrdre = (enfant.montantPaye || 0) >= totalExige;
+            const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+            const totalExige = (e.montantTotalExige !== undefined ? e.montantTotalExige : (config.scolaires + config.inscription + config.bulletin));
+            const reste = Math.max(0, totalExige - e.montantPaye);
+            const soldeOk = e.montantPaye >= totalExige;
 
-            const badgeEl = document.getElementById('p-statut-frais');
-            badgeEl.className = 'badge ' + (estEnOrdre ? 'success' : 'danger');
-            badgeEl.textContent = estEnOrdre ? 'En ordre' : 'Non en ordre';
-
-            document.getElementById('val-p-frais-scolaires').textContent = configFrais.scolaires + ' $';
-            document.getElementById('val-p-frais-inscription').textContent = configFrais.inscription + ' $';
-            document.getElementById('val-p-frais-bulletin').textContent = configFrais.bulletin + ' $';
+            document.getElementById('val-p-frais-scolaires').textContent = config.scolaires + ' $';
+            document.getElementById('val-p-frais-inscription').textContent = config.inscription + ' $';
+            document.getElementById('val-p-frais-bulletin').textContent = config.bulletin + ' $';
             document.getElementById('val-p-total-exige').textContent = totalExige + ' $';
-            document.getElementById('val-p-montant-paye').textContent = (enfant.montantPaye || 0) + ' $';
-            document.getElementById('val-p-reste-payer').textContent = restePayer + ' $';
+            document.getElementById('val-p-montant-paye').textContent = e.montantPaye + ' $';
+            document.getElementById('val-p-reste-payer').textContent = reste + ' $';
 
-            // Présences
+            const badgeFrais = document.getElementById('p-statut-frais');
+            badgeFrais.className = 'badge ' + (soldeOk ? 'success' : 'danger');
+            badgeFrais.textContent = soldeOk ? 'Frais Soldés' : `Payé: ${e.montantPaye}$ | Reste: ${reste}$`;
+
             const tbodyPres = document.getElementById('table-parent-presences');
-            if (!enfant.presences || enfant.presences.length === 0) {
+            if (!e.presences || e.presences.length === 0) {
                 tbodyPres.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Aucun historique de présence.</td></tr>';
             } else {
-                tbodyPres.innerHTML = enfant.presences.map(p => `
-                    <tr>
-                        <td>${p.date}</td>
-                        <td><span class="badge ${p.statut === 'Présent' ? 'success' : 'danger'}">${p.statut}</span></td>
-                    </tr>
+                tbodyPres.innerHTML = e.presences.map(p => `
+                    <tr><td>${p.date}</td><td><span class="badge success">${p.statut}</span></td></tr>
                 `).join('');
             }
 
-            // Notes
             const tbodyNotes = document.getElementById('table-parent-notes');
-            if (!enfant.notes || Object.keys(enfant.notes).length === 0) {
-                tbodyNotes.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune note enregistrée.</td></tr>';
+            const notesKeys = Object.keys(e.notes || {});
+            if (notesKeys.length === 0) {
+                tbodyNotes.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune cotation enregistrée pour le moment.</td></tr>';
             } else {
-                tbodyNotes.innerHTML = Object.entries(enfant.notes).map(([cle, n]) => {
-                    const parts = cle.split('_');
+                tbodyNotes.innerHTML = notesKeys.map(key => {
+                    const n = e.notes[key];
+                    const parts = key.split('_');
                     const cours = parts[0];
                     const trimestre = parts[1] || 'Trimestre 1';
+                    const maxVal = n.max || 20;
                     return `
                         <tr>
                             <td><strong>${cours}</strong></td>
@@ -107,8 +1673,8 @@ const db = getDB();
                             <td>${n.intero2 !== undefined ? n.intero2 : '-'}</td>
                             <td>${n.devoir !== undefined ? n.devoir : '-'}</td>
                             <td>${n.examen !== undefined ? n.examen : '-'}</td>
-                            <td><strong>${n.note !== undefined ? n.note : '-'} / ${n.max || 20}</strong></td>
-                            <td><span class="badge success">${n.appreciation || 'Validé'}</span></td>
+                            <td><strong>${n.note !== undefined ? n.note : '-'} / ${maxVal}</strong></td>
+                            <td>${n.appreciation || '-'}</td>
                         </tr>
                     `;
                 }).join('');
@@ -121,723 +1687,22 @@ const db = getDB();
             document.getElementById('enfant-detail-section').style.display = 'none';
         }
 
+        // --- GESTION DE LA MESSAGERIE (STYLE WHATSAPP) ---
         function ouvrirDiscussionAdminParent() {
             if (!parentActif) return;
-            tuteurDiscussionActif = parentActif.nomTuteur;
-            document.getElementById('modal-discussion-titre').textContent = `Discussion avec Administration (Tuteur : ${tuteurDiscussionActif})`;
-            document.getElementById('wa-contact-title').textContent = `Tuteur : ${tuteurDiscussionActif}`;
+            tuteurDiscussionActif = parentActif.tuteur;
+            document.getElementById('modal-discussion-titre').textContent = `Discussion avec l'Administration (${parentActif.tuteur})`;
+            document.getElementById('wa-avatar-initials').textContent = parentActif.tuteur.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase() || 'TP';
+            document.getElementById('wa-contact-title').textContent = 'Administration École de la RDC';
             document.getElementById('modal-discussion').style.display = 'flex';
             chargerMessagesDiscussion();
         }
 
-        // --- ESPACE ELEVE ---
-        let eleveActif = null;
-
-        function eleveLogin() {
-            const mat = document.getElementById('eleve-matricule-input').value.trim();
-            if (!mat) {
-                showMsg('eleve-msg', 'Veuillez entrer votre matricule.', 'error');
-                return;
-            }
-            const db = getDB();
-            const eleve = db.eleves.find(e => e.matricule === mat);
-            if (!eleve) {
-                showMsg('eleve-msg', 'Matricule introuvable. Veuillez vérifier.', 'error');
-                return;
-            }
-            eleveActif = eleve;
-            document.getElementById('eleve-login-card').style.display = 'none';
-            document.getElementById('eleve-dashboard-card').style.display = 'block';
-            document.getElementById('e-nom-eleve').textContent = `${eleve.nom} ${eleve.prenom}`;
-            document.getElementById('e-mat').textContent = eleve.matricule;
-            document.getElementById('e-classe').textContent = eleve.classe;
-
-            const configFrais = db.fraisConfig[eleve.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-            const totalExige = configFrais.scolaires + configFrais.inscription + configFrais.bulletin;
-            const estEnOrdre = (eleve.montantPaye || 0) >= totalExige;
-
-            const badgeEl = document.getElementById('e-statut-frais');
-            badgeEl.className = 'badge ' + (estEnOrdre ? 'success' : 'danger');
-            badgeEl.textContent = estEnOrdre ? 'En ordre' : 'Non en ordre';
-
-            chargerNotesEleve();
-        }
-
-        function eleveLogout() {
-            eleveActif = null;
-            document.getElementById('eleve-matricule-input').value = '';
-            document.getElementById('eleve-dashboard-card').style.display = 'none';
-            document.getElementById('eleve-login-card').style.display = 'block';
-        }
-
-        function chargerNotesEleve() {
-            if (!eleveActif) return;
-            const db = getDB();
-            const eleve = db.eleves.find(e => e.matricule === eleveActif.matricule);
-            const tbody = document.getElementById('table-eleve-notes');
-            if (!eleve.notes || Object.keys(eleve.notes).length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune note disponible pour le moment.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = Object.entries(eleve.notes).map(([cle, n]) => {
-                const parts = cle.split('_');
-                const cours = parts[0];
-                const trimestre = parts[1] || 'Trimestre 1';
-                return `
-                    <tr>
-                        <td><strong>${cours}</strong></td>
-                        <td>${trimestre}</td>
-                        <td>${n.intero1 !== undefined ? n.intero1 : '-'}</td>
-                        <td>${n.intero2 !== undefined ? n.intero2 : '-'}</td>
-                        <td>${n.devoir !== undefined ? n.devoir : '-'}</td>
-                        <td>${n.examen !== undefined ? n.examen : '-'}</td>
-                        <td><strong>${n.note !== undefined ? n.note : '-'} / ${n.max || 20}</strong></td>
-                        <td><span class="badge success">${n.appreciation || 'Validé'}</span></td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // --- ESPACE PROFESSEUR ---
-        let profActif = null;
-
-        function verifierSessionProf() {
-            if (!profActif) {
-                document.getElementById('prof-login-card').style.display = 'block';
-                document.getElementById('prof-dashboard-card').style.display = 'none';
-            } else {
-                document.getElementById('prof-login-card').style.display = 'none';
-                document.getElementById('prof-dashboard-card').style.display = 'block';
-                document.getElementById('prof-nom-titre').textContent = profActif.nom;
-                document.getElementById('prof-cours-input').value = profActif.matiere;
-                peuplerSelectClassesProf();
-            }
-        }
-
-        function profLogin() {
-            const code = document.getElementById('prof-code-input').value.trim();
-            if (!code) {
-                showMsg('prof-msg', 'Veuillez entrer votre Code Prof.', 'error');
-                return;
-            }
-            const db = getDB();
-            const prof = db.profs.find(p => p.codeProf === code);
-            if (!prof) {
-                showMsg('prof-msg', 'Code Prof incorrect.', 'error');
-                return;
-            }
-            profActif = prof;
-            document.getElementById('prof-code-input').value = '';
-            verifierSessionProf();
-        }
-
-        function profLogout() {
-            profActif = null;
-            verifierSessionProf();
-        }
-
-        function peuplerSelectClassesProf() {
-            const sel = document.getElementById('prof-classe-select');
-            if (!sel) return;
-            const val = sel.value;
-            sel.innerHTML = '<option value="">-- Choisir une classe & option --</option>' + 
-                CLASSES_OPTIONS_RDC.map(c => `<option value="${c}">${c}</option>`).join('');
-            if (val) sel.value = val;
-        }
-
-        function changerNbInteros() {
-            const nb = document.getElementById('prof-nb-interos').value;
-            // Afficher/masquer les colonnes intero 3 et 4 dans l'en-tête et le tableau
-            const th3 = document.querySelector('.th-int-3');
-            const th4 = document.querySelector('.th-int-4');
-            if (th3) th3.style.display = (nb >= 3) ? '' : 'none';
-            if (th4) th4.style.display = (nb >= 4) ? '' : 'none';
-            chargerElevesClasseProf();
-        }
-
-        function chargerElevesClasseProf() {
-            if (!profActif) return;
-            const classe = document.getElementById('prof-classe-select').value;
-            const trimestre = document.getElementById('prof-trimestre-select').value;
-            const cours = document.getElementById('prof-cours-input').value.trim() || profActif.matiere;
-            const maxVal = document.getElementById('prof-cotation-max').value;
-            const nbInteros = parseInt(document.getElementById('prof-nb-interos').value) || 2;
-
-            document.getElementById('th-label-total').textContent = `Total / ${maxVal}`;
-
-            const tbody = document.getElementById('table-prof-cotations');
-            if (!classe) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe & option.</td></tr>';
-                return;
-            }
-
-            const db = getDB();
-            const elevesClasse = db.eleves.filter(e => e.classe === classe);
-            if (elevesClasse.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Aucun élève dans cette classe.</td></tr>';
-                return;
-            }
-
-            const cleNote = `${cours}_${trimestre}`;
-
-            tbody.innerHTML = elevesClasse.map(e => {
-                const n = (e.notes && e.notes[cleNote]) || { intero1: '', intero2: '', intero3: '', intero4: '', devoir: '', examen: '', note: '' };
-                return `
-                    <tr data-matricule="${e.matricule}">
-                        <td><code>${e.matricule}</code></td>
-                        <td><strong>${e.nom} ${e.prenom}</strong></td>
-                        <td class="th-int-col th-int-1"><input type="number" class="input-note-int1" value="${n.intero1 !== undefined ? n.intero1 : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
-                        <td class="th-int-col th-int-2"><input type="number" class="input-note-int2" value="${n.intero2 !== undefined ? n.intero2 : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
-                        <td class="th-int-col th-int-3" style="${nbInteros >= 3 ? '' : 'display:none;'}"><input type="number" class="input-note-int3" value="${n.intero3 !== undefined ? n.intero3 : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
-                        <td class="th-int-col th-int-4" style="${nbInteros >= 4 ? '' : 'display:none;'}"><input type="number" class="input-note-int4" value="${n.intero4 !== undefined ? n.intero4 : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
-                        <td><input type="number" class="input-note-devoir" value="${n.devoir !== undefined ? n.devoir : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
-                        <td><input type="number" class="input-note-examen" value="${n.examen !== undefined ? n.examen : ''}" min="0" max="${maxVal}" oninput="calculerTotalLigne(this)"></td>
-                        <td><strong class="txt-total-ligne">${n.note !== undefined ? n.note : '-'}</strong> / ${maxVal}</td>
-                        <td><span class="badge success badge-appreciation">${n.appreciation || 'Validé'}</span></td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function calculerTotalLigne(input) {
-            const tr = input.closest('tr');
-            const maxVal = parseFloat(document.getElementById('prof-cotation-max').value) || 20;
-            const nbInteros = parseInt(document.getElementById('prof-nb-interos').value) || 2;
-
-            const i1 = parseFloat(tr.querySelector('.input-note-int1').value) || 0;
-            const i2 = parseFloat(tr.querySelector('.input-note-int2').value) || 0;
-            const i3 = nbInteros >= 3 ? (parseFloat(tr.querySelector('.input-note-int3').value) || 0) : 0;
-            const i4 = nbInteros >= 4 ? (parseFloat(tr.querySelector('.input-note-int4').value) || 0) : 0;
-            const dev = parseFloat(tr.querySelector('.input-note-devoir').value) || 0;
-            const ex = parseFloat(tr.querySelector('.input-note-examen').value) || 0;
-
-            // Calcul d'une moyenne ou somme pondérée selon le barème
-            let sommeInteros = i1 + i2;
-            let diviseur = 2;
-            if (nbInteros >= 3) { sommeInteros += i3; diviseur = 3; }
-            if (nbInteros >= 4) { sommeInteros += i4; diviseur = 4; }
-
-            const moyenneIntero = sommeInteros / diviseur;
-            // Formule standard : (Moyenne Interrogations + Devoir + Examen) ramenée sur maxVal ou simple moyenne
-            const totalCalc = Math.min(maxVal, Math.round(((moyenneIntero + dev + ex) / 3) * (maxVal / 20) * 10) / 10);
-
-            tr.querySelector('.txt-total-ligne').textContent = isNaN(totalCalc) ? '-' : totalCalc;
-
-            let app = 'Passable';
-            const pct = (totalCalc / maxVal) * 100;
-            if (pct >= 80) app = 'Excellent';
-            else if (pct >= 70) app = 'Très Bien';
-            else if (pct >= 60) app = 'Bien';
-            else if (pct >= 50) app = 'Assez Bien';
-            else app = 'Insuffisant';
-
-            tr.querySelector('.badge-appreciation').textContent = app;
-        }
-
-        function enregistrerNotesProf() {
-            if (!profActif) return;
-            const classe = document.getElementById('prof-classe-select').value;
-            const trimestre = document.getElementById('prof-trimestre-select').value;
-            const cours = document.getElementById('prof-cours-input').value.trim() || profActif.matiere;
-            const maxVal = parseInt(document.getElementById('prof-cotation-max').value) || 20;
-
-            if (!classe) {
-                alert('Veuillez sélectionner une classe.');
-                return;
-            }
-
-            const db = getDB();
-            const lignes = document.querySelectorAll('#table-prof-cotations tr[data-matricule]');
-            let modifie = false;
-
-            lignes.forEach(tr => {
-                const mat = tr.getAttribute('data-matricule');
-                const eleve = db.eleves.find(e => e.matricule === mat);
-                if (!eleve) return;
-
-                const i1 = tr.querySelector('.input-note-int1').value;
-                const i2 = tr.querySelector('.input-note-int2').value;
-                const i3El = tr.querySelector('.input-note-int3');
-                const i4El = tr.querySelector('.input-note-int4');
-                const dev = tr.querySelector('.input-note-devoir').value;
-                const ex = tr.querySelector('.input-note-examen').value;
-                const noteTotale = tr.querySelector('.txt-total-ligne').textContent;
-                const appreciation = tr.querySelector('.badge-appreciation').textContent;
-
-                if (!eleve.notes) eleve.notes = {};
-                const cle = `${cours}_${trimestre}`;
-
-                eleve.notes[cle] = {
-                    intero1: i1 !== '' ? parseFloat(i1) : undefined,
-                    intero2: i2 !== '' ? parseFloat(i2) : undefined,
-                    intero3: i3El && i3El.value !== '' ? parseFloat(i3El.value) : undefined,
-                    intero4: i4El && i4El.value !== '' ? parseFloat(i4El.value) : undefined,
-                    devoir: dev !== '' ? parseFloat(dev) : undefined,
-                    examen: ex !== '' ? parseFloat(ex) : undefined,
-                    note: noteTotale !== '-' ? parseFloat(noteTotale) : undefined,
-                    max: maxVal,
-                    appreciation: appreciation
-                };
-                modifie = true;
-            });
-
-            if (modifie) {
-                saveDB(db);
-                alert('Cotations enregistrées avec succès !');
-            }
-        }
-
-        function ouvrirModalAjouterCoursProf() {
-            peuplerSelectClassesProf();
-            document.getElementById('modal-ajouter-cours-prof').style.display = 'flex';
-        }
-
-        function fermerModalAjouterCoursProf() {
-            document.getElementById('modal-ajouter-cours-prof').style.display = 'none';
-        }
-
-        function soumettreDemandeCoursProf() {
-            if (!profActif) return;
-            const nomCours = document.getElementById('demande-cours-nom').value.trim();
-            const classe = document.getElementById('demande-cours-classe').value;
-            if (!nomCours || !classe) {
-                showMsg('prof-cours-demande-msg', 'Veuillez remplir tous les champs.', 'error');
-                return;
-            }
-            const db = getDB();
-            db.demandesCours.push({
-                id: Date.now(),
-                profNom: profActif.nom,
-                cours: nomCours,
-                classe: classe,
-                statut: 'En attente'
-            });
-            saveDB(db);
-            showMsg('prof-cours-demande-msg', 'Demande envoyée avec succès à l\'administration.', 'success');
-            setTimeout(() => {
-                fermerModalAjouterCoursProf();
-                document.getElementById('demande-cours-nom').value = '';
-            }, 1500);
-        }
-
-        function ouvrirModalModifierCodeProf() {
-            document.getElementById('modal-modifier-code').style.display = 'flex';
-        }
-
-        function fermerModalModifierCodeProf() {
-            document.getElementById('modal-modifier-code').style.display = 'none';
-        }
-
-        function sauvegarderNouveauCodeProf() {
-            if (!profActif) return;
-            const nouveauCode = document.getElementById('nouveau-code-prof').value.trim();
-            if (!nouveauCode) {
-                showMsg('prof-mod-msg', 'Veuillez entrer un code valide.', 'error');
-                return;
-            }
-            const db = getDB();
-            const prof = db.profs.find(p => p.id === profActif.id);
-            if (prof) {
-                prof.codeProf = nouveauCode;
-                saveDB(db);
-                profActif.codeProf = nouveauCode;
-                showMsg('prof-mod-msg', 'Code modifié avec succès !', 'success');
-                setTimeout(() => {
-                    fermerModalModifierCodeProf();
-                    document.getElementById('nouveau-code-prof').value = '';
-                }, 1500);
-            }
-        }
-
-        // --- ESPACE ADMIN ---
-        let adminConnecte = false;
-
-        function verifierSessionAdmin() {
-            if (!adminConnecte) {
-                document.getElementById('admin-login-card').style.display = 'block';
-                document.getElementById('admin-dashboard-card').style.display = 'none';
-            } else {
-                document.getElementById('admin-login-card').style.display = 'none';
-                document.getElementById('admin-dashboard-card').style.display = 'block';
-                peuplerSelectClasses();
-                chargerAdminEleves();
-                chargerAdminProfs();
-                chargerAdminConfigFrais();
-                chargerAdminCommuniques();
-                chargerAdminDemandesCours();
-                chargerAdminMessages();
-            }
-        }
-
-        function adminLogin() {
-            const pass = document.getElementById('admin-pass-input').value.trim();
-            const db = getDB();
-            if (pass === db.adminPass) {
-                adminConnecte = true;
-                document.getElementById('admin-pass-input').value = '';
-                verifierSessionAdmin();
-            } else {
-                showMsg('admin-msg', 'Mot de passe administrateur incorrect.', 'error');
-            }
-        }
-
-        function adminLogout() {
-            adminConnecte = false;
-            verifierSessionAdmin();
-        }
-
-        function switchAdminTab(tabId) {
-            document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('#admin .nav-btns button').forEach(b => b.classList.remove('active'));
-            document.getElementById('admin-content-' + tabId).style.display = 'block';
-            document.getElementById('tab-admin-' + tabId).classList.add('active');
-        }
-
-        // Gestion Admin - Élèves
-        function ajouterEleve() {
-            const nom = document.getElementById('add-eleve-nom').value.trim();
-            const prenom = document.getElementById('add-eleve-prenom').value.trim();
-            const classe = document.getElementById('add-eleve-classe').value;
-            const sexe = document.getElementById('add-eleve-sexe').value;
-            const tuteur = document.getElementById('add-eleve-tuteur').value.trim();
-            const emailParent = document.getElementById('add-eleve-email-parent').value.trim();
-            const telParent = document.getElementById('add-eleve-tel-parent').value.trim();
-
-            if (!nom || !prenom || !classe || !tuteur || !telParent) {
-                showMsg('admin-eleve-msg', 'Veuillez remplir tous les champs obligatoires.', 'error');
-                return;
-            }
-
-            const db = getDB();
-            const matricule = Math.floor(1000 + Math.random() * 9000).toString();
-            const codeParent = 'PAR' + Math.floor(1000 + Math.random() * 9000);
-
-            db.eleves.push({
-                matricule: matricule,
-                nom: nom,
-                prenom: prenom,
-                classe: classe,
-                sexe: sexe,
-                tuteur: tuteur,
-                emailParent: emailParent,
-                telParent: telParent,
-                codeParent: codeParent,
-                montantPaye: 0,
-                notes: {},
-                presences: [{ date: new Date().toISOString().split('T')[0], statut: 'Présent' }]
-            });
-
-            saveDB(db);
-            showMsg('admin-eleve-msg', `Élève inscrit avec succès ! Matricule : ${matricule} | Code Parent : ${codeParent}`, 'success');
-            
-            // Réinitialiser les champs
-            document.getElementById('add-eleve-nom').value = '';
-            document.getElementById('add-eleve-prenom').value = '';
-            document.getElementById('add-eleve-tuteur').value = '';
-            document.getElementById('add-eleve-email-parent').value = '';
-            document.getElementById('add-eleve-tel-parent').value = '';
-            chargerAdminEleves();
-        }
-
-        function chargerAdminEleves() {
-            const db = getDB();
-            const tbody = document.getElementById('table-admin-eleves');
-            if (db.eleves.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Aucun élève enregistré.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = db.eleves.map(e => {
-                const configFrais = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-                const totalExige = configFrais.scolaires + configFrais.inscription + configFrais.bulletin;
-                const estEnOrdre = (e.montantPaye || 0) >= totalExige;
-
-                return `
-                    <tr>
-                        <td><code>${e.matricule}</code></td>
-                        <td><strong>${e.nom} ${e.prenom}</strong></td>
-                        <td>${e.classe}</td>
-                        <td>${e.tuteur}<br><small style="color: var(--text-muted);">${e.telParent}</small></td>
-                        <td><code>${e.codeParent}</code></td>
-                        <td><span class="badge ${estEnOrdre ? 'success' : 'danger'}">${estEnOrdre ? 'En ordre' : 'Non en ordre'}</span></td>
-                        <td>
-                            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-                                <button onclick="modifierPaiementAdmin('${e.matricule}')" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">💰 Paiement</button>
-                                <button onclick="supprimerEleveAdmin('${e.matricule}')" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function modifierPaiementAdmin(matricule) {
-            const db = getDB();
-            const eleve = db.eleves.find(e => e.matricule === matricule);
-            if (!eleve) return;
-            const configFrais = db.fraisConfig[eleve.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-            const totalExige = configFrais.scolaires + configFrais.inscription + configFrais.bulletin;
-
-            const saisie = prompt(`Modifier le montant payé pour ${eleve.nom} ${eleve.prenom} (Total exigé : ${totalExige} $) :`, eleve.montantPaye || 0);
-            if (saisie !== null) {
-                const montant = parseFloat(saisie);
-                if (!isNaN(montant)) {
-                    eleve.montantPaye = montant;
-                    saveDB(db);
-                    chargerAdminEleves();
-                    alert('Paiement mis à jour avec succès !');
-                }
-            }
-        }
-
-        function supprimerEleveAdmin(matricule) {
-            if (!confirm('Êtes-vous sûr de vouloir supprimer cet élève ?')) return;
-            const db = getDB();
-            db.eleves = db.eleves.filter(e => e.matricule !== matricule);
-            saveDB(db);
-            chargerAdminEleves();
-        }
-
-        // Gestion Admin - Professeurs
-        function ajouterProf() {
-            const nom = document.getElementById('add-prof-nom').value.trim();
-            const matiere = document.getElementById('add-prof-matiere').value.trim();
-            if (!nom || !matiere) {
-                showMsg('admin-prof-msg', 'Veuillez remplir tous les champs.', 'error');
-                return;
-            }
-            const db = getDB();
-            const codeProf = 'PROF' + Math.floor(1000 + Math.random() * 9000);
-            db.profs.push({
-                id: Date.now(),
-                nom: nom,
-                matiere: matiere,
-                codeProf: codeProf
-            });
-            saveDB(db);
-            showMsg('admin-prof-msg', `Professeur enregistré ! Code d'accès généré : ${codeProf}`, 'success');
-            document.getElementById('add-prof-nom').value = '';
-            document.getElementById('add-prof-matiere').value = '';
-            chargerAdminProfs();
-        }
-
-        function chargerAdminProfs() {
-            const db = getDB();
-            const tbody = document.getElementById('table-admin-profs');
-            if (db.profs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun professeur.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = db.profs.map(p => `
-                <tr>
-                    <td><strong>${p.nom}</strong></td>
-                    <td>${p.matiere}</td>
-                    <td><code>${p.codeProf}</code></td>
-                    <td><button onclick="supprimerProfAdmin(${p.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button></td>
-                </tr>
-            `).join('');
-        }
-
-        function supprimerProfAdmin(id) {
-            if (!confirm('Supprimer ce professeur ?')) return;
-            const db = getDB();
-            db.profs = db.profs.filter(p => p.id !== id);
-            saveDB(db);
-            chargerAdminProfs();
-        }
-
-        // Gestion Admin - Configuration Frais
-        function chargerAdminConfigFrais() {
-            const sel = document.getElementById('config-frais-classe');
-            if (!sel) return;
-            const valeurActuelle = sel.value;
-            sel.innerHTML = '<option value="">-- Sélectionner une classe & option --</option>' + 
-                CLASSES_OPTIONS_RDC.map(c => `<option value="${c}">${c}</option>`).join('');
-            if (valeurActuelle) {
-                sel.value = valeurActuelle;
-                changerClasseConfigFrais();
-            }
-            sel.onchange = changerClasseConfigFrais;
-        }
-
-        function changerClasseConfigFrais() {
-            const classe = document.getElementById('config-frais-classe').value;
-            if (!classe) return;
-            const db = getDB();
-            const frais = db.fraisConfig[classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-            document.getElementById('config-frais-scolaires').value = frais.scolaires;
-            document.getElementById('config-frais-inscription').value = frais.inscription;
-            document.getElementById('config-frais-bulletin').value = frais.bulletin;
-        }
-
-        function sauvegarderConfigFrais() {
-            const classe = document.getElementById('config-frais-classe').value;
-            const scolaires = parseFloat(document.getElementById('config-frais-scolaires').value) || 0;
-            const inscription = parseFloat(document.getElementById('config-frais-inscription').value) || 0;
-            const bulletin = parseFloat(document.getElementById('config-frais-bulletin').value) || 0;
-
-            if (!classe) {
-                showMsg('admin-frais-msg', 'Veuillez sélectionner une classe.', 'error');
-                return;
-            }
-
-            const db = getDB();
-            db.fraisConfig[classe] = { scolaires: scolaires, inscription: inscription, bulletin: bulletin };
-            saveDB(db);
-            showMsg('admin-frais-msg', 'Tarifs enregistrés avec succès pour ' + classe, 'success');
-        }
-
-        // Gestion Admin - Communiqués
-        function ajouterCommunique() {
-            const texte = document.getElementById('admin-com-texte').value.trim();
-            if (!texte) {
-                showMsg('admin-com-msg', 'Veuillez rédiger le communiqué.', 'error');
-                return;
-            }
-            const db = getDB();
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            const dateStr = new Date().toLocaleDateString('fr-FR', options);
-            db.communiques.unshift({
-                id: Date.now(),
-                date: dateStr,
-                texte: texte
-            });
-            saveDB(db);
-            showMsg('admin-com-msg', 'Communiqué publié avec succès !', 'success');
-            document.getElementById('admin-com-texte').value = '';
-            chargerAdminCommuniques();
-        }
-
-        function chargerAdminCommuniques() {
-            const db = getDB();
-            const container = document.getElementById('admin-list-communiques');
-            if (!container) return;
-            if (db.communiques.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué.</p>';
-                return;
-            }
-            container.innerHTML = db.communiques.map(c => `
-                <div class="communique-item" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
-                    <div>
-                        <div class="communique-date">${c.date}</div>
-                        <p style="font-size: 0.9rem; color: var(--text-main);">${c.texte}</p>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
-                        <button onclick="ouvrirModalModifierCommunique(${c.id}, '${c.texte.replace(/'/g, "\\'")}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Modifier</button>
-                        <button onclick="supprimerCommuniqueAdmin(${c.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function ouvrirModalModifierCommunique(id, texte) {
-            document.getElementById('edit-com-id').value = id;
-            document.getElementById('edit-com-texte').value = texte;
-            document.getElementById('modal-modifier-communique').style.display = 'flex';
-        }
-
-        function fermerModalModifierCommunique() {
-            document.getElementById('modal-modifier-communique').style.display = 'none';
-        }
-
-        function sauvegarderModificationCommunique() {
-            const id = parseInt(document.getElementById('edit-com-id').value);
-            const texte = document.getElementById('edit-com-texte').value.trim();
-            if (!texte) return;
-            const db = getDB();
-            const com = db.communiques.find(c => c.id === id);
-            if (com) {
-                com.texte = texte;
-                saveDB(db);
-                fermerModalModifierCommunique();
-                chargerAdminCommuniques();
-            }
-        }
-
-        function supprimerCommuniqueAdmin(id) {
-            if (!confirm('Supprimer ce communiqué ?')) return;
-            const db = getDB();
-            db.communiques = db.communiques.filter(c => c.id !== id);
-            saveDB(db);
-            chargerAdminCommuniques();
-        }
-
-        // Gestion Admin - Demandes de Cours
-        function chargerAdminDemandesCours() {
-            const db = getDB();
-            const tbody = document.getElementById('table-admin-demandes-cours');
-            if (db.demandesCours.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucune demande en attente.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = db.demandesCours.map(d => `
-                <tr>
-                    <td><strong>${d.profNom}</strong></td>
-                    <td>${d.cours}</td>
-                    <td>${d.classe}</td>
-                    <td><span class="badge ${d.statut === 'Validé' ? 'success' : 'danger'}">${d.statut}</span></td>
-                    <td>
-                        ${d.statut === 'En attente' ? `<button onclick="validerDemandeCours(${d.id})" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Valider</button>` : ''}
-                        <button onclick="supprimerDemandeCours(${d.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; margin-left: 0.25rem;">Supprimer</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function validerDemandeCours(id) {
-            const db = getDB();
-            const d = db.demandesCours.find(item => item.id === id);
-            if (d) {
-                d.statut = 'Validé';
-                saveDB(db);
-                chargerAdminDemandesCours();
-            }
-        }
-
-        function supprimerDemandeCours(id) {
-            const db = getDB();
-            db.demandesCours = db.demandesCours.filter(item => item.id !== id);
-            saveDB(db);
-            chargerAdminDemandesCours();
-        }
-
-        // --- MESSAGERIE WHATSAPP PARENT - ADMIN ---
-        let adminDiscussionTuteurActif = null;
-
-        function chargerAdminMessages() {
-            const db = getDB();
-            const tbody = document.getElementById('table-admin-messages');
-            // Extraire la liste unique des tuteurs ayant des discussions
-            const tuteursMap = {};
-            db.discussions.forEach(d => {
-                tuteursMap[d.tuteur] = d;
-            });
-            const tuteurs = Object.keys(tuteursMap);
-
-            if (tuteurs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun message de parent.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = tuteurs.map(tuteur => {
-                const derniersMsgs = db.discussions.filter(d => d.tuteur === tuteur);
-                const dernier = derniersMsgs[derniersMsgs.length - 1];
-                return `
-                    <tr>
-                        <td><strong>${tuteur}</strong></td>
-                        <td>${dernier ? dernier.texte : ''}</td>
-                        <td>${dernier ? dernier.date : ''}</td>
-                        <td><button onclick="ouvrirDiscussionAdminPourTuteur('${tuteur}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Ouvrir Discussion</button></td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function ouvrirDiscussionAdminPourTuteur(tuteur) {
-            adminDiscussionTuteurActif = tuteur;
-            tuteurDiscussionActif = tuteur;
-            document.getElementById('modal-discussion-titre').textContent = `Discussion avec Tuteur : ${tuteur}`;
-            document.getElementById('wa-contact-title').textContent = `Tuteur : ${tuteur}`;
+        function ouvrirDiscussionAdminDepuisAdmin(tuteurNom) {
+            tuteurDiscussionActif = tuteurNom;
+            document.getElementById('modal-discussion-titre').textContent = `Discussion avec ${tuteurNom}`;
+            document.getElementById('wa-avatar-initials').textContent = tuteurNom.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase() || 'T';
+            document.getElementById('wa-contact-title').textContent = tuteurNom;
             document.getElementById('modal-discussion').style.display = 'flex';
             chargerMessagesDiscussion();
         }
@@ -845,44 +1710,42 @@ const db = getDB();
         function fermerModalDiscussion() {
             document.getElementById('modal-discussion').style.display = 'none';
             tuteurDiscussionActif = null;
-            adminDiscussionTuteurActif = null;
         }
 
         function chargerMessagesDiscussion() {
-            const tuteur = tuteurDiscussionActif;
-            if (!tuteur) return;
-            const db = getDB();
             const container = document.getElementById('discussion-messages-container');
-            const msgs = db.discussions.filter(d => d.tuteur === tuteur);
-
-            if (msgs.length === 0) {
+            if (!tuteurDiscussionActif) return;
+            const db = getDB();
+            const disc = db.discussions.find(d => d.tuteur === tuteurDiscussionActif);
+            
+            if (!disc || !disc.messages || disc.messages.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align: center; color: #8696a0; font-size: 0.8rem; margin: auto; padding: 1rem;">
-                        🔒 Les messages sont sécurisés. Envoyez un premier message pour démarrer la conversation avec ${adminConnecte ? 'le tuteur' : 'l\'administration'}.
+                    <div style="text-align: center; color: #8696a0; margin: auto; font-size: 0.85rem; padding: 2rem;">
+                        <p>🔒 Les messages sont sécurisés avec l'administration de l'École de la RDC.</p>
+                        <p style="margin-top: 0.5rem;">Commencez la discussion ci-dessous.</p>
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = msgs.map(m => {
-                // Si l'admin est connecté, les messages de l'admin sont outgoing (droite), ceux du tuteur incoming (gauche)
-                // Si le parent est connecté, l'inverse
-                let isOutgoing = false;
-                if (adminConnecte) {
-                    isOutgoing = (mexp => mexp === 'Admin')(m.expediteur);
+            const estAdminConnecte = document.getElementById('admin-dashboard-card').style.display === 'block';
+
+            container.innerHTML = disc.messages.map(m => {
+                // Si c'est l'admin qui regarde, les messages du tuteur sont 'incoming' et ceux de l'admin 'outgoing'
+                // Si c'est le parent qui regarde, c'est l'inverse
+                let estSortant = false;
+                if (estAdminConnecte) {
+                    estSortant = (m.expediteur === 'admin');
                 } else {
-                    isOutgoing = (mexp => mexp === 'Parent')(m.expediteur);
+                    estSortant = (m.expediteur === 'parent');
                 }
 
-                const msgClass = isOutgoing ? 'outgoing' : 'incoming';
-                const heure = m.heure || '12:00';
-
                 return `
-                    <div class="wa-message ${msgClass}">
+                    <div class="wa-message ${estSortant ? 'outgoing' : 'incoming'}">
                         <div class="wa-message-text">${m.texte}</div>
                         <div class="wa-message-meta">
-                            <span>${heure}</span>
-                            ${isOutgoing ? '<span class="wa-checks" style="color: #53bdeb;">✓✓</span>' : ''}
+                            <span>${m.heure}</span>
+                            ${estSortant ? '<span class="wa-checks" style="color: #53bdeb;" title="Lu">✓✓</span>' : ''}
                         </div>
                     </div>
                 `;
@@ -894,35 +1757,721 @@ const db = getDB();
         function envoyerMessageDiscussion() {
             const input = document.getElementById('discussion-input-texte');
             const texte = input.value.trim();
-            const tuteur = tuteurDiscussionActif;
-            if (!texte || !tuteur) return;
+            if (!texte || !tuteurDiscussionActif) return;
 
             const db = getDB();
-            const maintenant = new Date();
-            const heureStr = maintenant.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const dateStr = maintenant.toLocaleDateString();
+            let disc = db.discussions.find(d => d.tuteur === tuteurDiscussionActif);
+            
+            const now = new Date();
+            const heureStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            const dateStr = now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 
-            const expediteur = adminConnecte ? 'Admin' : 'Parent';
+            const estAdminConnecte = document.getElementById('admin-dashboard-card').style.display === 'block';
+            const expediteur = estAdminConnecte ? 'admin' : 'parent';
 
-            db.discussions.push({
-                tuteur: tuteur,
+            if (!disc) {
+                disc = { tuteur: tuteurDiscussionActif, dernierMessage: texte, date: dateStr, messages: [] };
+                db.discussions.push(disc);
+            }
+
+            disc.messages.push({
                 expediteur: expediteur,
                 texte: texte,
-                date: dateStr,
-                heure: heureStr
+                heure: heureStr,
+                date: dateStr
             });
+            disc.dernierMessage = texte;
+            disc.date = dateStr;
 
             saveDB(db);
             input.value = '';
             chargerMessagesDiscussion();
-            if (adminConnecte) {
-                chargerAdminMessages();
+
+            if (document.getElementById('admin-dashboard-card').style.display === 'block') {
+                chargerTableauMessagesAdmin();
             }
         }
 
-        // --- INITIALISATION AU CHARGEMENT ---
+        // --- AUTRES FONCTIONS DE GESTION (ÉLÈVES, PROFS, ADMIN, ETC.) ---
+        function eleveLogin() {
+            const mat = document.getElementById('eleve-matricule-input').value.trim();
+            if (!mat) {
+                showMsg('eleve-msg', 'Veuillez entrer votre numéro de matricule.', 'error');
+                return;
+            }
+            const db = getDB();
+            const e = db.eleves.find(item => item.matricule === mat);
+            if (!e) {
+                showMsg('eleve-msg', 'Matricule introuvable dans la base de données.', 'error');
+                return;
+            }
+
+            document.getElementById('eleve-login-card').style.display = 'none';
+            document.getElementById('eleve-dashboard-card').style.display = 'block';
+            document.getElementById('e-nom-eleve').textContent = `${e.nom || ''} ${e.prenom || ''}`.trim();
+            document.getElementById('e-mat').textContent = e.matricule;
+            document.getElementById('e-classe').textContent = e.classe;
+
+            const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+            const totalExige = (e.montantTotalExige !== undefined ? e.montantTotalExige : (config.scolaires + config.inscription + config.bulletin));
+            const reste = Math.max(0, totalExige - e.montantPaye);
+            const soldeOk = e.montantPaye >= totalExige;
+
+            const badgeFrais = document.getElementById('e-statut-frais');
+            badgeFrais.className = 'badge ' + (soldeOk ? 'success' : 'danger');
+            badgeFrais.textContent = soldeOk ? 'Frais Soldés' : `Payé: ${e.montantPaye}$ | Reste: ${reste}$`;
+
+            const tbodyNotes = document.getElementById('table-eleve-notes');
+            const notesKeys = Object.keys(e.notes || {});
+            if (notesKeys.length === 0) {
+                tbodyNotes.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune cotation enregistrée pour le moment.</td></tr>';
+            } else {
+                tbodyNotes.innerHTML = notesKeys.map(key => {
+                    const n = e.notes[key];
+                    const parts = key.split('_');
+                    const cours = parts[0];
+                    const trimestre = parts[1] || 'Trimestre 1';
+                    const maxVal = n.max || 20;
+                    return `
+                        <tr>
+                            <td><strong>${cours}</strong></td>
+                            <td>${trimestre}</td>
+                            <td>${n.intero1 !== undefined ? n.intero1 : '-'}</td>
+                            <td>${n.intero2 !== undefined ? n.intero2 : '-'}</td>
+                            <td>${n.devoir !== undefined ? n.devoir : '-'}</td>
+                            <td>${n.examen !== undefined ? n.examen : '-'}</td>
+                            <td><strong>${n.note !== undefined ? n.note : '-'} / ${maxVal}</strong></td>
+                            <td>${n.appreciation || '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        function eleveLogout() {
+            document.getElementById('eleve-matricule-input').value = '';
+            document.getElementById('eleve-dashboard-card').style.display = 'none';
+            document.getElementById('eleve-login-card').style.display = 'block';
+        }
+
+        let profActif = null;
+
+        function profLogin() {
+            const code = document.getElementById('prof-code-input').value.trim();
+            if (!code) {
+                showMsg('prof-msg', 'Veuillez entrer votre Code Prof.', 'error');
+                return;
+            }
+            const db = getDB();
+            const p = db.profs.find(item => item.codeProf === code);
+            if (!p) {
+                showMsg('prof-msg', 'Code Prof incorrect ou introuvable.', 'error');
+                return;
+            }
+            profActif = p;
+            document.getElementById('prof-login-card').style.display = 'none';
+            document.getElementById('prof-dashboard-card').style.display = 'block';
+            document.getElementById('prof-nom-titre').textContent = `${p.nom} (${p.matiere})`;
+            document.getElementById('prof-cours-input').value = p.matiere;
+
+            peuplerSelectClassesProf();
+        }
+
+        function profLogout() {
+            profActif = null;
+            document.getElementById('prof-code-input').value = '';
+            document.getElementById('prof-dashboard-card').style.display = 'none';
+            document.getElementById('prof-login-card').style.display = 'block';
+        }
+
+        function verifierSessionProf() {
+            if (!profActif) {
+                document.getElementById('prof-dashboard-card').style.display = 'none';
+                document.getElementById('prof-login-card').style.display = 'block';
+            }
+        }
+
+        function peuplerSelectClassesProf() {
+            const sel = document.getElementById('prof-classe-select');
+            const selDemande = document.getElementById('demande-cours-classe');
+            if (!sel) return;
+
+            const optionsHtml = '<option value="">-- Choisir une classe & option --</option>' + 
+                CLASSES_OPTIONS_RDC.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            sel.innerHTML = optionsHtml;
+            if (selDemande) selDemande.innerHTML = optionsHtml;
+        }
+
+        function changerNbInteros() {
+            const nb = document.getElementById('prof-nb-interos').value;
+            document.querySelectorAll('.th-int-col').forEach(th => th.style.display = 'none');
+            for (let i = 1; i <= nb; i++) {
+                const col = document.querySelector(`.th-int-${i}`);
+                if (col) col.style.display = 'table-cell';
+            }
+            chargerElevesClasseProf();
+        }
+
+        function chargerElevesClasseProf() {
+            const classe = document.getElementById('prof-classe-select').value;
+            const trimestre = document.getElementById('prof-trimestre-select').value;
+            const cours = document.getElementById('prof-cours-input').value.trim() || (profActif ? profActif.matiere : 'Matière');
+            const nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
+            const maxVal = parseInt(document.getElementById('prof-cotation-max').value);
+
+            document.getElementById('th-label-total').textContent = `Total / ${maxVal}`;
+
+            const tbody = document.getElementById('table-prof-cotations');
+            if (!classe) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe & option.</td></tr>';
+                return;
+            }
+
+            const db = getDB();
+            const elevesClasse = db.eleves.filter(e => e.classe === classe);
+
+            if (elevesClasse.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Aucun élève inscrit dans cette classe & option.</td></tr>';
+                return;
+            }
+
+            const cleNote = `${cours}_${trimestre}`;
+
+            tbody.innerHTML = elevesClasse.map(e => {
+                const notesEleve = e.notes && e.notes[cleNote] ? e.notes[cleNote] : {};
+                const nomComplet = `${e.nom || ''} ${e.prenom || ''}`.trim();
+                
+                let inputsInteros = '';
+                for (let i = 1; i <= 4; i++) {
+                    const val = notesEleve[`intero${i}`] !== undefined ? notesEleve[`intero${i}`] : '';
+                    inputsInteros += `
+                        <td class="td-int-col td-int-${i}" style="${i > nbInteros ? 'display:none;' : ''}">
+                            <input type="number" class="input-note input-int-${i}" data-mat="${e.matricule}" data-type="intero${i}" value="${val}" min="0" max="${maxVal}" style="width: 70px; padding: 0.4rem;" oninput="calculerTotalLigne(this)">
+                        </td>
+                    `;
+                }
+
+                const devoirVal = notesEleve.devoir !== undefined ? notesEleve.devoir : '';
+                const examenVal = notesEleve.examen !== undefined ? notesEleve.examen : '';
+                const totalVal = notesEleve.note !== undefined ? notesEleve.note : '-';
+                const appreciationVal = notesEleve.appreciation || '-';
+
+                return `
+                    <tr data-mat="${e.matricule}">
+                        <td><code>${e.matricule}</code></td>
+                        <td><strong>${nomComplet}</strong></td>
+                        ${inputsInteros}
+                        <td>
+                            <input type="number" class="input-note input-devoir" data-mat="${e.matricule}" data-type="devoir" value="${devoirVal}" min="0" max="${maxVal}" style="width: 70px; padding: 0.4rem;" oninput="calculerTotalLigne(this)">
+                        </td>
+                        <td>
+                            <input type="number" class="input-note input-examen" data-mat="${e.matricule}" data-type="examen" value="${examenVal}" min="0" max="${maxVal}" style="width: 70px; padding: 0.4rem;" oninput="calculerTotalLigne(this)">
+                        </td>
+                        <td><strong class="span-total">${totalVal}</strong> / ${maxVal}</td>
+                        <td><span class="span-appreciation">${appreciationVal}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function calculerTotalLigne(input) {
+            const tr = input.closest('tr');
+            const nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
+            const maxVal = parseInt(document.getElementById('prof-cotation-max').value);
+
+            let somme = 0;
+            let count = 0;
+
+            for (let i = 1; i <= nbInteros; i++) {
+                const inp = tr.querySelector(`.input-int-${i}`);
+                if (inp && inp.value !== '') {
+                    somme += parseFloat(inp.value) || 0;
+                    count++;
+                }
+            }
+
+            const devInp = tr.querySelector('.input-devoir');
+            if (devInp && devInp.value !== '') {
+                somme += parseFloat(devInp.value) || 0;
+                count++;
+            }
+
+            const examInp = tr.querySelector('.input-examen');
+            if (examInp && examInp.value !== '') {
+                somme += parseFloat(examInp.value) || 0;
+                count++;
+            }
+
+            const totalSpan = tr.querySelector('.span-total');
+            const appSpan = tr.querySelector('.span-appreciation');
+
+            if (count > 0) {
+                // Calcul de la moyenne ou du total pondéré ramené sur maxVal
+                const moyenne = Math.round((somme / count) * 10) / 10;
+                totalSpan.textContent = moyenne;
+                
+                let app = 'Insuffisant';
+                const pct = (moyenne / maxVal) * 100;
+                if (pct >= 80) app = 'Excellent';
+                else if (pct >= 70) app = 'Très Bien';
+                else if (pct >= 60) app = 'Bien';
+                else if (pct >= 50) app = 'Assez Bien';
+                else app = 'Insuffisant';
+
+                appSpan.textContent = app;
+            } else {
+                totalSpan.textContent = '-';
+                appSpan.textContent = '-';
+            }
+        }
+
+        function enregistrerNotesProf() {
+            const classe = document.getElementById('prof-classe-select').value;
+            const trimestre = document.getElementById('prof-trimestre-select').value;
+            const cours = document.getElementById('prof-cours-input').value.trim();
+            const maxVal = parseInt(document.getElementById('prof-cotation-max').value);
+            const nbInteros = parseInt(document.getElementById('prof-nb-interos').value);
+
+            if (!classe || !cours) {
+                alert('Veuillez sélectionner une classe et saisir l\'intitulé du cours.');
+                return;
+            }
+
+            const db = getDB();
+            const cleNote = `${cours}_${trimestre}`;
+
+            document.querySelectorAll('#table-prof-cotations tr').forEach(tr => {
+                const mat = tr.getAttribute('data-mat');
+                if (!mat) return;
+                const e = db.eleves.find(item => item.matricule === mat);
+                if (!e) return;
+
+                if (!e.notes) e.notes = {};
+
+                let intero1 = tr.querySelector('.input-int-1').value !== '' ? parseFloat(tr.querySelector('.input-int-1').value) : undefined;
+                let intero2 = tr.querySelector('.input-int-2').value !== '' ? parseFloat(tr.querySelector('.input-int-2').value) : undefined;
+                let intero3 = nbInteros >= 3 && tr.querySelector('.input-int-3').value !== '' ? parseFloat(tr.querySelector('.input-int-3').value) : undefined;
+                let intero4 = nbInteros >= 4 && tr.querySelector('.input-int-4').value !== '' ? parseFloat(tr.querySelector('.input-int-4').value) : undefined;
+                let devoir = tr.querySelector('.input-devoir').value !== '' ? parseFloat(tr.querySelector('.input-devoir').value) : undefined;
+                let examen = tr.querySelector('.input-examen').value !== '' ? parseFloat(tr.querySelector('.input-examen').value) : undefined;
+                
+                const totalText = tr.querySelector('.span-total').textContent;
+                const noteTotale = totalText !== '-' ? parseFloat(totalText) : undefined;
+                const appreciation = tr.querySelector('.span-appreciation').textContent;
+
+                e.notes[cleNote] = {
+                    intero1, intero2, intero3, intero4, devoir, examen,
+                    note: noteTotale,
+                    max: maxVal,
+                    appreciation: appreciation !== '-' ? appreciation : ''
+                };
+            });
+
+            saveDB(db);
+            alert('Cotations enregistrées avec succès !');
+        }
+
+        function ouvrirModalAjouterCoursProf() {
+            document.getElementById('modal-ajouter-cours-prof').style.display = 'flex';
+        }
+
+        function fermerModalAjouterCoursProf() {
+            document.getElementById('modal-ajouter-cours-prof').style.display = 'none';
+        }
+
+        function soumettreDemandeCoursProf() {
+            const nomCours = document.getElementById('demande-cours-nom').value.trim();
+            const classeCible = document.getElementById('demande-cours-classe').value;
+
+            if (!nomCours || !classeCible) {
+                showMsg('prof-cours-demande-msg', 'Veuillez remplir tous les champs.', 'error');
+                return;
+            }
+
+            const db = getDB();
+            db.demandesCours.push({
+                id: Date.now(),
+                prof: profActif ? profActif.nom : 'Professeur',
+                cours: nomCours,
+                classe: classeCible,
+                statut: 'En attente'
+            });
+            saveDB(db);
+            showMsg('prof-cours-demande-msg', 'Demande envoyée à l\'administration avec succès.', 'success');
+            setTimeout(() => { fermerModalAjouterCoursProf(); }, 1500);
+        }
+
+        function ouvrirModalModifierCodeProf() {
+            document.getElementById('modal-modifier-code').style.display = 'flex';
+        }
+
+        function fermerModalModifierCodeProf() {
+            document.getElementById('modal-modifier-code').style.display = 'none';
+        }
+
+        function sauvegarderNouveauCodeProf() {
+            const nouveauCode = document.getElementById('nouveau-code-prof').value.trim();
+            if (!nouveauCode) {
+                showMsg('prof-mod-msg', 'Veuillez entrer un code valide.', 'error');
+                return;
+            }
+            const db = getDB();
+            const p = db.profs.find(item => item.id === profActif.id);
+            if (p) {
+                p.codeProf = nouveauCode;
+                profActif.codeProf = nouveauCode;
+                saveDB(db);
+                showMsg('prof-mod-msg', 'Code modifié avec succès !', 'success');
+                setTimeout(() => { fermerModalModifierCodeProf(); }, 1500);
+            }
+        }
+
+        // --- ESPACE ADMIN ---
+        function adminLogin() {
+            const pass = document.getElementById('admin-pass-input').value.trim();
+            const db = getDB();
+            if (pass !== db.adminPass) {
+                showMsg('admin-msg', 'Mot de passe administrateur incorrect.', 'error');
+                return;
+            }
+            document.getElementById('admin-login-card').style.display = 'none';
+            document.getElementById('admin-dashboard-card').style.display = 'block';
+            
+            peuplerSelectClasses();
+            chargerTableauAdminEleves();
+            chargerTableauAdminProfs();
+            chargerAdminCommuniques();
+            chargerTableauAdminDemandesCours();
+            chargerTableauMessagesAdmin();
+        }
+
+        function adminLogout() {
+            document.getElementById('admin-pass-input').value = '';
+            document.getElementById('admin-dashboard-card').style.display = 'none';
+            document.getElementById('admin-login-card').style.display = 'block';
+        }
+
+        function verifierSessionAdmin() {
+            // Optionnel : garder la session admin si active
+        }
+
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('#admin .nav-btns button').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById('admin-content-' + tabId).style.display = 'block';
+            document.getElementById('tab-admin-' + tabId).classList.add('active');
+        }
+
+        function ajouterEleve() {
+            const nom = document.getElementById('add-eleve-nom').value.trim();
+            const prenom = document.getElementById('add-eleve-prenom').value.trim();
+            const classe = document.getElementById('add-eleve-classe').value;
+            const sexe = document.getElementById('add-eleve-sexe').value;
+            const tuteur = document.getElementById('add-eleve-tuteur').value.trim();
+            const emailParent = document.getElementById('add-eleve-email-parent').value.trim();
+            const telParent = document.getElementById('add-eleve-tel-parent').value.trim();
+
+            if (!nom || !prenom || !classe || !tuteur) {
+                showMsg('admin-eleve-msg', 'Veuillez remplir les champs obligatoires (Nom, Prénom, Classe, Tuteur).', 'error');
+                return;
+            }
+
+            const db = getDB();
+            const matricule = String(Math.floor(1000 + Math.random() * 9000));
+            // Générer un code parent unique basé sur les lettres ou un code aléatoire s'il n'existe pas déjà
+            let codeParent = 'PAR' + Math.floor(1000 + Math.random() * 9000);
+            
+            // Si le tuteur existe déjà, on lui attribue le même code parent
+            const eleveExistant = db.eleves.find(e => e.tuteur.toLowerCase() === tuteur.toLowerCase());
+            if (eleveExistant) {
+                codeParent = eleveExistant.codeParent;
+            }
+
+            db.eleves.push({
+                matricule, nom, prenom, classe, sexe, tuteur, emailParent, telParent, codeParent,
+                montantPaye: 0, notes: {}, presences: []
+            });
+
+            saveDB(db);
+            showMsg('admin-eleve-msg', `Élève inscrit avec succès ! Matricule: ${matricule} | Code Parent: ${codeParent}`, 'success');
+            
+            document.getElementById('add-eleve-nom').value = '';
+            document.getElementById('add-eleve-prenom').value = '';
+            document.getElementById('add-eleve-tuteur').value = '';
+            document.getElementById('add-eleve-email-parent').value = '';
+            document.getElementById('add-eleve-tel-parent').value = '';
+
+            chargerTableauAdminEleves();
+        }
+
+        function chargerTableauAdminEleves() {
+            const db = getDB();
+            const tbody = document.getElementById('table-admin-eleves');
+            if (db.eleves.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Aucun élève enregistré.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = db.eleves.map(e => {
+                const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+                const totalExige = config.scolaires + config.inscription + config.bulletin;
+                const soldeOk = e.montantPaye >= totalExige;
+                const nomComplet = `${e.nom || ''} ${e.prenom || ''}`.trim();
+
+                return `
+                    <tr>
+                        <td><code>${e.matricule}</code></td>
+                        <td><strong>${nomComplet}</strong></td>
+                        <td>${e.classe}</td>
+                        <td>${e.tuteur}<br><small style="color:var(--text-muted);">${e.telParent || ''}</small></td>
+                        <td><code>${e.codeParent}</code></td>
+                        <td><span class="badge ${soldeOk ? 'success' : 'danger'}">${soldeOk ? 'Soldé' : 'Payé: ' + e.montantPaye + '$'}</span></td>
+                        <td>
+                            <button onclick="modifierFraisEleve('${e.matricule}')" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Frais</button>
+                            <button onclick="supprimerEleve('${e.matricule}')" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Supprimer</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function modifierFraisEleve(mat) {
+            const db = getDB();
+            const e = db.eleves.find(item => item.matricule === mat);
+            if (!e) return;
+            const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+            const totalExige = config.scolaires + config.inscription + config.bulletin;
+
+            const montantSaisi = prompt(`Entrer le montant total payé pour ${e.nom} ${e.prenom} (Total exigé : ${totalExige}$):`, e.montantPaye);
+            if (montantSaisi !== null) {
+                const val = parseFloat(montantSaisi);
+                if (!isNaN(val)) {
+                    e.montantPaye = val;
+                    saveDB(db);
+                    chargerTableauAdminEleves();
+                    alert('Paiement mis à jour avec succès !');
+                }
+            }
+        }
+
+        function supprimerEleve(mat) {
+            if (confirm('Voulez-vous vraiment supprimer cet élève ?')) {
+                const db = getDB();
+                db.eleves = db.eleves.filter(e => e.matricule !== mat);
+                saveDB(db);
+                chargerTableauAdminEleves();
+            }
+        }
+
+        function ajouterProf() {
+            const nom = document.getElementById('add-prof-nom').value.trim();
+            const matiere = document.getElementById('add-prof-matiere').value.trim();
+
+            if (!nom || !matiere) {
+                showMsg('admin-prof-msg', 'Veuillez remplir tous les champs.', 'error');
+                return;
+            }
+
+            const db = getDB();
+            const codeProf = 'PROF' + Math.floor(1000 + Math.random() * 9000);
+            db.profs.push({
+                id: Date.now(),
+                nom, matiere, codeProf
+            });
+
+            saveDB(db);
+            showMsg('admin-prof-msg', `Professeur ajouté avec succès ! Code d'accès généré : ${codeProf}`, 'success');
+            document.getElementById('add-prof-nom').value = '';
+            document.getElementById('add-prof-matiere').value = '';
+            chargerTableauAdminProfs();
+        }
+
+        function chargerTableauAdminProfs() {
+            const db = getDB();
+            const tbody = document.getElementById('table-admin-profs');
+            if (db.profs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun professeur.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = db.profs.map(p => `
+                <tr>
+                    <td><strong>${p.nom}</strong></td>
+                    <td>${p.matiere}</td>
+                    <td><code>${p.codeProf}</code></td>
+                    <td><button onclick="supprimerProf(${p.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Supprimer</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function supprimerProf(id) {
+            if (confirm('Voulez-vous supprimer ce professeur ?')) {
+                const db = getDB();
+                db.profs = db.profs.filter(p => p.id !== id);
+                saveDB(db);
+                chargerTableauAdminProfs();
+            }
+        }
+
+        function sauvegarderConfigFrais() {
+            const classe = document.getElementById('config-frais-classe').value;
+            const scolaires = parseFloat(document.getElementById('config-frais-scolaires').value);
+            const inscription = parseFloat(document.getElementById('config-frais-inscription').value);
+            const bulletin = parseFloat(document.getElementById('config-frais-bulletin').value);
+
+            if (!classe || isNaN(scolaires) || isNaN(inscription) || isNaN(bulletin)) {
+                showMsg('admin-frais-msg', 'Veuillez sélectionner une classe et entrer des montants valides.', 'error');
+                return;
+            }
+
+            const db = getDB();
+            db.fraisConfig[classe] = { scolaires, inscription, bulletin };
+            saveDB(db);
+            showMsg('admin-frais-msg', 'Tarifs enregistrés avec succès pour cette classe.', 'success');
+        }
+
+        function ajouterCommunique() {
+            const texte = document.getElementById('admin-com-texte').value.trim();
+            if (!texte) {
+                showMsg('admin-com-msg', 'Veuillez rédiger le communiqué.', 'error');
+                return;
+            }
+
+            const db = getDB();
+            const dateStr = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            db.communiques.unshift({
+                id: Date.now(),
+                date: dateStr,
+                texte
+            });
+
+            saveDB(db);
+            showMsg('admin-com-msg', 'Communiqué publié avec succès !', 'success');
+            document.getElementById('admin-com-texte').value = '';
+            chargerAdminCommuniques();
+        }
+
+        function chargerAdminCommuniques() {
+            const db = getDB();
+            const container = document.getElementById('admin-list-communiques');
+            if (db.communiques.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué.</p>';
+                return;
+            }
+
+            container.innerHTML = db.communiques.map(c => `
+                <div class="communique-item" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                    <div>
+                        <div class="communique-date">${c.date}</div>
+                        <p style="font-size: 0.9rem; color: var(--text-main);">${c.texte}</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                        <button onclick="ouvrirModalModifierCommunique(${c.id})" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Modifier</button>
+                        <button onclick="supprimerCommunique(${c.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Supprimer</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function supprimerCommunique(id) {
+            if (confirm('Voulez-vous supprimer ce communiqué ?')) {
+                const db = getDB();
+                db.communiques = db.communiques.filter(c => c.id !== id);
+                saveDB(db);
+                chargerAdminCommuniques();
+            }
+        }
+
+        function ouvrirModalModifierCommunique(id) {
+            const db = getDB();
+            const c = db.communiques.find(item => item.id === id);
+            if (!c) return;
+            document.getElementById('edit-com-id').value = c.id;
+            document.getElementById('edit-com-texte').value = c.texte;
+            document.getElementById('modal-modifier-communique').style.display = 'flex';
+        }
+
+        function fermerModalModifierCommunique() {
+            document.getElementById('modal-modifier-communique').style.display = 'none';
+        }
+
+        function sauvegarderModificationCommunique() {
+            const id = parseInt(document.getElementById('edit-com-id').value);
+            const texte = document.getElementById('edit-com-texte').value.trim();
+            if (!texte) return;
+
+            const db = getDB();
+            const c = db.communiques.find(item => item.id === id);
+            if (c) {
+                c.texte = texte;
+                saveDB(db);
+                fermerModalModifierCommunique();
+                chargerAdminCommuniques();
+            }
+        }
+
+        function chargerTableauAdminDemandesCours() {
+            const db = getDB();
+            const tbody = document.getElementById('table-admin-demandes-cours');
+            if (db.demandesCours.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Aucune demande en attente.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = db.demandesCours.map(d => `
+                <tr>
+                    <td><strong>${d.prof}</strong></td>
+                    <td>${d.cours}</td>
+                    <td>${d.classe}</td>
+                    <td><span class="badge ${d.statut === 'Validée' ? 'success' : 'danger'}">${d.statut}</span></td>
+                    <td>
+                        ${d.statut === 'En attente' ? `<button onclick="validerDemandeCours(${d.id})" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Valider</button>` : ''}
+                        <button onclick="supprimerDemandeCours(${d.id})" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Supprimer</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function validerDemandeCours(id) {
+            const db = getDB();
+            const d = db.demandesCours.find(item => item.id === id);
+            if (d) {
+                d.statut = 'Validée';
+                saveDB(db);
+                chargerTableauAdminDemandesCours();
+            }
+        }
+
+        function supprimerDemandeCours(id) {
+            const db = getDB();
+            db.demandesCours = db.demandesCours.filter(d => d.id !== id);
+            saveDB(db);
+            chargerTableauAdminDemandesCours();
+        }
+
+        function chargerTableauMessagesAdmin() {
+            const db = getDB();
+            const tbody = document.getElementById('table-admin-messages');
+            if (!db.discussions || db.discussions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun message de parent.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = db.discussions.map(d => `
+                <tr>
+                    <td><strong>${d.tuteur}</strong></td>
+                    <td>${d.dernierMessage || '...'}</td>
+                    <td>${d.date || ''}</td>
+                    <td><button onclick="ouvrirDiscussionAdminDepuisAdmin('${d.tuteur}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem;">Ouvrir le Chat</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // --- INITIALISATION AU CHARGEMENT DE LA PAGE ---
         window.addEventListener('DOMContentLoaded', () => {
-            getDB(); // Initialisation de la base si vide
+            getDB();
             peuplerSelectClasses();
             chargerCommuniquesPublics();
         });
