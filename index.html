@@ -718,12 +718,17 @@
                             <thead>
                                 <tr>
                                     <th>Cours</th>
-                                    <th>Note / 20</th>
+                                    <th>Trimestre</th>
+                                    <th>Intero 1</th>
+                                    <th>Intero 2</th>
+                                    <th>Devoir</th>
+                                    <th>Examen</th>
+                                    <th>Total / 20</th>
                                     <th>Appréciation</th>
                                 </tr>
                             </thead>
                             <tbody id="table-parent-notes">
-                                <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Aucun bulletin.</td></tr>
+                                <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucun bulletin.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -763,12 +768,17 @@
                         <thead>
                             <tr>
                                 <th>Cours</th>
-                                <th>Note / 20</th>
+                                <th>Trimestre</th>
+                                <th>Intero 1</th>
+                                <th>Intero 2</th>
+                                <th>Devoir</th>
+                                <th>Examen</th>
+                                <th>Total / 20</th>
                                 <th>Appréciation</th>
                             </tr>
                         </thead>
                         <tbody id="table-eleve-notes">
-                            <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Aucune note disponible.</td></tr>
+                            <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune note disponible.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -810,29 +820,41 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="prof-trimestre-select">Trimestre</label>
+                        <select id="prof-trimestre-select" onchange="chargerElevesClasseProf()">
+                            <option value="Trimestre 1">Trimestre 1</option>
+                            <option value="Trimestre 2">Trimestre 2</option>
+                            <option value="Trimestre 3">Trimestre 3</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
                         <label for="prof-cours-input">Intitulé du Cours / Matière</label>
-                        <input type="text" id="prof-cours-input" placeholder="Ex: Mathématiques">
+                        <input type="text" id="prof-cours-input" placeholder="Ex: Mathématiques" oninput="chargerElevesClasseProf()">
                     </div>
                 </div>
 
-                <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Cotations des Élèves</h3>
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Cotations des Élèves (Interrogations, Devoir, Examen)</h3>
                 <div class="table-responsive" style="margin-bottom: 1.5rem;">
                     <table>
                         <thead>
                             <tr>
                                 <th>Matricule</th>
                                 <th>Élève</th>
-                                <th>Note / 20</th>
+                                <th>Intero 1</th>
+                                <th>Intero 2</th>
+                                <th>Devoir</th>
+                                <th>Examen</th>
+                                <th>Total / 20</th>
                                 <th>Appréciation</th>
                             </tr>
                         </thead>
                         <tbody id="table-prof-cotations">
-                            <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe.</td></tr>
+                            <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe.</td></tr>
                         </tbody>
                     </table>
                 </div>
 
-                <button class="btn-submit" onclick="enregistrerNotesProf()">Enregistrer les Notes</button>
+                <button class="btn-submit" onclick="enregistrerNotesProf()">Enregistrer les Cotations</button>
             </div>
         </section>
 
@@ -996,13 +1018,13 @@
 
                 <!-- SOUS-ONGLET COMMUNIQUES -->
                 <div id="admin-content-communiques" class="admin-tab-content" style="display: none;">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Publier un Communiqué</h3>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Publier et Modifier un Communiqué Important</h3>
                     <div id="admin-com-msg" class="msg-box" role="alert"></div>
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label for="admin-com-texte">Contenu du Communiqué</label>
                         <textarea id="admin-com-texte" rows="4" placeholder="Rédigez l'annonce officielle ici..."></textarea>
                     </div>
-                    <button class="btn-submit" onclick="ajouterCommunique()" style="margin-bottom: 2rem;">Publier</button>
+                    <button class="btn-submit" onclick="ajouterCommunique()" style="margin-bottom: 2rem;">Publier / Ajouter</button>
 
                     <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Communiqués Actifs</h3>
                     <div id="admin-list-communiques">
@@ -1012,6 +1034,23 @@
             </div>
         </section>
     </main>
+
+    <!-- MODAL MODIFICATION COMMUNIQUE (ADMIN) -->
+    <div id="modal-modifier-communique" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="card" style="width: 100%; max-width: 450px; margin: 1rem;">
+            <h3>Modifier le Communiqué</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Mettez à jour le contenu de ce communiqué important.</p>
+            <input type="hidden" id="edit-com-id">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="edit-com-texte">Texte du Communiqué</label>
+                <textarea id="edit-com-texte" rows="4" style="width: 100%;"></textarea>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="btn-submit" onclick="sauvegarderModificationCommunique()">Enregistrer</button>
+                <button type="button" onclick="fermerModalModifierCommunique()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.85rem 1rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; width: 100%;">Annuler</button>
+            </div>
+        </div>
+    </div>
 
     <footer>
         &copy; 2026 École de la RDC &bull; Tous droits réservés &bull; Kinshasa, RDC
@@ -1045,7 +1084,7 @@
         ];
 
         // --- BASE DE DONNÉES LOCALE (localStorage) ---
-        const DB_KEY = "ecole_rdc_db_v4";
+        const DB_KEY = "ecole_rdc_db_v5";
 
         function getDefaultData() {
             let initialFrais = {};
@@ -1055,8 +1094,8 @@
 
             return {
                 eleves: [
-                    { matricule: "4812", nom: "Kabamba Paul", classe: "6ème Humanités - Commerciale et Gestion", sexe: "M", tuteur: "M. Jean Kabamba", codeParent: "PAR9210", montantPaye: 210, notes: { "Mathématiques": { note: 16, appreciation: "Très Bien" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
-                    { matricule: "4813", nom: "Mukendi Sarah", classe: "6ème Humanités - Commerciale et Gestion", sexe: "F", tuteur: "M. Jean Kabamba", codeParent: "PAR9210", montantPaye: 210, notes: { "Mathématiques": { note: 18, appreciation: "Excellent" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
+                    { matricule: "4812", nom: "Kabamba Paul", classe: "6ème Humanités - Commerciale et Gestion", sexe: "M", tuteur: "M. Jean Kabamba", codeParent: "PAR9210", montantPaye: 210, notes: { "Mathématiques_Trimestre 1": { intero1: 15, intero2: 17, devoir: 16, examen: 16, note: 16, appreciation: "Très Bien" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
+                    { matricule: "4813", nom: "Mukendi Sarah", classe: "6ème Humanités - Commerciale et Gestion", sexe: "F", tuteur: "M. Jean Kabamba", codeParent: "PAR9210", montantPaye: 210, notes: { "Mathématiques_Trimestre 1": { intero1: 18, intero2: 19, devoir: 18, examen: 18, note: 18, appreciation: "Excellent" } }, presences: [{ date: "2026-09-10", statut: "Présent" }] },
                     { matricule: "4901", nom: "Tshisekedi David", classe: "5ème Humanités - Scientifique (Math-Physique)", sexe: "M", tuteur: "Mme Marie Tshisekedi", codeParent: "PAR4412", montantPaye: 100, notes: {}, presences: [] }
                 ],
                 profs: [
@@ -1199,14 +1238,15 @@
 
             tbody.innerHTML = parentActif.enfants.map(e => {
                 const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-                const totalExige = config.scolaires + config.inscription + config.bulletin;
+                const totalExige = (e.montantTotalExige !== undefined ? e.montantTotalExige : (config.scolaires + config.inscription + config.bulletin));
+                const reste = Math.max(0, totalExige - e.montantPaye);
                 const soldeOk = e.montantPaye >= totalExige;
                 return `
                     <tr>
                         <td><code>${e.matricule}</code></td>
                         <td><strong>${e.nom}</strong></td>
                         <td>${e.classe}</td>
-                        <td><span class="badge ${soldeOk ? 'success' : 'danger'}">${soldeOk ? 'Soldé' : 'En attente'}</span></td>
+                        <td><span class="badge ${soldeOk ? 'success' : 'danger'}">${soldeOk ? 'Soldé' : 'Payé: ' + e.montantPaye + '$ | Reste: ' + reste + '$'}</span></td>
                         <td><button onclick="voirDetailEnfant('${e.matricule}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem;">Dossier</button></td>
                     </tr>
                 `;
@@ -1225,7 +1265,7 @@
             document.getElementById('p-sexe').textContent = e.sexe === 'M' ? 'Masculin' : 'Féminin';
 
             const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-            const totalExige = config.scolaires + config.inscription + config.bulletin;
+            const totalExige = (e.montantTotalExige !== undefined ? e.montantTotalExige : (config.scolaires + config.inscription + config.bulletin));
             const reste = Math.max(0, totalExige - e.montantPaye);
             const soldeOk = e.montantPaye >= totalExige;
 
@@ -1238,7 +1278,7 @@
 
             const badgeFrais = document.getElementById('p-statut-frais');
             badgeFrais.className = 'badge ' + (soldeOk ? 'success' : 'danger');
-            badgeFrais.textContent = soldeOk ? 'Frais Soldés' : 'Solde Incomplet';
+            badgeFrais.textContent = soldeOk ? 'Frais Soldés' : `Payé: ${e.montantPaye}$ | Reste: ${reste}$`;
 
             const tbodyPres = document.getElementById('table-parent-presences');
             if (!e.presences || e.presences.length === 0) {
@@ -1252,15 +1292,23 @@
             const tbodyNotes = document.getElementById('table-parent-notes');
             const notesKeys = Object.keys(e.notes || {});
             if (notesKeys.length === 0) {
-                tbodyNotes.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Aucune cotation enregistrée pour le moment.</td></tr>';
+                tbodyNotes.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune cotation enregistrée pour le moment.</td></tr>';
             } else {
-                tbodyNotes.innerHTML = notesKeys.map(cours => {
-                    const n = e.notes[cours];
+                tbodyNotes.innerHTML = notesKeys.map(key => {
+                    const n = e.notes[key];
+                    const parts = key.split('_');
+                    const cours = parts[0];
+                    const trimestre = parts[1] || 'Trimestre 1';
                     return `
                         <tr>
                             <td><strong>${cours}</strong></td>
-                            <td>${n.note} / 20</td>
-                            <td>${n.appreciation}</td>
+                            <td>${trimestre}</td>
+                            <td>${n.intero1 !== undefined ? n.intero1 : '-'}</td>
+                            <td>${n.intero2 !== undefined ? n.intero2 : '-'}</td>
+                            <td>${n.devoir !== undefined ? n.devoir : '-'}</td>
+                            <td>${n.examen !== undefined ? n.examen : '-'}</td>
+                            <td><strong>${n.note !== undefined ? n.note : '-'} / 20</strong></td>
+                            <td>${n.appreciation || '-'}</td>
                         </tr>
                     `;
                 }).join('');
@@ -1295,25 +1343,34 @@
             document.getElementById('e-classe').textContent = e.classe;
 
             const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-            const totalExige = config.scolaires + config.inscription + config.bulletin;
+            const totalExige = (e.montantTotalExige !== undefined ? e.montantTotalExige : (config.scolaires + config.inscription + config.bulletin));
+            const reste = Math.max(0, totalExige - e.montantPaye);
             const soldeOk = e.montantPaye >= totalExige;
 
             const badgeFrais = document.getElementById('e-statut-frais');
             badgeFrais.className = 'badge ' + (soldeOk ? 'success' : 'danger');
-            badgeFrais.textContent = soldeOk ? 'Frais Soldés' : 'Frais en Attente';
+            badgeFrais.textContent = soldeOk ? 'Frais Soldés' : `Payé: ${e.montantPaye}$ | Reste: ${reste}$`;
 
             const tbody = document.getElementById('table-eleve-notes');
             const notesKeys = Object.keys(e.notes || {});
             if (notesKeys.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Aucune note disponible.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucune note disponible.</td></tr>';
             } else {
-                tbody.innerHTML = notesKeys.map(cours => {
-                    const n = e.notes[cours];
+                tbody.innerHTML = notesKeys.map(key => {
+                    const n = e.notes[key];
+                    const parts = key.split('_');
+                    const cours = parts[0];
+                    const trimestre = parts[1] || 'Trimestre 1';
                     return `
                         <tr>
                             <td><strong>${cours}</strong></td>
-                            <td>${n.note} / 20</td>
-                            <td>${n.appreciation}</td>
+                            <td>${trimestre}</td>
+                            <td>${n.intero1 !== undefined ? n.intero1 : '-'}</td>
+                            <td>${n.intero2 !== undefined ? n.intero2 : '-'}</td>
+                            <td>${n.devoir !== undefined ? n.devoir : '-'}</td>
+                            <td>${n.examen !== undefined ? n.examen : '-'}</td>
+                            <td><strong>${n.note !== undefined ? n.note : '-'} / 20</strong></td>
+                            <td>${n.appreciation || '-'}</td>
                         </tr>
                     `;
                 }).join('');
@@ -1373,40 +1430,87 @@
             select.innerHTML = '<option value="">-- Choisir une classe --</option>' + classesUniques.map(c => `
                 <option value="${c}">${c}</option>
             `).join('');
+            
+            chargerElevesClasseProf();
         }
 
         function chargerElevesClasseProf() {
             const classe = document.getElementById('prof-classe-select').value;
+            const trimestre = document.getElementById('prof-trimestre-select').value;
+            const cours = document.getElementById('prof-cours-input').value.trim() || (profActif ? profActif.matiere : '');
             const tbody = document.getElementById('table-prof-cotations');
+            
             if (!classe) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Veuillez sélectionner une classe.</td></tr>';
                 return;
             }
             const db = getDB();
             const elevesClasse = db.eleves.filter(e => e.classe === classe);
-            const cours = document.getElementById('prof-cours-input').value.trim() || profActif.matiere;
 
             if (elevesClasse.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Aucun élève dans cette classe.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aucun élève dans cette classe.</td></tr>';
                 return;
             }
 
+            const cleNote = cours + '_' + trimestre;
+
             tbody.innerHTML = elevesClasse.map(e => {
-                const noteActuelle = (e.notes && e.notes[cours]) ? e.notes[cours].note : '';
-                const appActuelle = (e.notes && e.notes[cours]) ? e.notes[cours].appreciation : '';
+                const noteObj = (e.notes && e.notes[cleNote]) ? e.notes[cleNote] : {};
+                const int1 = noteObj.intero1 !== undefined ? noteObj.intero1 : '';
+                const int2 = noteObj.intero2 !== undefined ? noteObj.intero2 : '';
+                const dev = noteObj.devoir !== undefined ? noteObj.devoir : '';
+                const ex = noteObj.examen !== undefined ? noteObj.examen : '';
+                const total = noteObj.note !== undefined ? noteObj.note : '';
+                const app = noteObj.appreciation || '';
                 return `
                     <tr data-mat="${e.matricule}">
                         <td><code>${e.matricule}</code></td>
                         <td><strong>${e.nom}</strong></td>
-                        <td><input type="number" min="0" max="20" step="0.5" class="input-note" value="${noteActuelle}" placeholder="0-20" style="padding: 0.4rem; width: 80px;"></td>
-                        <td><input type="text" class="input-app" value="${appActuelle}" placeholder="Ex: Bien" style="padding: 0.4rem;"></td>
+                        <td><input type="number" min="0" max="20" step="0.5" class="input-int1" value="${int1}" placeholder="Int1" style="padding: 0.3rem; width: 65px;" oninput="calculerTotalLigne(this)"></td>
+                        <td><input type="number" min="0" max="20" step="0.5" class="input-int2" value="${int2}" placeholder="Int2" style="padding: 0.3rem; width: 65px;" oninput="calculerTotalLigne(this)"></td>
+                        <td><input type="number" min="0" max="20" step="0.5" class="input-dev" value="${dev}" placeholder="Dev" style="padding: 0.3rem; width: 65px;" oninput="calculerTotalLigne(this)"></td>
+                        <td><input type="number" min="0" max="20" step="0.5" class="input-ex" value="${ex}" placeholder="Exam" style="padding: 0.3rem; width: 65px;" oninput="calculerTotalLigne(this)"></td>
+                        <td><span class="span-total" style="font-weight: 700; color: var(--primary);">${total !== '' ? total + ' / 20' : '-'}</span></td>
+                        <td><input type="text" class="input-app" value="${app}" placeholder="Appréciation" style="padding: 0.3rem; width: 110px;"></td>
                     </tr>
                 `;
             }).join('');
         }
 
+        function calculerTotalLigne(input) {
+            const tr = input.closest('tr');
+            const int1 = parseFloat(tr.querySelector('.input-int1').value) || 0;
+            const int2 = parseFloat(tr.querySelector('.input-int2').value) || 0;
+            const dev = parseFloat(tr.querySelector('.input-dev').value) || 0;
+            const ex = parseFloat(tr.querySelector('.input-ex').value) || 0;
+            
+            // Calcul d'une moyenne pondérée ou somme ramenée sur /20 (ex: Intero1 + Intero2 + Devoir + Examen divisé par 4 ou pondéré)
+            // Ici faisons une moyenne simple des éléments saisis non nuls ou sur 4 composants
+            const vals = [
+                tr.querySelector('.input-int1').value !== '' ? parseFloat(tr.querySelector('.input-int1').value) : null,
+                tr.querySelector('.input-int2').value !== '' ? parseFloat(tr.querySelector('.input-int2').value) : null,
+                tr.querySelector('.input-dev').value !== '' ? parseFloat(tr.querySelector('.input-dev').value) : null,
+                tr.querySelector('.input-ex').value !== '' ? parseFloat(tr.querySelector('.input-ex').value) : null
+            ].filter(v => v !== null);
+
+            const spanTotal = tr.querySelector('.span-total');
+            const inputApp = tr.querySelector('.input-app');
+
+            if (vals.length > 0) {
+                const somme = vals.reduce((a, b) => a + b, 0);
+                const moyenne = Math.round((somme / vals.length) * 10) / 10;
+                spanTotal.textContent = moyenne + ' / 20';
+                if (!inputApp.value) {
+                    inputApp.value = moyenne >= 16 ? 'Très Bien' : moyenne >= 12 ? 'Bon' : moyenne >= 10 ? 'Satisfaisant' : 'À améliorer';
+                }
+            } else {
+                spanTotal.textContent = '-';
+            }
+        }
+
         function enregistrerNotesProf() {
             const classe = document.getElementById('prof-classe-select').value;
+            const trimestre = document.getElementById('prof-trimestre-select').value;
             const cours = document.getElementById('prof-cours-input').value.trim();
             if (!classe || !cours) {
                 alert('Veuillez sélectionner une classe et spécifier l\'intitulé du cours.');
@@ -1414,23 +1518,41 @@
             }
             const db = getDB();
             const lignes = document.querySelectorAll('#table-prof-cotations tr');
+            const cleNote = cours + '_' + trimestre;
             
             let misAJour = false;
             lignes.forEach(tr => {
                 const mat = tr.getAttribute('data-mat');
                 if (!mat) return;
-                const inputNote = tr.querySelector('.input-note');
+                const inputInt1 = tr.querySelector('.input-int1');
+                const inputInt2 = tr.querySelector('.input-int2');
+                const inputDev = tr.querySelector('.input-dev');
+                const inputEx = tr.querySelector('.input-ex');
                 const inputApp = tr.querySelector('.input-app');
-                if (!inputNote) return;
+                if (!inputInt1) return;
 
-                const valNote = parseFloat(inputNote.value);
-                const valApp = inputApp.value.trim() || (valNote >= 16 ? 'Très Bien' : valNote >= 12 ? 'Bon' : valNote >= 10 ? 'Satisfaisant' : 'À améliorer');
+                const valInt1 = inputInt1.value !== '' ? parseFloat(inputInt1.value) : undefined;
+                const valInt2 = inputInt2.value !== '' ? parseFloat(inputInt2.value) : undefined;
+                const valDev = inputDev.value !== '' ? parseFloat(inputDev.value) : undefined;
+                const valEx = inputEx.value !== '' ? parseFloat(inputEx.value) : undefined;
 
-                const eleve = db.eleves.find(e => e.matricule === mat);
-                if (eleve) {
-                    if (!eleve.notes) eleve.notes = {};
-                    if (!isNaN(valNote)) {
-                        eleve.notes[cours] = { note: valNote, appreciation: valApp };
+                const vals = [valInt1, valInt2, valDev, valEx].filter(v => v !== undefined);
+                if (vals.length > 0) {
+                    const somme = vals.reduce((a, b) => a + b, 0);
+                    const moyenne = Math.round((somme / vals.length) * 10) / 10;
+                    const valApp = inputApp.value.trim() || (moyenne >= 16 ? 'Très Bien' : moyenne >= 12 ? 'Bon' : moyenne >= 10 ? 'Satisfaisant' : 'À améliorer');
+
+                    const eleve = db.eleves.find(e => e.matricule === mat);
+                    if (eleve) {
+                        if (!eleve.notes) eleve.notes = {};
+                        eleve.notes[cleNote] = {
+                            intero1: valInt1,
+                            intero2: valInt2,
+                            devoir: valDev,
+                            examen: valEx,
+                            note: moyenne,
+                            appreciation: valApp
+                        };
                         misAJour = true;
                     }
                 }
@@ -1438,7 +1560,7 @@
 
             if (misAJour) {
                 saveDB(db);
-                alert('Cotations enregistrées avec succès !');
+                alert('Cotations enregistrées avec succès pour le ' + trimestre + ' !');
             } else {
                 alert('Aucune note valide à enregistrer.');
             }
@@ -1517,7 +1639,8 @@
             } else {
                 tbodyEleves.innerHTML = db.eleves.map(e => {
                     const config = db.fraisConfig[e.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
-                    const totalExige = config.scolaires + config.inscription + config.bulletin;
+                    const totalExige = (e.montantTotalExige !== undefined ? e.montantTotalExige : (config.scolaires + config.inscription + config.bulletin));
+                    const reste = Math.max(0, totalExige - e.montantPaye);
                     const soldeOk = e.montantPaye >= totalExige;
                     return `
                         <tr>
@@ -1525,8 +1648,9 @@
                             <td><strong>${e.nom}</strong></td>
                             <td>${e.classe}</td>
                             <td><code>${e.codeParent}</code></td>
-                            <td><span class="badge ${soldeOk ? 'success' : 'danger'}">${soldeOk ? 'Soldé' : e.montantPaye + ' / ' + totalExige + ' $'}</span></td>
+                            <td><span class="badge ${soldeOk ? 'success' : 'danger'}">${soldeOk ? 'Soldé' : 'Payé: ' + e.montantPaye + '$ | Reste: ' + reste + '$'}</span></td>
                             <td>
+                                <button onclick="modifierFraisEleve('${e.matricule}')" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; margin-right: 0.25rem;" title="Modifier les frais de cet élève">⚙️ Frais</button>
                                 <button onclick="ajouterPaiementAdmin('${e.matricule}')" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; margin-right: 0.25rem;" title="Ajouter un paiement">+ Paiement</button>
                                 <button onclick="supprimerEleve('${e.matricule}')" style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button>
                             </td>
@@ -1556,15 +1680,41 @@
                 listCom.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Aucun communiqué.</p>';
             } else {
                 listCom.innerHTML = db.communiques.map(c => `
-                    <div class="communique-item" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div class="communique-item" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
                         <div>
                             <div class="communique-date">${c.date}</div>
                             <p style="font-size: 0.9rem; color: var(--text-main);">${c.texte}</p>
                         </div>
-                        <button onclick="supprimerCommunique(${c.id})" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button>
+                        <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                            <button onclick="ouvrirModalModifierCommunique(${c.id})" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Modifier</button>
+                            <button onclick="supprimerCommunique(${c.id})" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;">Supprimer</button>
+                        </div>
                     </div>
                 `).join('');
             }
+        }
+
+        function modifierFraisEleve(mat) {
+            const db = getDB();
+            const eleve = db.eleves.find(e => e.matricule === mat);
+            if (!eleve) return;
+
+            const config = db.fraisConfig[eleve.classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+            const defTotal = eleve.montantTotalExige !== undefined ? eleve.montantTotalExige : (config.scolaires + config.inscription + config.bulletin);
+
+            const nouveauTotalStr = prompt(`Modifier le montant total des frais exigés pour l'élève ${eleve.nom} (${eleve.classe}) :`, defTotal);
+            if (nouveauTotalStr === null) return;
+            const nouveauTotal = parseFloat(nouveauTotalStr);
+
+            if (isNaN(nouveauTotal) || nouveauTotal < 0) {
+                alert('Montant invalide.');
+                return;
+            }
+
+            eleve.montantTotalExige = nouveauTotal;
+            saveDB(db);
+            chargerAdminDonnees();
+            alert(`Montant total des frais mis à jour à ${nouveauTotal} $ pour ${eleve.nom}. Les parents verront le montant payé et le reste exact.`);
         }
 
         function ajouterEleve() {
@@ -1583,6 +1733,9 @@
             let parentExist = db.eleves.find(e => e.tuteur.toLowerCase() === tuteur.toLowerCase());
             const codeParent = parentExist ? parentExist.codeParent : 'PAR' + Math.floor(1000 + Math.random() * 9000);
 
+            const config = db.fraisConfig[classe] || { scolaires: 150, inscription: 50, bulletin: 10 };
+            const montantTotalExige = config.scolaires + config.inscription + config.bulletin;
+
             db.eleves.push({
                 matricule,
                 nom,
@@ -1591,6 +1744,7 @@
                 tuteur,
                 codeParent,
                 montantPaye: 0,
+                montantTotalExige,
                 notes: {},
                 presences: [{ date: new Date().toISOString().split('T')[0], statut: "Présent" }]
             });
@@ -1625,7 +1779,7 @@
                 eleve.montantPaye = (eleve.montantPaye || 0) + montant;
                 saveDB(db);
                 chargerAdminDonnees();
-                alert(`Paiement de ${montant} $ enregistré pour ${eleve.nom}.`);
+                alert(`Paiement de ${montant} $ enregistré pour ${eleve.nom}. Le parent sera notifié du montant payé et du reste à payer.`);
             }
         }
 
@@ -1693,6 +1847,37 @@
             document.getElementById('admin-com-texte').value = '';
             showMsg('admin-com-msg', 'Communiqué publié avec succès.', 'success');
             chargerAdminDonnees();
+        }
+
+        function ouvrirModalModifierCommunique(id) {
+            const db = getDB();
+            const com = db.communiques.find(c => c.id === id);
+            if (!com) return;
+            document.getElementById('edit-com-id').value = com.id;
+            document.getElementById('edit-com-texte').value = com.texte;
+            document.getElementById('modal-modifier-communique').style.display = 'flex';
+        }
+
+        function fermerModalModifierCommunique() {
+            document.getElementById('modal-modifier-communique').style.display = 'none';
+        }
+
+        function sauvegarderModificationCommunique() {
+            const id = parseInt(document.getElementById('edit-com-id').value);
+            const texte = document.getElementById('edit-com-texte').value.trim();
+            if (!texte) {
+                alert('Le texte ne peut pas être vide.');
+                return;
+            }
+            const db = getDB();
+            const com = db.communiques.find(c => c.id === id);
+            if (com) {
+                com.texte = texte;
+                saveDB(db);
+                fermerModalModifierCommunique();
+                chargerAdminDonnees();
+                alert('Communiqué modifié avec succès !');
+            }
         }
 
         function supprimerCommunique(id) {
