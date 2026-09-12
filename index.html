@@ -33,22 +33,22 @@
                 <div onclick="changerVue('admin-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">⚙️</div>
                     <h3 class="font-bold text-slate-800">Administration</h3>
-                    <p class="text-xs text-slate-500 mt-1">Gestion globale, élèves & impression</p>
+                    <p class="text-xs text-slate-500 mt-1">Gestion complète, modification & impression</p>
                 </div>
                 <div onclick="changerVue('prof-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">👨‍🏫</div>
                     <h3 class="font-bold text-slate-800">Espace Professeur</h3>
-                    <p class="text-xs text-slate-500 mt-1">Cours et demandes d'ajout</p>
+                    <p class="text-xs text-slate-500 mt-1">Cotations et présences</p>
                 </div>
                 <div onclick="changerVue('eleve-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">🎓</div>
                     <h3 class="font-bold text-slate-800">Espace Élève</h3>
-                    <p class="text-xs text-slate-500 mt-1">Cotations et présences</p>
+                    <p class="text-xs text-slate-500 mt-1">Consultation des notes</p>
                 </div>
                 <div onclick="changerVue('parent-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">👪</div>
                     <h3 class="font-bold text-slate-800">Espace Parent</h3>
-                    <p class="text-xs text-slate-500 mt-1">Suivi, frais & messagerie admin</p>
+                    <p class="text-xs text-slate-500 mt-1">Suivi, frais & messagerie</p>
                 </div>
             </div>
         </div>
@@ -77,15 +77,16 @@
 
             <!-- Onglets Admin -->
             <div class="flex gap-2 border-b pb-2 no-print">
-                <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">Élèves & Frais</button>
+                <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">Élèves & Gestion</button>
                 <button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Professeurs</button>
                 <button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Messagerie Parents</button>
             </div>
 
-            <!-- Gestion Élèves & Frais -->
+            <!-- Gestion Élèves & Modifications -->
             <div id="admin-sec-eleves" class="space-y-4">
                 <div class="bg-slate-50 p-4 rounded-xl border no-print">
-                    <h3 class="font-bold text-slate-700 mb-3">Enregistrer un nouvel élève</h3>
+                    <h3 id="titre-form-eleve" class="font-bold text-slate-700 mb-3">Enregistrer un nouvel élève</h3>
+                    <input type="hidden" id="edit-eleve-key" value="">
                     <div class="grid md:grid-cols-3 gap-3">
                         <input id="el-nom" placeholder="Nom" class="border p-2 rounded text-sm">
                         <input id="el-postnom" placeholder="Post-nom" class="border p-2 rounded text-sm">
@@ -116,11 +117,14 @@
                             <option value="en_ordre">Frais payés (En ordre)</option>
                             <option value="non_ordre">Frais non payés (Bloqué)</option>
                         </select>
-                        <button onclick="enregistrerEleve()" class="bg-blue-600 text-white p-2 rounded text-sm font-medium hover:bg-blue-700">Enregistrer & Générer Code</button>
+                        <div class="flex gap-2">
+                            <button onclick="enregistrerOuModifierEleve()" id="btn-valider-eleve" class="bg-blue-600 text-white p-2 rounded text-sm font-medium hover:bg-blue-700 flex-1">Enregistrer</button>
+                            <button onclick="annulerModificationEleve()" id="btn-annuler-eleve" class="bg-slate-300 text-slate-700 p-2 rounded text-sm font-medium hidden">Annuler</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Zone ciblée pour l'affichage et l'impression propre -->
+                <!-- Zone d'impression et affichage -->
                 <div id="section-impression-admin" class="overflow-x-auto">
                     <div class="hidden print:block mb-4">
                         <h2 class="text-xl font-bold">République Démocratique du Congo</h2>
@@ -132,10 +136,10 @@
                             <tr class="bg-slate-100 text-slate-600 uppercase text-xs">
                                 <th class="p-2 border">Nom complet</th>
                                 <th class="p-2 border">Classe</th>
-                                <th class="p-2 border">Tuteur</th>
+                                <th class="p-2 border">Tuteur & Adresse</th>
                                 <th class="p-2 border">Codes d'accès (Masqués)</th>
                                 <th class="p-2 border">Statut Frais</th>
-                                <th class="p-2 border text-center no-print">Actions</th>
+                                <th class="p-2 border text-center no-print">Actions Admin</th>
                             </tr>
                         </thead>
                         <tbody id="liste-admin-eleves"></tbody>
@@ -175,7 +179,7 @@
             </div>
             <div class="grid md:grid-cols-2 gap-6">
                 <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl space-y-4">
-                    <h3 class="font-bold text-blue-900">Cotations par Trimestre</h3>
+                    <h3 class="font-bold text-blue-900">Cotations par Trimestre (Gérées par les Professeurs)</h3>
                     <select id="select-trimestre" onchange="changerTrimestreEleve()" class="w-full border p-2 rounded bg-white text-sm">
                         <option value="T1">Premier Trimestre (T1)</option>
                         <option value="T2">Deuxième Trimestre (T2)</option>
@@ -199,18 +203,10 @@
                 </div>
                 <button onclick="changerVue('accueil')" class="text-sm text-red-600 hover:underline">Déconnexion</button>
             </div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-slate-50 border p-5 rounded-xl space-y-4">
-                    <h3 class="font-bold text-slate-700">Demander un cours supplémentaire</h3>
-                    <div class="flex gap-2">
-                        <input id="nouveau-cours-prof" placeholder="Intitulé du nouveau cours" class="border p-2 rounded flex-1 text-sm">
-                        <button onclick="demanderCoursSupplementaire()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">Demander</button>
-                    </div>
-                    <p id="statut-demande-cours" class="text-xs text-slate-500"></p>
-                </div>
+            <div class="grid md:grid-cols-1 gap-6">
                 <div class="bg-emerald-50 border border-emerald-200 p-5 rounded-xl space-y-4">
-                    <h3 class="font-bold text-emerald-900">Gestion des notes et présences de vos classes</h3>
-                    <div id="prof-liste-eleves-action" class="space-y-2 max-h-60 overflow-y-auto"></div>
+                    <h3 class="font-bold text-emerald-900">Gestion des notes et présences (Attribution exclusive professeur)</h3>
+                    <div id="prof-liste-eleves-action" class="space-y-2 max-h-96 overflow-y-auto"></div>
                 </div>
             </div>
         </div>
@@ -396,7 +392,8 @@ window.imprimerListeEleves = function() {
     window.print();
 }
 
-window.enregistrerEleve = function() {
+window.enregistrerOuModifierEleve = function() {
+    const editKey = document.getElementById('edit-eleve-key').value;
     const nom = document.getElementById('el-nom').value.trim();
     const postnom = document.getElementById('el-postnom').value.trim();
     const prenom = document.getElementById('el-prenom').value.trim();
@@ -408,25 +405,63 @@ window.enregistrerEleve = function() {
 
     if(!nom || !prenom || !classe || !tuteur) return alert("Veuillez remplir les champs obligatoires.");
 
-    const codeEleve = `ELV-${Math.floor(1000 + Math.random() * 9000)}`;
-    const codeParent = `PAR-${Math.floor(1000 + Math.random() * 9000)}`;
+    if(editKey) {
+        // Mode Modification (L'admin modifie identité, classe, frais, adresse, tuteur sans toucher aux cotations)
+        update(ref(db, `ecole_rdc_complet/eleves/${editKey}`), {
+            nom, postnom, prenom, classe, adresse, datenais, tuteur, frais
+        });
+        annulerModificationEleve();
+        alert("Informations de l'élève mises à jour avec succès !");
+    } else {
+        // Mode Ajout d'un nouvel élève
+        const codeEleve = `ELV-${Math.floor(1000 + Math.random() * 9000)}`;
+        const codeParent = `PAR-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    push(ref(db, 'ecole_rdc_complet/eleves'), {
-        nom, postnom, prenom, classe, adresse, datenais, tuteur, frais,
-        codeEleve, codeParent,
-        cotations: { T1: {}, T2: {}, T3: {} },
-        presences: { T1: 'Présent', T2: 'Présent', T3: 'Présent' }
-    });
+        push(ref(db, 'ecole_rdc_complet/eleves'), {
+            nom, postnom, prenom, classe, adresse, datenais, tuteur, frais,
+            codeEleve, codeParent,
+            cotations: { T1: {}, T2: {}, T3: {} },
+            presences: { T1: 'Présent', T2: 'Présent', T3: 'Présent' }
+        });
+        viderFormulaireEleve();
+    }
+}
 
+window.preparerModificationEleve = function(key, elStr) {
+    const el = JSON.parse(decodeURIComponent(elStr));
+    document.getElementById('edit-eleve-key').value = key;
+    document.getElementById('el-nom').value = el.nom || '';
+    document.getElementById('el-postnom').value = el.postnom || '';
+    document.getElementById('el-prenom').value = el.prenom || '';
+    document.getElementById('el-classe').value = el.classe || '';
+    document.getElementById('el-adresse').value = el.adresse || '';
+    document.getElementById('el-datenais').value = el.datenais || '';
+    document.getElementById('el-tuteur').value = el.tuteur || '';
+    document.getElementById('el-frais').value = el.frais || 'en_ordre';
+
+    document.getElementById('titre-form-eleve').innerText = "Modifier les informations de l'élève";
+    document.getElementById('btn-valider-eleve').innerText = "Mettre à jour";
+    document.getElementById('btn-annuler-eleve').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window.annulerModificationEleve = function() {
+    document.getElementById('edit-eleve-key').value = '';
+    viderFormulaireEleve();
+    document.getElementById('titre-form-eleve').innerText = "Enregistrer un nouvel élève";
+    document.getElementById('btn-valider-eleve').innerText = "Enregistrer";
+    document.getElementById('btn-annuler-eleve').classList.add('hidden');
+}
+
+function viderFormulaireEleve() {
     ['el-nom', 'el-postnom', 'el-prenom', 'el-classe', 'el-adresse', 'el-datenais', 'el-tuteur'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('el-frais').value = 'en_ordre';
 }
 
 window.supprimerEleve = function(key) {
-    remove(ref(db, `ecole_rdc_complet/eleves/${key}`));
-}
-
-window.modifierFrais = function(key, statutActuel) {
-    update(ref(db, `ecole_rdc_complet/eleves/${key}`), { frais: statutActuel === 'en_ordre' ? 'non_ordre' : 'en_ordre' });
+    if(confirm("Voulez-vous vraiment supprimer cet élève ?")) {
+        remove(ref(db, `ecole_rdc_complet/eleves/${key}`));
+    }
 }
 
 window.enregistrerProfesseur = function() {
@@ -450,19 +485,20 @@ function actualiserInterfaceAdmin(data) {
     Object.keys(eleves).reverse().forEach((key, index) => {
         const el = eleves[key];
         const idCode = `code-sec-${index}`;
+        const elJson = encodeURIComponent(JSON.stringify(el));
         const tr = document.createElement('tr');
         tr.className = "border-b hover:bg-slate-50";
         tr.innerHTML = `
             <td class="p-2 font-medium">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
             <td class="p-2">${el.classe}</td>
-            <td class="p-2">${el.tuteur}</td>
+            <td class="p-2 text-xs"><strong>Tuteur:</strong> ${el.tuteur}<br><span class="text-slate-500">Adr: ${el.adresse || 'Non renseignée'}</span></td>
             <td class="p-2 font-mono text-xs cursor-pointer" title="Cliquer pour voir/masquer" onclick="basculerAffichageCode('${idCode}')">
                 <span id="${idCode}" class="blur-sm bg-slate-200 px-1 rounded select-none">Élève: ${el.codeEleve} | Parent: ${el.codeParent}</span>
             </td>
             <td class="p-2"><span class="px-2 py-1 rounded text-xs font-semibold ${el.frais === 'en_ordre' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${el.frais === 'en_ordre' ? 'En ordre' : 'Non payé'}</span></td>
             <td class="p-2 text-center space-x-1 no-print">
-                <button onclick="modifierFrais('${key}', '${el.frais}')" class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">Frais</button>
-                <button onclick="supprimerEleve('${key}')" class="text-red-500 font-bold px-1">✕</button>
+                <button onclick="preparerModificationEleve('${key}', '${elJson}')" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">Modifier</button>
+                <button onclick="supprimerEleve('${key}')" class="text-red-500 font-bold px-1 text-sm" title="Supprimer">✕</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -502,18 +538,10 @@ function mettreAJourDashboardEleve(data) {
 
     const cotationsDiv = document.getElementById('contenu-cotations');
     const notesTrimestre = eleveActuel.cotations?.[trimestre] || {};
-    cotationsDiv.innerHTML = Object.keys(notesTrimestre).length ? "" : "<p class='text-slate-400 text-xs'>Aucune cotation enregistrée.</p>";
+    cotationsDiv.innerHTML = Object.keys(notesTrimestre).length ? "" : "<p class='text-slate-400 text-xs'>Aucune cotation enregistrée pour le moment.</p>";
     Object.keys(notesTrimestre).forEach(cours => { cotationsDiv.innerHTML += `<div><strong>${cours}:</strong> ${notesTrimestre[cours]} / 20</div>`; });
 
     document.getElementById('contenu-presences').innerHTML = `<div class="p-2 rounded bg-green-50 text-green-800">Statut : <strong>${eleveActuel.presences?.[trimestre] || 'Présent'}</strong></div>`;
-}
-
-window.demanderCoursSupplementaire = function() {
-    const cours = document.getElementById('nouveau-cours-prof').value.trim();
-    if(!cours) return;
-    push(ref(db, 'ecole_rdc_complet/demandes_cours'), { prof: utilisateurConnecte.nom, cours, date: new Date().toLocaleDateString() });
-    document.getElementById('nouveau-cours-prof').value = '';
-    document.getElementById('statut-demande-cours').innerText = "Demande envoyée.";
 }
 
 function mettreAJourDashboardProf(data) {
@@ -527,7 +555,7 @@ function mettreAJourDashboardProf(data) {
                 <div class="flex gap-2">
                     <input id="note-${key}" type="number" placeholder="Note /20" class="border p-1 rounded w-20 text-xs">
                     <select id="pres-${key}" class="border p-1 rounded text-xs"><option value="Présent">Présent</option><option value="Absent">Absent</option></select>
-                    <button onclick="sauvegarderNoteProf('${key}')" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs">Enregistrer</button>
+                    <button onclick="sauvegarderNoteProf('${key}')" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs font-medium">Attribuer Note / Présence</button>
                 </div>
             </div>`;
     });
@@ -537,10 +565,11 @@ window.sauvegarderNoteProf = function(eleveKey) {
     const note = document.getElementById(`note-${eleveKey}`).value;
     const presence = document.getElementById(`pres-${eleveKey}`).value;
     const trimestre = document.getElementById('select-trimestre')?.value || 'T1';
-    if(!note) return alert("Entrez une note.");
+    if(!note) return alert("Veuillez entrer une note.");
+    
     update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/cotations/${trimestre}`), { [utilisateurConnecte.cours]: note });
     update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/presences`), { [trimestre]: presence });
-    alert("Enregistré avec succès !");
+    alert("Cotation mise à jour avec succès !");
 }
 
 window.envoyerMessageParent = function() {
@@ -559,7 +588,7 @@ function mettreAJourDashboardParent(data) {
     Object.values(data.eleves || {}).forEach(el => {
         if(el.codeParent === utilisateurConnecte.codeParent) {
             if(el.frais === 'non_ordre') unEnfantBloque = true;
-            enfantsContainer.innerHTML += `<div class="border p-3 rounded bg-white text-sm"><strong>${el.nom} ${el.prenom}</strong> (${el.classe})<br>Frais : <span class="${el.frais === 'en_ordre' ? 'text-green-600' : 'text-red-600'}">${el.frais === 'en_ordre' ? 'En ordre' : 'Bloqué (Non payé)'}</span></div>`;
+            enfantsContainer.innerHTML += `<div class="border p-3 rounded bg-white text-sm"><strong>${el.nom} ${el.prenom}</strong> (${el.classe})<br>Frais : <span class="${el.frais === 'en_ordre' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}">${el.frais === 'en_ordre' ? 'En ordre' : 'Bloqué (Non payé)'}</span></div>`;
         }
     });
 
@@ -567,6 +596,7 @@ function mettreAJourDashboardParent(data) {
 
     const chatBox = document.getElementById('parent-chat-box');
     chatBox.innerHTML = "";
+    Object.values(data.messages || {}).messages = data.messages || {};
     Object.values(data.messages || {}).forEach(m => {
         if(m.codeParent === utilisateurConnecte.codeParent) {
             chatBox.innerHTML += `<div class="p-2 rounded bg-blue-50 text-blue-900"><strong>Vous :</strong> ${m.texte} <div class="text-[10px] text-slate-400">${m.date}</div></div>`;
