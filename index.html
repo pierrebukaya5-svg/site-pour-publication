@@ -993,7 +993,10 @@
                         </div>
                         <div class="form-group">
                             <label for="adm-code-parent">Code Parent associé</label>
-                            <input type="text" id="adm-code-parent" placeholder="Ex: PAR9210">
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" id="adm-code-parent" placeholder="Ex: PAR9210" style="flex: 1;">
+                                <button type="button" onclick="genererCodeParentAdmin()" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600; white-space: nowrap;">Générer</button>
+                            </div>
                         </div>
                     </div>
                     <div class="form-group" style="margin-top: 1rem; margin-bottom: 1.25rem;">
@@ -1221,6 +1224,16 @@
             }, 5000);
         }
 
+        // Fonction pour générer automatiquement un Code Parent unique
+        function genererCodeParentAdmin() {
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            const codeGenere = `PAR${randomNum}`;
+            const inputCode = document.getElementById('adm-code-parent');
+            if (inputCode) {
+                inputCode.value = codeGenere;
+            }
+        }
+
         // --- ESPACE PUBLIC ---
         function afficherCommuniquesPublics() {
             const container = document.getElementById('public-communiques');
@@ -1419,7 +1432,6 @@
                 return;
             }
 
-            // Vérification dans les profs enregistrés ou mot de passe universel prof par défaut
             const prof = db.profs.find(p => p.password === pwd);
             if (!prof && pwd !== "prof123") {
                 afficherMessage('prof-msg', 'Mot de passe professeur incorrect.', 'error');
@@ -1461,7 +1473,6 @@
                 document.getElementById('tab-btn-notes').style.borderColor = 'var(--border)';
                 document.getElementById('tab-btn-notes').style.color = 'var(--text-muted)';
                 
-                // Mettre la date du jour par défaut
                 const aujourdHui = new Date().toISOString().split('T')[0];
                 document.getElementById('prof-pres-date').value = aujourdHui;
             }
@@ -1536,7 +1547,6 @@
 
             if (!db.notes[mat]) db.notes[mat] = [];
             
-            // Vérifier si le cours existe déjà pour cet élève, le mettre à jour ou l'ajouter
             const existingNote = db.notes[mat].find(n => n.cours.toLowerCase() === cours.toLowerCase());
             if (existingNote) {
                 existingNote.note = noteVal;
@@ -1601,7 +1611,6 @@
                     const statut = selectStatut.value;
                     if (!db.presences[e.matricule]) db.presences[e.matricule] = [];
                     
-                    // Remplacer ou ajouter la présence du jour
                     const existingIndex = db.presences[e.matricule].findIndex(p => p.date === date);
                     if (existingIndex >= 0) {
                         db.presences[e.matricule][existingIndex].statut = statut;
@@ -1618,7 +1627,6 @@
         // --- ESPACE ADMIN ---
         function adminLogin() {
             const pwd = document.getElementById('admin-password-input').value.trim();
-            // Mot de passe administrateur par défaut sécurisé
             if (pwd !== "admin123" && pwd !== "Admin@2026") {
                 afficherMessage('admin-msg', 'Mot de passe administrateur incorrect.', 'error');
                 return;
@@ -1659,7 +1667,6 @@
         }
 
         function rafraichirAdminTables() {
-            // Table Élèves Admin
             const tbodyEleves = document.getElementById('table-admin-eleves');
             if (tbodyEleves) {
                 if (db.eleves.length === 0) {
@@ -1681,7 +1688,6 @@
                 }
             }
 
-            // Table Profs Admin
             const tbodyProfs = document.getElementById('table-admin-profs');
             if (tbodyProfs) {
                 if (db.profs.length === 0) {
@@ -1702,7 +1708,6 @@
                 }
             }
 
-            // Table Finances Admin
             const tbodyFinances = document.getElementById('table-admin-finances');
             if (tbodyFinances) {
                 if (db.eleves.length === 0) {
@@ -1739,15 +1744,21 @@
             const nom = document.getElementById('adm-nom-eleve').value.trim();
             const classe = document.getElementById('adm-classe-eleve').value;
             const sexe = document.getElementById('adm-sexe-eleve').value;
-            const codeParent = document.getElementById('adm-code-parent').value.trim().toUpperCase();
+            let codeParent = document.getElementById('adm-code-parent').value.trim().toUpperCase();
             const nomTuteur = document.getElementById('adm-nom-tuteur').value.trim();
 
-            if (!nom || !classe || !codeParent || !nomTuteur) {
-                afficherMessage('admin-eleve-msg', 'Veuillez remplir tous les champs de l\'élève.', 'error');
+            if (!nom || !classe || !nomTuteur) {
+                afficherMessage('admin-eleve-msg', 'Veuillez remplir le nom, la classe et le tuteur de l\'élève.', 'error');
                 return;
             }
 
-            // Génération d'un matricule aléatoire unique à 4 chiffres
+            // Si le code parent n'est pas rempli, le générer automatiquement
+            if (!codeParent) {
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                codeParent = `PAR${randomNum}`;
+                document.getElementById('adm-code-parent').value = codeParent;
+            }
+
             const matricule = Math.floor(1000 + Math.random() * 9000).toString();
 
             const nouveauEleve = {
@@ -1766,7 +1777,7 @@
 
             db.eleves.push(nouveauEleve);
             sauvegarderDonnees();
-            afficherMessage('admin-eleve-msg', `Élève inscrit avec succès ! Matricule attribué : ${matricule}`, 'success');
+            afficherMessage('admin-eleve-msg', `Élève inscrit ! Matricule: ${matricule} | Code Parent généré: ${codeParent}`, 'success');
 
             document.getElementById('adm-nom-eleve').value = '';
             document.getElementById('adm-code-parent').value = '';
@@ -1869,7 +1880,6 @@
             }
         }
 
-        // Charger les données au démarrage de la page
         window.addEventListener('DOMContentLoaded', () => {
             chargerDonnees();
         });
