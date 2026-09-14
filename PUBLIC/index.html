@@ -1050,13 +1050,10 @@ window.envoyerMessageAdminWhatsApp = function() {
         push(ref(db, 'ecole_rdc_complet/messages'), {
             codeParent: adminSelectedParentCode,
             tuteur: nomTuteurRattache,
-            texte: "[Message initié par l'administration]",
+            texte: "Discussion initialisée par l'administration",
             date: dateStr,
             reponses: {
-                0: {
-                    texte: texte,
-                    date: dateStr
-                }
+                0: { texte: texte, date: dateStr }
             }
         }).then(() => {
             input.value = '';
@@ -1064,399 +1061,432 @@ window.envoyerMessageAdminWhatsApp = function() {
     }
 }
 
+// GESTION DU CALENDRIER DES PRÉSENCES ADMIN
 function chargerCalendrierAdmin(data) {
-    if(!data) return;
-    const eleves = data.eleves || {};
     const tbody = document.getElementById('admin-liste-calendrier-presences');
     if(!tbody) return;
+    const trimestre = document.getElementById('admin-cal-trimestre').value;
+    const eleves = data.eleves || {};
+
     tbody.innerHTML = "";
-
-    const trimestre = document.getElementById('admin-cal-trimestre')?.value || 'T1';
-
     if(Object.keys(eleves).length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-5 text-center text-slate-400 font-medium">Aucun élève enregistré</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Aucun élève enregistré</td></tr>`;
         return;
     }
 
     Object.keys(eleves).forEach(key => {
         const el = eleves[key];
         const statutActuel = el.presences?.[trimestre] || 'Présent';
+
         tbody.innerHTML += `
             <tr class="hover:bg-slate-50 transition-colors">
                 <td class="p-3 font-semibold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
                 <td class="p-3 text-slate-600 font-medium">${el.classe}</td>
                 <td class="p-3">
-                    <select id="admin-pres-${key}" class="bg-white border border-slate-200 p-2 rounded-xl text-xs font-semibold focus:ring-1 focus:ring-slate-900 focus:outline-none">
+                    <select id="admin-pres-${key}" class="bg-white border border-slate-200 p-1.5 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-blue-600 focus:outline-none">
                         <option value="Présent" ${statutActuel === 'Présent' ? 'selected' : ''}>Présent</option>
                         <option value="Absent" ${statutActuel === 'Absent' ? 'selected' : ''}>Absent</option>
                         <option value="Retard" ${statutActuel === 'Retard' ? 'selected' : ''}>Retard</option>
-                        <option value="Excusé" ${statutActuel === 'Excusé' ? 'selected' : ''}>Excusé</option>
+                        <option value="Exclu" ${statutActuel === 'Exclu' ? 'selected' : ''}>Exclu</option>
                     </select>
                 </td>
                 <td class="p-3 text-center">
-                    <button onclick="mettreAJourPresenceAdmin('${key}', '${trimestre}')" class="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition shadow-xs">Mettre à jour</button>
+                    <button onclick="mettreAJourPresenceAdmin('${key}', '${trimestre}')" class="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold transition shadow-xs">Enregistrer</button>
                 </td>
             </tr>`;
     });
 }
 
 window.mettreAJourPresenceAdmin = function(eleveKey, trimestre) {
-    const nouveauStatut = document.getElementById(`admin-pres-${eleveKey}`).value;
-    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/presences`), { [trimestre]: nouveauStatut })
-        .then(() => { alert("Statut de présence mis à jour avec succès !"); })
-        .catch((err) => { alert("Erreur : " + err.message); });
+    const select = document.getElementById(`admin-pres-${eleveKey}`);
+    if(!select) return;
+    const nouveauStatut = select.value;
+    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/presences`), {
+        [trimestre]: nouveauStatut
+    }).then(() => {
+        alert("Statut de présence mis à jour avec succès !");
+    }).catch(err => alert("Erreur : " + err.message));
 }
 
-window.changerTrimestreEleve = function() {
-    if(cacheDonnees) mettreAJourDashboardEleve(cacheDonnees);
-}
-
-function calculerTotauxEtPourcentageCours(cData, baremes) {
-    let obtenu = 0;
-    let maximum = 0;
-
-    const nbInterros = baremes?.nbInterros || 4;
-    const maxInt = baremes?.maxInterro || 10;
-    for(let i=1; i<=nbInterros; i++) {
-        const val = parseFloat(cData[`interro${i}`]);
-        if(!isNaN(val)) obtenu += val;
-        maximum += maxInt;
-    }
-
-    if(baremes?.actifDevoir !== 'non') {
-        const valDev = parseFloat(cData.devoir);
-        if(!isNaN(valDev)) obtenu += valDev;
-        maximum += (baremes?.maxDevoir || 10);
-    }
-
-    if(baremes?.actifExamen !== 'non') {
-        const valEx = parseFloat(cData.examen);
-        if(!isNaN(valEx)) obtenu += valEx;
-        maximum += (baremes?.maxExamen || 50);
-    }
-
-    const pourcentage = maximum > 0 ? ((obtenu / maximum) * 100).toFixed(2) : "0.00";
-    return { obtenu, maximum, pourcentage };
-}
-
+// ESPACE ÉLÈVE
 function mettreAJourDashboardEleve(data) {
     if(!utilisateurConnecte) return;
-    const trimestre = document.getElementById('select-trimestre-eleve').value;
-    const coursFiltre = document.getElementById('select-cours-eleve').value;
     let eleveActuel = null;
+    let eleveKey = null;
 
-    Object.values(data.eleves || {}).forEach(el => {
-        if(el.codeEleve === utilisateurConnecte.codeEleve) eleveActuel = el;
+    Object.keys(data.eleves || {}).forEach(k => {
+        if(data.eleves[k].codeEleve === utilisateurConnecte.codeEleve) {
+            eleveActuel = data.eleves[k];
+            eleveKey = k;
+        }
     });
 
     if(!eleveActuel) return;
+    utilisateurConnecte = eleveActuel;
 
-    let eleveKey = null;
-    Object.keys(data.eleves || {}).forEach(k => {
-        if(data.eleves[k].codeEleve === utilisateurConnecte.codeEleve) eleveKey = k;
-    });
+    const trimestre = document.getElementById('select-trimestre-eleve').value;
+    const coursFiltre = document.getElementById('select-cours-eleve').value;
+    const cotationsTrim = eleveActuel.cotations?.[trimestre] || {};
 
-    const profs = data.profs || {};
     const containerCotations = document.getElementById('contenu-cotations');
     containerCotations.innerHTML = "";
 
-    let totalGlobalObtenu = 0;
-    let totalGlobalMax = 0;
-
-    let lignesBulletinHtml = "";
+    const profs = data.profs || {};
+    let totalMaxGeneral = 0;
+    let totalObtGeneral = 0;
+    let coursTrouves = 0;
 
     Object.values(profs).forEach(p => {
-        if(coursFiltre && p.cours !== coursFiltre) return;
-        
-        const cData = eleveActuel.cotations?.[trimestre]?.[p.cours] || {};
-        const res = calculerTotauxEtPourcentageCours(cData, p.baremes);
+        const coursNom = p.cours;
+        if(coursFiltre && coursFiltre !== coursNom) return;
 
-        totalGlobalObtenu += res.obtenu;
-        totalGlobalMax += res.maximum;
+        const baremes = p.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+        const notesCours = cotationsTrim[coursNom] || {};
 
-        lignesBulletinHtml += `
-            <tr class="border-b border-slate-300">
-                <td class="p-2 border border-slate-300 font-semibold text-slate-800">${p.cours} <span class="text-[9px] text-slate-500 font-medium">(Prof. ${p.nom})</span></td>
-                <td class="p-2 border border-slate-300 text-center font-medium">${res.maximum}</td>
-                <td class="p-2 border border-slate-300 text-center font-bold text-slate-900">${res.obtenu}</td>
-            </tr>`;
-
-        let interrosDetails = '';
-        const nbInt = p.baremes?.nbInterros || 4;
-        for(let i=1; i<=nbInt; i++) {
-            interrosDetails += `<span class="bg-white px-2 py-1 rounded border border-slate-200 font-medium">Int.${i}: <strong>${cData[`interro${i}`] !== undefined ? cData[`interro${i}`] : '-'}/${p.baremes?.maxInterro || 10}</strong></span>`;
+        let maxCours = 0;
+        let sumInterros = 0;
+        let nbIntActives = baremes.nbInterros;
+        for(let i=1; i<=nbIntActives; i++) {
+            maxCours += baremes.maxInterro;
+            sumInterros += (parseFloat(notesCours[`int${i}`]) || 0);
         }
 
-        let devoirDetail = p.baremes?.actifDevoir !== 'non' ? `<span class="bg-white px-2 py-1 rounded border border-slate-200 font-medium">Devoir: <strong>${cData.devoir !== undefined ? cData.devoir : '-'}/${p.baremes?.maxDevoir || 10}</strong></span>` : '';
-        let examenDetail = p.baremes?.actifExamen !== 'non' ? `<span class="bg-white px-2 py-1 rounded border border-slate-200 font-medium">Examen: <strong>${cData.examen !== undefined ? cData.examen : '-'}/${p.baremes?.maxExamen || 50}</strong></span>` : '';
+        let maxDevoir = baremes.actifDevoir === 'oui' ? baremes.maxDevoir : 0;
+        let valDevoir = baremes.actifDevoir === 'oui' ? (parseFloat(notesCours.devoir) || 0) : 0;
+        if(baremes.actifDevoir === 'oui') maxCours += maxDevoir;
+
+        let maxExamen = baremes.actifExamen === 'oui' ? baremes.maxExamen : 0;
+        let valExamen = baremes.actifExamen === 'oui' ? (parseFloat(notesCours.examen) || 0) : 0;
+        if(baremes.actifExamen === 'oui') maxCours += maxExamen;
+
+        const totalObtenuCours = sumInterros + valDevoir + valExamen;
+        totalMaxGeneral += maxCours;
+        totalObtGeneral += totalObtenuCours;
+        coursTrouves++;
 
         containerCotations.innerHTML += `
-            <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2 shadow-xs">
+            <div class="bg-white border border-slate-200 p-3.5 rounded-xl space-y-1.5 shadow-xs">
                 <div class="flex justify-between items-center font-bold text-slate-900">
-                    <span>${p.cours}</span>
-                    <span class="text-slate-700 font-bold">${res.obtenu} / ${res.maximum} (${res.pourcentage}%)</span>
+                    <span>${coursNom}</span>
+                    <span class="text-blue-600 font-mono">${totalObtenuCours} / ${maxCours} pts</span>
                 </div>
-                <div class="flex flex-wrap gap-1.5 text-[11px] text-slate-600">
-                    ${interrosDetails} ${devoirDetail} ${examenDetail}
+                <div class="text-[11px] text-slate-500 font-medium">
+                    Interros : ${sumInterros} / ${nbIntActives * baremes.maxInterro} | Devoir : ${valDevoir}/${maxDevoir} | Examen : ${valExamen}/${maxExamen}
                 </div>
             </div>`;
     });
 
-    if(containerCotations.innerHTML === "") {
-        containerCotations.innerHTML = `<div class="text-slate-400 text-xs py-4 text-center font-medium">Aucun cours trouvé.</div>`;
+    if(coursTrouves === 0) {
+        containerCotations.innerHTML = `<div class="text-slate-400 text-xs text-center py-4 font-medium">Aucun cours trouvé.</div>`;
     }
 
-    document.getElementById('eleve-pourcentage-global').innerText = `${totalGlobalObtenu} pts / ${totalGlobalMax} pts`;
+    document.getElementById('eleve-pourcentage-global').innerText = `${totalObtGeneral.toFixed(1)} pts / ${totalMaxGeneral} pts`;
 
-    document.getElementById('bul-trimestre-txt').innerText = trimestre === 'T1' ? 'TRIMESTRE 1' : trimestre === 'T2' ? 'TRIMESTRE 2' : 'TRIMESTRE 3';
+    // Présences
+    const contPresences = document.getElementById('contenu-presences');
+    const statutPres = eleveActuel.presences?.[trimestre] || 'Présent';
+    contPresences.innerHTML = `
+        <div class="flex justify-between items-center font-medium">
+            <span>Trimestre sélectionné : <strong>${trimestre}</strong></span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${statutPres === 'Présent' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">${statutPres}</span>
+        </div>`;
+
+    // Remplissage Bulletin Officiel PDF
+    document.getElementById('bul-trimestre-txt').innerText = `TRIMESTRE ${trimestre.replace('T', '')}`;
     document.getElementById('bul-nom').innerText = eleveActuel.nom;
     document.getElementById('bul-prenom').innerText = `${eleveActuel.postnom || ''} ${eleveActuel.prenom}`;
     document.getElementById('bul-classe').innerText = eleveActuel.classe;
     document.getElementById('bul-code').innerText = eleveActuel.codeEleve;
     document.getElementById('bul-tuteur').innerText = eleveActuel.tuteur;
     document.getElementById('bul-date').innerText = new Date().toLocaleDateString();
-    document.getElementById('bul-lignes-cours').innerHTML = lignesBulletinHtml;
-    document.getElementById('bul-total-max').innerText = totalGlobalMax;
-    document.getElementById('bul-total-obt').innerText = totalGlobalObtenu;
-    
-    const presenceTrim = eleveActuel.presences?.[trimestre] || 'Présent';
-    document.getElementById('bul-presence-txt').innerText = presenceTrim;
+    document.getElementById('bul-presence-txt').innerText = statutPres;
 
-    const contPres = document.getElementById('contenu-presences');
-    contPres.innerHTML = `
-        <div class="flex justify-between items-center py-1 font-medium">
-            <span class="text-slate-600">Trimestre 1 (T1) :</span>
-            <span class="font-bold px-2.5 py-0.5 rounded-full text-[10px] ${eleveActuel.presences?.T1 === 'Absent' ? 'bg-red-50 text-red-700 border border-red-200' : eleveActuel.presences?.T1 === 'Retard' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">${eleveActuel.presences?.T1 || 'Présent'}</span>
-        </div>
-        <div class="flex justify-between items-center py-1 font-medium">
-            <span class="text-slate-600">Trimestre 2 (T2) :</span>
-            <span class="font-bold px-2.5 py-0.5 rounded-full text-[10px] ${eleveActuel.presences?.T2 === 'Absent' ? 'bg-red-50 text-red-700 border border-red-200' : eleveActuel.presences?.T2 === 'Retard' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">${eleveActuel.presences?.T2 || 'Présent'}</span>
-        </div>
-        <div class="flex justify-between items-center py-1 font-medium">
-            <span class="text-slate-600">Trimestre 3 (T3) :</span>
-            <span class="font-bold px-2.5 py-0.5 rounded-full text-[10px] ${eleveActuel.presences?.T3 === 'Absent' ? 'bg-red-50 text-red-700 border border-red-200' : eleveActuel.presences?.T3 === 'Retard' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">${eleveActuel.presences?.T3 || 'Présent'}</span>
-        </div>`;
+    const bulLignes = document.getElementById('bul-lignes-cours');
+    bulLignes.innerHTML = "";
+
+    Object.values(profs).forEach(p => {
+        const coursNom = p.cours;
+        const baremes = p.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+        const notesCours = cotationsTrim[coursNom] || {};
+
+        let maxCours = 0;
+        let sumInterros = 0;
+        for(let i=1; i<=baremes.nbInterros; i++) {
+            maxCours += baremes.maxInterro;
+            sumInterros += (parseFloat(notesCours[`int${i}`]) || 0);
+        }
+        if(baremes.actifDevoir === 'oui') maxCours += baremes.maxDevoir;
+        if(baremes.actifExamen === 'oui') maxCours += baremes.maxExamen;
+
+        const totalObtenuCours = sumInterros + (baremes.actifDevoir === 'oui' ? (parseFloat(notesCours.devoir) || 0) : 0) + (baremes.actifExamen === 'oui' ? (parseFloat(notesCours.examen) || 0) : 0);
+
+        bulLignes.innerHTML += `
+            <tr class="border-b border-slate-200">
+                <td class="p-2 border border-slate-300 font-semibold">${coursNom}</td>
+                <td class="p-2 border border-slate-300 text-center font-mono">${maxCours}</td>
+                <td class="p-2 border border-slate-300 text-center font-mono font-bold">${totalObtenuCours}</td>
+            </tr>`;
+    });
+
+    document.getElementById('bul-total-max').innerText = totalMaxGeneral;
+    document.getElementById('bul-total-obt').innerText = totalObtGeneral.toFixed(1);
 }
 
-window.changerTrimestreProf = function() {
-    if(cacheDonnees) mettreAJourDashboardProf(cacheDonnees);
-}
-window.changerClasseProf = function() {
-    if(cacheDonnees) mettreAJourDashboardProf(cacheDonnees);
+window.changerTrimestreEleve = function() {
+    if(cacheDonnees) mettreAJourDashboardEleve(cacheDonnees);
 }
 
+// ESPACE PROFESSEUR
 function mettreAJourDashboardProf(data) {
     if(!utilisateurConnecte) return;
-    const trimestre = document.getElementById('prof-select-trimestre').value;
     const classeFiltre = document.getElementById('prof-select-classe').value;
-
+    const trimestre = document.getElementById('prof-select-trimestre').value;
     const coursProf = utilisateurConnecte.cours;
     const baremes = utilisateurConnecte.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
 
-    const thInt1 = document.getElementById('th-int1');
-    const thInt2 = document.getElementById('th-int2');
-    const thInt3 = document.getElementById('th-int3');
-    const thInt4 = document.getElementById('th-int4');
-    const thDev = document.getElementById('th-dev');
-    const thEx = document.getElementById('th-ex');
-
-    const maxI = baremes.maxInterro || 10;
-    const maxD = baremes.maxDevoir || 10;
-    const maxE = baremes.maxExamen || 50;
-    const nbI = baremes.nbInterros || 4;
-
-    if(thInt1) thInt1.innerText = nbI >= 1 ? `Int.1 (/${maxI})` : '';
-    if(thInt1) thInt1.style.display = nbI >= 1 ? '' : 'none';
-
-    if(thInt2) thInt2.innerText = nbI >= 2 ? `Int.2 (/${maxI})` : '';
-    if(thInt2) thInt2.style.display = nbI >= 2 ? '' : 'none';
-
-    if(thInt3) thInt3.innerText = nbI >= 3 ? `Int.3 (/${maxI})` : '';
-    if(thInt3) thInt3.style.display = nbI >= 3 ? '' : 'none';
-
-    if(thInt4) thInt4.innerText = nbI >= 4 ? `Int.4 (/${maxI})` : '';
-    if(thInt4) thInt4.style.display = nbI >= 4 ? '' : 'none';
-
-    if(thDev) {
-        thDev.innerText = `Devoir (/${maxD})`;
-        thDev.style.display = baremes.actifDevoir !== 'non' ? '' : 'none';
+    // Adapter les entêtes de la table selon les barèmes
+    for(let i=1; i<=4; i++) {
+        const th = document.getElementById(`th-int${i}`);
+        if(th) {
+            if(i <= baremes.nbInterros) {
+                th.style.display = '';
+                th.innerText = `Int. ${i} (/${baremes.maxInterro})`;
+            } else {
+                th.style.display = 'none';
+            }
+        }
     }
+
+    const thDev = document.getElementById('th-dev');
+    if(thDev) {
+        if(baremes.actifDevoir === 'oui') {
+            thDev.style.display = '';
+            thDev.innerText = `Devoir (/${baremes.maxDevoir})`;
+        } else {
+            thDev.style.display = 'none';
+        }
+    }
+
+    const thEx = document.getElementById('th-ex');
     if(thEx) {
-        thEx.innerText = `Examen (/${maxE})`;
-        thEx.style.display = baremes.actifExamen !== 'non' ? '' : 'none';
+        if(baremes.actifExamen === 'oui') {
+            thEx.style.display = '';
+            thEx.innerText = `Examen (/${baremes.maxExamen})`;
+        } else {
+            thDev.style.display = 'none';
+        }
     }
 
     const tbody = document.getElementById('prof-liste-eleves-action');
-    if(!tbody) return;
     tbody.innerHTML = "";
 
     const eleves = data.eleves || {};
     let nbElevesAffiches = 0;
 
-    Object.keys(eleves).forEach(elKey => {
-        const el = eleves[elKey];
+    Object.keys(eleves).forEach(key => {
+        const el = eleves[key];
         if(classeFiltre && el.classe !== classeFiltre) return;
         nbElevesAffiches++;
 
-        const cData = el.cotations?.[trimestre]?.[coursProf] || {};
-        const res = calculerTotauxEtPourcentageCours(cData, baremes);
+        const notes = el.cotations?.[trimestre]?.[coursProf] || {};
+        
+        let htmlInts = '';
+        let sumInt = 0;
+        let maxIntsTotal = baremes.nbInterros * baremes.maxInterro;
 
-        let tdsInterros = '';
         for(let i=1; i<=4; i++) {
-            const affiche = i <= nbI;
-            tdsInterros += `<td class="p-2 text-center" style="${affiche ? '' : 'display:none;'}"><input id="input-${elKey}-int${i}" type="number" step="0.5" value="${cData[`interro${i}`] !== undefined ? cData[`interro${i}`] : ''}" placeholder="/${maxI}" class="w-12 bg-slate-50 border border-slate-200 p-1.5 rounded text-center text-xs font-semibold focus:bg-white focus:ring-1 focus:ring-slate-900 focus:outline-none"></td>`;
+            if(i <= baremes.nbInterros) {
+                const val = notes[`int${i}`] !== undefined ? notes[`int${i}`] : '';
+                sumInt += parseFloat(val) || 0;
+                htmlInts += `<td class="p-2.5 text-center"><input type="number" id="note-${key}-int${i}" value="${val}" min="0" max="${baremes.maxInterro}" onchange="sauvegarderNoteProf('${key}', '${trimestre}', '${coursProf}')" class="w-14 bg-white border border-slate-200 p-1.5 rounded-lg text-center font-mono text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
+            } else {
+                htmlInts += `<td class="p-2.5 text-center" style="display:none;"></td>`;
+            }
         }
 
-        const tdDevoir = `<td class="p-2 text-center" style="${baremes.actifDevoir !== 'non' ? '' : 'display:none;'}"><input id="input-${elKey}-dev" type="number" step="0.5" value="${cData.devoir !== undefined ? cData.devoir : ''}" placeholder="/${maxD}" class="w-12 bg-slate-50 border border-slate-200 p-1.5 rounded text-center text-xs font-semibold focus:bg-white focus:ring-1 focus:ring-slate-900 focus:outline-none"></td>`;
-        const tdExamen = `<td class="p-2 text-center" style="${baremes.actifExamen !== 'non' ? '' : 'display:none;'}"><input id="input-${elKey}-ex" type="number" step="0.5" value="${cData.examen !== undefined ? cData.examen : ''}" placeholder="/${maxE}" class="w-12 bg-slate-50 border border-slate-200 p-1.5 rounded text-center text-xs font-semibold focus:bg-white focus:ring-1 focus:ring-slate-900 focus:outline-none"></td>`;
+        let htmlDev = '';
+        let valDev = 0;
+        if(baremes.actifDevoir === 'oui') {
+            valDev = notes.devoir !== undefined ? notes.devoir : '';
+            htmlDev = `<td class="p-2.5 text-center"><input type="number" id="note-${key}-devoir" value="${valDev}" min="0" max="${baremes.maxDevoir}" onchange="sauvegarderNoteProf('${key}', '${trimestre}', '${coursProf}')" class="w-14 bg-white border border-slate-200 p-1.5 rounded-lg text-center font-mono text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
+        } else {
+            htmlDev = `<td class="p-2.5 text-center" style="display:none;"></td>`;
+        }
+
+        let htmlEx = '';
+        let valEx = 0;
+        if(baremes.actifExamen === 'oui') {
+            valEx = notes.examen !== undefined ? notes.examen : '';
+            htmlEx = `<td class="p-2.5 text-center"><input type="number" id="note-${key}-examen" value="${valEx}" min="0" max="${baremes.maxExamen}" onchange="sauvegarderNoteProf('${key}', '${trimestre}', '${coursProf}')" class="w-14 bg-white border border-slate-200 p-1.5 rounded-lg text-center font-mono text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
+        } else {
+            htmlEx = `<td class="p-2.5 text-center" style="display:none;"></td>`;
+        }
+
+        const totalEleveCours = sumInt + (baremes.actifDevoir === 'oui' ? (parseFloat(valDev) || 0) : 0) + (baremes.actifExamen === 'oui' ? (parseFloat(valEx) || 0) : 0);
+        const maxTotalCours = maxIntsTotal + (baremes.actifDevoir === 'oui' ? baremes.maxDevoir : 0) + (baremes.actifExamen === 'oui' ? baremes.maxExamen : 0);
 
         tbody.innerHTML += `
             <tr class="hover:bg-slate-50 transition-colors">
                 <td class="p-2.5 font-semibold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
                 <td class="p-2.5 text-slate-600 font-medium">${el.classe}</td>
-                ${tdsInterros}
-                ${tdDevoir}
-                ${tdExamen}
-                <td class="p-2.5 text-center bg-slate-50 font-bold text-slate-900" id="total-${elKey}">${res.obtenu} / ${res.maximum}</td>
+                ${htmlInts}
+                ${htmlDev}
+                ${htmlEx}
+                <td class="p-2.5 text-center font-mono font-bold bg-slate-50 text-slate-900" id="total-${key}">${totalEleveCours} / ${maxTotalCours}</td>
                 <td class="p-2.5 text-center no-print">
-                    <button onclick="enregistrerNotesEleve('${elKey}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs">Enregistrer</button>
+                    <span class="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">Auto</span>
                 </td>
             </tr>`;
     });
 
     if(nbElevesAffiches === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-slate-400 font-medium">Aucun élève trouvé dans cette classe.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-slate-400 font-medium">Aucun élève trouvé pour cette classe</td></tr>`;
     }
 }
 
-window.enregistrerNotesEleve = function(elKey) {
+window.changerClasseProf = function() {
+    if(cacheDonnees) mettreAJourDashboardProf(cacheDonnees);
+}
+
+window.changerTrimestreProf = function() {
+    if(cacheDonnees) mettreAJourDashboardProf(cacheDonnees);
+}
+
+window.sauvegarderNoteProf = function(eleveKey, trimestre, coursProf) {
     if(!utilisateurConnecte) return;
-    const trimestre = document.getElementById('prof-select-trimestre').value;
-    const coursProf = utilisateurConnecte.cours;
     const baremes = utilisateurConnecte.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
-    const nbI = baremes.nbInterros || 4;
 
-    const cData = {};
-    for(let i=1; i<=nbI; i++) {
-        const val = document.getElementById(`input-${elKey}-int${i}`).value;
-        if(val !== '') cData[`interro${i}`] = parseFloat(val);
+    let notesObj = {};
+    for(let i=1; i<=baremes.nbInterros; i++) {
+        const val = document.getElementById(`note-${eleveKey}-int${i}`)?.value;
+        if(val !== undefined && val !== '') notesObj[`int${i}`] = parseFloat(val);
+    }
+    if(baremes.actifDevoir === 'oui') {
+        const valDev = document.getElementById(`note-${eleveKey}-devoir`)?.value;
+        if(valDev !== undefined && valDev !== '') notesObj['devoir'] = parseFloat(valDev);
+    }
+    if(baremes.actifExamen === 'oui') {
+        const valEx = document.getElementById(`note-${eleveKey}-examen`)?.value;
+        if(valEx !== undefined && valEx !== '') notesObj['examen'] = parseFloat(valEx);
     }
 
-    if(baremes.actifDevoir !== 'non') {
-        const valDev = document.getElementById(`input-${elKey}-dev`).value;
-        if(valDev !== '') cData.devoir = parseFloat(valDev);
-    }
-
-    if(baremes.actifExamen !== 'non') {
-        const valEx = document.getElementById(`input-${elKey}-ex`).value;
-        if(valEx !== '') cData.examen = parseFloat(valEx);
-    }
-
-    update(ref(db, `ecole_rdc_complet/eleves/${elKey}/cotations/${trimestre}/${coursProf}`), cData)
-        .then(() => {
-            alert("Notes enregistrées avec succès !");
-        })
-        .catch(err => alert("Erreur : " + err.message));
+    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/cotations/${trimestre}/${coursProf}`), notesObj);
 }
 
+// ESPACE PARENT / TUTEUR
 function mettreAJourDashboardParent(data) {
     if(!utilisateurConnecte) return;
+    const codeParent = utilisateurConnecte.codeParent;
     const trimestre = document.getElementById('select-trimestre-parent').value;
     const coursFiltre = document.getElementById('select-cours-parent').value;
-    const container = document.getElementById('parent-liste-enfants');
-    container.innerHTML = "";
+
+    const enfantsContainer = document.getElementById('parent-liste-enfants');
+    enfantsContainer.innerHTML = "";
 
     const eleves = data.eleves || {};
     const profs = data.profs || {};
-    let unEnfantNonEnOrdre = false;
-    let nbEnfantsTrouves = 0;
+    let unEnfantNonOrdre = false;
+    let nbEnfants = 0;
 
-    Object.values(eleves).forEach(el => {
-        if(el.codeParent === utilisateurConnecte.codeParent) {
-            nbEnfantsTrouves++;
-            if(el.frais === 'non_ordre') unEnfantNonEnOrdre = true;
+    Object.keys(eleves).forEach(eKey => {
+        const el = eleves[eKey];
+        if(el.codeParent === codeParent) {
+            nbEnfants++;
+            if(el.frais === 'non_ordre') unEnfantNonOrdre = true;
 
-            let cotationsHtml = '';
-            let totalObtenuEnfant = 0;
-            let totalMaxEnfant = 0;
+            const cotationsTrim = el.cotations?.[trimestre] || {};
+            let htmlCours = '';
+            let totalMaxEl = 0;
+            let totalObtEl = 0;
 
             Object.values(profs).forEach(p => {
-                if(coursFiltre && p.cours !== coursFiltre) return;
-                const cData = el.cotations?.[trimestre]?.[p.cours] || {};
-                const res = calculerTotauxEtPourcentageCours(cData, p.baremes);
+                const coursNom = p.cours;
+                if(coursFiltre && coursFiltre !== coursNom) return;
 
-                totalObtenuEnfant += res.obtenu;
-                totalMaxEnfant += res.maximum;
+                const baremes = p.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+                const notesCours = cotationsTrim[coursNom] || {};
 
-                cotationsHtml += `
-                    <div class="bg-white p-2.5 rounded-lg border border-slate-200 text-xs flex justify-between items-center">
-                        <span class="font-semibold text-slate-800">${p.cours}</span>
-                        <span class="font-bold text-slate-900">${res.obtenu} / ${res.maximum} (${res.pourcentage}%)</span>
+                let maxCours = 0;
+                let sumInterros = 0;
+                for(let i=1; i<=baremes.nbInterros; i++) {
+                    maxCours += baremes.maxInterro;
+                    sumInterros += (parseFloat(notesCours[`int${i}`]) || 0);
+                }
+                if(baremes.actifDevoir === 'oui') maxCours += baremes.maxDevoir;
+                if(baremes.actifExamen === 'oui') maxCours += baremes.maxExamen;
+
+                const totalObtenuCours = sumInterros + (baremes.actifDevoir === 'oui' ? (parseFloat(notesCours.devoir) || 0) : 0) + (baremes.actifExamen === 'oui' ? (parseFloat(notesCours.examen) || 0) : 0);
+                
+                totalMaxEl += maxCours;
+                totalObtEl += totalObtenuCours;
+
+                htmlCours += `
+                    <div class="flex justify-between items-center text-xs py-1.5 border-b border-slate-100 last:border-0 font-medium">
+                        <span class="text-slate-700">${coursNom}</span>
+                        <span class="font-mono font-bold text-slate-900">${totalObtenuCours} / ${maxCours} pts</span>
                     </div>`;
             });
 
-            container.innerHTML += `
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+            enfantsContainer.innerHTML += `
+                <div class="bg-white border border-slate-200 p-4 rounded-xl space-y-3 shadow-xs">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-2">
                         <div>
-                            <div class="font-bold text-slate-900 text-sm">${el.nom} ${el.postnom || ''} ${el.prenom}</div>
-                            <div class="text-[11px] text-slate-500 font-medium">Classe : ${el.classe} | Code : ${el.codeEleve}</div>
+                            <h4 class="font-bold text-slate-900 text-xs">${el.nom} ${el.postnom || ''} ${el.prenom}</h4>
+                            <p class="text-[10px] text-slate-500 font-semibold">${el.classe}</p>
                         </div>
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${el.frais === 'en_ordre' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}">${el.frais === 'en_ordre' ? 'Frais en ordre' : 'Frais non payés'}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${el.frais === 'en_ordre' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}">${el.frais === 'en_ordre' ? 'Frais en ordre' : 'Frais non payés'}</span>
                     </div>
-                    <div class="space-y-1.5">
-                        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Notes du ${trimestre} (Total : ${totalObtenuEnfant} / ${totalMaxEnfant} pts)</div>
-                        <div class="space-y-1 max-h-48 overflow-y-auto">${cotationsHtml || '<div class="text-slate-400 text-xs">Aucune note.</div>'}</div>
+                    <div class="space-y-1 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+                        ${htmlCours || '<div class="text-slate-400 text-xs text-center">Aucune note</div>'}
+                    </div>
+                    <div class="flex justify-between items-center pt-1 text-xs font-bold text-slate-900 bg-slate-100/70 p-2.5 rounded-lg">
+                        <span>Total Général (${trimestre}) :</span>
+                        <span class="font-mono text-blue-600">${totalObtEl.toFixed(1)} / ${totalMaxEl} pts</span>
                     </div>
                 </div>`;
         }
     });
 
     const alerteFrais = document.getElementById('alerte-frais-parent');
-    if(unEnfantNonEnOrdre) {
+    if(unEnfantNonOrdre) {
         alerteFrais.classList.remove('hidden');
     } else {
         alerteFrais.classList.add('hidden');
     }
 
-    if(nbEnfantsTrouves === 0) {
-        container.innerHTML = `<div class="text-slate-400 text-xs py-4 text-center">Aucun élève rattaché à ce compte parent.</div>`;
-    }
-
-    afficherMessagesParentWhatsApp(data);
+    afficherMessagesParentWhatsApp(data, codeParent);
 }
 
 window.changerTrimestreParent = function() {
     if(cacheDonnees) mettreAJourDashboardParent(cacheDonnees);
 }
 
-function afficherMessagesParentWhatsApp(data) {
+function afficherMessagesParentWhatsApp(data, codeParent) {
     const chatBox = document.getElementById('parent-chat-box');
-    if(!chatBox || !utilisateurConnecte) return;
+    if(!chatBox) return;
     chatBox.innerHTML = "";
 
     const messages = data.messages || {};
-    let messagesTrouves = false;
+    let trouve = false;
 
-    Object.values(messages).forEach(m => {
-        if(m.codeParent === utilisateurConnecte.codeParent) {
-            messagesTrouves = true;
-            if(m.texte && !m.texte.includes("[Message initié par l'administration]")) {
-                chatBox.innerHTML += `
-                    <div class="flex flex-col items-end mb-2">
-                        <div class="bg-blue-600 text-white rounded-xl rounded-tr-sm p-2.5 max-w-[85%] text-xs space-y-0.5 shadow-xs">
-                            <div class="font-bold text-[9px] text-blue-200 uppercase tracking-wide">Moi (${m.tuteur})</div>
-                            <div class="font-medium">${m.texte}</div>
-                            <div class="text-[8px] text-blue-200 text-right font-semibold">${m.date}</div>
-                        </div>
-                    </div>`;
-            }
+    Object.keys(messages).forEach(mKey => {
+        const m = messages[mKey];
+        if(m.codeParent === codeParent) {
+            trouve = true;
+            chatBox.innerHTML += `
+                <div class="flex flex-col items-end mb-2">
+                    <div class="bg-blue-600 text-white rounded-xl rounded-tr-sm p-3 max-w-[85%] text-xs space-y-1 shadow-xs">
+                        <div class="font-bold text-[9px] text-blue-200 uppercase tracking-wide">Vous (Tuteur)</div>
+                        <div class="font-medium">${m.texte}</div>
+                        <div class="text-[8px] text-blue-200 text-right font-semibold">${m.date}</div>
+                    </div>
+                </div>`;
 
             if(m.reponses) {
                 Object.values(m.reponses).forEach(rep => {
                     chatBox.innerHTML += `
                         <div class="flex flex-col items-start mb-2">
-                            <div class="bg-slate-100 border border-slate-200 rounded-xl rounded-tl-sm p-2.5 max-w-[85%] text-xs space-y-0.5">
+                            <div class="bg-white border border-slate-200 rounded-xl rounded-tl-sm p-3 max-w-[85%] text-xs space-y-1 shadow-xs">
                                 <div class="font-bold text-[9px] text-slate-500 uppercase tracking-wide">Administration</div>
                                 <div class="text-slate-800 font-medium">${rep.texte}</div>
                                 <div class="text-[8px] text-slate-400 text-right font-semibold">${rep.date}</div>
@@ -1467,8 +1497,8 @@ function afficherMessagesParentWhatsApp(data) {
         }
     });
 
-    if(!messagesTrouves) {
-        chatBox.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto font-medium">Posez vos questions directement à l'administration ici.</div>`;
+    if(!trouve) {
+        chatBox.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto font-medium">Démarrez une discussion avec l'administration ci-dessous.</div>`;
     }
     chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -1479,34 +1509,18 @@ window.envoyerMessageParent = function() {
     const texte = input.value.trim();
     if(!texte) return;
 
-    const messages = cacheDonnees?.messages || {};
-    let targetMsgKey = null;
-
-    Object.keys(messages).forEach(k => {
-        if(messages[k].codeParent === utilisateurConnecte.codeParent) {
-            targetMsgKey = k;
-        }
-    });
-
+    const codeParent = utilisateurConnecte.codeParent;
+    const nomTuteur = utilisateurConnecte.tuteur;
     const dateStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-    if(targetMsgKey) {
-        push(ref(db, `ecole_rdc_complet/messages/${targetMsgKey}/reponses`), {
-            texte: texte,
-            date: dateStr
-        }).then(() => {
-            input.value = '';
-        }).catch(err => alert("Erreur : " + err.message));
-    } else {
-        push(ref(db, 'ecole_rdc_complet/messages'), {
-            codeParent: utilisateurConnecte.codeParent,
-            tuteur: utilisateurConnecte.tuteur,
-            texte: texte,
-            date: dateStr
-        }).then(() => {
-            input.value = '';
-        }).catch(err => alert("Erreur : " + err.message));
-    }
+    push(ref(db, 'ecole_rdc_complet/messages'), {
+        codeParent: codeParent,
+        tuteur: nomTuteur,
+        texte: texte,
+        date: dateStr
+    }).then(() => {
+        input.value = '';
+    }).catch(err => alert("Erreur : " + err.message));
 }
 </script>
 </body>
