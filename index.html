@@ -8,9 +8,10 @@
 <style>
     @media print {
         body * { visibility: hidden; }
-        #section-impression-admin, #section-impression-admin *, #section-impression-prof, #section-impression-prof * { visibility: visible; }
+        #section-impression-admin, #section-impression-admin *, #section-impression-prof, #section-impression-prof *, #bulletin-impression, #bulletin-impression * { visibility: visible; }
         #section-impression-admin { position: absolute; left: 0; top: 0; width: 100%; }
         #section-impression-prof { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+        #bulletin-impression { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: white !important; z-index: 9999; }
         .no-print { display: none !important; }
     }
 </style>
@@ -44,12 +45,12 @@
                 <div onclick="changerVue('eleve-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">🎓</div>
                     <h3 class="font-bold text-slate-800">Espace Élève</h3>
-                    <p class="text-xs text-slate-500 mt-1">Consultation détaillée & pourcentage global</p>
+                    <p class="text-xs text-slate-500 mt-1">Consultation détaillée & bulletin officiel</p>
                 </div>
                 <div onclick="changerVue('parent-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">👪</div>
                     <h3 class="font-bold text-slate-800">Espace Parent</h3>
-                    <p class="text-xs text-slate-500 mt-1">Suivi par cours, totaux & pourcentage</p>
+                    <p class="text-xs text-slate-500 mt-1">Suivi par cours & bulletin officiel</p>
                 </div>
             </div>
         </div>
@@ -171,7 +172,10 @@
                     <h2 class="text-xl font-bold text-slate-800">Espace Élève</h2>
                     <p id="welcome-eleve" class="text-sm text-slate-500"></p>
                 </div>
-                <button onclick="changerVue('accueil')" class="text-sm text-red-600 hover:underline">Déconnexion</button>
+                <div class="flex gap-3 items-center">
+                    <button onclick="imprimerBulletinEleve()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700 no-print">🖨️ Imprimer mon Bulletin Officiel</button>
+                    <button onclick="changerVue('accueil')" class="text-sm text-red-600 hover:underline no-print">Déconnexion</button>
+                </div>
             </div>
             
             <!-- Carte récapitulative du pourcentage global -->
@@ -204,6 +208,76 @@
                 <div class="bg-slate-50 border p-5 rounded-xl space-y-4">
                     <h3 class="font-bold text-slate-800">Registre de présence</h3>
                     <div id="contenu-presences" class="space-y-2 text-sm bg-white p-4 rounded-lg border"></div>
+                </div>
+            </div>
+
+            <!-- BULLETIN OFFICIEL RDC (Caché pour impression) -->
+            <div id="bulletin-impression" class="hidden p-6 bg-white text-slate-900 border-2 border-slate-900 space-y-6 max-w-4xl mx-auto">
+                <div class="text-center border-b-2 border-slate-900 pb-4 space-y-1">
+                    <h4 class="font-extrabold text-sm uppercase tracking-wide">REPULIQUE DEMOCRATIQUE DU CONGO</h4>
+                    <p class="text-xs font-semibold">MINISTERE DE L'ENSEIGNEMENT PRIMAIRE, SECONDAIRE ET TECHNIQUE</p>
+                    <div class="flex justify-between items-center mt-2 px-4 text-xs font-medium">
+                        <span>PROVINCE EDUCATIONNELLE : KINSHASA</span>
+                        <span>ANNEE SCOLAIRE 2025 - 2026</span>
+                    </div>
+                    <h2 class="text-xl font-black uppercase mt-3 bg-slate-900 text-white py-1">BULLETIN SCOLAIRE OFFICIEL - <span id="bul-trimestre-txt">TRIMESTRE 1</span></h2>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-xs border p-3 bg-slate-50 rounded">
+                    <div>
+                        <p><strong>Nom :</strong> <span id="bul-nom"></span></p>
+                        <p><strong>Post-nom / Prénom :</strong> <span id="bul-prenom"></span></p>
+                        <p><strong>Classe :</strong> <span id="bul-classe"></span></p>
+                    </div>
+                    <div>
+                        <p><strong>Numéro d'ordre :</strong> <span id="bul-code"></span></p>
+                        <p><strong>Tuteur :</strong> <span id="bul-tuteur"></span></p>
+                        <p><strong>Date d'impression :</strong> <span id="bul-date"></span></p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs border border-slate-900">
+                        <thead>
+                            <tr class="bg-slate-200 text-slate-900 uppercase text-[10px] border-b border-slate-900">
+                                <th class="p-2 border border-slate-900">Branches / Cours</th>
+                                <th class="p-2 border border-slate-900 text-center">Max Total</th>
+                                <th class="p-2 border border-slate-900 text-center">Total Obtenu</th>
+                                <th class="p-2 border border-slate-900 text-center">%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bul-lignes-cours"></tbody>
+                        <tfoot>
+                            <tr class="bg-slate-100 font-bold border-t-2 border-slate-900">
+                                <td class="p-2 border border-slate-900 text-right">TOTAUX GENERAUX :</td>
+                                <td class="p-2 border border-slate-900 text-center" id="bul-total-max">0</td>
+                                <td class="p-2 border border-slate-900 text-center" id="bul-total-obt">0</td>
+                                <td class="p-2 border border-slate-900 text-center text-blue-900 font-extrabold" id="bul-pourcentage-fin">0.00 %</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-xs border p-3 rounded bg-slate-50">
+                    <div>
+                        <p><strong>Conduite :</strong> Bonne</p>
+                        <p><strong>Absences injustifiées :</strong> 0 heure</p>
+                    </div>
+                    <div>
+                        <p><strong>Mention obtenue :</strong> <span id="bul-mention" class="font-bold"></span></p>
+                        <p><strong>Statut des Frais :</strong> En ordre</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-end pt-8 px-8 text-xs font-bold">
+                    <div class="text-center">
+                        <p>Sceau de l'Établissement</p>
+                        <div class="h-16 w-32 border border-dashed border-slate-400 mx-auto mt-2"></div>
+                    </div>
+                    <div class="text-center">
+                        <p>Signature du Chef d'Établissement</p>
+                        <div class="h-12 w-40 border-b border-slate-900 mx-auto mt-6"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -498,7 +572,6 @@ window.validerConnexion = function() {
                 document.getElementById('print-prof-nom').innerText = trouve.nom;
                 document.getElementById('print-prof-cours').innerText = trouve.cours;
                 
-                // Charger les barèmes sauvegardés du prof s'ils existent
                 if(trouve.baremes) {
                     document.getElementById('cfg-nb-interros').value = trouve.baremes.nbInterros || 4;
                     document.getElementById('cfg-max-interro').value = trouve.baremes.maxInterro || 10;
@@ -548,6 +621,10 @@ window.imprimerFicheProf = function() {
     document.getElementById('print-prof-trim').innerText = document.getElementById('prof-select-trimestre').value;
     const classeVal = document.getElementById('prof-select-classe').value;
     document.getElementById('print-prof-classe').innerText = classeVal ? classeVal : "Toutes les classes";
+    window.print();
+}
+
+window.imprimerBulletinEleve = function() {
     window.print();
 }
 
@@ -780,6 +857,18 @@ function mettreAJourDashboardEleve(data) {
 
     const profs = data.profs || {};
 
+    // Remplissage des données du bulletin officiel
+    document.getElementById('bul-trimestre-txt').innerText = `TRIMESTRE ${trimestre.replace('T', '')}`;
+    document.getElementById('bul-nom').innerText = eleveActuel.nom;
+    document.getElementById('bul-prenom').innerText = `${eleveActuel.postnom || ''} ${eleveActuel.prenom}`;
+    document.getElementById('bul-classe').innerText = eleveActuel.classe;
+    document.getElementById('bul-code').innerText = eleveActuel.codeEleve;
+    document.getElementById('bul-tuteur').innerText = eleveActuel.tuteur;
+    document.getElementById('bul-date').innerText = new Date().toLocaleDateString();
+
+    const bulLignes = document.getElementById('bul-lignes-cours');
+    bulLignes.innerHTML = "";
+
     Object.keys(cotationsTrimestre).forEach(cours => {
         if(coursFiltre && cours !== coursFiltre) return;
         coursTrouves++;
@@ -793,6 +882,15 @@ function mettreAJourDashboardEleve(data) {
         const resCalcul = calculerTotauxEtPourcentageCours(cData, baremesCours);
         totalObtenuGlobal += resCalcul.obtenu;
         totalMaximumGlobal += resCalcul.maximum;
+
+        // Ligne pour le bulletin officiel imprimable
+        bulLignes.innerHTML += `
+            <tr class="border-b border-slate-900">
+                <td class="p-1.5 border border-slate-900 font-medium">${cours}</td>
+                <td class="p-1.5 border border-slate-900 text-center">${resCalcul.maximum}</td>
+                <td class="p-1.5 border border-slate-900 text-center font-bold">${resCalcul.obtenu}</td>
+                <td class="p-1.5 border border-slate-900 text-center">${resCalcul.pourcentage}%</td>
+            </tr>`;
 
         let interrosHtml = '';
         for(let i=1; i<=baremesCours.nbInterros; i++) {
@@ -826,8 +924,22 @@ function mettreAJourDashboardEleve(data) {
     const pourcentageGlobal = totalMaximumGlobal > 0 ? ((totalObtenuGlobal / totalMaximumGlobal) * 100).toFixed(2) : "0.00";
     document.getElementById('eleve-pourcentage-global').innerText = `${pourcentageGlobal} % (${totalObtenuGlobal} pts / ${totalMaximumGlobal} pts)`;
 
+    // Mise à jour des totaux du bulletin officiel
+    document.getElementById('bul-total-max').innerText = totalMaximumGlobal;
+    document.getElementById('bul-total-obt').innerText = totalObtenuGlobal;
+    document.getElementById('bul-pourcentage-fin').innerText = `${pourcentageGlobal} %`;
+
+    let mention = "Insuffisant (< 50%)";
+    const pNum = parseFloat(pourcentageGlobal);
+    if(pNum >= 80) mention = "La plus grande distinction ( ≥ 80%)";
+    else if(pNum >= 70) mention = "Grande distinction ( ≥ 70%)";
+    else if(pNum >= 60) mention = "Distinction ( ≥ 60%)";
+    else if(pNum >= 50) mention = "Satisfaction ( ≥ 50%)";
+    document.getElementById('bul-mention').innerText = mention;
+
     if(coursTrouves === 0) {
         cotationsDiv.innerHTML = `<p class='text-slate-400 text-xs'>Aucune cotation enregistrée pour cette sélection.</p>`;
+        bulLignes.innerHTML = `<tr><td colspan="4" class="p-2 text-center text-slate-400">Aucune cotation enregistrée</td></tr>`;
     }
 
     document.getElementById('contenu-presences').innerHTML = `<div class="p-2 rounded bg-green-50 text-green-800">Statut (${trimestre}) : <strong>${eleveActuel.presences?.[trimestre] || 'Présent'}</strong></div>`;
@@ -1040,9 +1152,12 @@ function mettreAJourDashboardParent(data) {
                             <strong>${el.nom} ${el.prenom}</strong> (${el.classe})<br>
                             <span class="text-xs">Frais : <span class="${el.frais === 'en_ordre' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}">${el.frais === 'en_ordre' ? 'En ordre' : 'Bloqué'}</span></span>
                         </div>
-                        <div class="text-right bg-blue-600 text-white px-3 py-1.5 rounded-lg">
-                            <div class="text-[10px] uppercase opacity-90">Pourcentage Global</div>
-                            <div class="font-extrabold text-base">${pourcentageEnfant} %</div>
+                        <div class="flex flex-col items-end gap-2">
+                            <div class="text-right bg-blue-600 text-white px-3 py-1.5 rounded-lg">
+                                <div class="text-[10px] uppercase opacity-90">Pourcentage Global</div>
+                                <div class="font-extrabold text-base">${pourcentageEnfant} %</div>
+                            </div>
+                            <button onclick="imprimerBulletinEleve()" class="bg-emerald-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-emerald-700">🖨️ Imprimer Bulletin</button>
                         </div>
                     </div>
                     <div class="mt-2"><strong>Notes par cours (${trimestre}) :</strong></div>
