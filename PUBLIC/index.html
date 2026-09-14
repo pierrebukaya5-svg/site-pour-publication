@@ -10,6 +10,9 @@
         darkMode: 'class',
     }
 </script>
+<!-- Inclusion de Firebase SDK (Compat) pour la synchronisation Cloud multi-appareils -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <!-- Inclusion de html2pdf.js pour le téléchargement PDF non modifiable -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Inclusion de Lucide Icons pour des icônes modernes et épurées -->
@@ -38,7 +41,6 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Style minimaliste épuré & Mobile Friendly */
     .card-hover {
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -381,7 +383,6 @@
                 </div>
             </div>
 
-            <!-- ESPACE COURS ET DOCUMENTS TÉLÉCHARGEABLES (NOUVEAU) -->
             <div class="bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-2xl space-y-3 shadow-xs">
                 <h3 class="font-bold text-white text-xs uppercase tracking-wide flex items-center gap-2 text-blue-400">
                     <i data-lucide="book-open" class="w-4 h-4"></i> Cours et Documents pédagogiques mis en ligne par les professeurs
@@ -421,7 +422,6 @@
                             </button>
                         </div>
                     </div>
-                    <!-- Vue Calendrier Interactif des Présences -->
                     <div id="contenu-calendrier-eleve" class="bg-slate-900 p-3.5 rounded-xl border border-slate-700"></div>
                 </div>
             </div>
@@ -529,7 +529,6 @@
                 </div>
             </div>
 
-            <!-- SECTION INSERTION DE COURS (PDF OU DOC) PAR LE PROF -->
             <div class="bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-2xl space-y-3 no-print shadow-xs">
                 <h3 class="font-bold text-white text-xs flex items-center gap-2 uppercase tracking-wide text-emerald-400">
                     <i data-lucide="file-up" class="w-4 h-4"></i> Mettre en ligne un cours (PDF ou DOC) pour les élèves
@@ -696,631 +695,1072 @@
                             <thead>
                                 <tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 font-semibold">
                                     <th class="p-3">Élève</th>
-                                    <th class="p-3">Statut du jour</th>
-                                    <th class="p-3 text-center">Action</th>
+                                    <th class="p-3">Classe</th>
+                                    <th class="p-3">Statut de présence</th>
+                                    <th class="p-3 text-center">Action rapide</th>
                                 </tr>
                             </thead>
-                            <tbody id="prof-table-presences-corps" class="divide-y divide-slate-700/50"></tbody>
+                            <tbody id="prof-liste-presences-action" class="divide-y divide-slate-700/50"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TABLEAU DE BORD PARENT / TUTEUR -->
-        <div id="vue-parent-dashboard" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-4 gap-4">
-                <div>
-                    <h2 class="text-lg font-bold text-white">Espace Parent / Tuteur</h2>
-                    <p id="welcome-parent" class="text-xs text-slate-400 font-semibold mt-0.5"></p>
-                </div>
-                <button onclick="changerVue('accueil', true)" class="text-xs font-semibold text-red-400 hover:text-red-300 transition flex items-center gap-1">
-                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Déconnexion
-                </button>
-            </div>
-            <div id="alerte-frais-parent" class="hidden bg-amber-950/50 border border-amber-900/60 p-3.5 rounded-2xl text-amber-200 text-xs">
-                <h4 class="font-bold flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Paiement des frais scolaires requis</h4>
-                <p class="mt-0.5 font-medium">L'un de vos enfants rattachés n'est pas en ordre de frais.</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div class="bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-2xl space-y-3 shadow-xs">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <h3 class="font-bold text-white text-xs uppercase tracking-wide">Enfants rattachés & Notes</h3>
-                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                            <select id="select-trimestre-parent" onchange="changerTrimestreParent()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs font-semibold flex-1 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:bg-slate-900">
-                                <option value="T1">Trimestre 1 (T1)</option>
-                                <option value="T2">Trimestre 2 (T2)</option>
-                                <option value="T3">Trimestre 3 (T3)</option>
-                            </select>
-                            <select id="select-cours-parent" onchange="changerTrimestreParent()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs font-semibold flex-1 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:bg-slate-900">
-                                <option value="">Tous les cours</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div id="parent-liste-enfants" class="space-y-3"></div>
-                </div>
-                <!-- SECTION MESSAGERIE PARENT STYLE WHATSAPP -->
-                <div class="bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-2xl space-y-3 flex flex-col justify-between shadow-xs" style="min-height: 420px;">
-                    <h3 class="font-bold text-white text-xs uppercase tracking-wide border-b border-slate-700 pb-2.5 flex items-center gap-1.5">
-                        <i data-lucide="message-circle" class="w-4 h-4 text-blue-400"></i> Discussion directe avec l'administration
-                    </h3>
-                    <div id="parent-chat-box" class="h-56 overflow-y-auto border border-slate-700 p-3 rounded-2xl bg-slate-900/60 space-y-2.5 flex-1 my-2 text-xs text-slate-300"></div>
-                    <div class="flex gap-2 pt-1">
-                        <input id="parent-msg-input" placeholder="Écrire un message..." class="bg-slate-900 border border-slate-700 text-white placeholder-slate-500 p-2.5 rounded-xl flex-1 text-xs focus:bg-slate-900 focus:ring-1 focus:ring-blue-600 focus:outline-none transition">
-                        <button onclick="envoyerMessageParent()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition shrink-0 shadow-xs flex items-center gap-1 border border-slate-600">
-                            <i data-lucide="send" class="w-3.5 h-3.5"></i> Envoyer
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <!-- CALENDRIER DE PRESENCE POUR LE PARENT -->
-            <div class="bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-2xl space-y-3 shadow-xs">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <h3 class="font-bold text-white text-xs uppercase tracking-wide">Calendrier des présences de l'enfant</h3>
-                    <div class="flex items-center gap-2 text-xs font-semibold text-slate-300">
-                        <button onclick="changerMoisCalendrierParent(-1)" class="px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg hover:bg-slate-700 flex items-center">
-                            <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
-                        </button>
-                        <span id="label-mois-parent" class="w-32 text-center uppercase tracking-wider text-slate-200">Mois</span>
-                        <button onclick="changerMoisCalendrierParent(1)" class="px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg hover:bg-slate-700 flex items-center">
-                            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-                        </button>
-                    </div>
-                </div>
-                <div id="contenu-calendrier-parent" class="bg-slate-900 p-4 rounded-xl border border-slate-700"></div>
-            </div>
-        </div>
+        <!-- TABLEAU DE BORD ESPACE ÉLÈVE & PARENT -->
+        <div id="vue-eleve-parent-dashboard" class="hidden space-y-6"></div>
 
-    </div>
-
-    <!-- Pied de page -->
-    <div class="bg-slate-900/80 backdrop-blur-sm border-t border-slate-800 px-6 py-3.5 flex justify-between items-center text-[11px] text-slate-400 no-print font-medium">
-        <span id="status-connexion" class="flex items-center gap-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> ...
-        </span>
-        <span class="font-bold text-slate-300">Pbk</span>
     </div>
 </div>
 
-<!-- MODAL DEMANDE DE COURS (PROF) -->
-<div id="modal-demande-cours" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+<!-- MODALE DEMANDE DE COURS SUPPLÉMENTAIRE -->
+<div id="modal-demande-cours" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
         <h3 class="font-bold text-white text-sm flex items-center gap-2">
-            <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i> Demander l'ajout d'un nouveau cours
+            <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i> Demander un cours supplémentaire
         </h3>
-        <p class="text-xs text-slate-400">Veuillez indiquer le nom du cours que vous souhaitez dispenser. L'administration devra valider cette demande.</p>
-        <input id="input-cours-demande" placeholder="Ex: Informatique Avancée" class="w-full bg-slate-800 border border-slate-700 text-white placeholder-slate-500 p-2.5 rounded-xl text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none">
-        <div class="flex gap-2">
-            <button onclick="soumettreDemandeCours()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex-1 transition shadow-xs">Envoyer la demande</button>
+        <p class="text-xs text-slate-400 font-medium">Entrez le nom du cours que vous souhaitez dispenser. L'administration devra l'approuver.</p>
+        <input id="input-cours-demande" placeholder="Nom du cours (ex: Informatique)" class="w-full bg-slate-800 border border-slate-700 text-white placeholder-slate-500 p-2.5 rounded-xl text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none">
+        <div class="flex gap-2 pt-2">
+            <button onclick="soumettreDemandeCours()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex-1 transition shadow-xs">Soumettre</button>
             <button onclick="fermerModalDemandeCours()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-semibold transition">Annuler</button>
         </div>
     </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+<script>
+    // Configuration Firebase pour synchroniser PC et Téléphone en temps réel
+    const firebaseConfig = {
+        databaseURL: "https://site-publication-default-rtdb.firebaseio.com/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-const firebaseConfig = {
-    apiKey: "AIzaSyDpzKhm93AJnwGsqptCBNfmWG8E4m0uJNM",
-    authDomain: "site-publication.firebaseapp.com",
-    databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
-    projectId: "site-publication",
-    storageBucket: "site-publication.firebasestorage.app",
-    messagingSenderId: "934019778891",
-    appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
-};
+    // Variables d'état globales (synchronisées via Cloud Realtime Database)
+    let dbData = {
+        eleves: {},
+        professeurs: {},
+        notes: {},
+        baremes: {},
+        presences: {},
+        communiques: {},
+        demandesCours: {},
+        messages: {},
+        documents: {}
+    };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const dbRef = ref(db, 'ecole_rdc_complet');
+    let sessionActive = { role: null, id: null, nom: null, classe: null, cours: null };
+    let anneeScolaireActuelle = "2025-2026";
+    let moisActuelIndex = new Date().getMonth();
+    let anneeActuelleCalendrier = new Date().getFullYear();
+    let chatAdminContactActif = null;
 
-let modeActif = '';
-let utilisateurConnecte = null;
-let cacheDonnees = null;
-let adminSelectedParentCode = null;
-let moisActuelCalendrier = new Date();
-const statusEl = document.getElementById('status-connexion');
+    // Écouteur en temps réel Firebase (Cloud Database Listener)
+    db.ref().on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            dbData = {
+                eleves: data.eleves || {},
+                professeurs: data.professeurs || {},
+                notes: data.notes || {},
+                baremes: data.baremes || {},
+                presences: data.presences || {},
+                communiques: data.communiques || {},
+                demandesCours: data.demandesCours || {},
+                messages: data.messages || {},
+                documents: data.documents || {}
+            };
+        }
+        rafraichirVueCourante();
+    });
 
-// Initialiser les dates par défaut du jour
-const aujourdhuiStr = new Date().toISOString().split('T')[0];
-document.addEventListener("DOMContentLoaded", () => {
-    if(document.getElementById('admin-cal-date')) document.getElementById('admin-cal-date').value = aujourdhuiStr;
-    if(document.getElementById('prof-date-presence')) document.getElementById('prof-date-presence').value = aujourdhuiStr;
-    if(typeof lucide !== 'undefined') {
+    // Fonction d'écriture unifiée sur le Cloud Firebase (synchro immédiate PC & Mobile)
+    function sauvegarderDB() {
+        db.ref().set(dbData).catch((error) => {
+            console.error("Erreur de synchronisation Cloud :", error);
+            alert("Erreur d'enregistrement : Vérifiez votre connexion internet.");
+        });
+    }
+
+    function rafraichirVueCourante() {
+        chargerCommuniquesAccueil();
+        if (!document.getElementById("vue-admin-dashboard").classList.contains("hidden")) {
+            chargerDonneesAdmin();
+        } else if (!document.getElementById("vue-prof-dashboard").classList.contains("hidden")) {
+            chargerTableauDeBordProf();
+        } else if (!document.getElementById("vue-eleve-dashboard").classList.contains("hidden")) {
+            chargerTableauDeBordEleve();
+        }
+    }
+
+    // Initialisation des icônes Lucide au chargement
+    document.addEventListener("DOMContentLoaded", () => {
+        lucide.createIcons();
+        chargerCommuniquesAccueil();
+        const aujourdhuiStr = new Date().toISOString().split('T')[0];
+        if(document.getElementById("admin-cal-date")) document.getElementById("admin-cal-date").value = aujourdhuiStr;
+        if(document.getElementById("prof-date-presence")) document.getElementById("prof-date-presence").value = aujourdhuiStr;
+        if(document.getElementById("el-datenais")) document.getElementById("el-datenais").value = "2010-01-01";
+    });
+
+    function changerVue(vue, resetForm = false) {
+        ['vue-accueil', 'vue-connexion', 'vue-admin-dashboard', 'vue-eleve-dashboard', 'vue-prof-dashboard'].forEach(v => {
+            const el = document.getElementById(v);
+            if(el) el.classList.add('hidden');
+        });
+
+        if (vue === 'accueil') {
+            document.getElementById('vue-accueil').classList.remove('hidden');
+            chargerCommuniquesAccueil();
+        } else if (vue === 'admin-login') {
+            document.getElementById('vue-connexion').classList.remove('hidden');
+            document.getElementById('titre-connexion').textContent = 'Administration';
+            document.getElementById('label-code').textContent = 'Code d\'accès Admin';
+            document.getElementById('input-code').value = '';
+            document.getElementById('input-code').dataset.role = 'admin';
+            document.getElementById('erreur-connexion').classList.add('hidden');
+        } else if (vue === 'prof-login') {
+            document.getElementById('vue-connexion').classList.remove('hidden');
+            document.getElementById('titre-connexion').textContent = 'Espace Professeur';
+            document.getElementById('label-code').textContent = 'Code d\'accès Professeur';
+            document.getElementById('input-code').value = '';
+            document.getElementById('input-code').dataset.role = 'prof';
+            document.getElementById('erreur-connexion').classList.add('hidden');
+        } else if (vue === 'eleve-login') {
+            document.getElementById('vue-connexion').classList.remove('hidden');
+            document.getElementById('titre-connexion').textContent = 'Espace Élève';
+            document.getElementById('label-code').textContent = 'Code d\'accès Élève';
+            document.getElementById('input-code').value = '';
+            document.getElementById('input-code').dataset.role = 'eleve';
+            document.getElementById('erreur-connexion').classList.add('hidden');
+        } else if (vue === 'parent-login') {
+            document.getElementById('vue-connexion').classList.remove('hidden');
+            document.getElementById('titre-connexion').textContent = 'Espace Parent';
+            document.getElementById('label-code').textContent = 'Code d\'accès Parent (Matricule de l\'élève)';
+            document.getElementById('input-code').value = '';
+            document.getElementById('input-code').dataset.role = 'parent';
+            document.getElementById('erreur-connexion').classList.add('hidden');
+        }
         lucide.createIcons();
     }
-});
 
-onValue(dbRef, (snapshot) => {
-    statusEl.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Connecté';
-    cacheDonnees = snapshot.val() || { eleves: {}, profs: {}, messages: {}, demandes_cours: {}, communiques: {}, documents: {} };
-    
-    actualiserInterfaceAdmin(cacheDonnees);
-    actualiserCommuniquesAccueil(cacheDonnees);
-    if(modeActif === 'eleve' && utilisateurConnecte) mettreAJourDashboardEleve(cacheDonnees);
-    if(modeActif === 'prof' && utilisateurConnecte) {
-        mettreAJourDashboardProf(cacheDonnees);
-        chargerPresencesProf();
-        afficherDocumentsProf(cacheDonnees);
-    }
-    if(modeActif === 'parent' && utilisateurConnecte) mettreAJourDashboardParent(cacheDonnees);
-    
-    if(typeof lucide !== 'undefined') {
-        setTimeout(() => lucide.createIcons(), 50);
-    }
-});
+    function validerConnexion() {
+        const input = document.getElementById('input-code');
+        const role = input.dataset.role;
+        const code = input.value.trim();
+        const err = document.getElementById('erreur-connexion');
 
-window.changerVue = function(vue, pousserHistorique = false) {
-    ['accueil', 'connexion', 'admin-dashboard', 'eleve-dashboard', 'prof-dashboard', 'parent-dashboard'].forEach(v => {
-        document.getElementById(`vue-${v}`).classList.add('hidden');
-    });
-
-    if(pousserHistorique) {
-        history.pushState({ vue: vue }, "", `#${vue}`);
-    }
-
-    if(vue === 'accueil') {
-        document.getElementById('vue-accueil').classList.remove('hidden');
-        modeActif = '';
-        utilisateurConnecte = null;
-    } else if(vue === 'admin-login') {
-        modeActif = 'admin';
-        document.getElementById('vue-connexion').classList.remove('hidden');
-        document.getElementById('titre-connexion').innerText = "Connexion Administration";
-        document.getElementById('label-code').innerText = "Code administrateur privé";
-        document.getElementById('input-code').value = '';
-        document.getElementById('erreur-connexion').classList.add('hidden');
-    } else if(vue.includes('-login')) {
-        modeActif = vue.replace('-login', '');
-        document.getElementById('vue-connexion').classList.remove('hidden');
-        document.getElementById('titre-connexion').innerText = `Connexion ${modeActif.charAt(0).toUpperCase() + modeActif.slice(1)}`;
-        document.getElementById('label-code').innerText = "Code d'accès unique";
-        document.getElementById('input-code').value = '';
-        document.getElementById('erreur-connexion').classList.add('hidden');
-    } else if(vue === 'admin-dashboard') {
-        document.getElementById('vue-admin-dashboard').classList.remove('hidden');
-    } else if(vue === 'eleve-dashboard') {
-        document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
-    } else if(vue === 'prof-dashboard') {
-        document.getElementById('vue-prof-dashboard').classList.remove('hidden');
-    } else if(vue === 'parent-dashboard') {
-        document.getElementById('vue-parent-dashboard').classList.remove('hidden');
-    }
-
-    if(typeof lucide !== 'undefined') {
-        setTimeout(() => lucide.createIcons(), 50);
-    }
-}
-
-window.addEventListener('popstate', (event) => {
-    if(event.state && event.state.vue) {
-        changerVue(event.state.vue, false);
-    } else {
-        changerVue('accueil', false);
-    }
-});
-
-window.changerOngletAdmin = function(onglet) {
-    ['eleves', 'professeurs', 'communiques', 'demandes', 'messages', 'calendrier'].forEach(o => {
-        const btnId = o === 'eleves' ? 'eleves' : o === 'professeurs' ? 'profs' : o === 'communiques' ? 'communiques' : o === 'demandes' ? 'demandes' : o === 'messages' ? 'msgs' : 'cal';
-        const sec = document.getElementById(`admin-sec-${o}`);
-        if(sec) sec.classList.add('hidden');
-        const btn = document.getElementById(`tab-btn-${btnId}`);
-        if(btn) btn.className = "px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50";
-    });
-    const activeSec = document.getElementById(`admin-sec-${onglet}`);
-    if(activeSec) activeSec.classList.remove('hidden');
-    const activeBtnId = onglet === 'eleves' ? 'eleves' : onglet === 'professeurs' ? 'profs' : onglet === 'communiques' ? 'communiques' : onglet === 'demandes' ? 'demandes' : onglet === 'messages' ? 'msgs' : 'cal';
-    const activeBtn = document.getElementById(`tab-btn-${activeBtnId}`);
-    if(activeBtn) activeBtn.className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5";
-
-    if(onglet === 'calendrier' && cacheDonnees) {
-        chargerCalendrierAdmin(cacheDonnees);
-    }
-    if(onglet === 'messages' && cacheDonnees) {
-        initialiserWhatsAppAdmin(cacheDonnees);
-    }
-    if(typeof lucide !== 'undefined') {
-        setTimeout(() => lucide.createIcons(), 50);
-    }
-}
-
-window.changerOngletProf = function(onglet) {
-    ['notes', 'presences'].forEach(o => {
-        const sec = document.getElementById(`prof-sec-${o}`);
-        if(sec) sec.classList.add('hidden');
-        const btn = document.getElementById(`prof-tab-${o}`);
-        if(btn) btn.className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50";
-    });
-    document.getElementById(`prof-sec-${onglet}`).classList.remove('hidden');
-    document.getElementById(`prof-tab-${onglet}`).className = "px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
-    if(onglet === 'presences') {
-        chargerPresencesProf();
-    }
-    if(typeof lucide !== 'undefined') {
-        setTimeout(() => lucide.createIcons(), 50);
-    }
-}
-
-window.validerConnexion = function() {
-    const code = document.getElementById('input-code').value.trim().toUpperCase();
-    if(!code) return;
-
-    if(modeActif === 'admin') {
-        if(code === 'PR1999') {
-            changerVue('admin-dashboard', true);
-            if(cacheDonnees) {
-                chargerCalendrierAdmin(cacheDonnees);
-                initialiserWhatsAppAdmin(cacheDonnees);
+        if (role === 'admin') {
+            if (code === 'ADMIN2026' || code === 'admin') {
+                sessionActive = { role: 'admin', nom: 'Administrateur Principal' };
+                document.getElementById('vue-connexion').classList.add('hidden');
+                document.getElementById('vue-admin-dashboard').classList.remove('hidden');
+                changerOngletAdmin('eleves');
+                chargerDonneesAdmin();
+            } else {
+                err.classList.remove('hidden');
             }
-        } else {
-            document.getElementById('erreur-connexion').classList.remove('hidden');
-        }
-        return;
-    }
-
-    const data = cacheDonnees || {};
-    let trouve = null;
-
-    if(modeActif === 'eleve') {
-        Object.values(data.eleves || {}).forEach(el => {
-            if(el.codeEleve === code) {
-                if(el.frais === 'non_ordre') {
-                    alert("Accès refusé : Frais scolaires non réglés.");
+        } else if (role === 'prof') {
+            let profTrouveKey = null;
+            let profObj = null;
+            for (const [k, p] of Object.entries(dbData.professeurs)) {
+                if (p.code === code) {
+                    profTrouveKey = k;
+                    profObj = p;
+                    break;
+                }
+            }
+            if (profObj) {
+                sessionActive = { role: 'prof', id: profTrouveKey, nom: profObj.nom, cours: profObj.cours };
+                document.getElementById('vue-connexion').classList.add('hidden');
+                document.getElementById('vue-prof-dashboard').classList.remove('hidden');
+                chargerTableauDeBordProf();
+            } else {
+                err.classList.remove('hidden');
+            }
+        } else if (role === 'eleve') {
+            let eleveTrouveKey = null;
+            let eleveObj = null;
+            for (const [k, e] of Object.entries(dbData.eleves)) {
+                if (e.code === code) {
+                    eleveTrouveKey = k;
+                    eleveObj = e;
+                    break;
+                }
+            }
+            if (eleveObj) {
+                if (eleveObj.frais === 'non_ordre') {
+                    alert("Accès bloqué : Les frais scolaires de cet élève ne sont pas en ordre.");
                     return;
                 }
-                trouve = el;
+                sessionActive = { role: 'eleve', id: eleveTrouveKey, nom: `${eleveObj.nom} ${eleveObj.postnom || ''}`, classe: eleveObj.classe };
+                document.getElementById('vue-connexion').classList.add('hidden');
+                document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
+                chargerTableauDeBordEleve();
+            } else {
+                err.classList.remove('hidden');
             }
-        });
-    } else if(modeActif === 'prof') {
-        Object.values(data.profs || {}).forEach(p => {
-            if(p.codeProf === code) trouve = p;
-        });
-    } else if(modeActif === 'parent') {
-        Object.values(data.eleves || {}).forEach(el => {
-            if(el.codeParent === code) trouve = { tuteur: el.tuteur, codeParent: code };
-        });
-    }
-
-    if(trouve) {
-        utilisateurConnecte = trouve;
-        if(modeActif === 'eleve') {
-            changerVue('eleve-dashboard', true);
-            document.getElementById('welcome-eleve').innerText = `${trouve.prenom} ${trouve.nom} — ${trouve.classe}`;
-            peuplerSelectCours(data, 'select-cours-eleve');
-            mettreAJourDashboardEleve(data);
-        } else if(modeActif === 'prof') {
-            changerVue('prof-dashboard', true);
-            
-            if(!utilisateurConnecte.coursAutorises) {
-                utilisateurConnecte.coursAutorises = [utilisateurConnecte.cours];
+        } else if (role === 'parent') {
+            let eleveTrouveKey = null;
+            let eleveObj = null;
+            for (const [k, e] of Object.entries(dbData.eleves)) {
+                if (e.code === code || e.tuteur?.toLowerCase().includes(code.toLowerCase())) {
+                    eleveTrouveKey = k;
+                    eleveObj = e;
+                    break;
+                }
             }
-            if(!utilisateurConnecte.coursActif) {
-                utilisateurConnecte.coursActif = utilisateurConnecte.cours;
+            if (eleveObj) {
+                sessionActive = { role: 'parent', id: eleveTrouveKey, nom: `Parent de ${eleveObj.nom}`, classe: eleveObj.classe };
+                document.getElementById('vue-connexion').classList.add('hidden');
+                document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
+                chargerTableauDeBordEleve();
+            } else {
+                err.classList.remove('hidden');
             }
-            
-            actualiserSelectCoursProfActif();
-            
-            document.getElementById('welcome-prof').innerText = `Prof. ${trouve.nom} — Cours actif : ${utilisateurConnecte.coursActif}`;
-            document.getElementById('print-prof-nom').innerText = trouve.nom;
-            document.getElementById('print-prof-cours').innerText = utilisateurConnecte.coursActif;
-            
-            if(trouve.baremes) {
-                document.getElementById('cfg-nb-interros').value = trouve.baremes.nbInterros || 4;
-                document.getElementById('cfg-max-interro').value = trouve.baremes.maxInterro || 10;
-                document.getElementById('cfg-actif-devoir').value = trouve.baremes.actifDevoir || 'oui';
-                document.getElementById('cfg-max-devoir').value = trouve.baremes.maxDevoir || 10;
-                document.getElementById('cfg-actif-examen').value = trouve.baremes.actifExamen || 'oui';
-                document.getElementById('cfg-max-examen').value = trouve.baremes.maxExamen || 50;
-            }
-            mettreAJourDashboardProf(data);
-            afficherDocumentsProf(data);
-        } else if(modeActif === 'parent') {
-            changerVue('parent-dashboard', true);
-            document.getElementById('welcome-parent').innerText = `Tuteur : ${trouve.tuteur}`;
-            peuplerSelectCours(data, 'select-cours-parent');
-            mettreAJourDashboardParent(data);
         }
-    } else {
-        document.getElementById('erreur-connexion').classList.remove('hidden');
-    }
-}
-
-// ================= GESTION DES COMMUNIQUÉS (ADMIN) =================
-window.publierCommuniqueAdmin = function() {
-    const titre = document.getElementById('com-titre').value.trim();
-    const message = document.getElementById('com-message').value.trim();
-    if(!titre || !message) return alert("Veuillez remplir le titre et le contenu du communiqué.");
-
-    const dateStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-    push(ref(db, 'ecole_rdc_complet/communiques'), {
-        titre,
-        message,
-        date: dateStr
-    });
-
-    document.getElementById('com-titre').value = '';
-    document.getElementById('com-message').value = '';
-    alert("Communiqué publié avec succès sur l'accueil pour tout le monde !");
-}
-
-window.supprimerCommuniqueAdmin = function(key) {
-    if(confirm("Voulez-vous vraiment supprimer ce communiqué ?")) {
-        remove(ref(db, `ecole_rdc_complet/communiques/${key}`));
-    }
-}
-
-function actualiserCommuniquesAccueil(data) {
-    const conteneur = document.getElementById('accueil-communiques-liste');
-    if(!conteneur) return;
-    conteneur.innerHTML = '';
-    const communiques = data.communiques || {};
-
-    if(Object.keys(communiques).length === 0) {
-        conteneur.innerHTML = `<p class="text-xs text-slate-400 italic text-center py-2">Aucun communiqué récent pour le moment.</p>`;
-        return;
+        lucide.createIcons();
     }
 
-    const entrees = Object.entries(communiques).reverse();
-    entrees.forEach(([key, com]) => {
-        conteneur.innerHTML += `
-            <div class="bg-slate-900/60 border border-slate-700/60 p-3 rounded-xl space-y-1">
-                <div class="flex justify-between items-center">
-                    <h4 class="font-bold text-xs text-white flex items-center gap-1.5"><i data-lucide="bell" class="w-3.5 h-3.5 text-blue-400"></i> ${com.titre}</h4>
-                    <span class="text-[10px] text-slate-400">${com.date || ''}</span>
-                </div>
-                <p class="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">${com.message}</p>
-            </div>
-        `;
-    });
-    if(typeof lucide !== 'undefined') {
-        setTimeout(() => lucide.createIcons(), 50);
-    }
-}
-
-// ================= GESTION DES DOCUMENTS COURS (PROF / ÉLÈVE) =================
-window.uploaderDocumentProf = function() {
-    const titre = document.getElementById('doc-titre').value.trim();
-    const fileInput = document.getElementById('doc-fichier');
-    if(!titre || fileInput.files.length === 0) {
-        return alert("Veuillez entrer un titre et sélectionner un fichier PDF ou DOC.");
+    // --- COMMUNIQUÉS ---
+    function chargerCommuniquesAccueil() {
+        const container = document.getElementById('accueil-communiques-liste');
+        if (!container) return;
+        const keys = Object.keys(dbData.communiques);
+        if (keys.length === 0) {
+            container.innerHTML = `<p class="text-xs text-slate-400 italic text-center py-2">Aucun communiqué officiel pour le moment.</p>`;
+            return;
+        }
+        container.innerHTML = keys.map(k => {
+            const c = dbData.communiques[k];
+            return `<div class="p-3 bg-slate-900/60 border border-slate-700/60 rounded-xl space-y-1">
+                <div class="flex justify-between items-center"><h4 class="font-bold text-white text-xs">${c.titre}</h4><span class="text-[10px] text-slate-500">${c.date}</span></div>
+                <p class="text-xs text-slate-300 leading-relaxed">${c.message}</p>
+            </div>`;
+        }).join('');
+        lucide.createIcons();
     }
 
-    const fichier = fileInput.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const base64Data = e.target.result;
-        const dateStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    function publierCommuniqueAdmin() {
+        const titre = document.getElementById('com-titre').value.trim();
+        const message = document.getElementById('com-message').value.trim();
+        if (!titre || !message) {
+            alert("Veuillez remplir le titre et le contenu du communiqué.");
+            return;
+        }
+        const key = 'com_' + Date.now();
+        dbData.communiques[key] = { titre, message, date: new Date().toLocaleDateString() };
+        sauvegarderDB();
+        document.getElementById('com-titre').value = '';
+        document.getElementById('com-message').value = '';
+        chargerDonneesAdmin();
+        alert("Communiqué publié avec succès !");
+    }
 
-        push(ref(db, 'ecole_rdc_complet/documents'), {
-            titre,
-            nomFichier: fichier.name,
-            donneesFichier: base64Data,
-            profNom: utilisateurConnecte.nom,
-            cours: utilisateurConnecte.coursActif,
-            date: dateStr
+    function supprimerCommunique(key) {
+        if(confirm("Voulez-vous supprimer ce communiqué ?")) {
+            delete dbData.communiques[key];
+            sauvegarderDB();
+            chargerDonneesAdmin();
+        }
+    }
+
+    // --- ADMINISTRATION ---
+    function changerOngletAdmin(onglet) {
+        ['eleves', 'professeurs', 'communiques', 'demandes', 'messages', 'calendrier'].forEach(o => {
+            const sec = document.getElementById(`admin-sec-${o}`);
+            const btn = document.getElementById(`tab-btn-${o === 'profs' ? 'professeurs' : o === 'msgs' ? 'messages' : o === 'cal' ? 'calendrier' : o}`);
+            if (sec) sec.classList.add('hidden');
+            if (btn) {
+                btn.className = "px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50";
+            }
         });
-
-        document.getElementById('doc-titre').value = '';
-        fileInput.value = '';
-        alert("Cours ou document publié avec succès ! Les élèves peuvent désormais le télécharger.");
-    };
-    reader.readAsDataURL(fichier);
-}
-
-window.supprimerDocumentProf = function(key) {
-    if(confirm("Voulez-vous supprimer ce document ?")) {
-        remove(ref(db, `ecole_rdc_complet/documents/${key}`));
+        const activeSec = document.getElementById(`admin-sec-${onglet}`);
+        const activeBtn = document.getElementById(`tab-btn-${onglet === 'professeurs' ? 'profs' : onglet === 'communiques' ? 'communiques' : onglet === 'demandes' ? 'demandes' : onglet === 'messages' ? 'msgs' : onglet === 'calendrier' ? 'cal' : 'eleves'}`);
+        if(activeSec) activeSec.classList.remove('hidden');
+        if(activeBtn) activeBtn.className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5";
+        
+        chargerDonneesAdmin();
+        lucide.createIcons();
     }
-}
 
-function afficherDocumentsProf(data) {
-    const conteneur = document.getElementById('prof-liste-mes-documents');
-    if(!conteneur || !utilisateurConnecte) return;
-    conteneur.innerHTML = '';
-    const documents = data.documents || {};
+    function chargerDonneesAdmin() {
+        // Élèves
+        const tbodyEleves = document.getElementById('liste-admin-eleves');
+        if (tbodyEleves) {
+            const elevesKeys = Object.keys(dbData.eleves);
+            if(elevesKeys.length === 0) {
+                tbodyEleves.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Aucun élève enregistré.</td></tr>`;
+            } else {
+                tbodyEleves.innerHTML = elevesKeys.map(k => {
+                    const e = dbData.eleves[k];
+                    return `<tr class="hover:bg-slate-900/40 transition">
+                        <td class="p-3 font-semibold text-white">${e.nom} ${e.postnom || ''} ${e.prenom || ''}</td>
+                        <td class="p-3 text-slate-300">${e.classe}</td>
+                        <td class="p-3 text-slate-300">${e.tuteur || '-'} (${e.adresse || '-'})</td>
+                        <td class="p-3 font-mono text-blue-400 font-bold">${e.code}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded-full text-[10px] font-semibold ${e.frais === 'en_ordre' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/50' : 'bg-red-950 text-red-400 border border-red-800/50'}">
+                                ${e.frais === 'en_ordre' ? 'En ordre' : 'Bloqué (Non payé)'}
+                            </span>
+                        </td>
+                        <td class="p-3 text-center no-print space-x-1">
+                            <button onclick="editerEleve('${k}')" class="p-1 bg-slate-700 hover:bg-blue-600 text-white rounded-lg transition" title="Modifier"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="supprimerEleve('${k}')" class="p-1 bg-slate-700 hover:bg-red-600 text-white rounded-lg transition" title="Supprimer"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            }
+        }
+
+        // Professeurs
+        const listProfs = document.getElementById('liste-admin-profs');
+        if (listProfs) {
+            const profsKeys = Object.keys(dbData.professeurs);
+            if(profsKeys.length === 0) {
+                listProfs.innerHTML = `<p class="text-xs text-slate-400 italic col-span-2 text-center py-2">Aucun professeur enregistré.</p>`;
+            } else {
+                listProfs.innerHTML = profsKeys.map(k => {
+                    const p = dbData.professeurs[k];
+                    return `<div class="bg-slate-900/70 border border-slate-700/70 p-3.5 rounded-xl flex justify-between items-center">
+                        <div><h4 class="font-bold text-white text-xs">${p.nom}</h4><p class="text-[11px] text-slate-400">Cours : ${p.cours}</p></div>
+                        <div class="text-right"><span class="font-mono font-bold text-emerald-400 text-xs">${p.code}</span><br><button onclick="supprimerProfesseur('${k}')" class="text-[10px] text-red-400 hover:underline mt-1">Supprimer</button></div>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        // Communiqués admin
+        const adminCom = document.getElementById('admin-liste-communiques');
+        if(adminCom) {
+            const comKeys = Object.keys(dbData.communiques);
+            adminCom.innerHTML = comKeys.length === 0 ? `<p class="text-xs text-slate-400 italic">Aucun communiqué.</p>` : comKeys.map(k => {
+                const c = dbData.communiques[k];
+                return `<div class="p-3 bg-slate-900 border border-slate-700 rounded-xl flex justify-between items-center">
+                    <div><h4 class="font-bold text-white text-xs">${c.titre}</h4><p class="text-xs text-slate-300">${c.message}</p></div>
+                    <button onclick="supprimerCommunique('${k}')" class="p-1 bg-red-950 text-red-400 hover:bg-red-900 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>`;
+            }).join('');
+        }
+
+        // Demandes de cours
+        const tbodyDemandes = document.getElementById('admin-liste-demandes');
+        if(tbodyDemandes) {
+            const demKeys = Object.keys(dbData.demandesCours);
+            tbodyDemandes.innerHTML = demKeys.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Aucune demande de cours.</td></tr>` : demKeys.map(k => {
+                const d = dbData.demandesCours[k];
+                return `<tr class="hover:bg-slate-900/40 transition">
+                    <td class="p-3 font-semibold text-white">${d.profNom}</td>
+                    <td class="p-3 text-emerald-400 font-bold">${d.cours}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] ${d.statut === 'Approuvé' ? 'bg-emerald-950 text-emerald-400' : 'bg-amber-950 text-amber-400'}">${d.statut}</span></td>
+                    <td class="p-3 text-center space-x-1">
+                        ${d.statut !== 'Approuvé' ? `<button onclick="approuverDemandeCours('${k}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-semibold">Approuver</button>` : ''}
+                        <button onclick="supprimerDemandeCours('${k}')" class="px-2.5 py-1 bg-red-950 hover:bg-red-900 text-red-400 rounded-lg text-[11px] font-semibold">Supprimer</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        chargerContactsAdminWhatsApp();
+        chargerCalendrierAdmin();
+        lucide.createIcons();
+    }
+
+    function enregistrerOuModifierEleve() {
+        const key = document.getElementById('edit-eleve-key').value;
+        const nom = document.getElementById('el-nom').value.trim();
+        const postnom = document.getElementById('el-postnom').value.trim();
+        const prenom = document.getElementById('el-prenom').value.trim();
+        const classe = document.getElementById('el-classe').value;
+        const adresse = document.getElementById('el-adresse').value.trim();
+        const datenais = document.getElementById('el-datenais').value;
+        const tuteur = document.getElementById('el-tuteur').value.trim();
+        const frais = document.getElementById('el-frais').value;
+
+        if (!nom || !classe) {
+            alert("Veuillez renseigner au moins le nom et la classe de l'élève.");
+            return;
+        }
+
+        if (key) {
+            dbData.eleves[key] = { ...dbData.eleves[key], nom, postnom, prenom, classe, adresse, datenais, tuteur, frais };
+            document.getElementById('edit-eleve-key').value = '';
+            document.getElementById('titre-form-eleve').innerHTML = `<i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i> Enregistrer un nouvel élève`;
+            document.getElementById('btn-valider-eleve').innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Enregistrer`;
+            document.getElementById('btn-annuler-eleve').classList.add('hidden');
+        } else {
+            const eleveKey = 'eleve_' + Date.now();
+            const code = 'EL' + Math.floor(1000 + Math.random() * 9000);
+            dbData.eleves[eleveKey] = { nom, postnom, prenom, classe, adresse, datenais, tuteur, frais, code };
+        }
+
+        sauvegarderDB();
+        viderFormulaireEleve();
+        chargerDonneesAdmin();
+        alert("Élève enregistré avec succès !");
+    }
+
+    function viderFormulaireEleve() {
+        ['el-nom', 'el-postnom', 'el-prenom', 'el-classe', 'el-adresse', 'el-tuteur'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('el-frais').value = 'en_ordre';
+    }
+
+    function editerEleve(key) {
+        const e = dbData.eleves[key];
+        if(!e) return;
+        document.getElementById('edit-eleve-key').value = key;
+        document.getElementById('el-nom').value = e.nom || '';
+        document.getElementById('el-postnom').value = e.postnom || '';
+        document.getElementById('el-prenom').value = e.prenom || '';
+        document.getElementById('el-classe').value = e.classe || '';
+        document.getElementById('el-adresse').value = e.adresse || '';
+        document.getElementById('el-datenais').value = e.datenais || '';
+        document.getElementById('el-tuteur').value = e.tuteur || '';
+        document.getElementById('el-frais').value = e.frais || 'en_ordre';
+        
+        document.getElementById('titre-form-eleve').innerHTML = `<i data-lucide="edit" class="w-4 h-4 text-blue-400"></i> Modifier l'élève`;
+        document.getElementById('btn-valider-eleve').innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Mettre à jour`;
+        document.getElementById('btn-annuler-eleve').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        lucide.createIcons();
+    }
+
+    function annulerModificationEleve() {
+        document.getElementById('edit-eleve-key').value = '';
+        viderFormulaireEleve();
+        document.getElementById('titre-form-eleve').innerHTML = `<i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i> Enregistrer un nouvel élève`;
+        document.getElementById('btn-valider-eleve').innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Enregistrer`;
+        document.getElementById('btn-annuler-eleve').classList.add('hidden');
+        lucide.createIcons();
+    }
+
+    function supprimerEleve(key) {
+        if(confirm("Voulez-vous vraiment supprimer cet élève ?")) {
+            delete dbData.eleves[key];
+            sauvegarderDB();
+            chargerDonneesAdmin();
+        }
+    }
+
+    function enregistrerProfesseur() {
+        const nom = document.getElementById('prf-nom').value.trim();
+        const cours = document.getElementById('prf-cours').value.trim();
+        if(!nom || !cours) {
+            alert("Veuillez remplir le nom du professeur et son cours principal.");
+            return;
+        }
+        const key = 'prof_' + Date.now();
+        const code = 'PROF' + Math.floor(1000 + Math.random() * 9000);
+        dbData.professeurs[key] = { nom, cours, code };
+        sauvegarderDB();
+        document.getElementById('prf-nom').value = '';
+        document.getElementById('prf-cours').value = '';
+        chargerDonneesAdmin();
+        alert(`Professeur enregistré ! Code d'accès : ${code}`);
+    }
+
+    function supprimerProfesseur(key) {
+        if(confirm("Supprimer ce professeur ?")) {
+            delete dbData.professeurs[key];
+            sauvegarderDB();
+            chargerDonneesAdmin();
+        }
+    }
+
+    function approuverDemandeCours(key) {
+        dbData.demandesCours[key].statut = 'Approuvé';
+        const d = dbData.demandesCours[key];
+        const profKey = 'prof_cours_' + Date.now();
+        dbData.professeurs[profKey] = { nom: d.profNom, cours: d.cours, code: 'PROF' + Math.floor(1000 + Math.random() * 9000) };
+        sauvegarderDB();
+        chargerDonneesAdmin();
+        alert("Demande approuvée et cours ajouté au corps professoral !");
+    }
+
+    function supprimerDemandeCours(key) {
+        delete dbData.demandesCours[key];
+        sauvegarderDB();
+        chargerDonneesAdmin();
+    }
+
+    function chargerContactsAdminWhatsApp() {
+        const contactsContainer = document.getElementById('admin-whatsapp-contacts');
+        if(!contactsContainer) return;
+        const eleves = Object.entries(dbData.eleves);
+        if(eleves.length === 0) {
+            contactsContainer.innerHTML = `<p class="text-xs text-slate-500 italic p-3 text-center">Aucun tuteur disponible.</p>`;
+            return;
+        }
+        contactsContainer.innerHTML = eleves.map(([k, e]) => {
+            const nomTuteur = e.tuteur || `Tuteur de ${e.nom}`;
+            const actifClass = chatAdminContactActif === k ? 'bg-blue-950/80 border-l-4 border-blue-500' : 'hover:bg-slate-900/40';
+            return `<div onclick="selectionnerContactAdminWhatsApp('${k}')" class="p-3 cursor-pointer transition ${actifClass}">
+                <h4 class="font-bold text-white text-xs">${nomTuteur}</h4>
+                <p class="text-[10px] text-slate-400">Élève : ${e.nom} (${e.classe})</p>
+            </div>`;
+        }).join('');
+    }
+
+    function selectionnerContactAdminWhatsApp(eleveKey) {
+        chatAdminContactActif = eleveKey;
+        chargerContactsAdminWhatsApp();
+        const e = dbData.eleves[eleveKey];
+        const header = document.getElementById('admin-whatsapp-header');
+        header.innerHTML = `<span>Discussion avec ${e.tuteur || 'Tuteur'} (${e.nom})</span>`;
+        document.getElementById('admin-whatsapp-input').disabled = false;
+        const btnSend = document.getElementById('admin-whatsapp-send-btn');
+        btnSend.disabled = false;
+        btnSend.classList.remove('opacity-50', 'cursor-not-allowed');
+        btnSend.classList.add('bg-blue-600', 'hover:bg-blue-700', 'text-white');
+        afficherMessagesAdminWhatsApp();
+    }
+
+    function afficherMessagesAdminWhatsApp() {
+        const chatContainer = document.getElementById('admin-whatsapp-chat');
+        if(!chatContainer || !chatAdminContactActif) return;
+        if(!dbData.messages[chatAdminContactActif]) dbData.messages[chatAdminContactActif] = [];
+        const msgs = dbData.messages[chatAdminContactActif];
+        if(msgs.length === 0) {
+            chatContainer.innerHTML = `<div class="text-center text-slate-500 text-xs my-auto">Envoyez votre premier message au tuteur...</div>`;
+            return;
+        }
+        chatContainer.innerHTML = msgs.map(m => {
+            const isAdmin = m. expediteur === 'admin';
+            return `<div class="flex ${isAdmin ? 'justify-end' : 'justify-start'}">
+                <div class="max-w-xs p-3 rounded-2xl text-xs ${isAdmin ? 'bg-blue-600 text-white rounded-br-none' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-bl-none'}">
+                    <p>${m.texte}</p>
+                    <span class="text-[9px] ${isAdmin ? 'text-blue-200' : 'text-slate-400'} block text-right mt-1">${m.heure}</span>
+                </div>
+            </div>`;
+        }).join('');
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function envoyerMessageAdminWhatsApp() {
+        const input = document.getElementById('admin-whatsapp-input');
+        const texte = input.value.trim();
+        if(!texte || !chatAdminContactActif) return;
+        if(!dbData.messages[chatAdminContactActif]) dbData.messages[chatAdminContactActif] = [];
+        const heure = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        dbData.messages[chatAdminContactActif].push({ expediteur: 'admin', texte, heure });
+        sauvegarderDB();
+        input.value = '';
+        afficherMessagesAdminWhatsApp();
+    }
+
+    function chargerCalendrierAdmin() {
+        const tbody = document.getElementById('admin-liste-calendrier-presences');
+        const dateInput = document.getElementById('admin-cal-date');
+        if(!tbody || !dateInput) return;
+        const dateStr = dateInput.value;
+        const eleves = Object.entries(dbData.eleves);
+        if(eleves.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Aucun élève enregistré.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = eleves.map(([k, e]) => {
+            if(!dbData.presences[dateStr]) dbData.presences[dateStr] = {};
+            const statut = dbData.presences[dateStr][k] || 'Present';
+            return `<tr class="hover:bg-slate-900/40 transition">
+                <td class="p-3 font-semibold text-white">${e.nom} ${e.postnom || ''}</td>
+                <td class="p-3 text-slate-300">${e.classe}</td>
+                <td class="p-3">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold ${statut === 'Present' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/50' : statut === 'Retard' ? 'bg-amber-950 text-amber-400 border border-amber-800/50' : 'bg-red-950 text-red-400 border border-red-800/50'}">
+                        ${statut === 'Present' ? 'Présent(e)' : statut === 'Retard' ? 'En Retard' : 'Absent(e)'}
+                    </span>
+                </td>
+                <td class="p-3 text-center space-x-1">
+                    <button onclick="changerStatutPresenceAdmin('${k}','Present')" class="px-2 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-semibold">Présent</button>
+                    <button onclick="changerStatutPresenceAdmin('${k}','Retard')" class="px-2 py-1 bg-amber-600 text-white rounded-lg text-[10px] font-semibold">Retard</button>
+                    <button onclick="changerStatutPresenceAdmin('${k}','Absent')" class="px-2 py-1 bg-red-600 text-white rounded-lg text-[10px] font-semibold">Absent</button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function changerStatutPresenceAdmin(eleveKey, statut) {
+        const dateStr = document.getElementById('admin-cal-date').value;
+        if(!dateStr) return;
+        if(!dbData.presences[dateStr]) dbData.presences[dateStr] = {};
+        dbData.presences[dateStr][eleveKey] = statut;
+        sauvegarderDB();
+        chargerCalendrierAdmin();
+    }
+
+    function imprimerListeEleves() {
+        document.getElementById('date-impression').textContent = new Date().toLocaleDateString();
+        window.print();
+    }
+
+
+    // --- ESPACE PROFESSEUR ---
+    function chargerTableauDeBordProf() {
+        if(sessionActive.role !== 'prof') return;
+        document.getElementById('welcome-prof').textContent = `Professeur : ${sessionActive.nom} (${sessionActive.cours})`;
+        
+        // Charger les cours du prof (cours principal + cours demandés approuvés)
+        const selectCoursActif = document.getElementById('prof-select-cours-actif');
+        let mesCours = [sessionActive.cours];
+        for(const d of Object.values(dbData.demandesCours)) {
+            if(d.profNom === sessionActive.nom && d.statut === 'Approuvé' && !mesCours.includes(d.cours)) {
+                mesCours.push(d.cours);
+            }
+        }
+        selectCoursActif.innerHTML = mesCours.map(c => `<option value="${c}" ${sessionActive.cours === c ? 'selected' : ''}>${c}</option>`).join('');
+
+        chargerBaremesProf();
+        chargerNotesProf();
+        chargerDocumentsProf();
+        chargerPresencesProf();
+        lucide.createIcons();
+    }
+
+    function changerCoursActifProf(nouveauCours) {
+        sessionActive.cours = nouveauCours;
+        chargerBaremesProf();
+        chargerNotesProf();
+    }
+
+    function chargerBaremesProf() {
+        const cours = sessionActive.cours;
+        if(!dbData.baremes[cours]) {
+            dbData.baremes[cours] = { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+        }
+        const b = dbData.baremes[cours];
+        document.getElementById('cfg-nb-interros').value = b.nbInterros;
+        document.getElementById('cfg-max-interro').value = b.maxInterro;
+        document.getElementById('cfg-actif-devoir').value = b.actifDevoir;
+        document.getElementById('cfg-max-devoir').value = b.maxDevoir;
+        document.getElementById('cfg-actif-examen').value = b.actifExamen;
+        document.getElementById('cfg-max-examen').value = b.maxExamen;
+
+        // Adapter les entêtes du tableau selon les barèmes
+        const nb = parseInt(b.nbInterros);
+        for(let i=1; i<=4; i++) {
+            const th = document.getElementById(`th-int${i}`);
+            if(th) {
+                if(i <= nb) {
+                    th.style.display = '';
+                    th.textContent = `Int. ${i} (/` + b.maxInterro + `)`;
+                } else {
+                    th.style.display = 'none';
+                }
+            }
+        }
+        const thDev = document.getElementById('th-dev');
+        if(thDev) {
+            thDev.style.display = b.actifDevoir === 'oui' ? '' : 'none';
+            thDev.textContent = `Devoir (/` + b.maxDevoir + `)`;
+        }
+        const thEx = document.getElementById('th-ex');
+        if(thEx) {
+            thEx.style.display = b.actifExamen === 'oui' ? '' : 'none';
+            thEx.textContent = `Examen (/` + b.maxExamen + `)`;
+        }
+    }
+
+    function sauvegarderBaremesProf() {
+        const cours = sessionActive.cours;
+        dbData.baremes[cours] = {
+            nbInterros: parseInt(document.getElementById('cfg-nb-interros').value),
+            maxInterro: parseFloat(document.getElementById('cfg-max-interro').value) || 10,
+            actifDevoir: document.getElementById('cfg-actif-devoir').value,
+            maxDevoir: parseFloat(document.getElementById('cfg-max-devoir').value) || 10,
+            actifExamen: document.getElementById('cfg-actif-examen').value,
+            maxExamen: parseFloat(document.getElementById('cfg-max-examen').value) || 50
+        };
+        sauvegarderDB();
+        chargerBaremesProf();
+        chargerNotesProf();
+    }
+
+    function changerOngletProf(onglet) {
+        ['notes', 'presences'].forEach(o => {
+            document.getElementById(`prof-sec-${o}`).classList.add('hidden');
+            document.getElementById(`prof-tab-${o}`).className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50";
+        });
+        document.getElementById(`prof-sec-${onglet}`).classList.remove('hidden');
+        document.getElementById(`prof-tab-${onglet}`).className = "px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+        lucide.createIcons();
+    }
+
+    function chargerNotesProf() {
+        const tbody = document.getElementById('prof-liste-eleves-action');
+        const classeFiltre = document.getElementById('prof-select-classe').value;
+        const trimestre = document.getElementById('prof-select-trimestre').value;
+        const cours = sessionActive.cours;
+        if(!tbody) return;
+
+        const b = dbData.baremes[cours] || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+        const eleves = Object.entries(dbData.eleves).filter(([k, e]) => !classeFiltre || e.classe === classeFiltre);
+
+        if(eleves.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400 italic">Aucun élève trouvé pour cette classe.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = eleves.map(([k, e]) => {
+            if(!dbData.notes[k]) dbData.notes[k] = {};
+            if(!dbData.notes[k][trimestre]) dbData.notes[k][trimestre] = {};
+            if(!dbData.notes[k][trimestre][cours]) dbData.notes[k][trimestre][cours] = { interros: [0,0,0,0], devoir: 0, examen: 0 };
+            
+            const n = dbData.notes[k][trimestre][cours];
+            
+            let totalObt = 0;
+            for(let i=0; i<b.nbInterros; i++) totalObt += (n.interros[i] || 0);
+            if(b.actifDevoir === 'oui') totalObt += (n.devoir || 0);
+            if(b.actifExamen === 'oui') totalObt += (n.examen || 0);
+
+            let htmlInputs = '';
+            for(let i=0; i<4; i++) {
+                const displayStyle = i < b.nbInterros ? '' : 'display:none;';
+                htmlInputs += `<td class="p-2 text-center" style="${displayStyle}"><input type="number" min="0" max="${b.maxInterro}" value="${n.interros[i] || 0}" onchange="modifierNoteProf('${k}','interro',${i},this.value)" class="w-14 bg-slate-900 border border-slate-700 text-white text-center p-1.5 rounded-lg text-xs font-bold focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
+            }
+
+            const devStyle = b.actifDevoir === 'oui' ? '' : 'display:none;';
+            htmlInputs += `<td class="p-2 text-center" style="${devStyle}"><input type="number" min="0" max="${b.maxDevoir}" value="${n.devoir || 0}" onchange="modifierNoteProf('${k}','devoir',0,this.value)" class="w-14 bg-slate-900 border border-slate-700 text-white text-center p-1.5 rounded-lg text-xs font-bold focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
+
+            const exStyle = b.actifExamen === 'oui' ? '' : 'display:none;';
+            htmlInputs += `<td class="p-2 text-center" style="${exStyle}"><input type="number" min="0" max="${b.maxExamen}" value="${n.examen || 0}" onchange="modifierNoteProf('${k}','examen',0,this.value)" class="w-14 bg-slate-900 border border-slate-700 text-white text-center p-1.5 rounded-lg text-xs font-bold focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
+
+            return `<tr class="hover:bg-slate-900/40 transition">
+                <td class="p-2.5 font-semibold text-white">${e.nom} ${e.postnom || ''}</td>
+                <td class="p-2.5 text-slate-300">${e.classe}</td>
+                ${htmlInputs}
+                <td class="p-2.5 text-center font-bold text-emerald-400 bg-slate-900/80">${totalObt.toFixed(1)}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function modifierNoteProf(eleveKey, type, index, valeur) {
+        const trimestre = document.getElementById('prof-select-trimestre').value;
+        const cours = sessionActive.cours;
+        valeur = parseFloat(valeur) || 0;
+
+        if(!dbData.notes[eleveKey]) dbData.notes[eleveKey] = {};
+        if(!dbData.notes[eleveKey][trimestre]) dbData.notes[eleveKey][trimestre] = {};
+        if(!dbData.notes[eleveKey][trimestre][cours]) dbData.notes[eleveKey][trimestre][cours] = { interros: [0,0,0,0], devoir: 0, examen: 0 };
+
+        if(type === 'interro') {
+            dbData.notes[eleveKey][trimestre][cours].interros[index] = valeur;
+        } else if(type === 'devoir') {
+            dbData.notes[eleveKey][trimestre][cours].devoir = valeur;
+        } else if(type === 'examen') {
+            dbData.notes[eleveKey][trimestre][cours].examen = valeur;
+        }
+
+        sauvegarderDB();
+        chargerNotesProf();
+    }
+
+    function changerClasseProf() { chargerNotesProf(); }
+    function changerTrimestreProf() { chargerNotesProf(); }
+
+    function uploaderDocumentProf() {
+        const titre = document.getElementById('doc-titre').value.trim();
+        const fileInput = document.getElementById('doc-fichier');
+        if(!titre || fileInput.files.length === 0) {
+            alert("Veuillez entrer un titre et sélectionner un fichier.");
+            return;
+        }
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const fileData = e.target.result;
+            const key = 'doc_' + Date.now();
+            dbData.documents[key] = {
+                titre,
+                nomFichier: file.name,
+                data: fileData,
+                profNom: sessionActive.nom,
+                cours: sessionActive.cours,
+                date: new Date().toLocaleDateString()
+            };
+            sauvegarderDB();
+            document.getElementById('doc-titre').value = '';
+            fileInput.value = '';
+            chargerDocumentsProf();
+            alert("Cours publié avec succès !");
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function chargerDocumentsProf() {
+        const container = document.getElementById('prof-liste-mes-documents');
+        if(!container) return;
+        const docs = Object.entries(dbData.documents).filter(([k, d]) => d.profNom === sessionActive.nom);
+        if(docs.length === 0) {
+            container.innerHTML = `<p class="text-xs text-slate-500 italic">Aucun document mis en ligne.</p>`;
+            return;
+        }
+        container.innerHTML = docs.map(([k, d]) => `<div class="p-2.5 bg-slate-900 border border-slate-700 rounded-xl flex justify-between items-center text-xs">
+            <div><strong class="text-white">${d.titre}</strong> <span class="text-slate-400">(${d.nomFichier})</span></div>
+            <button onclick="supprimerDocumentProf('${k}')" class="text-red-400 hover:text-red-300"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+        </div>`).join('');
+        lucide.createIcons();
+    }
+
+    function supprimerDocumentProf(key) {
+        delete dbData.documents[key];
+        sauvegarderDB();
+        chargerDocumentsProf();
+    }
+
+    function chargerPresencesProf() {
+        const tbody = document.getElementById('prof-liste-presences-action');
+        const dateInput = document.getElementById('prof-date-presence');
+        const classeSelect = document.getElementById('prof-classe-presence');
+        if(!tbody || !dateInput || !classeSelect) return;
+
+        const dateStr = dateInput.value;
+        const classeFiltre = classeSelect.value;
+        if(!classeFiltre) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Veuillez sélectionner une classe pour faire l'appel.</td></tr>`;
+            return;
+        }
+
+        const eleves = Object.entries(dbData.eleves).filter(([k, e]) => e.classe === classeFiltre);
+        if(eleves.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Aucun élève dans cette classe.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = eleves.map(([k, e]) => {
+            if(!dbData.presences[dateStr]) dbData.presences[dateStr] = {};
+            const statut = dbData.presences[dateStr][k] || 'Present';
+            return `<tr class="hover:bg-slate-900/40 transition">
+                <td class="p-3 font-semibold text-white">${e.nom} ${e.postnom || ''}</td>
+                <td class="p-3 text-slate-300">${e.classe}</td>
+                <td class="p-3">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold ${statut === 'Present' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/50' : statut === 'Retard' ? 'bg-amber-950 text-amber-400 border border-amber-800/50' : 'bg-red-950 text-red-400 border border-red-800/50'}">
+                        ${statut === 'Present' ? 'Présent(e)' : statut === 'Retard' ? 'En Retard' : 'Absent(e)'}
+                    </span>
+                </td>
+                <td class="p-3 text-center space-x-1">
+                    <button onclick="changerStatutPresenceProf('${k}','Present')" class="px-2 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-semibold">Présent</button>
+                    <button onclick="changerStatutPresenceProf('${k}','Retard')" class="px-2 py-1 bg-amber-600 text-white rounded-lg text-[10px] font-semibold">Retard</button>
+                    <button onclick="changerStatutPresenceProf('${k}','Absent')" class="px-2 py-1 bg-red-600 text-white rounded-lg text-[10px] font-semibold">Absent</button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function changerStatutPresenceProf(eleveKey, statut) {
+        const dateStr = document.getElementById('prof-date-presence').value;
+        if(!dateStr) return;
+        if(!dbData.presences[dateStr]) dbData.presences[dateStr] = {};
+        dbData.presences[dateStr][eleveKey] = statut;
+        sauvegarderDB();
+        chargerPresencesProf();
+    }
+
+    function ouvrirModalDemandeCours() { document.getElementById('modal-demande-cours').classList.remove('hidden'); }
+    function fermerModalDemandeCours() { document.getElementById('modal-demande-cours').classList.add('hidden'); }
     
-    let mesDocs = Object.entries(documents).filter(([k, doc]) => doc.profNom === utilisateurConnecte.nom);
-    if(mesDocs.length === 0) {
-        conteneur.innerHTML = `<p class="text-xs text-slate-400 italic">Vous n'avez publié aucun document pour le moment.</p>`;
-        return;
-    }
-
-    mesDocs.forEach(([key, doc]) => {
-        conteneur.innerHTML += `
-            <div class="bg-slate-900 border border-slate-700/80 p-2.5 rounded-xl flex items-center justify-between text-xs">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i>
-                    <div>
-                        <p class="font-bold text-white">${doc.titre} <span class="text-[10px] text-slate-400 font-normal">(${doc.cours})</span></p>
-                        <p class="text-[10px] text-slate-400">${doc.nomFichier} — ${doc.date}</p>
-                    </div>
-                </div>
-                <button onclick="supprimerDocumentProf('${key}')" class="text-red-400 hover:text-red-300 p-1">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
-            </div>
-        `;
-    });
-    if(typeof lucide !== 'undefined') {
-        setTimeout(() => lucide.createIcons(), 50);
-    }
-}
-
-function actualiserDocumentsEleve(data) {
-    const conteneur = document.getElementById('eleve-liste-documents');
-    if(!conteneur) return;
-    conteneur.innerHTML = '';
-    const documents = data.documents || {};
-
-    if(Object.keys(documents).length === 0) {
-        conteneur.innerHTML = `<p class="text-xs text-slate-400 italic text-center py-2">Aucun cours ou document mis en ligne pour le moment.</p>`;
-        return;
-    }
-
-    Object.entries(documents).forEach(([key, doc]) => {
-        conteneur.innerHTML += `
-            <div class="bg-slate-900/80 border border-slate-700 p-3 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                <div class="space-y-0.5">
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="book" class="w-4 h-4 text-blue-400"></i>
-                        <h4 class="font-bold text-white text-xs">${doc.titre}</h4>
-                    </div>
-                    <p class="text-[11px] text-slate-400">Prof. ${doc.profNom} — Cours : <span class="text-slate-300 font-medium">${doc.cours}</span> (${doc.date})</p>
-                </div>
-                <a href="${doc.donneesFichier}" download="${doc.nomFichier}" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs w-full sm:w-auto justify-center">
-                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Télécharger (${doc.nomFichier.split('.').pop().toUpperCase()})
-                </a>
-            </div>
-        `;
-    });
-    if(typeof lucide !== 'undefined') {
-        setTimeout(() => lucide.createIcons(), 50);
-    }
-}
-
-// ================= GESTION DES DEMANDES ET BASCULE DE COURS PROF =================
-window.ouvrirModalDemandeCours = function() {
-    document.getElementById('input-cours-demande').value = '';
-    document.getElementById('modal-demande-cours').classList.remove('hidden');
-}
-
-window.fermerModalDemandeCours = function() {
-    document.getElementById('modal-demande-cours').classList.add('hidden');
-}
-
-window.soumettreDemandeCours = function() {
-    const nouveauCours = document.getElementById('input-cours-demande').value.trim();
-    if(!nouveauCours) return alert("Veuillez saisir le nom du cours.");
-
-    let profKey = null;
-    Object.keys(cacheDonnees.profs || {}).forEach(k => {
-        if(cacheDonnees.profs[k].codeProf === utilisateurConnecte.codeProf) profKey = k;
-    });
-
-    if(profKey) {
-        push(ref(db, 'ecole_rdc_complet/demandes_cours'), {
-            profKey: profKey,
-            profNom: utilisateurConnecte.nom,
-            codeProf: utilisateurConnecte.codeProf,
-            coursDemande: nouveauCours,
-            statut: 'en_attente'
-        });
+    function soumettreDemandeCours() {
+        const cours = document.getElementById('input-cours-demande').value.trim();
+        if(!cours) return;
+        const key = 'dem_' + Date.now();
+        dbData.demandesCours[key] = { profNom: sessionActive.nom, cours, statut: 'En attente' };
+        sauvegarderDB();
         fermerModalDemandeCours();
-        alert("Demande envoyée avec succès à l'administration.");
+        document.getElementById('input-cours-demande').value = '';
+        alert("Demande transmise à l'administration avec succès !");
     }
-}
 
-window.changerCoursActifProf = function(coursChoisi) {
-    if(!utilisateurConnecte) return;
-    utilisateurConnecte.coursActif = coursChoisi;
-    document.getElementById('welcome-prof').innerText = `Prof. ${utilisateurConnecte.nom} — Cours actif : ${coursChoisi}`;
-    document.getElementById('print-prof-cours').innerText = coursChoisi;
-    if(cacheDonnees) mettreAJourDashboardProf(cacheDonnees);
-}
+    function imprimerFicheProf() { window.print(); }
 
-function actualiserSelectCoursProfActif() {
-    const select = document.getElementById('prof-select-cours-actif');
-    if(!select || !utilisateurConnecte) return;
-    select.innerHTML = '';
-    const coursList = utilisateurConnecte.coursAutorises || [utilisateurConnecte.cours];
-    coursList.forEach(c => {
-        const selected = c === utilisateurConnecte.coursActif ? 'selected' : '';
-        select.innerHTML += `<option value="${c}" ${selected}>${c}</option>`;
-    });
-}
 
-window.validerDemandeCoursAdmin = function(demandeKey, profKey, coursDemande) {
-    update(ref(db, `ecole_rdc_complet/demandes_cours/${demandeKey}`), { statut: 'valide' });
+    // --- ESPACE ÉLÈVE & PARENT ---
+    function chargerTableauDeBordEleve() {
+        if(sessionActive.role !== 'eleve' && sessionActive.role !== 'parent') return;
+        const eleveId = sessionActive.id;
+        const eleve = dbData.eleves[eleveId];
+        if(!eleve) return;
 
-    const profObj = cacheDonnees.profs[profKey];
-    let coursAuth = profObj.coursAutorises || [profObj.cours];
-    if(!coursAuth.includes(coursDemande)) {
-        coursAuth.push(coursDemande);
-        update(ref(db, `ecole_rdc_complet/profs/${profKey}`), { coursAutorises: coursAuth });
+        document.getElementById('welcome-eleve').textContent = `Élève : ${eleve.nom} ${eleve.postnom || ''} | Classe : ${eleve.classe}`;
+
+        // Remplir le select des cours
+        const selectCours = document.getElementById('select-cours-eleve');
+        const tousLesCours = Object.keys(dbData.baremes);
+        selectCours.innerHTML = `<option value="">Tous les cours</option>` + tousLesCours.map(c => `<option value="${c}">${c}</option>`).join('');
+
+        chargerCotationsEleve();
+        chargerDocumentsEleve();
+        chargerCalendrierEleve();
+        lucide.createIcons();
     }
-    alert("Demande validée avec succès ! Le professeur peut désormais basculer sur ce cours.");
-}
 
-window.rejeterDemandeCoursAdmin = function(demandeKey) {
-    update(ref(db, `ecole_rdc_complet/demandes_cours/${demandeKey}`), { statut: 'rejete' });
-}
+    function chargerCotationsEleve() {
+        const eleveId = sessionActive.id;
+        const trimestre = document.getElementById('select-trimestre-eleve').value;
+        const coursFiltre = document.getElementById('select-cours-eleve').value;
+        const container = document.getElementById('contenu-cotations');
+        const eleve = dbData.eleves[eleveId];
+        if(!container || !eleve) return;
 
-function peuplerSelectCours(data, selectId) {
-    const select = document.getElementById(selectId);
-    if(!select) return;
-    const coursDisponibles = new Set();
-    Object.values(data.profs || {}).forEach(p => { 
-        if(p.cours) coursDisponibles.add(p.cours); 
-        if(p.coursAutorises) p.coursAutorises.forEach(c => coursDisponibles.add(c));
-    });
+        const notesEleve = dbData.notes[eleveId]?.[trimestre] || {};
+        const coursList = Object.keys(dbData.baremes);
+
+        if(coursList.length === 0) {
+            container.innerHTML = `<p class="text-xs text-slate-400 italic text-center py-2">Aucune cotation enregistrée pour le moment.</p>`;
+            document.getElementById('eleve-pourcentage-global').textContent = `0.0 pts / 0 pts`;
+            return;
+        }
+
+        let totalGeneralObt = 0;
+        let totalGeneralMax = 0;
+
+        let html = '';
+        coursList.forEach(cours => {
+            if(coursFiltre && coursFiltre !== cours) return;
+            const b = dbData.baremes[cours];
+            const n = notesEleve[cours] || { interros: [0,0,0,0], devoir: 0, examen: 0 };
+            
+            let maxCours = 0;
+            let obtCours = 0;
+            for(let i=0; i<b.nbInterros; i++) { maxCours += b.maxInterro; obtCours += (n.interros[i] || 0); }
+            if(b.actifDevoir === 'oui') { maxCours += b.maxDevoir; obtCours += (n.devoir || 0); }
+            if(b.actifExamen === 'oui') { maxCours += b.maxExamen; obtCours += (n.examen || 0); }
+
+            totalGeneralMax += maxCours;
+            totalGeneralObt += obtCours;
+
+            html += `<div class="p-3 bg-slate-900 border border-slate-700 rounded-xl space-y-1">
+                <div class="flex justify-between items-center"><strong class="text-white">${cours}</strong><span class="font-bold text-emerald-400">${obtCours.toFixed(1)} / ${maxCours} pts</span></div>
+                <div class="text-[10px] text-slate-400 flex flex-wrap gap-2">
+                    ${Array.from({length: b.nbInterros}, (_, i) => `<span>Int${i+1}: ${n.interros[i] || 0}/${b.maxInterro}</span>`).join(' | ')}
+                    ${b.actifDevoir === 'oui' ? `<span>Devoir: ${n.devoir || 0}/${b.maxDevoir}</span>` : ''}
+                    ${b.actifExamen === 'oui' ? `<span>Examen: ${n.examen || 0}/${b.maxExamen}</span>` : ''}
+                </div>
+            </div>`;
+        });
+
+        container.innerHTML = html || `<p class="text-xs text-slate-400 italic text-center py-2">Aucun cours trouvé.</p>`;
+        document.getElementById('eleve-pourcentage-global').textContent = `${totalGeneralObt.toFixed(1)} pts / ${totalGeneralMax} pts`;
+    }
+
+    function changerTrimestreEleve() { chargerCotationsEleve(); }
+
+    function chargerDocumentsEleve() {
+        const container = document.getElementById('eleve-liste-documents');
+        if(!container) return;
+        const docs = Object.entries(dbData.documents);
+        if(docs.length === 0) {
+            container.innerHTML = `<p class="text-xs text-slate-400 italic text-center py-2">Aucun document disponible pour le moment.</p>`;
+            return;
+        }
+        container.innerHTML = docs.map(([k, d]) => `<div class="p-3 bg-slate-900 border border-slate-700 rounded-xl flex justify-between items-center text-xs">
+            <div><strong class="text-white">${d.titre}</strong> <span class="text-slate-400">(${d.cours} - ${d.profNom})</span></div>
+            <a href="${d.data}" download="${d.nomFichier}" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition flex items-center gap-1"><i data-lucide="download" class="w-3.5 h-3.5"></i> Télécharger</a>
+        </div>`).join('');
+        lucide.createIcons();
+    }
+
+    const nomsMois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
     
-    const valeurActuelle = select.value;
-    select.innerHTML = `<option value="">Tous les cours</option>`;
-    coursDisponibles.forEach(c => {
-        select.innerHTML += `<option value="${c}">${c}</option>`;
-    });
-    select.value = valeurActuelle;
-}
+    function chargerCalendrierEleve() {
+        const labelMois = document.getElementById('label-mois-eleve');
+        const contenuCal = document.getElementById('contenu-calendrier-eleve');
+        if(!labelMois || !contenuCal) return;
 
-window.basculerAffichageCode = function(idElement) {
-    const el = document.getElementById(idElement);
-    el.classList.toggle('blur-sm');
-}
+        labelMois.textContent = `${nomsMois[moisActuelIndex]} ${anneeActuelleCalendrier}`;
+        const premierJour = new Date(anneeActuelleCalendrier, moisActuelIndex, 1).getDay();
+        const nbJours = new Date(anneeActuelleCalendrier, moisActuelIndex + 1, 0).getDate();
+        const eleveId = sessionActive.id;
 
-window.imprimerListeEleves = function() {
-    document.getElementById('date-impression').innerText = new Date().toLocaleDateString();
-    window.print();
-}
+        let html = `<div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mb-2">
+            <span>Dim</span><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span>
+        </div><div class="grid grid-cols-7 gap-1 text-center text-xs">`;
 
-window.imprimerFicheProf = function() {
-    document.getElementById('print-prof-trim').innerText = document.getElementById('prof-select-trimestre').value;
-    const classeVal = document.getElementById('prof-select-classe').value;
-    document.getElementById('print-prof-classe').innerText = classeVal ? classeVal : "Toutes les classes";
-    window.print();
-}
+        let decalage = (premierJour === 0) ? 6 : premierJour - 1; // Semaine commence le lundi
+        for(let i=0; i<decalage; i++) {
+            html += `<div></div>`;
+        }
 
-window.telechargerBulletinPDF = function() {
-    const element = document.getElementById('bulletin-impression');
-    element.classList.remove('hidden');
-    
-    const opt = {
-        margin:       10,
-        filename:     `Bulletin_Officiel_${utilisateurConnecte.nom}_${utilisateurConnecte.prenom}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+        for(let jour=1; jour<=nbJours; jour++) {
+            const moisStr = String(moisActuelIndex + 1).padStart(2, '0');
+            const jourStr = String(jour).padStart(2, '0');
+            const dateStr = `${anneeActuelleCalendrier}-${moisStr}-${jourStr}`;
+            
+            const statut = dbData.presences[dateStr]?.[eleveId];
+            let bgClass = 'bg-slate-800 text-slate-300 hover:bg-slate-700';
+            if(statut === 'Present') bgClass = 'bg-emerald-950 text-emerald-400 border border-emerald-800/50';
+            else if(statut === 'Retard') bgClass = 'bg-amber-950 text-amber-400 border border-amber-800/50';
+            else if(statut === 'Absent') bgClass = 'bg-red-950 text-red-400 border border-red-800/50';
 
-    html2pdf().from(element).set(opt).save().then(() => {
-        element.classList.add('hidden');
-    });
-}
+            html += `<div class="p-2 rounded-lg font-semibold ${bgClass}" title="${statut || 'Non pointé'}">${jour}</div>`;
+        }
 
-window.sauvegarderBaremesProf = function() {
-    if(!utilisateurConnecte || modeActif !== 'prof') return;
-    // Mise en place de la logique de sauvegarde des barèmes du prof
-}
+        html += `</div>`;
+        contenuCal.innerHTML = html;
+    }
 
-// Les fonctions additionnelles du tableau de bord élève
-function mettreAJourDashboardEleve(data) {
-    actualiserDocumentsEleve(data);
-    // Autres logiques existantes pour l'élève
-}
+    function changerMoisCalendrierEleve(direction) {
+        moisActuelIndex += direction;
+        if(moisActuelIndex > 11) { moisActuelIndex = 0; anneeActuelleCalendrier++; }
+        else if(moisActuelIndex < 0) { moisActuelIndex = 11; anneeActuelleCalendrier--; }
+        chargerCalendrierEleve();
+    }
 
-function mettreAJourDashboardProf(data) {
-    // Autres logiques existantes pour le prof
-}
+    function telechargerBulletinPDF() {
+        const eleveId = sessionActive.id;
+        const eleve = dbData.eleves[eleveId];
+        const trimestre = document.getElementById('select-trimestre-eleve').value;
+        if(!eleve) return;
 
-function mettreAJourDashboardParent(data) {
-    // Autres logiques existantes pour le parent
-}
+        document.getElementById('bul-trimestre-txt').textContent = trimestre === 'T1' ? 'TRIMESTRE 1' : trimestre === 'T2' ? 'TRIMESTRE 2' : 'TRIMESTRE 3';
+        document.getElementById('bul-nom').textContent = eleve.nom;
+        document.getElementById('bul-prenom').textContent = `${eleve.postnom || ''} ${eleve.prenom || ''}`;
+        document.getElementById('bul-classe').textContent = eleve.classe;
+        document.getElementById('bul-code').textContent = eleve.code;
+        document.getElementById('bul-tuteur').textContent = eleve.tuteur || '-';
+        document.getElementById('bul-date').textContent = new Date().toLocaleDateString();
 
-function actualiserInterfaceAdmin(data) {
-    // Logique admin existante
-}
+        const notesEleve = dbData.notes[eleveId]?.[trimestre] || {};
+        const coursList = Object.keys(dbData.baremes);
+        const tbody = document.getElementById('bul-lignes-cours');
+
+        let totalMaxGeneral = 0;
+        let totalObtGeneral = 0;
+
+        tbody.innerHTML = coursList.map(cours => {
+            const b = dbData.baremes[cours];
+            const n = notesEleve[cours] || { interros: [0,0,0,0], devoir: 0, examen: 0 };
+            let maxCours = 0;
+            let obtCours = 0;
+            for(let i=0; i<b.nbInterros; i++) { maxCours += b.maxInterro; obtCours += (n.interros[i] || 0); }
+            if(b.actifDevoir === 'oui') { maxCours += b.maxDevoir; obtCours += (n.devoir || 0); }
+            if(b.actifExamen === 'oui') { maxCours += b.maxExamen; obtCours += (n.examen || 0); }
+
+            totalMaxGeneral += maxCours;
+            totalObtGeneral += obtCours;
+
+            return `<tr>
+                <td class="p-2 border border-slate-300 font-semibold">${cours}</td>
+                <td class="p-2 border border-slate-300 text-center">${maxCours}</td>
+                <td class="p-2 border border-slate-300 text-center font-bold">${obtCours.toFixed(1)}</td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('bul-total-max').textContent = totalMaxGeneral;
+        document.getElementById('bul-total-obt').textContent = totalObtGeneral.toFixed(1);
+
+        const bulletinEl = document.getElementById('bulletin-impression');
+        bulletinEl.classList.remove('hidden');
+
+        const opt = {
+            margin:       0.5,
+            filename:     `Bulletin_${eleve.nom}_${trimestre}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().from(bulletinEl).set(opt).save().then(() => {
+            bulletinEl.classList.add('hidden');
+        });
+    }
 </script>
 </body>
 </html>
