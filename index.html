@@ -554,7 +554,6 @@ window.imprimerFicheProf = function() {
 window.sauvegarderBaremesProf = function() {
     if(!utilisateurConnecte || modeActif !== 'prof') return;
     
-    // Trouver la clé Firebase du prof connecté
     onValue(dbRef, (snapshot) => {
         const data = snapshot.val() || {};
         let profKey = null;
@@ -779,7 +778,6 @@ function mettreAJourDashboardEleve(data) {
     let totalMaximumGlobal = 0;
     let coursTrouves = 0;
 
-    // Récupérer les barèmes des profs
     const profs = data.profs || {};
 
     Object.keys(cotationsTrimestre).forEach(cours => {
@@ -787,7 +785,6 @@ function mettreAJourDashboardEleve(data) {
         coursTrouves++;
         const cData = cotationsTrimestre[cours] || {};
         
-        // Trouver les barèmes du prof pour ce cours
         let baremesCours = { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
         Object.values(profs).forEach(p => {
             if(p.cours === cours && p.baremes) baremesCours = p.baremes;
@@ -851,7 +848,6 @@ function mettreAJourDashboardProf(data) {
     const trimestre = document.getElementById('prof-select-trimestre')?.value || 'T1';
     const classeFiltre = document.getElementById('prof-select-classe')?.value || '';
 
-    // Récupérer les barèmes actuels
     const nbInterros = parseInt(document.getElementById('cfg-nb-interros')?.value) || 4;
     const maxInterro = parseFloat(document.getElementById('cfg-max-interro')?.value) || 10;
     const actifDevoir = document.getElementById('cfg-actif-devoir')?.value || 'oui';
@@ -859,7 +855,6 @@ function mettreAJourDashboardProf(data) {
     const actifExamen = document.getElementById('cfg-actif-examen')?.value || 'oui';
     const maxExamen = parseFloat(document.getElementById('cfg-max-examen')?.value) || 50;
 
-    // Ajuster les en-têtes du tableau prof dynamiquement
     for(let i=1; i<=4; i++) {
         const th = document.getElementById(`th-int${i}`);
         if(th) {
