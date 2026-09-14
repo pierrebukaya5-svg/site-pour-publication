@@ -508,7 +508,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDpzKhm93AJnwGsqptCBNfmWG8E4m0uJNM",
@@ -527,7 +527,7 @@ const dbRef = ref(db, 'ecole_rdc_complet');
 let modeActif = '';
 let utilisateurConnecte = null;
 let cacheDonnees = null;
-let adminSelectedParentCode = null; // Stocke le codeParent sélectionné par l'admin dans la messagerie WhatsApp
+let adminSelectedParentCode = null;
 const statusEl = document.getElementById('status-connexion');
 
 onValue(dbRef, (snapshot) => {
@@ -888,8 +888,7 @@ function initialiserWhatsAppAdmin(data) {
     const contactsContainer = document.getElementById('admin-whatsapp-contacts');
     if(!contactsContainer) return;
 
-    // Récupérer tous les tuteurs uniques à partir des élèves enregistrés
-    const tuteursMap = {}; // codeParent -> { tuteur, nomEnfant, classe }
+    const tuteursMap = {};
     Object.values(data.eleves || {}).forEach(el => {
         if(el.codeParent && el.tuteur) {
             if(!tuteursMap[el.codeParent]) {
@@ -947,12 +946,10 @@ function afficherMessagesWhatsAppAdmin(data, codeParent) {
     const messages = data.messages || {};
     let messagesTrouves = false;
 
-    // Trier les messages par ordre chronologique si nécessaire (les clés Firebase push le sont déjà globalement)
     Object.keys(messages).forEach(mKey => {
         const m = messages[mKey];
         if(m.codeParent === codeParent) {
             messagesTrouves = true;
-            // Message du parent (bulle alignée à gauche, style WhatsApp)
             chatContainer.innerHTML += `
                 <div class="flex flex-col items-start mb-2">
                     <div class="bg-white border rounded-2xl rounded-tl-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
@@ -962,7 +959,6 @@ function afficherMessagesWhatsAppAdmin(data, codeParent) {
                     </div>
                 </div>`;
 
-            // Réponses de l'administration (bulles alignées à droite, style WhatsApp vert/bleu)
             if(m.reponses) {
                 Object.values(m.reponses).forEach(rep => {
                     chatContainer.innerHTML += `
@@ -990,7 +986,6 @@ window.envoyerMessageAdminWhatsApp = function() {
     const texte = input.value.trim();
     if(!texte) return;
 
-    // Rechercher ou créer un thread de message pour ce parent
     const messages = cacheDonnees?.messages || {};
     let targetMsgKey = null;
 
@@ -1003,7 +998,6 @@ window.envoyerMessageAdminWhatsApp = function() {
     const dateStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
     if(targetMsgKey) {
-        // Ajouter la réponse dans le thread existant
         push(ref(db, `ecole_rdc_complet/messages/${targetMsgKey}/reponses`), {
             texte: texte,
             date: dateStr
@@ -1011,7 +1005,6 @@ window.envoyerMessageAdminWhatsApp = function() {
             input.value = '';
         }).catch(err => alert("Erreur : " + err.message));
     } else {
-        // S'il n'y a pas encore de message du parent, créer un message initial initié par l'admin rattaché au parent
         let nomTuteurRattache = "Tuteur";
         Object.values(cacheDonnees.eleves || {}).forEach(el => {
             if(el.codeParent === adminSelectedParentCode) nomTuteurRattache = el.tuteur;
@@ -1166,20 +1159,19 @@ function mettreAJourDashboardEleve(data) {
                     <span>${p.cours}</span>
                     <span class="text-blue-600">${res.obtenu} / ${res.maximum} (${res.pourcentage}%)</span>
                 </div>
-                <div class="flex flex-wrap gap-2 text-xs text-slate-600">
-                    ${interrosDetails}
-                    ${devoirDetail}
-                    ${examenDetail}
+                <div class="flex flex-wrap gap-1 text-xs text-slate-600">
+                    ${interrosDetails} ${devoirDetail} ${examenDetail}
                 </div>
             </div>`;
     });
 
     if(containerCotations.innerHTML === "") {
-        containerCotations.innerHTML = `<p class="text-slate-500 text-xs">Aucun cours trouvé pour ce filtre.</p>`;
+        containerCotations.innerHTML = `<div class="text-slate-400 text-xs">Aucun cours trouvé.</div>`;
     }
 
-    document.getElementById('eleve-pourcentage-global').innerText = `${totalGlobalObtenu} pts / ${totalGlobalMax} pts (${totalGlobalMax > 0 ? ((totalGlobalObtenu/totalGlobalMax)*100).toFixed(2) : 0}%)`;
+    document.getElementById('eleve-pourcentage-global').innerText = `${totalGlobalObtenu} pts / ${totalGlobalMax} pts`;
 
+    // Remplir le bulletin officiel
     document.getElementById('bul-trimestre-txt').innerText = trimestre === 'T1' ? 'TRIMESTRE 1' : trimestre === 'T2' ? 'TRIMESTRE 2' : 'TRIMESTRE 3';
     document.getElementById('bul-nom').innerText = eleveActuel.nom;
     document.getElementById('bul-prenom').innerText = `${eleveActuel.postnom || ''} ${eleveActuel.prenom}`;
@@ -1187,27 +1179,27 @@ function mettreAJourDashboardEleve(data) {
     document.getElementById('bul-code').innerText = eleveActuel.codeEleve;
     document.getElementById('bul-tuteur').innerText = eleveActuel.tuteur;
     document.getElementById('bul-date').innerText = new Date().toLocaleDateString();
-    
     document.getElementById('bul-lignes-cours').innerHTML = lignesBulletinHtml;
     document.getElementById('bul-total-max').innerText = totalGlobalMax;
     document.getElementById('bul-total-obt').innerText = totalGlobalObtenu;
-    document.getElementById('bul-presence-txt').innerText = eleveActuel.presences?.[trimestre] || 'Présent';
+    
+    const presenceTrim = eleveActuel.presences?.[trimestre] || 'Présent';
+    document.getElementById('bul-presence-txt').innerText = presenceTrim;
 
-    const presContainer = document.getElementById('contenu-presences');
-    presContainer.innerHTML = `
-        <div class="flex justify-between items-center text-xs p-2 bg-slate-50 rounded border">
+    const contPres = document.getElementById('contenu-presences');
+    contPres.innerHTML = `
+        <div class="flex justify-between items-center">
             <span>Trimestre 1 (T1) :</span>
-            <strong class="px-2 py-0.5 rounded ${eleveActuel.presences?.T1 === 'Présent' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${eleveActuel.presences?.T1 || 'Présent'}</strong>
+            <span class="font-bold px-2 py-0.5 rounded text-xs ${eleveActuel.presences?.T1 === 'Absent' ? 'bg-red-100 text-red-700' : eleveActuel.presences?.T1 === 'Retard' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}">${eleveActuel.presences?.T1 || 'Présent'}</span>
         </div>
-        <div class="flex justify-between items-center text-xs p-2 bg-slate-50 rounded border">
+        <div class="flex justify-between items-center">
             <span>Trimestre 2 (T2) :</span>
-            <strong class="px-2 py-0.5 rounded ${eleveActuel.presences?.T2 === 'Présent' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${eleveActuel.presences?.T2 || 'Présent'}</strong>
+            <span class="font-bold px-2 py-0.5 rounded text-xs ${eleveActuel.presences?.T2 === 'Absent' ? 'bg-red-100 text-red-700' : eleveActuel.presences?.T2 === 'Retard' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}">${eleveActuel.presences?.T2 || 'Présent'}</span>
         </div>
-        <div class="flex justify-between items-center text-xs p-2 bg-slate-50 rounded border">
+        <div class="flex justify-between items-center">
             <span>Trimestre 3 (T3) :</span>
-            <strong class="px-2 py-0.5 rounded ${eleveActuel.presences?.T3 === 'Présent' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${eleveActuel.presences?.T3 || 'Présent'}</strong>
-        </div>
-    `;
+            <span class="font-bold px-2 py-0.5 rounded text-xs ${eleveActuel.presences?.T3 === 'Absent' ? 'bg-red-100 text-red-700' : eleveActuel.presences?.T3 === 'Retard' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}">${eleveActuel.presences?.T3 || 'Présent'}</span>
+        </div>`;
 }
 
 window.changerClasseProf = function() {
@@ -1222,16 +1214,17 @@ function mettreAJourDashboardProf(data) {
     if(!utilisateurConnecte || modeActif !== 'prof') return;
     const classeFiltre = document.getElementById('prof-select-classe').value;
     const trimestre = document.getElementById('prof-select-trimestre').value;
-    const coursProf = utilisateurConnecte.cours;
+    
     const baremes = utilisateurConnecte.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
-
     const nbInt = baremes.nbInterros || 4;
+
+    // Ajuster l'affichage des entêtes du tableau selon les interros et options
     for(let i=1; i<=4; i++) {
         const th = document.getElementById(`th-int${i}`);
         if(th) {
             if(i <= nbInt) {
                 th.style.display = '';
-                th.innerText = `Int. ${i} (/${baremes.maxInterro})`;
+                th.innerText = `Int. ${i} (/${baremes.maxInterro || 10})`;
             } else {
                 th.style.display = 'none';
             }
@@ -1242,7 +1235,7 @@ function mettreAJourDashboardProf(data) {
     if(thDev) {
         if(baremes.actifDevoir !== 'non') {
             thDev.style.display = '';
-            thDev.innerText = `Devoir (/${baremes.maxDevoir})`;
+            thDev.innerText = `Devoir (/${baremes.maxDevoir || 10})`;
         } else {
             thDev.style.display = 'none';
         }
@@ -1252,90 +1245,98 @@ function mettreAJourDashboardProf(data) {
     if(thEx) {
         if(baremes.actifExamen !== 'non') {
             thEx.style.display = '';
-            thEx.innerText = `Examen (/${baremes.maxExamen})`;
+            thEx.innerText = `Examen (/${baremes.maxExamen || 50})`;
         } else {
             thEx.style.display = 'none';
         }
     }
 
-    const eleves = data.eleves || {};
     const tbody = document.getElementById('prof-liste-eleves-action');
+    if(!tbody) return;
     tbody.innerHTML = "";
 
+    const eleves = data.eleves || {};
     let count = 0;
+
     Object.keys(eleves).forEach(elKey => {
         const el = eleves[elKey];
         if(classeFiltre && el.classe !== classeFiltre) return;
         count++;
 
-        const cData = el.cotations?.[trimestre]?.[coursProf] || {};
-        
+        const cData = el.cotations?.[trimestre]?.[utilisateurConnecte.cours] || {};
+
         let inputsHtml = '';
         for(let i=1; i<=nbInt; i++) {
-            inputsHtml += `<td class="p-1 border text-center"><input id="val-${elKey}-int${i}" type="number" value="${cData[`interro${i}`] !== undefined ? cData[`interro${i}`] : ''}" placeholder="/${baremes.maxInterro}" class="w-12 border p-1 rounded text-center text-xs"></td>`;
+            const val = cData[`interro${i}`] !== undefined ? cData[`interro${i}`] : '';
+            inputsHtml += `<td class="p-1 border text-center"><input id="note-${elKey}-int${i}" type="number" step="0.5" value="${val}" class="w-12 border p-1 rounded text-center text-xs"></td>`;
         }
         for(let i=nbInt+1; i<=4; i++) {
-            inputsHtml += `<td class="p-1 border text-center hidden" id="cell-${elKey}-int${i}"><input id="val-${elKey}-int${i}" type="number" value="" class="w-12 border p-1 rounded text-center text-xs"></td>`;
+            inputsHtml += `<td class="p-1 border text-center" style="display:none;"></td>`;
         }
 
+        let devHtml = '';
         if(baremes.actifDevoir !== 'non') {
-            inputsHtml += `<td class="p-1 border text-center"><input id="val-${elKey}-devoir" type="number" value="${cData.devoir !== undefined ? cData.devoir : ''}" placeholder="/${baremes.maxDevoir}" class="w-12 border p-1 rounded text-center text-xs"></td>`;
+            const valDev = cData.devoir !== undefined ? cData.devoir : '';
+            devHtml = `<td class="p-1 border text-center"><input id="note-${elKey}-dev" type="number" step="0.5" value="${valDev}" class="w-12 border p-1 rounded text-center text-xs"></td>`;
         } else {
-            inputsHtml += `<td class="p-1 border text-center hidden"><input id="val-${elKey}-devoir" type="number" value=""></td>`;
+            devHtml = `<td class="p-1 border text-center" style="display:none;"></td>`;
         }
 
+        let exHtml = '';
         if(baremes.actifExamen !== 'non') {
-            inputsHtml += `<td class="p-1 border text-center"><input id="val-${elKey}-examen" type="number" value="${cData.examen !== undefined ? cData.examen : ''}" placeholder="/${baremes.maxExamen}" class="w-12 border p-1 rounded text-center text-xs"></td>`;
+            const valEx = cData.examen !== undefined ? cData.examen : '';
+            exHtml = `<td class="p-1 border text-center"><input id="note-${elKey}-ex" type="number" step="0.5" value="${valEx}" class="w-12 border p-1 rounded text-center text-xs"></td>`;
         } else {
-            inputsHtml += `<td class="p-1 border text-center hidden"><input id="val-${elKey}-examen" type="number" value=""></td>`;
+            exHtml = `<td class="p-1 border text-center" style="display:none;"></td>`;
         }
 
-        const res = calculerTotauxEtPourcentageCours(cData, baremes);
+        const resCalc = calculerTotauxEtPourcentageCours(cData, baremes);
 
         tbody.innerHTML += `
             <tr class="border-b hover:bg-slate-50">
                 <td class="p-2 font-medium">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
-                <td class="p-2">${el.classe}</td>
+                <td class="p-2 text-xs">${el.classe}</td>
                 ${inputsHtml}
-                <td class="p-2 border text-center font-bold text-blue-900 bg-blue-50">${res.obtenu} / ${res.maximum}</td>
+                ${devHtml}
+                ${exHtml}
+                <td class="p-2 border text-center font-bold bg-blue-50 text-blue-900" id="total-${elKey}">${resCalc.obtenu} / ${resCalc.maximum}</td>
                 <td class="p-2 border text-center no-print">
-                    <button onclick="enregistrerNotesEleve('${elKey}', '${coursProf}', '${trimestre}')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-blue-700">Enregistrer</button>
+                    <button onclick="enregistrerNotesEleve('${elKey}', '${trimestre}', '${utilisateurConnecte.cours}')" class="bg-blue-600 text-white px-2.5 py-1 rounded text-xs font-medium hover:bg-blue-700">Enregistrer</button>
                 </td>
             </tr>`;
     });
 
     if(count === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-slate-400">Aucun élève trouvé pour cette classe</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-slate-400">Aucun élève trouvé dans cette classe.</td></tr>`;
     }
 }
 
-window.enregistrerNotesEleve = function(eleveKey, cours, trimestre) {
-    const baremes = utilisateurConnecte.baremes || { nbInterros: 4, actifDevoir: 'oui', actifExamen: 'oui' };
+window.enregistrerNotesEleve = function(eleveKey, trimestre, cours) {
+    if(!utilisateurConnecte || modeActif !== 'prof') return;
+    const baremes = utilisateurConnecte.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
     const nbInt = baremes.nbInterros || 4;
-    
-    let cotationsCours = {};
+
+    const cotationsMaj = {};
     for(let i=1; i<=nbInt; i++) {
-        const val = document.getElementById(`val-${eleveKey}-int${i}`).value;
-        if(val !== '') cotationsCours[`interro${i}`] = parseFloat(val);
+        const val = document.getElementById(`note-${eleveKey}-int${i}`).value;
+        if(val !== '') cotationsMaj[`interro${i}`] = parseFloat(val);
     }
 
     if(baremes.actifDevoir !== 'non') {
-        const valDev = document.getElementById(`val-${eleveKey}-devoir`).value;
-        if(valDev !== '') cotationsCours[`devoir`] = parseFloat(valDev);
+        const valDev = document.getElementById(`note-${eleveKey}-dev`).value;
+        if(valDev !== '') cotationsMaj['devoir'] = parseFloat(valDev);
     }
 
     if(baremes.actifExamen !== 'non') {
-        const valEx = document.getElementById(`val-${eleveKey}-examen`).value;
-        if(valEx !== '') cotationsCours[`examen`] = parseFloat(valEx);
+        const valEx = document.getElementById(`note-${eleveKey}-ex`).value;
+        if(valEx !== '') cotationsMaj['examen'] = parseFloat(valEx);
     }
 
-    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/cotations/${trimestre}/${cours}`), cotationsCours)
+    set(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/cotations/${trimestre}/${cours}`), cotationsMaj)
         .then(() => {
             alert("Notes enregistrées avec succès !");
         })
-        .catch((err) => {
-            alert("Erreur lors de l'enregistrement : " + err.message);
-        });
+        .catch(err => alert("Erreur : " + err.message));
 }
 
 window.changerTrimestreParent = function() {
@@ -1346,64 +1347,72 @@ function mettreAJourDashboardParent(data) {
     if(!utilisateurConnecte || modeActif !== 'parent') return;
     const trimestre = document.getElementById('select-trimestre-parent').value;
     const coursFiltre = document.getElementById('select-cours-parent').value;
-    const codeParent = utilisateurConnecte.codeParent;
-
-    const eleves = data.eleves || {};
     const container = document.getElementById('parent-liste-enfants');
+    const alerteFrais = document.getElementById('alerte-frais-parent');
+    if(!container) return;
+
     container.innerHTML = "";
+    let fraisNonRegles = false;
+    let enfantsRattaches = [];
 
-    let unEnfantNonEnOrdre = false;
-    let enfantsTrouves = 0;
-
-    Object.values(eleves).forEach(el => {
-        if(el.codeParent === codeParent) {
-            enfantsTrouves++;
-            if(el.frais === 'non_ordre') unEnfantNonEnOrdre = true;
-
-            let cotationsHtml = '';
-            const profs = data.profs || {};
-            let totalObt = 0;
-            let totalMax = 0;
-
-            Object.values(profs).forEach(p => {
-                if(coursFiltre && p.cours !== coursFiltre) return;
-                const cData = el.cotations?.[trimestre]?.[p.cours] || {};
-                const res = calculerTotauxEtPourcentageCours(cData, p.baremes);
-                totalObt += res.obtenu;
-                totalMax += res.maximum;
-
-                cotationsHtml += `
-                    <div class="flex justify-between items-center text-xs bg-slate-50 p-2 rounded border">
-                        <span>${p.cours}</span>
-                        <strong class="text-blue-600">${res.obtenu} / ${res.maximum} (${res.pourcentage}%)</strong>
-                    </div>`;
-            });
-
-            container.innerHTML += `
-                <div class="border p-4 rounded-xl bg-white space-y-3">
-                    <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-slate-800 text-sm sm:text-base">${el.nom} ${el.postnom || ''} ${el.prenom}</h4>
-                        <span class="text-xs px-2 py-0.5 rounded font-semibold ${el.frais === 'en_ordre' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${el.frais === 'en_ordre' ? 'Frais payés' : 'Frais impayés'}</span>
-                    </div>
-                    <p class="text-xs text-slate-500">Classe : ${el.classe}</p>
-                    <div class="space-y-1">
-                        <div class="text-xs font-semibold text-slate-700">Notes du Trimestre (${totalObt} / ${totalMax} pts) :</div>
-                        ${cotationsHtml || '<p class="text-xs text-slate-400">Aucune cotation disponible.</p>'}
-                    </div>
-                </div>`;
+    Object.values(data.eleves || {}).forEach(el => {
+        if(el.codeParent === utilisateurConnecte.codeParent) {
+            enfantsRattaches.push(el);
+            if(el.frais === 'non_ordre') fraisNonRegles = true;
         }
     });
 
-    const alerteFrais = document.getElementById('alerte-frais-parent');
-    if(unEnfantNonEnOrdre) {
+    if(fraisNonRegles) {
         alerteFrais.classList.remove('hidden');
     } else {
         alerteFrais.classList.add('hidden');
     }
 
-    // Affichage messagerie style WhatsApp pour le parent
-    const chatBox = document.getElementById('parent-chat-box');
-    chatBox.innerHTML = "";
+    const profs = data.profs || {};
+
+    enfantsRattaches.forEach(el => {
+        let notesHtml = "";
+        let totalObt = 0;
+        let totalMax = 0;
+
+        Object.values(profs).forEach(p => {
+            if(coursFiltre && p.cours !== coursFiltre) return;
+            const cData = el.cotations?.[trimestre]?.[p.cours] || {};
+            const res = calculerTotauxEtPourcentageCours(cData, p.baremes);
+            totalObt += res.obtenu;
+            totalMax += res.maximum;
+
+            notesHtml += `
+                <div class="border-b pb-2 mb-2 text-xs">
+                    <div class="flex justify-between font-bold text-slate-800">
+                        <span>${p.cours}</span>
+                        <span class="text-blue-600">${res.obtenu} / ${res.maximum} (${res.pourcentage}%)</span>
+                    </div>
+                </div>`;
+        });
+
+        container.innerHTML += `
+            <div class="bg-white border p-4 rounded-xl space-y-3 shadow-sm">
+                <div class="flex justify-between items-center border-b pb-2">
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-sm">${el.nom} ${el.postnom || ''} ${el.prenom}</h4>
+                        <p class="text-xs text-slate-500">Classe : ${el.classe} | Code : ${el.codeEleve}</p>
+                    </div>
+                    <span class="px-2 py-1 rounded text-xs font-semibold ${el.frais === 'en_ordre' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${el.frais === 'en_ordre' ? 'Frais en ordre' : 'Frais non payés'}</span>
+                </div>
+                <div class="text-xs font-semibold text-slate-600">Total ${trimestre} : <span class="text-blue-900 font-bold">${totalObt} / ${totalMax} pts</span></div>
+                <div class="space-y-1">${notesHtml}</div>
+            </div>`;
+    });
+
+    afficherMessagesWhatsAppParent(data, utilisateurConnecte.codeParent);
+}
+
+function afficherMessagesWhatsAppParent(data, codeParent) {
+    const chatContainer = document.getElementById('parent-chat-box');
+    if(!chatContainer) return;
+    chatContainer.innerHTML = "";
+
     const messages = data.messages || {};
     let messagesTrouves = false;
 
@@ -1411,26 +1420,21 @@ function mettreAJourDashboardParent(data) {
         const m = messages[mKey];
         if(m.codeParent === codeParent) {
             messagesTrouves = true;
-            
-            // Message du parent (bulle alignée à droite pour le parent)
-            if(m.texte && m.texte !== "[Message initié par l'administration]") {
-                chatBox.innerHTML += `
-                    <div class="flex flex-col items-end mb-2">
-                        <div class="bg-blue-600 text-white rounded-2xl rounded-tr-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
-                            <div class="font-bold text-[10px] text-blue-200 mb-0.5">Vous</div>
-                            <div>${m.texte}</div>
-                            <div class="text-[9px] text-blue-200 text-right mt-1">${m.date}</div>
-                        </div>
-                    </div>`;
-            }
+            chatContainer.innerHTML += `
+                <div class="flex flex-col items-end mb-2">
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl rounded-tr-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
+                        <div class="font-bold text-[10px] text-emerald-800 mb-0.5">Vous (${m.tuteur})</div>
+                        <div>${m.texte}</div>
+                        <div class="text-[9px] text-slate-400 text-right mt-1">${m.date}</div>
+                    </div>
+                </div>`;
 
-            // Réponses de l'administration (bulles alignées à gauche)
             if(m.reponses) {
                 Object.values(m.reponses).forEach(rep => {
-                    chatBox.innerHTML += `
+                    chatContainer.innerHTML += `
                         <div class="flex flex-col items-start mb-2">
                             <div class="bg-white border rounded-2xl rounded-tl-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
-                                <div class="font-bold text-[10px] text-emerald-700 mb-0.5">Administration</div>
+                                <div class="font-bold text-[10px] text-blue-700 mb-0.5">Administration</div>
                                 <div>${rep.texte}</div>
                                 <div class="text-[9px] text-slate-400 text-right mt-1">${rep.date}</div>
                             </div>
@@ -1441,9 +1445,9 @@ function mettreAJourDashboardParent(data) {
     });
 
     if(!messagesTrouves) {
-        chatBox.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto">Aucun message échangé pour l'instant. Écrivez ci-dessous pour contacter l'administration.</div>`;
+        chatContainer.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto">Aucun message pour le moment. Envoyez un message à l'administration ci-dessous.</div>`;
     }
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 window.envoyerMessageParent = function() {
@@ -1452,16 +1456,16 @@ window.envoyerMessageParent = function() {
     const texte = input.value.trim();
     if(!texte) return;
 
+    const dateStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
     push(ref(db, 'ecole_rdc_complet/messages'), {
         codeParent: utilisateurConnecte.codeParent,
         tuteur: utilisateurConnecte.tuteur,
         texte: texte,
-        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        date: dateStr
     }).then(() => {
         input.value = '';
-    }).catch(err => {
-        alert("Erreur : " + err.message);
-    });
+    }).catch(err => alert("Erreur : " + err.message));
 }
 </script>
 </body>
