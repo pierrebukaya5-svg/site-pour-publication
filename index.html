@@ -206,14 +206,49 @@
             <div class="grid md:grid-cols-1 gap-6">
                 <div class="bg-emerald-50 border border-emerald-200 p-5 rounded-xl space-y-4">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-emerald-900">Gestion des notes et présences (Attribution exclusive professeur)</h3>
-                        <select id="prof-select-trimestre" class="border p-1.5 rounded bg-white text-sm">
-                            <option value="T1">Trimestre 1 (T1)</option>
-                            <option value="T2">Trimestre 2 (T2)</option>
-                            <option value="T3">Trimestre 3 (T3)</option>
-                        </select>
+                        <h3 class="font-bold text-emerald-900">Fiche de cotations et présences (Visualisation et modification)</h3>
+                        <div class="flex items-center gap-2">
+                            <select id="prof-select-classe" onchange="changerClasseProf()" class="border p-1.5 rounded bg-white text-sm">
+                                <option value="">Toutes les classes</option>
+                                <option value="1ère Primaire">1ère Primaire</option>
+                                <option value="2ème Primaire">2ème Primaire</option>
+                                <option value="3ème Primaire">3ème Primaire</option>
+                                <option value="4ème Primaire">4ème Primaire</option>
+                                <option value="5ème Primaire">5ème Primaire</option>
+                                <option value="6ème Primaire">6ème Primaire</option>
+                                <option value="7ème Éducation de Base">7ème Éducation de Base</option>
+                                <option value="8ème Éducation de Base">8ème Éducation de Base</option>
+                                <option value="3ème Humanité - Pédagogie Générale">3ème Humanité - Pédagogie Générale</option>
+                                <option value="4ème Humanité - Pédagogie Générale">4ème Humanité - Pédagogie Générale</option>
+                                <option value="3ème Humanité - Commerciale & Gestion">3ème Humanité - Commerciale & Gestion</option>
+                                <option value="4ème Humanité - Commerciale & Gestion">4ème Humanité - Commerciale & Gestion</option>
+                                <option value="3ème Humanité - Scientifique (Math-Physique)">3ème Humanité - Scientifique (Math-Physique)</option>
+                                <option value="4ème Humanité - Scientifique (Math-Physique)">4ème Humanité - Scientifique (Math-Physique)</option>
+                                <option value="3ème Humanité - Coupe & Couture">3ème Humanité - Coupe & Couture</option>
+                                <option value="4ème Humanité - Coupe & Couture">4ème Humanité - Coupe & Couture</option>
+                            </select>
+                            <select id="prof-select-trimestre" onchange="changerTrimestreProf()" class="border p-1.5 rounded bg-white text-sm">
+                                <option value="T1">Trimestre 1 (T1)</option>
+                                <option value="T2">Trimestre 2 (T2)</option>
+                                <option value="T3">Trimestre 3 (T3)</option>
+                            </select>
+                        </div>
                     </div>
-                    <div id="prof-liste-eleves-action" class="space-y-2 max-h-96 overflow-y-auto"></div>
+                    <!-- Fiche de cotation visuelle type tableau modifiable -->
+                    <div class="overflow-x-auto bg-white rounded-lg border">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-600 uppercase text-xs">
+                                    <th class="p-2 border">Élève</th>
+                                    <th class="p-2 border">Classe</th>
+                                    <th class="p-2 border w-28">Note (/20)</th>
+                                    <th class="p-2 border w-36">Présence</th>
+                                    <th class="p-2 border text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prof-liste-eleves-action"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -524,9 +559,26 @@ function actualiserInterfaceAdmin(data) {
     const messages = data.messages || {};
     const boxMsgs = document.getElementById('admin-box-messages');
     boxMsgs.innerHTML = "";
+    if(Object.keys(messages).length === 0) {
+        boxMsgs.innerHTML = `<p class="text-slate-400 text-xs p-2">Aucun message de tuteur pour le moment.</p>`;
+    }
     Object.keys(messages).forEach(mKey => {
         const m = messages[mKey];
-        boxMsgs.innerHTML += `<div class="border p-3 rounded bg-white text-sm space-y-1"><strong>Tuteur (${m.tuteur}) :</strong> ${m.texte} <div class="text-xs text-slate-400">${m.date}</div></div>`;
+        let reponsesHtml = '';
+        if(m.reponses) {
+            Object.values(m.reponses).forEach(rep => {
+                reponsesHtml += `<div class="ml-4 mt-2 p-2 rounded bg-blue-50 border-l-2 border-blue-600 text-xs"><strong>Administration :</strong> ${rep.texte} <div class="text-[10px] text-slate-400">${rep.date}</div></div>`;
+            });
+        }
+        boxMsgs.innerHTML += `
+            <div class="border p-3 rounded bg-white text-sm space-y-2">
+                <div><strong>Tuteur (${m.tuteur}) :</strong> ${m.texte} <div class="text-xs text-slate-400">${m.date}</div></div>
+                ${reponsesHtml}
+                <div class="mt-2 flex gap-2">
+                    <input id="admin-rep-${mKey}" placeholder="Répondre au tuteur..." class="border p-1.5 rounded flex-1 text-xs">
+                    <button onclick="repondreMessageAdmin('${mKey}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium">Répondre</button>
+                </div>
+            </div>`;
     });
 }
 
@@ -549,28 +601,61 @@ function mettreAJourDashboardEleve(data) {
     document.getElementById('contenu-presences').innerHTML = `<div class="p-2 rounded bg-green-50 text-green-800">Statut : <strong>${eleveActuel.presences?.[trimestre] || 'Présent'}</strong></div>`;
 }
 
+window.changerClasseProf = function() {
+    onValue(dbRef, (snapshot) => { mettreAJourDashboardProf(snapshot.val()); }, { onlyOnce: true });
+}
+
+window.changerTrimestreProf = function() {
+    onValue(dbRef, (snapshot) => { mettreAJourDashboardProf(snapshot.val()); }, { onlyOnce: true });
+}
+
 function mettreAJourDashboardProf(data) {
+    if(!utilisateurConnecte) return;
     const container = document.getElementById('prof-liste-eleves-action');
     container.innerHTML = "";
-    Object.keys(data.eleves || {}).forEach(key => {
-        const el = data.eleves[key];
+    const trimestre = document.getElementById('prof-select-trimestre')?.value || 'T1';
+    const classeFiltre = document.getElementById('prof-select-classe')?.value || '';
+
+    const eleves = data.eleves || {};
+    let nbEleves = 0;
+
+    Object.keys(eleves).forEach(key => {
+        const el = eleves[key];
+        if(classeFiltre && el.classe !== classeFiltre) return;
+        nbEleves++;
+
+        const noteActuelle = el.cotations?.[trimestre]?.[utilisateurConnecte.cours] || '';
+        const presenceActuelle = el.presences?.[trimestre] || 'Présent';
+
         container.innerHTML += `
-            <div class="border p-3 rounded bg-white text-sm space-y-2">
-                <div class="font-bold">${el.nom} ${el.prenom} (${el.classe})</div>
-                <div class="flex gap-2">
-                    <input id="note-${key}" type="number" placeholder="Note /20" class="border p-1 rounded w-20 text-xs">
-                    <select id="pres-${key}" class="border p-1 rounded text-xs"><option value="Présent">Présent</option><option value="Absent">Absent</option></select>
-                    <button onclick="sauvegarderNoteProf('${key}')" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs font-medium">Attribuer note / présence</button>
-                </div>
-            </div>`;
+            <tr class="border-b hover:bg-slate-50">
+                <td class="p-2 font-medium">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
+                <td class="p-2 text-xs text-slate-600">${el.classe}</td>
+                <td class="p-2">
+                    <input id="note-${key}" type="number" min="0" max="20" step="0.5" value="${noteActuelle}" placeholder="Note /20" class="border p-1.5 rounded w-24 text-xs">
+                </td>
+                <td class="p-2">
+                    <select id="pres-${key}" class="border p-1.5 rounded text-xs">
+                        <option value="Présent" ${presenceActuelle === 'Présent' ? 'selected' : ''}>Présent</option>
+                        <option value="Absent" ${presenceActuelle === 'Absent' ? 'selected' : ''}>Absent</option>
+                    </select>
+                </td>
+                <td class="p-2 text-center">
+                    <button onclick="sauvegarderNoteProf('${key}')" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-emerald-700">Mettre à jour</button>
+                </td>
+            </tr>`;
     });
+
+    if(nbEleves === 0) {
+        container.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Aucun élève trouvé pour cette sélection.</td></tr>`;
+    }
 }
 
 window.sauvegarderNoteProf = function(eleveKey) {
     const note = document.getElementById(`note-${eleveKey}`).value;
     const presence = document.getElementById(`pres-${eleveKey}`).value;
     const trimestre = document.getElementById('prof-select-trimestre')?.value || 'T1';
-    if(!note) return alert("Veuillez entrer une note.");
+    if(note === '') return alert("Veuillez entrer une note.");
     
     update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/cotations/${trimestre}`), { [utilisateurConnecte.cours]: note });
     update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/presences`), { [trimestre]: presence });
@@ -582,6 +667,13 @@ window.envoyerMessageParent = function() {
     if(!texte || !utilisateurConnecte) return;
     push(ref(db, 'ecole_rdc_complet/messages'), { tuteur: utilisateurConnecte.tuteur, codeParent: utilisateurConnecte.codeParent, texte, date: new Date().toLocaleString() });
     document.getElementById('parent-msg-input').value = '';
+}
+
+window.repondreMessageAdmin = function(msgKey) {
+    const texte = document.getElementById(`admin-rep-${msgKey}`).value.trim();
+    if(!texte) return alert("Veuillez saisir une réponse.");
+    push(ref(db, `ecole_rdc_complet/messages/${msgKey}/reponses`), { texte, date: new Date().toLocaleString() });
+    document.getElementById(`admin-rep-${msgKey}`).value = '';
 }
 
 function mettreAJourDashboardParent(data) {
@@ -602,9 +694,20 @@ function mettreAJourDashboardParent(data) {
     const chatBox = document.getElementById('parent-chat-box');
     chatBox.innerHTML = "";
     const messages = data.messages || {};
-    Object.values(messages).forEach(m => {
+    Object.keys(messages).forEach(mKey => {
+        const m = messages[mKey];
         if(m.codeParent === utilisateurConnecte.codeParent) {
-            chatBox.innerHTML += `<div class="p-2 rounded bg-blue-50 text-blue-900"><strong>Vous :</strong> ${m.texte} <div class="text-[10px] text-slate-400">${m.date}</div></div>`;
+            let reponsesHtml = '';
+            if(m.reponses) {
+                Object.values(m.reponses).forEach(rep => {
+                    reponsesHtml += `<div class="mt-1 p-2 rounded bg-white border text-xs text-slate-800"><strong>Administration :</strong> ${rep.texte} <div class="text-[10px] text-slate-400">${rep.date}</div></div>`;
+                });
+            }
+            chatBox.innerHTML += `
+                <div class="p-2.5 rounded bg-blue-50 text-blue-900 space-y-2">
+                    <div><strong>Vous :</strong> ${m.texte} <div class="text-[10px] text-slate-400">${m.date}</div></div>
+                    ${reponsesHtml}
+                </div>`;
         }
     });
 }
