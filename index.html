@@ -8,8 +8,9 @@
 <style>
     @media print {
         body * { visibility: hidden; }
-        #section-impression-admin, #section-impression-admin * { visibility: visible; }
+        #section-impression-admin, #section-impression-admin *, #section-impression-prof, #section-impression-prof * { visibility: visible; }
         #section-impression-admin { position: absolute; left: 0; top: 0; width: 100%; }
+        #section-impression-prof { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
         .no-print { display: none !important; }
     }
 </style>
@@ -38,12 +39,12 @@
                 <div onclick="changerVue('prof-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">👨‍🏫</div>
                     <h3 class="font-bold text-slate-800">Espace Professeur</h3>
-                    <p class="text-xs text-slate-500 mt-1">Cotations et présences</p>
+                    <p class="text-xs text-slate-500 mt-1">Cotations, présences & fiches</p>
                 </div>
                 <div onclick="changerVue('eleve-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">🎓</div>
                     <h3 class="font-bold text-slate-800">Espace Élève</h3>
-                    <p class="text-xs text-slate-500 mt-1">Consultation des notes</p>
+                    <p class="text-xs text-slate-500 mt-1">Consultation des notes par trimestre</p>
                 </div>
                 <div onclick="changerVue('parent-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">👪</div>
@@ -179,12 +180,14 @@
             </div>
             <div class="grid md:grid-cols-2 gap-6">
                 <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl space-y-4">
-                    <h3 class="font-bold text-blue-900">Cotations par trimestre (Gérées par les professeurs)</h3>
-                    <select id="select-trimestre" onchange="changerTrimestreEleve()" class="w-full border p-2 rounded bg-white text-sm">
-                        <option value="T1">Premier trimestre (T1)</option>
-                        <option value="T2">Deuxième trimestre (T2)</option>
-                        <option value="T3">Troisième trimestre (T3)</option>
-                    </select>
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-blue-900">Cotations par trimestre</h3>
+                        <select id="select-trimestre-eleve" onchange="changerTrimestreEleve()" class="border p-1.5 rounded bg-white text-sm">
+                            <option value="T1">Trimestre 1 (T1)</option>
+                            <option value="T2">Trimestre 2 (T2)</option>
+                            <option value="T3">Trimestre 3 (T3)</option>
+                        </select>
+                    </div>
                     <div id="contenu-cotations" class="space-y-2 text-sm bg-white p-4 rounded-lg border"></div>
                 </div>
                 <div class="bg-slate-50 border p-5 rounded-xl space-y-4">
@@ -201,11 +204,14 @@
                     <h2 class="text-xl font-bold text-slate-800">Espace Professeur</h2>
                     <p id="welcome-prof" class="text-sm text-slate-500"></p>
                 </div>
-                <button onclick="changerVue('accueil')" class="text-sm text-red-600 hover:underline">Déconnexion</button>
+                <div class="flex gap-2 items-center">
+                    <button onclick="imprimerFicheProf()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700 no-print">🖨️ Imprimer la fiche</button>
+                    <button onclick="changerVue('accueil')" class="text-sm text-red-600 hover:underline no-print">Déconnexion</button>
+                </div>
             </div>
             <div class="grid md:grid-cols-1 gap-6">
                 <div class="bg-emerald-50 border border-emerald-200 p-5 rounded-xl space-y-4">
-                    <div class="flex justify-between items-center">
+                    <div class="flex justify-between items-center no-print">
                         <h3 class="font-bold text-emerald-900">Fiche de cotations et présences (Visualisation et modification)</h3>
                         <div class="flex items-center gap-2">
                             <select id="prof-select-classe" onchange="changerClasseProf()" class="border p-1.5 rounded bg-white text-sm">
@@ -234,20 +240,28 @@
                             </select>
                         </div>
                     </div>
-                    <!-- Fiche de cotation visuelle type tableau modifiable -->
-                    <div class="overflow-x-auto bg-white rounded-lg border">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-600 uppercase text-xs">
-                                    <th class="p-2 border">Élève</th>
-                                    <th class="p-2 border">Classe</th>
-                                    <th class="p-2 border w-28">Note (/20)</th>
-                                    <th class="p-2 border w-36">Présence</th>
-                                    <th class="p-2 border text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="prof-liste-eleves-action"></tbody>
-                        </table>
+
+                    <!-- Fiche imprimable du professeur -->
+                    <div id="section-impression-prof" class="bg-white rounded-lg border p-4 space-y-4">
+                        <div class="hidden print:block mb-4 border-b pb-2">
+                            <h2 class="text-xl font-bold">République Démocratique du Congo</h2>
+                            <h3 class="text-md font-semibold text-slate-600">Fiche de Cotations officielle</h3>
+                            <p class="text-xs text-slate-500">Professeur : <span id="print-prof-nom"></span> | Cours : <span id="print-prof-cours"></span> | Trimestre : <span id="print-prof-trim"></span> | Classe : <span id="print-prof-classe">Toutes</span></p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600 uppercase text-xs">
+                                        <th class="p-2 border">Élève</th>
+                                        <th class="p-2 border">Classe</th>
+                                        <th class="p-2 border w-28">Note (/20)</th>
+                                        <th class="p-2 border w-36">Présence</th>
+                                        <th class="p-2 border text-center no-print">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="prof-liste-eleves-action"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -268,8 +282,15 @@
             </div>
             <div class="grid md:grid-cols-2 gap-6">
                 <div class="bg-slate-50 border p-5 rounded-xl space-y-3">
-                    <h3 class="font-bold text-slate-700">Enfants rattachés à votre compte</h3>
-                    <div id="parent-liste-enfants" class="space-y-2"></div>
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-slate-700">Enfants rattachés</h3>
+                        <select id="select-trimestre-parent" onchange="changerTrimestreParent()" class="border p-1.5 rounded bg-white text-xs">
+                            <option value="T1">Trimestre 1 (T1)</option>
+                            <option value="T2">Trimestre 2 (T2)</option>
+                            <option value="T3">Trimestre 3 (T3)</option>
+                        </select>
+                    </div>
+                    <div id="parent-liste-enfants" class="space-y-3"></div>
                 </div>
                 <div class="bg-white border p-5 rounded-xl space-y-4">
                     <h3 class="font-bold text-slate-700">Discussion directe avec l'administration</h3>
@@ -408,6 +429,8 @@ window.validerConnexion = function() {
             } else if(modeActif === 'prof') {
                 document.getElementById('vue-prof-dashboard').classList.remove('hidden');
                 document.getElementById('welcome-prof').innerText = `Prof. ${trouve.nom} - Cours : ${trouve.cours}`;
+                document.getElementById('print-prof-nom').innerText = trouve.nom;
+                document.getElementById('print-prof-cours').innerText = trouve.cours;
                 mettreAJourDashboardProf(data);
             } else if(modeActif === 'parent') {
                 document.getElementById('vue-parent-dashboard').classList.remove('hidden');
@@ -422,15 +445,18 @@ window.validerConnexion = function() {
 
 window.basculerAffichageCode = function(idElement) {
     const el = document.getElementById(idElement);
-    if(el.classList.contains('blur-sm')) {
-        el.classList.remove('blur-sm');
-    } else {
-        el.classList.add('blur-sm');
-    }
+    el.classList.toggle('blur-sm');
 }
 
 window.imprimerListeEleves = function() {
     document.getElementById('date-impression').innerText = new Date().toLocaleDateString();
+    window.print();
+}
+
+window.imprimerFicheProf = function() {
+    document.getElementById('print-prof-trim').innerText = document.getElementById('prof-select-trimestre').value;
+    const classeVal = document.getElementById('prof-select-classe').value;
+    document.getElementById('print-prof-classe').innerText = classeVal ? classeVal : "Toutes les classes";
     window.print();
 }
 
@@ -588,17 +614,17 @@ window.changerTrimestreEleve = function() {
 
 function mettreAJourDashboardEleve(data) {
     if(!utilisateurConnecte) return;
-    const trimestre = document.getElementById('select-trimestre').value;
+    const trimestre = document.getElementById('select-trimestre-eleve').value;
     let eleveActuel = null;
     Object.values(data.eleves || {}).forEach(el => { if(el.codeEleve === utilisateurConnecte.codeEleve) eleveActuel = el; });
     if(!eleveActuel) return;
 
     const cotationsDiv = document.getElementById('contenu-cotations');
     const notesTrimestre = eleveActuel.cotations?.[trimestre] || {};
-    cotationsDiv.innerHTML = Object.keys(notesTrimestre).length ? "" : "<p class='text-slate-400 text-xs'>Aucune cotation enregistrée pour le moment.</p>";
+    cotationsDiv.innerHTML = Object.keys(notesTrimestre).length ? "" : "<p class='text-slate-400 text-xs'>Aucune cotation enregistrée pour ce trimestre.</p>";
     Object.keys(notesTrimestre).forEach(cours => { cotationsDiv.innerHTML += `<div><strong>${cours} :</strong> ${notesTrimestre[cours]} / 20</div>`; });
 
-    document.getElementById('contenu-presences').innerHTML = `<div class="p-2 rounded bg-green-50 text-green-800">Statut : <strong>${eleveActuel.presences?.[trimestre] || 'Présent'}</strong></div>`;
+    document.getElementById('contenu-presences').innerHTML = `<div class="p-2 rounded bg-green-50 text-green-800">Statut (${trimestre}) : <strong>${eleveActuel.presences?.[trimestre] || 'Présent'}</strong></div>`;
 }
 
 window.changerClasseProf = function() {
@@ -640,7 +666,7 @@ function mettreAJourDashboardProf(data) {
                         <option value="Absent" ${presenceActuelle === 'Absent' ? 'selected' : ''}>Absent</option>
                     </select>
                 </td>
-                <td class="p-2 text-center">
+                <td class="p-2 text-center no-print">
                     <button onclick="sauvegarderNoteProf('${key}')" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-emerald-700">Mettre à jour</button>
                 </td>
             </tr>`;
@@ -676,8 +702,13 @@ window.repondreMessageAdmin = function(msgKey) {
     document.getElementById(`admin-rep-${msgKey}`).value = '';
 }
 
+window.changerTrimestreParent = function() {
+    onValue(dbRef, (snapshot) => { mettreAJourDashboardParent(snapshot.val()); }, { onlyOnce: true });
+}
+
 function mettreAJourDashboardParent(data) {
     if(!utilisateurConnecte) return;
+    const trimestre = document.getElementById('select-trimestre-parent')?.value || 'T1';
     const enfantsContainer = document.getElementById('parent-liste-enfants');
     enfantsContainer.innerHTML = "";
     let unEnfantBloque = false;
@@ -685,7 +716,25 @@ function mettreAJourDashboardParent(data) {
     Object.values(data.eleves || {}).forEach(el => {
         if(el.codeParent === utilisateurConnecte.codeParent) {
             if(el.frais === 'non_ordre') unEnfantBloque = true;
-            enfantsContainer.innerHTML += `<div class="border p-3 rounded bg-white text-sm"><strong>${el.nom} ${el.prenom}</strong> (${el.classe})<br>Frais : <span class="${el.frais === 'en_ordre' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}">${el.frais === 'en_ordre' ? 'En ordre' : 'Bloqué (Non payé)'}</span></div>`;
+            
+            const notesTrimestre = el.cotations?.[trimestre] || {};
+            let notesHtml = '';
+            if(Object.keys(notesTrimestre).length === 0) {
+                notesHtml = `<p class="text-xs text-slate-400 mt-1">Aucune note pour ce ${trimestre}.</p>`;
+            } else {
+                notesHtml = `<div class="mt-2 text-xs space-y-1 bg-slate-50 p-2 rounded"><strong>Notes (${trimestre}) :</strong>`;
+                Object.keys(notesTrimestre).forEach(cours => {
+                    notesHtml += `<div>${cours} : ${notesTrimestre[cours]}/20</div>`;
+                });
+                notesHtml += `</div>`;
+            }
+
+            enfantsContainer.innerHTML += `
+                <div class="border p-3 rounded bg-white text-sm space-y-1">
+                    <strong>${el.nom} ${el.prenom}</strong> (${el.classe})<br>
+                    Frais : <span class="${el.frais === 'en_ordre' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}">${el.frais === 'en_ordre' ? 'En ordre' : 'Bloqué (Non payé)'}</span>
+                    ${notesHtml}
+                </div>`;
         }
     });
 
