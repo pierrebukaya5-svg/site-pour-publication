@@ -533,8 +533,8 @@
 
     <!-- Pied de page -->
     <div class="bg-slate-50 border-t border-slate-100 px-6 py-3.5 flex justify-between items-center text-[11px] text-slate-400 no-print font-medium">
-        <span id="status-connexion" class="flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Connexion au serveur...
+        <span id="status-connexion" class="flex items-center">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
         </span>
         <span class="font-bold text-slate-500">Portail officiel - RDC</span>
     </div>
@@ -565,7 +565,7 @@ let adminSelectedParentCode = null;
 const statusEl = document.getElementById('status-connexion');
 
 onValue(dbRef, (snapshot) => {
-    statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connecté en temps réel';
+    statusEl.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>';
     cacheDonnees = snapshot.val() || { eleves: {}, profs: {}, messages: {} };
     
     actualiserInterfaceAdmin(cacheDonnees);
@@ -1313,145 +1313,141 @@ function mettreAJourDashboardProf(data) {
         tbody.innerHTML += `
             <tr class="hover:bg-slate-50 transition-colors">
                 <td class="p-2.5 font-semibold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
-                <td class="p-2.5 text-slate-500 font-medium">${el.classe}</td>
-                ${tdsInterros} ${tdDevoir} ${tdExamen}
-                <td class="p-2.5 text-center font-bold text-slate-900 bg-slate-50/60" id="total-${elKey}">${res.obtenu} / ${res.maximum}</td>
+                <td class="p-2.5 text-slate-600 font-medium">${el.classe}</td>
+                ${tdsInterros}
+                ${tdDevoir}
+                ${tdExamen}
+                <td class="p-2.5 text-center bg-slate-50 font-bold text-slate-900" id="total-${elKey}">${res.obtenu} / ${res.maximum}</td>
                 <td class="p-2.5 text-center no-print">
-                    <button onclick="enregistrerNotesEleve('${elKey}', '${coursProf}', '${trimestre}')" class="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1 rounded-lg text-xs font-semibold transition shadow-xs">Enregistrer</button>
+                    <button onclick="enregistrerNotesEleve('${elKey}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs">Enregistrer</button>
                 </td>
             </tr>`;
     });
 
     if(nbElevesAffiches === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="p-5 text-center text-slate-400 text-xs font-medium">Aucun élève trouvé pour cette classe</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-slate-400 font-medium">Aucun élève trouvé dans cette classe.</td></tr>`;
     }
 }
 
-window.enregistrerNotesEleve = function(eleveKey, cours, trimestre) {
-    const baremes = utilisateurConnecte?.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+window.enregistrerNotesEleve = function(elKey) {
+    if(!utilisateurConnecte) return;
+    const trimestre = document.getElementById('prof-select-trimestre').value;
+    const coursProf = utilisateurConnecte.cours;
+    const baremes = utilisateurConnecte.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
     const nbI = baremes.nbInterros || 4;
 
-    const cotationsMaj = {};
+    const cData = {};
     for(let i=1; i<=nbI; i++) {
-        const val = document.getElementById(`input-${eleveKey}-int${i}`).value;
-        if(val !== '') cotationsMaj[`interro${i}`] = parseFloat(val);
+        const val = document.getElementById(`input-${elKey}-int${i}`).value;
+        if(val !== '') cData[`interro${i}`] = parseFloat(val);
     }
 
     if(baremes.actifDevoir !== 'non') {
-        const valDev = document.getElementById(`input-${eleveKey}-dev`).value;
-        if(valDev !== '') cotationsMaj.devoir = parseFloat(valDev);
+        const valDev = document.getElementById(`input-${elKey}-dev`).value;
+        if(valDev !== '') cData.devoir = parseFloat(valDev);
     }
 
     if(baremes.actifExamen !== 'non') {
-        const valEx = document.getElementById(`input-${eleveKey}-ex`).value;
-        if(valEx !== '') cotationsMaj.examen = parseFloat(valEx);
+        const valEx = document.getElementById(`input-${elKey}-ex`).value;
+        if(valEx !== '') cData.examen = parseFloat(valEx);
     }
 
-    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/cotations/${trimestre}/${cours}`), cotationsMaj)
+    update(ref(db, `ecole_rdc_complet/eleves/${elKey}/cotations/${trimestre}/${coursProf}`), cData)
         .then(() => {
             alert("Notes enregistrées avec succès !");
         })
-        .catch((err) => {
-            alert("Erreur lors de l'enregistrement : " + err.message);
-        });
-}
-
-window.changerTrimestreParent = function() {
-    if(cacheDonnees) mettreAJourDashboardParent(cacheDonnees);
+        .catch(err => alert("Erreur : " + err.message));
 }
 
 function mettreAJourDashboardParent(data) {
     if(!utilisateurConnecte) return;
     const trimestre = document.getElementById('select-trimestre-parent').value;
     const coursFiltre = document.getElementById('select-cours-parent').value;
+    const container = document.getElementById('parent-liste-enfants');
+    container.innerHTML = "";
 
-    const codeParent = utilisateurConnecte.codeParent;
-    const elevesRattaches = [];
+    const eleves = data.eleves || {};
+    const profs = data.profs || {};
+    let unEnfantNonEnOrdre = false;
+    let nbEnfantsTrouves = 0;
 
-    Object.values(data.eleves || {}).forEach(el => {
-        if(el.codeParent === codeParent) elevesRattaches.push(el);
-    });
+    Object.values(eleves).forEach(el => {
+        if(el.codeParent === utilisateurConnecte.codeParent) {
+            nbEnfantsTrouves++;
+            if(el.frais === 'non_ordre') unEnfantNonEnOrdre = true;
 
-    let fraisNonRegle = false;
-    elevesRattaches.forEach(el => {
-        if(el.frais === 'non_ordre') fraisNonRegle = true;
+            let cotationsHtml = '';
+            let totalObtenuEnfant = 0;
+            let totalMaxEnfant = 0;
+
+            Object.values(profs).forEach(p => {
+                if(coursFiltre && p.cours !== coursFiltre) return;
+                const cData = el.cotations?.[trimestre]?.[p.cours] || {};
+                const res = calculerTotauxEtPourcentageCours(cData, p.baremes);
+
+                totalObtenuEnfant += res.obtenu;
+                totalMaxEnfant += res.maximum;
+
+                cotationsHtml += `
+                    <div class="bg-white p-2.5 rounded-lg border border-slate-200 text-xs flex justify-between items-center">
+                        <span class="font-semibold text-slate-800">${p.cours}</span>
+                        <span class="font-bold text-slate-900">${res.obtenu} / ${res.maximum} (${res.pourcentage}%)</span>
+                    </div>`;
+            });
+
+            container.innerHTML += `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <div>
+                            <div class="font-bold text-slate-900 text-sm">${el.nom} ${el.postnom || ''} ${el.prenom}</div>
+                            <div class="text-[11px] text-slate-500 font-medium">Classe : ${el.classe} | Code : ${el.codeEleve}</div>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${el.frais === 'en_ordre' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}">${el.frais === 'en_ordre' ? 'Frais en ordre' : 'Frais non payés'}</span>
+                    </div>
+                    <div class="space-y-1.5">
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Notes du ${trimestre} (Total : ${totalObtenuEnfant} / ${totalMaxEnfant} pts)</div>
+                        <div class="space-y-1 max-h-48 overflow-y-auto">${cotationsHtml || '<div class="text-slate-400 text-xs">Aucune note.</div>'}</div>
+                    </div>
+                </div>`;
+        }
     });
 
     const alerteFrais = document.getElementById('alerte-frais-parent');
-    if(fraisNonRegle) {
+    if(unEnfantNonEnOrdre) {
         alerteFrais.classList.remove('hidden');
     } else {
         alerteFrais.classList.add('hidden');
     }
 
-    const container = document.getElementById('parent-liste-enfants');
-    container.innerHTML = "";
-
-    if(elevesRattaches.length === 0) {
-        container.innerHTML = `<div class="text-slate-400 text-xs py-4 text-center font-medium">Aucun enfant rattaché à ce code parent.</div>`;
-        return;
+    if(nbEnfantsTrouves === 0) {
+        container.innerHTML = `<div class="text-slate-400 text-xs py-4 text-center">Aucun élève rattaché à ce compte parent.</div>`;
     }
 
-    const profs = data.profs || {};
-
-    elevesRattaches.forEach(el => {
-        let cotationsHtml = '';
-        let totObtenu = 0;
-        let totMax = 0;
-
-        Object.values(profs).forEach(p => {
-            if(coursFiltre && p.cours !== coursFiltre) return;
-            const cData = el.cotations?.[trimestre]?.[p.cours] || {};
-            const res = calculerTotauxEtPourcentageCours(cData, p.baremes);
-            totObtenu += res.obtenu;
-            totMax += res.maximum;
-
-            cotationsHtml += `
-                <div class="flex justify-between items-center py-1.5 border-b border-slate-100 text-xs">
-                    <span class="font-semibold text-slate-700">${p.cours}</span>
-                    <span class="font-bold text-slate-900">${res.obtenu} / ${res.maximum} (${res.pourcentage}%)</span>
-                </div>`;
-        });
-
-        const presenceEleve = el.presences?.[trimestre] || 'Présent';
-
-        container.innerHTML += `
-            <div class="bg-white border border-slate-200 p-4 rounded-xl space-y-3 shadow-xs">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h4 class="font-bold text-slate-900 text-xs">${el.nom} ${el.postnom || ''} ${el.prenom}</h4>
-                        <p class="text-[11px] text-slate-500 font-medium">Classe : ${el.classe} | Présence : <span class="font-bold ${presenceEleve === 'Absent' ? 'text-red-600' : presenceEleve === 'Retard' ? 'text-amber-600' : 'text-emerald-600'}">${presenceEleve}</span></p>
-                    </div>
-                    <span class="px-2.5 py-1 bg-slate-100 text-slate-800 rounded-lg text-xs font-bold">${totObtenu} / ${totMax} pts</span>
-                </div>
-                <div class="space-y-1 pt-1">
-                    ${cotationsHtml || '<p class="text-[11px] text-slate-400 font-medium">Aucune cotation pour ce filtre.</p>'}
-                </div>
-            </div>`;
-    });
-
-    afficherMessagesWhatsAppParent(data, codeParent);
+    afficherMessagesParentWhatsApp(data);
 }
 
-function afficherMessagesWhatsAppParent(data, codeParent) {
+window.changerTrimestreParent = function() {
+    if(cacheDonnees) mettreAJourDashboardParent(cacheDonnees);
+}
+
+function afficherMessagesParentWhatsApp(data) {
     const chatBox = document.getElementById('parent-chat-box');
-    if(!chatBox) return;
+    if(!chatBox || !utilisateurConnecte) return;
     chatBox.innerHTML = "";
 
     const messages = data.messages || {};
-    let trouve = false;
+    let messagesTrouves = false;
 
-    Object.keys(messages).forEach(k => {
-        const m = messages[k];
-        if(m.codeParent === codeParent) {
-            trouve = true;
-            if(m.texte && !m.texte.includes("[Message initié")) {
+    Object.values(messages).forEach(m => {
+        if(m.codeParent === utilisateurConnecte.codeParent) {
+            messagesTrouves = true;
+            if(m.texte && !m.texte.includes("[Message initié par l'administration]")) {
                 chatBox.innerHTML += `
                     <div class="flex flex-col items-end mb-2">
-                        <div class="bg-slate-900 text-white rounded-xl rounded-tr-sm p-2.5 max-w-[85%] text-xs space-y-0.5 shadow-xs">
-                            <div class="font-bold text-[8px] text-slate-400 uppercase">Moi (Parent)</div>
-                            <div>${m.texte}</div>
-                            <div class="text-[7px] text-slate-400 text-right">${m.date}</div>
+                        <div class="bg-blue-600 text-white rounded-xl rounded-tr-sm p-2.5 max-w-[85%] text-xs space-y-0.5 shadow-xs">
+                            <div class="font-bold text-[9px] text-blue-200 uppercase tracking-wide">Moi (${m.tuteur})</div>
+                            <div class="font-medium">${m.texte}</div>
+                            <div class="text-[8px] text-blue-200 text-right font-semibold">${m.date}</div>
                         </div>
                     </div>`;
             }
@@ -1460,10 +1456,10 @@ function afficherMessagesWhatsAppParent(data, codeParent) {
                 Object.values(m.reponses).forEach(rep => {
                     chatBox.innerHTML += `
                         <div class="flex flex-col items-start mb-2">
-                            <div class="bg-slate-100 border border-slate-200/60 rounded-xl rounded-tl-sm p-2.5 max-w-[85%] text-xs space-y-0.5">
-                                <div class="font-bold text-[8px] text-slate-500 uppercase">Administration</div>
+                            <div class="bg-slate-100 border border-slate-200 rounded-xl rounded-tl-sm p-2.5 max-w-[85%] text-xs space-y-0.5">
+                                <div class="font-bold text-[9px] text-slate-500 uppercase tracking-wide">Administration</div>
                                 <div class="text-slate-800 font-medium">${rep.texte}</div>
-                                <div class="text-[7px] text-slate-400 text-right">${rep.date}</div>
+                                <div class="text-[8px] text-slate-400 text-right font-semibold">${rep.date}</div>
                             </div>
                         </div>`;
                 });
@@ -1471,8 +1467,8 @@ function afficherMessagesWhatsAppParent(data, codeParent) {
         }
     });
 
-    if(!trouve) {
-        chatBox.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto font-medium">Posez vos questions à l'administration ici.</div>`;
+    if(!messagesTrouves) {
+        chatBox.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto font-medium">Posez vos questions directement à l'administration ici.</div>`;
     }
     chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -1483,30 +1479,28 @@ window.envoyerMessageParent = function() {
     const texte = input.value.trim();
     if(!texte) return;
 
-    const codeParent = utilisateurConnecte.codeParent;
-    const nomTuteur = utilisateurConnecte.tuteur;
-    const dateStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
     const messages = cacheDonnees?.messages || {};
     let targetMsgKey = null;
 
     Object.keys(messages).forEach(k => {
-        if(messages[k].codeParent === codeParent) {
+        if(messages[k].codeParent === utilisateurConnecte.codeParent) {
             targetMsgKey = k;
         }
     });
 
+    const dateStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
     if(targetMsgKey) {
         push(ref(db, `ecole_rdc_complet/messages/${targetMsgKey}/reponses`), {
-            texte: `[Question Parent] ${texte}`,
+            texte: texte,
             date: dateStr
         }).then(() => {
             input.value = '';
         }).catch(err => alert("Erreur : " + err.message));
     } else {
         push(ref(db, 'ecole_rdc_complet/messages'), {
-            codeParent: codeParent,
-            tuteur: nomTuteur,
+            codeParent: utilisateurConnecte.codeParent,
+            tuteur: utilisateurConnecte.tuteur,
             texte: texte,
             date: dateStr
         }).then(() => {
