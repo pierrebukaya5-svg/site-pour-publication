@@ -168,9 +168,31 @@
                 <div id="liste-admin-profs" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
             </div>
 
+            <!-- SECTION MESSAGERIE ADMIN STYLE WHATSAPP -->
             <div id="admin-sec-messages" class="space-y-4 hidden">
-                <h3 class="font-bold text-slate-700">Boîte de dialogue avec les tuteurs</h3>
-                <div id="admin-box-messages" class="space-y-3 max-h-96 overflow-y-auto p-2 border rounded-xl bg-slate-50"></div>
+                <h3 class="font-bold text-slate-700">Messagerie style WhatsApp (Administration & Tuteurs)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border rounded-xl bg-white overflow-hidden shadow-sm" style="min-height: 500px;">
+                    <!-- Liste des tuteurs (contacts) -->
+                    <div class="border-r bg-slate-50 flex flex-col">
+                        <div class="p-3 bg-slate-100 border-b font-semibold text-xs text-slate-600 uppercase">Tuteurs / Conversations</div>
+                        <div id="admin-whatsapp-contacts" class="overflow-y-auto flex-1 divide-y">
+                            <!-- Les contacts seront injectés ici -->
+                        </div>
+                    </div>
+                    <!-- Fenêtre de discussion active -->
+                    <div class="md:col-span-2 flex flex-col justify-between bg-slate-50">
+                        <div id="admin-whatsapp-header" class="p-3 bg-white border-b font-semibold text-sm text-slate-800 flex items-center justify-between">
+                            <span>Sélectionnez un tuteur pour lire et répondre</span>
+                        </div>
+                        <div id="admin-whatsapp-chat" class="p-4 overflow-y-auto flex-1 space-y-3 bg-slate-100">
+                            <div class="text-center text-slate-400 text-xs my-auto">Aucune conversation sélectionnée</div>
+                        </div>
+                        <div class="p-3 bg-white border-t flex gap-2 items-center">
+                            <input id="admin-whatsapp-input" placeholder="Écrire un message en tant qu'admin..." class="border p-2.5 rounded-lg flex-1 text-sm bg-slate-50 focus:bg-white transition" disabled>
+                            <button onclick="envoyerMessageAdminWhatsApp()" id="admin-whatsapp-send-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shrink-0 opacity-50 cursor-not-allowed" disabled>Envoyer</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="admin-sec-calendrier" class="space-y-4 hidden">
@@ -461,12 +483,13 @@
                     </div>
                     <div id="parent-liste-enfants" class="space-y-3"></div>
                 </div>
-                <div class="bg-white border p-3 sm:p-5 rounded-xl space-y-4">
-                    <h3 class="font-bold text-slate-700 text-sm sm:text-base">Discussion directe avec l'administration</h3>
-                    <div id="parent-chat-box" class="h-48 overflow-y-auto border p-3 rounded-lg bg-slate-50 space-y-2 text-sm"></div>
+                <!-- SECTION MESSAGERIE PARENT STYLE WHATSAPP -->
+                <div class="bg-white border p-3 sm:p-5 rounded-xl space-y-4 flex flex-col justify-between" style="min-height: 400px;">
+                    <h3 class="font-bold text-slate-700 text-sm sm:text-base border-b pb-2">Discussion directe avec l'administration</h3>
+                    <div id="parent-chat-box" class="h-64 overflow-y-auto border p-3 rounded-lg bg-slate-100 space-y-3 flex-1 my-2"></div>
                     <div class="flex gap-2">
-                        <input id="parent-msg-input" placeholder="Écrire un message..." class="border p-2 rounded flex-1 text-sm">
-                        <button onclick="envoyerMessageParent()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm shrink-0">Envoyer</button>
+                        <input id="parent-msg-input" placeholder="Écrire un message..." class="border p-2.5 rounded-lg flex-1 text-sm bg-slate-50 focus:bg-white transition">
+                        <button onclick="envoyerMessageParent()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shrink-0">Envoyer</button>
                     </div>
                 </div>
             </div>
@@ -504,6 +527,7 @@ const dbRef = ref(db, 'ecole_rdc_complet');
 let modeActif = '';
 let utilisateurConnecte = null;
 let cacheDonnees = null;
+let adminSelectedParentCode = null; // Stocke le codeParent sélectionné par l'admin dans la messagerie WhatsApp
 const statusEl = document.getElementById('status-connexion');
 
 onValue(dbRef, (snapshot) => {
@@ -579,6 +603,9 @@ window.changerOngletAdmin = function(onglet) {
     if(onglet === 'calendrier' && cacheDonnees) {
         chargerCalendrierAdmin(cacheDonnees);
     }
+    if(onglet === 'messages' && cacheDonnees) {
+        initialiserWhatsAppAdmin(cacheDonnees);
+    }
 }
 
 window.validerConnexion = function() {
@@ -588,7 +615,10 @@ window.validerConnexion = function() {
     if(modeActif === 'admin') {
         if(code === 'PR1999') {
             changerVue('admin-dashboard', true);
-            if(cacheDonnees) chargerCalendrierAdmin(cacheDonnees);
+            if(cacheDonnees) {
+                chargerCalendrierAdmin(cacheDonnees);
+                initialiserWhatsAppAdmin(cacheDonnees);
+            }
         } else {
             document.getElementById('erreur-connexion').classList.remove('hidden');
         }
@@ -849,32 +879,159 @@ function actualiserInterfaceAdmin(data) {
             </div>`;
     });
 
-    const messages = data.messages || {};
-    const boxMsgs = document.getElementById('admin-box-messages');
-    boxMsgs.innerHTML = "";
-    if(Object.keys(messages).length === 0) {
-        boxMsgs.innerHTML = `<p class="text-slate-400 text-xs p-2">Aucun message de tuteur pour le moment.</p>`;
-    }
-    Object.keys(messages).forEach(mKey => {
-        const m = messages[mKey];
-        let reponsesHtml = '';
-        if(m.reponses) {
-            Object.values(m.reponses).forEach(rep => {
-                reponsesHtml += `<div class="ml-4 mt-2 p-2 rounded bg-blue-50 border-l-2 border-blue-600 text-xs"><strong>Administration :</strong> ${rep.texte} <div class="text-[10px] text-slate-400">${rep.date}</div></div>`;
-            });
+    initialiserWhatsAppAdmin(data);
+    chargerCalendrierAdmin(data);
+}
+
+// LOGIQUE MESSAGERIE WHATSAPP POUR L'ADMINISTRATION
+function initialiserWhatsAppAdmin(data) {
+    const contactsContainer = document.getElementById('admin-whatsapp-contacts');
+    if(!contactsContainer) return;
+
+    // Récupérer tous les tuteurs uniques à partir des élèves enregistrés
+    const tuteursMap = {}; // codeParent -> { tuteur, nomEnfant, classe }
+    Object.values(data.eleves || {}).forEach(el => {
+        if(el.codeParent && el.tuteur) {
+            if(!tuteursMap[el.codeParent]) {
+                tuteursMap[el.codeParent] = {
+                    tuteur: el.tuteur,
+                    codeParent: el.codeParent,
+                    enfants: []
+                };
+            }
+            tuteursMap[el.codeParent].enfants.push(`${el.nom} ${el.prenom} (${el.classe})`);
         }
-        boxMsgs.innerHTML += `
-            <div class="border p-3 rounded bg-white text-sm space-y-2">
-                <div><strong>Tuteur (${m.tuteur}) :</strong> ${m.texte} <div class="text-xs text-slate-400">${m.date}</div></div>
-                ${reponsesHtml}
-                <div class="mt-2 flex gap-2">
-                    <input id="admin-rep-${mKey}" placeholder="Répondre..." class="border p-1.5 rounded flex-1 text-xs">
-                    <button onclick="repondreMessageAdmin('${mKey}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium shrink-0">Répondre</button>
-                </div>
+    });
+
+    contactsContainer.innerHTML = "";
+    const tuteursList = Object.values(tuteursMap);
+
+    if(tuteursList.length === 0) {
+        contactsContainer.innerHTML = `<div class="p-4 text-slate-400 text-xs text-center">Aucun tuteur enregistré</div>`;
+        return;
+    }
+
+    tuteursList.forEach(t => {
+        const isSelected = adminSelectedParentCode === t.codeParent;
+        contactsContainer.innerHTML += `
+            <div onclick="selectionnerTuteurWhatsApp('${t.codeParent}', '${t.tuteur.replace(/'/g, "\\'")}')" class="p-3 cursor-pointer transition hover:bg-slate-100 ${isSelected ? 'bg-blue-50 border-l-4 border-blue-600' : ''}">
+                <div class="font-bold text-xs sm:text-sm text-slate-800">${t.tuteur}</div>
+                <div class="text-[10px] text-slate-500 truncate">Élève(s) : ${t.enfants.join(', ')}</div>
+                <div class="text-[10px] font-mono text-blue-600">Code : ${t.codeParent}</div>
             </div>`;
     });
 
-    chargerCalendrierAdmin(data);
+    if(adminSelectedParentCode) {
+        afficherMessagesWhatsAppAdmin(data, adminSelectedParentCode);
+    }
+}
+
+window.selectionnerTuteurWhatsApp = function(codeParent, nomTuteur) {
+    adminSelectedParentCode = codeParent;
+    document.getElementById('admin-whatsapp-header').innerHTML = `<span>Discussion avec : <strong class="text-blue-600">${nomTuteur}</strong> (${codeParent})</span>`;
+    document.getElementById('admin-whatsapp-input').removeAttribute('disabled');
+    const btnSend = document.getElementById('admin-whatsapp-send-btn');
+    btnSend.removeAttribute('disabled');
+    btnSend.classList.remove('opacity-50', 'cursor-not-allowed');
+
+    if(cacheDonnees) {
+        initialiserWhatsAppAdmin(cacheDonnees);
+    }
+}
+
+function afficherMessagesWhatsAppAdmin(data, codeParent) {
+    const chatContainer = document.getElementById('admin-whatsapp-chat');
+    if(!chatContainer) return;
+    chatContainer.innerHTML = "";
+
+    const messages = data.messages || {};
+    let messagesTrouves = false;
+
+    // Trier les messages par ordre chronologique si nécessaire (les clés Firebase push le sont déjà globalement)
+    Object.keys(messages).forEach(mKey => {
+        const m = messages[mKey];
+        if(m.codeParent === codeParent) {
+            messagesTrouves = true;
+            // Message du parent (bulle alignée à gauche, style WhatsApp)
+            chatContainer.innerHTML += `
+                <div class="flex flex-col items-start mb-2">
+                    <div class="bg-white border rounded-2xl rounded-tl-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
+                        <div class="font-bold text-[10px] text-blue-700 mb-0.5">Tuteur (${m.tuteur})</div>
+                        <div>${m.texte}</div>
+                        <div class="text-[9px] text-slate-400 text-right mt-1">${m.date}</div>
+                    </div>
+                </div>`;
+
+            // Réponses de l'administration (bulles alignées à droite, style WhatsApp vert/bleu)
+            if(m.reponses) {
+                Object.values(m.reponses).forEach(rep => {
+                    chatContainer.innerHTML += `
+                        <div class="flex flex-col items-end mb-2">
+                            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl rounded-tr-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
+                                <div class="font-bold text-[10px] text-emerald-800 mb-0.5">Administration</div>
+                                <div>${rep.texte}</div>
+                                <div class="text-[9px] text-slate-400 text-right mt-1">${rep.date}</div>
+                            </div>
+                        </div>`;
+                });
+            }
+        }
+    });
+
+    if(!messagesTrouves) {
+        chatContainer.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto">Aucun message échangé avec ce tuteur pour le moment. Envoyez un message ci-dessous pour démarrer la conversation.</div>`;
+    }
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+window.envoyerMessageAdminWhatsApp = function() {
+    if(!adminSelectedParentCode) return;
+    const input = document.getElementById('admin-whatsapp-input');
+    const texte = input.value.trim();
+    if(!texte) return;
+
+    // Rechercher ou créer un thread de message pour ce parent
+    const messages = cacheDonnees?.messages || {};
+    let targetMsgKey = null;
+
+    Object.keys(messages).forEach(k => {
+        if(messages[k].codeParent === adminSelectedParentCode) {
+            targetMsgKey = k;
+        }
+    });
+
+    const dateStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+    if(targetMsgKey) {
+        // Ajouter la réponse dans le thread existant
+        push(ref(db, `ecole_rdc_complet/messages/${targetMsgKey}/reponses`), {
+            texte: texte,
+            date: dateStr
+        }).then(() => {
+            input.value = '';
+        }).catch(err => alert("Erreur : " + err.message));
+    } else {
+        // S'il n'y a pas encore de message du parent, créer un message initial initié par l'admin rattaché au parent
+        let nomTuteurRattache = "Tuteur";
+        Object.values(cacheDonnees.eleves || {}).forEach(el => {
+            if(el.codeParent === adminSelectedParentCode) nomTuteurRattache = el.tuteur;
+        });
+
+        push(ref(db, 'ecole_rdc_complet/messages'), {
+            codeParent: adminSelectedParentCode,
+            tuteur: nomTuteurRattache,
+            texte: "[Message initié par l'administration]",
+            date: dateStr,
+            reponses: {
+                0: {
+                    texte: texte,
+                    date: dateStr
+                }
+            }
+        }).then(() => {
+            input.value = '';
+        }).catch(err => alert("Erreur : " + err.message));
+    }
 }
 
 function chargerCalendrierAdmin(data) {
@@ -1244,6 +1401,7 @@ function mettreAJourDashboardParent(data) {
         alerteFrais.classList.add('hidden');
     }
 
+    // Affichage messagerie style WhatsApp pour le parent
     const chatBox = document.getElementById('parent-chat-box');
     chatBox.innerHTML = "";
     const messages = data.messages || {};
@@ -1253,23 +1411,39 @@ function mettreAJourDashboardParent(data) {
         const m = messages[mKey];
         if(m.codeParent === codeParent) {
             messagesTrouves = true;
-            let reponsesHtml = '';
+            
+            // Message du parent (bulle alignée à droite pour le parent)
+            if(m.texte && m.texte !== "[Message initié par l'administration]") {
+                chatBox.innerHTML += `
+                    <div class="flex flex-col items-end mb-2">
+                        <div class="bg-blue-600 text-white rounded-2xl rounded-tr-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
+                            <div class="font-bold text-[10px] text-blue-200 mb-0.5">Vous</div>
+                            <div>${m.texte}</div>
+                            <div class="text-[9px] text-blue-200 text-right mt-1">${m.date}</div>
+                        </div>
+                    </div>`;
+            }
+
+            // Réponses de l'administration (bulles alignées à gauche)
             if(m.reponses) {
                 Object.values(m.reponses).forEach(rep => {
-                    reponsesHtml += `<div class="ml-4 mt-2 p-2 rounded bg-blue-50 border-l-2 border-blue-600 text-xs"><strong>Administration :</strong> ${rep.texte} <div class="text-[10px] text-slate-400">${rep.date}</div></div>`;
+                    chatBox.innerHTML += `
+                        <div class="flex flex-col items-start mb-2">
+                            <div class="bg-white border rounded-2xl rounded-tl-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
+                                <div class="font-bold text-[10px] text-emerald-700 mb-0.5">Administration</div>
+                                <div>${rep.texte}</div>
+                                <div class="text-[9px] text-slate-400 text-right mt-1">${rep.date}</div>
+                            </div>
+                        </div>`;
                 });
             }
-            chatBox.innerHTML += `
-                <div class="border p-2.5 rounded bg-white space-y-1">
-                    <div class="text-xs"><strong>Vous :</strong> ${m.texte} <span class="text-[10px] text-slate-400">(${m.date})</span></div>
-                    ${reponsesHtml}
-                </div>`;
         }
     });
 
     if(!messagesTrouves) {
-        chatBox.innerHTML = `<p class="text-slate-400 text-xs">Aucun message envoyé pour l'instant. Écrivez ci-dessous pour contacter l'administration.</p>`;
+        chatBox.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto">Aucun message échangé pour l'instant. Écrivez ci-dessous pour contacter l'administration.</div>`;
     }
+    chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 window.envoyerMessageParent = function() {
@@ -1281,21 +1455,6 @@ window.envoyerMessageParent = function() {
     push(ref(db, 'ecole_rdc_complet/messages'), {
         codeParent: utilisateurConnecte.codeParent,
         tuteur: utilisateurConnecte.tuteur,
-        texte: texte,
-        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    }).then(() => {
-        input.value = '';
-    }).catch(err => {
-        alert("Erreur : " + err.message);
-    });
-}
-
-window.repondreMessageAdmin = function(mKey) {
-    const input = document.getElementById(`admin-rep-${mKey}`);
-    const texte = input.value.trim();
-    if(!texte) return;
-
-    push(ref(db, `ecole_rdc_complet/messages/${mKey}/reponses`), {
         texte: texte,
         date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     }).then(() => {
