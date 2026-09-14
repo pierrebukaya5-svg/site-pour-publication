@@ -1024,8 +1024,11 @@ window.annulerModificationEleve = function() {
 }
 
 function viderFormulaireEleve() {
-    ['el-nom', 'el-postnom', 'el-prenom', 'el-classe', 'el-adresse', 'el-datenais', 'el-tuteur'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('el-frais').value = 'en_ordre';
+    ['el-nom', 'el-postnom', 'el-prenom', 'el-classe', 'el-adresse', 'el-datenais', 'el-tuteur'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.value = '';
+    });
+    if(document.getElementById('el-frais')) document.getElementById('el-frais').value = 'en_ordre';
 }
 
 window.supprimerEleve = function(key) {
@@ -1037,162 +1040,657 @@ window.supprimerEleve = function(key) {
 window.enregistrerProfesseur = function() {
     const nom = document.getElementById('prf-nom').value.trim();
     const cours = document.getElementById('prf-cours').value.trim();
-    if(!nom || !cours) return;
-    push(ref(db, 'ecole_rdc_complet/profs'), { 
-        nom, 
-        cours, 
-        codeProf: `PRF-${Math.floor(1000 + Math.random() * 9000)}`,
+    if(!nom || !cours) return alert("Veuillez remplir tous les champs du professeur.");
+
+    const codeProf = `PRF-${Math.floor(1000 + Math.random() * 9000)}`;
+    push(ref(db, 'ecole_rdc_complet/profs'), {
+        nom, cours, codeProf,
         baremes: { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 }
     });
     document.getElementById('prf-nom').value = '';
     document.getElementById('prf-cours').value = '';
 }
 
-function actualiserInterfaceAdmin(data) {
-    const eleves = data.eleves || {};
-    const tbody = document.getElementById('liste-admin-eleves');
-    tbody.innerHTML = "";
-
-    if(Object.keys(eleves).length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 font-medium">Aucun élève enregistré</td></tr>`;
+window.supprimerProfesseur = function(key) {
+    if(confirm("Voulez-vous vraiment supprimer ce professeur ?")) {
+        remove(ref(db, `ecole_rdc_complet/profs/${key}`));
     }
-
-    Object.keys(eleves).reverse().forEach((key, index) => {
-        const el = eleves[key];
-        const idCode = `code-sec-${index}`;
-        const elJson = encodeURIComponent(JSON.stringify(el));
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-100 transition-colors";
-        tr.innerHTML = `
-            <td class="p-3 font-semibold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
-            <td class="p-3 text-slate-700 font-medium">${el.classe}</td>
-            <td class="p-3 text-xs text-slate-700 font-medium"><strong>Tuteur :</strong> ${el.tuteur}<br><span class="text-slate-500">Adr. : ${el.adresse || 'Non renseignée'}</span></td>
-            <td class="p-3 font-mono text-xs cursor-pointer" title="Cliquer pour voir/masquer" onclick="basculerAffichageCode('${idCode}')">
-                <span id="${idCode}" class="blur-sm bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded text-slate-800 select-none transition">Élève : ${el.codeEleve} | Parent : ${el.codeParent}</span>
-            </td>
-            <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${el.frais === 'en_ordre' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-red-100 text-red-800 border border-red-200'}">${el.frais === 'en_ordre' ? 'En ordre' : 'Non payé'}</span></td>
-            <td class="p-3 text-center space-x-1.5 no-print">
-                <button onclick="preparerModificationEleve('${key}', '${elJson}')" class="text-[11px] bg-slate-200 hover:bg-slate-300 text-slate-800 px-2.5 py-1 rounded-lg font-semibold transition">Modifier</button>
-                <button onclick="supprimerEleve('${key}')" class="text-red-600 hover:text-red-800 font-bold px-1.5 py-1 rounded-lg text-xs transition" title="Supprimer">✕</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    const profs = data.profs || {};
-    const profsContainer = document.getElementById('liste-admin-profs');
-    profsContainer.innerHTML = "";
-    Object.values(profs).forEach((p, idx) => {
-        const idProfCode = `prof-code-${idx}`;
-        profsContainer.innerHTML += `
-            <div class="border border-slate-200 p-3.5 rounded-2xl bg-white shadow-xs space-y-1.5 text-xs">
-                <div class="font-bold text-slate-900">Prof. ${p.nom}</div>
-                <div class="text-slate-600 font-medium">Cours : <span class="font-bold text-slate-800">${p.cours}</span></div>
-                <div>
-                    <span class="font-mono text-[11px] cursor-pointer blur-sm bg-slate-200 hover:bg-slate-300 px-2 py-0.5 rounded select-none inline-block text-slate-800 transition" id="${idProfCode}" onclick="basculerAffichageCode('${idProfCode}')">Code : ${p.codeProf}</span>
-                </div>
-            </div>`;
-    });
-
-    initialiserWhatsAppAdmin(data);
-    chargerCalendrierAdmin(data);
 }
 
-// LOGIQUE MESSAGERIE WHATSAPP POUR L'ADMINISTRATION
-function initialiserWhatsAppAdmin(data) {
-    const contactsContainer = document.getElementById('admin-whatsapp-contacts');
-    if(!contactsContainer) return;
-
-    const tuteursMap = {};
-    Object.values(data.eleves || {}).forEach(el => {
-        if(el.codeParent && el.tuteur) {
-            if(!tuteursMap[el.codeParent]) {
-                tuteursMap[el.codeParent] = {
-                    tuteur: el.tuteur,
-                    codeParent: el.codeParent,
-                    enfants: []
-                };
-            }
-            tuteursMap[el.codeParent].enfants.push(`${el.nom} ${el.prenom} (${el.classe})`);
+function actualiserInterfaceAdmin(data) {
+    // 1. Liste des élèves
+    const listeElDiv = document.getElementById('liste-admin-eleves');
+    if(listeElDiv) {
+        listeElDiv.innerHTML = '';
+        const eleves = data.eleves || {};
+        if(Object.keys(eleves).length === 0) {
+            listeElDiv.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Aucun élève enregistré.</td></tr>`;
+        } else {
+            Object.keys(eleves).forEach(key => {
+                const el = eleves[key];
+                const elStr = encodeURIComponent(JSON.stringify(el));
+                const badgeFrais = el.frais === 'non_ordre' ? '<span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-semibold">Non en ordre</span>' : '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-semibold">En ordre</span>';
+                
+                listeElDiv.innerHTML += `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-3 font-semibold text-slate-900">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
+                        <td class="p-3 text-slate-600">${el.classe}</td>
+                        <td class="p-3 text-slate-600">${el.tuteur} <br><span class="text-[10px] text-slate-400">${el.adresse || ''}</span></td>
+                        <td class="p-3 font-mono text-[11px]">
+                            Élève: <span id="code-el-${key}" class="blur-sm select-none cursor-pointer" onclick="basculerAffichageCode('code-el-${key}')">${el.codeEleve}</span><br>
+                            Parent: <span id="code-par-${key}" class="blur-sm select-none cursor-pointer" onclick="basculerAffichageCode('code-par-${key}')">${el.codeParent}</span>
+                        </td>
+                        <td class="p-3">${badgeFrais}</td>
+                        <td class="p-3 text-center no-print space-x-1">
+                            <button onclick="preparerModificationEleve('${key}', '${elStr}')" class="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition" title="Modifier">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="supprimerEleve('${key}')" class="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition" title="Supprimer">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
+    }
+
+    // 2. Liste des profs
+    const listePrfDiv = document.getElementById('liste-admin-profs');
+    if(listePrfDiv) {
+        listePrfDiv.innerHTML = '';
+        const profs = data.profs || {};
+        if(Object.keys(profs).length === 0) {
+            listePrfDiv.innerHTML = `<div class="text-slate-400 text-xs col-span-2 text-center p-4">Aucun professeur enregistré.</div>`;
+        } else {
+            Object.keys(profs).forEach(key => {
+                const p = profs[key];
+                listePrfDiv.innerHTML += `
+                    <div class="bg-white border border-slate-200 p-4 rounded-2xl flex justify-between items-center shadow-xs">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-xs">${p.nom}</h4>
+                            <p class="text-[11px] text-slate-600 font-medium">Cours : ${p.cours}</p>
+                            <p class="text-[10px] font-mono text-emerald-600 mt-1">Code : <span id="code-prf-${key}" class="blur-sm select-none cursor-pointer font-bold" onclick="basculerAffichageCode('code-prf-${key}')">${p.codeProf}</span></p>
+                        </div>
+                        <button onclick="supprimerProfesseur('${key}')" class="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+    }
+}
+
+// ================= GESTION DES NOTES PROF =================
+window.changerClasseProf = function() {
+    if(cacheDonnees) mettreAJourDashboardProf(cacheDonnees);
+}
+window.changerTrimestreProf = function() {
+    if(cacheDonnees) mettreAJourDashboardProf(cacheDonnees);
+}
+
+function mettreAJourDashboardProf(data) {
+    if(!utilisateurConnecte) return;
+    const classeSelectionnee = document.getElementById('prof-select-classe').value;
+    const trimestre = document.getElementById('prof-select-trimestre').value;
+    const coursProf = utilisateurConnecte.cours;
+    const baremes = utilisateurConnecte.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+
+    // Adapter les en-têtes selon le nombre d'interros
+    const nbInt = baremes.nbInterros;
+    for(let i=1; i<=4; i++) {
+        const th = document.getElementById(`th-int${i}`);
+        if(th) {
+            if(i <= nbInt) {
+                th.classList.remove('hidden');
+                th.innerText = `Int. ${i} (/${baremes.maxInterro})`;
+            } else {
+                th.classList.add('hidden');
+            }
+        }
+    }
+    const thDev = document.getElementById('th-dev');
+    if(thDev) {
+        if(baremes.actifDevoir === 'oui') {
+            thDev.classList.remove('hidden');
+            thDev.innerText = `Devoir (/${baremes.maxDevoir})`;
+        } else {
+            thDev.classList.add('hidden');
+        }
+    }
+    const thEx = document.getElementById('th-ex');
+    if(thEx) {
+        if(baremes.actifExamen === 'oui') {
+            thEx.classList.remove('hidden');
+            thEx.innerText = `Examen (/${baremes.maxExamen})`;
+        } else {
+            thEx.classList.add('hidden');
+        }
+    }
+
+    const tbody = document.getElementById('prof-liste-eleves-action');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+
+    const eleves = data.eleves || {};
+    let count = 0;
+
+    Object.keys(eleves).forEach(elKey => {
+        const el = eleves[elKey];
+        if(classeSelectionnee && el.classe !== classeSelectionnee) return;
+        count++;
+
+        if(!el.cotations) el.cotations = { T1: {}, T2: {}, T3: {} };
+        if(!el.cotations[trimestre]) el.cotations[trimestre] = {};
+        if(!el.cotations[trimestre][coursProf]) {
+            el.cotations[trimestre][coursProf] = { int1: '', int2: '', int3: '', int4: '', devoir: '', examen: '' };
+        }
+        const cot = el.cotations[trimestre][coursProf];
+
+        // Calcul dynamique du total obtenu pour ce cours
+        let totalObt = 0;
+        for(let i=1; i<=nbInt; i++) {
+            const val = parseFloat(cot[`int${i}`]) || 0;
+            totalObt += val;
+        }
+        if(baremes.actifDevoir === 'oui') totalObt += (parseFloat(cot.devoir) || 0);
+        if(baremes.actifExamen === 'oui') totalObt += (parseFloat(cot.examen) || 0);
+
+        let inputsHTML = '';
+        for(let i=1; i<=4; i++) {
+            const hiddenClass = i > nbInt ? 'hidden' : '';
+            inputsHTML += `
+                <td class="p-2 text-center ${hiddenClass}">
+                    <input type="number" step="0.5" value="${cot[`int${i}`] !== undefined ? cot[`int${i}`] : ''}" 
+                        onchange="mettreAJourNoteEleve('${elKey}', '${coursProf}', '${trimestre}', 'int${i}', this.value)" 
+                        class="w-12 bg-slate-50 border border-slate-200 p-1.5 rounded-lg text-center text-xs font-bold focus:ring-1 focus:ring-emerald-600 focus:bg-white focus:outline-none">
+                </td>
+            `;
+        }
+
+        const devHidden = baremes.actifDevoir === 'non' ? 'hidden' : '';
+        inputsHTML += `
+            <td class="p-2 text-center ${devHidden}">
+                <input type="number" step="0.5" value="${cot.devoir !== undefined ? cot.devoir : ''}" 
+                    onchange="mettreAJourNoteEleve('${elKey}', '${coursProf}', '${trimestre}', 'devoir', this.value)" 
+                    class="w-12 bg-slate-50 border border-slate-200 p-1.5 rounded-lg text-center text-xs font-bold focus:ring-1 focus:ring-emerald-600 focus:bg-white focus:outline-none">
+            </td>
+        `;
+
+        const exHidden = baremes.actifExamen === 'non' ? 'hidden' : '';
+        inputsHTML += `
+            <td class="p-2 text-center ${exHidden}">
+                <input type="number" step="0.5" value="${cot.examen !== undefined ? cot.examen : ''}" 
+                    onchange="mettreAJourNoteEleve('${elKey}', '${coursProf}', '${trimestre}', 'examen', this.value)" 
+                    class="w-12 bg-slate-50 border border-slate-200 p-1.5 rounded-lg text-center text-xs font-bold focus:ring-1 focus:ring-emerald-600 focus:bg-white focus:outline-none">
+            </td>
+        `;
+
+        tbody.innerHTML += `
+            <tr class="hover:bg-slate-50/80 transition">
+                <td class="p-2.5 font-semibold text-slate-900">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
+                <td class="p-2.5 text-slate-600">${el.classe}</td>
+                ${inputsHTML}
+                <td class="p-2.5 text-center bg-slate-100 font-extrabold text-slate-900" id="total-${elKey}">${totalObt.toFixed(1)} pts</td>
+            </tr>
+        `;
     });
 
-    contactsContainer.innerHTML = "";
-    const tuteursList = Object.values(tuteursMap);
+    if(count === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">Aucun élève trouvé pour cette classe.</td></tr>`;
+    }
+}
 
-    if(tuteursList.length === 0) {
-        contactsContainer.innerHTML = `<div class="p-5 text-slate-400 text-xs text-center font-medium">Aucun tuteur enregistré</div>`;
+window.mettreAJourNoteEleve = function(elKey, cours, trimestre, champ, valeur) {
+    const numVal = valeur === '' ? '' : parseFloat(valeur);
+    update(ref(db, `ecole_rdc_complet/eleves/${elKey}/cotations/${trimestre}/${cours}`), {
+        [champ]: numVal
+    });
+}
+
+// ================= GESTION DES PRÉSENCES (PAR JOUR) =================
+window.chargerPresencesProf = function() {
+    const dateStr = document.getElementById('prof-date-presence').value;
+    const classeVal = document.getElementById('prof-classe-presence').value;
+    const tbody = document.getElementById('prof-table-presences-corps');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+
+    if(!dateStr || !classeVal) {
+        tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">Veuillez sélectionner une date et une classe.</td></tr>`;
         return;
     }
 
-    tuteursList.forEach(t => {
-        const isSelected = adminSelectedParentCode === t.codeParent;
-        contactsContainer.innerHTML += `
-            <div onclick="selectionnerTuteurWhatsApp('${t.codeParent}', '${t.tuteur.replace(/'/g, "\\'")}')" class="p-3 cursor-pointer transition hover:bg-slate-200/70 ${isSelected ? 'bg-slate-200 border-l-2 border-slate-900' : ''}">
-                <div class="font-bold text-xs text-slate-900">${t.tuteur}</div>
-                <div class="text-[10px] text-slate-600 truncate mt-0.5 font-medium">Élève(s) : ${t.enfants.join(', ')}</div>
-                <div class="text-[10px] font-mono text-slate-500 mt-0.5">Code : ${t.codeParent}</div>
-            </div>`;
+    const eleves = cacheDonnees.eleves || {};
+    let count = 0;
+
+    Object.keys(eleves).forEach(elKey => {
+        const el = eleves[elKey];
+        if(el.classe !== classeVal) return;
+        count++;
+
+        if(!el.presences) el.presences = {};
+        const statutJour = el.presences[dateStr] || 'present'; // Par défaut présent
+
+        let badgeStatut = '';
+        if(statutJour === 'present') badgeStatut = '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full font-semibold text-[11px]">Présent(e)</span>';
+        else if(statutJour === 'absent') badgeStatut = '<span class="px-2.5 py-1 bg-red-100 text-red-800 rounded-full font-semibold text-[11px]">Absent(e)</span>';
+        else if(statutJour === 'retard') badgeStatut = '<span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full font-semibold text-[11px]">Retard</span>';
+
+        tbody.innerHTML += `
+            <tr class="hover:bg-slate-50 transition">
+                <td class="p-3 font-semibold text-slate-900">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
+                <td class="p-3">${badgeStatut}</td>
+                <td class="p-3 text-center space-x-1">
+                    <button onclick="changerStatutPresence('${elKey}', '${dateStr}', 'present')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition">P</button>
+                    <button onclick="changerStatutPresence('${elKey}', '${dateStr}', 'absent')" class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-semibold transition">A</button>
+                    <button onclick="changerStatutPresence('${elKey}', '${dateStr}', 'retard')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold transition">R</button>
+                </td>
+            </tr>
+        `;
     });
 
-    if(adminSelectedParentCode) {
-        afficherMessagesWhatsAppAdmin(data, adminSelectedParentCode);
+    if(count === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">Aucun élève dans cette classe.</td></tr>`;
     }
 }
 
-window.selectionnerTuteurWhatsApp = function(codeParent, nomTuteur) {
-    adminSelectedParentCode = codeParent;
-    document.getElementById('admin-whatsapp-header').innerHTML = `<span>Discussion avec : <strong class="text-slate-900">${nomTuteur}</strong> (${codeParent})</span>`;
-    document.getElementById('admin-whatsapp-input').removeAttribute('disabled');
-    const btnSend = document.getElementById('admin-whatsapp-send-btn');
-    btnSend.removeAttribute('disabled');
-    btnSend.classList.remove('opacity-50', 'cursor-not-allowed');
-
-    if(cacheDonnees) {
-        initialiserWhatsAppAdmin(cacheDonnees);
-    }
+window.changerStatutPresence = function(elKey, dateStr, statut) {
+    update(ref(db, `ecole_rdc_complet/eleves/${elKey}/presences`), {
+        [dateStr]: statut
+    }).then(() => {
+        chargerPresencesProf();
+    });
 }
 
-function afficherMessagesWhatsAppAdmin(data, codeParent) {
-    const chatContainer = document.getElementById('admin-whatsapp-chat');
-    if(!chatContainer) return;
-    chatContainer.innerHTML = "";
+// Calendrier Administrateur Global des Présences
+window.chargerCalendrierAdmin = function() {
+    const dateStr = document.getElementById('admin-cal-date').value;
+    const tbody = document.getElementById('admin-liste-calendrier-presences');
+    if(!tbody) return;
+    tbody.innerHTML = '';
 
-    const messages = data.messages || {};
-    let messagesTrouves = false;
+    if(!dateStr) return;
 
-    Object.keys(messages).forEach(mKey => {
-        const m = messages[mKey];
-        if(m.codeParent === codeParent) {
-            messagesTrouves = true;
-            chatContainer.innerHTML += `
-                <div class="flex flex-col items-start mb-2.5">
-                    <div class="bg-slate-200/80 border border-slate-300 rounded-2xl rounded-tl-sm p-3 max-w-[85%] text-xs space-y-1">
-                        <div class="font-bold text-[9px] text-slate-600 uppercase tracking-wide">Tuteur (${m.tuteur})</div>
-                        <div class="text-slate-900 font-medium">${m.texte}</div>
-                        <div class="text-[8px] text-slate-500 text-right font-semibold">${m.date}</div>
-                    </div>
-                </div>`;
+    const eleves = cacheDonnees.eleves || {};
+    let count = 0;
 
-            if(m.reponses) {
-                Object.values(m.reponses).forEach(rep => {
-                    chatContainer.innerHTML += `
-                        <div class="flex flex-col items-end mb-2.5">
-                            <div class="bg-slate-900 text-white rounded-2xl rounded-tr-sm p-3 max-w-[85%] text-xs space-y-1 shadow-xs">
-                                <div class="font-bold text-[9px] text-slate-400 uppercase tracking-wide">Administration</div>
-                                <div class="font-medium">${rep.texte}</div>
-                                <div class="text-[8px] text-slate-400 text-right font-semibold">${rep.date}</div>
-                            </div>
-                        </div>`;
-                });
+    Object.keys(eleves).forEach(elKey => {
+        const el = eleves[elKey];
+        count++;
+        if(!el.presences) el.presences = {};
+        const statut = el.presences[dateStr] || 'present';
+
+        let badge = statut === 'present' ? '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-semibold">Présent(e)</span>' : statut === 'absent' ? '<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded-full font-semibold">Absent(e)</span>' : '<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-semibold">Retard</span>';
+
+        tbody.innerHTML += `
+            <tr class="hover:bg-slate-50 transition">
+                <td class="p-3 font-semibold text-slate-900">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
+                <td class="p-3 text-slate-600">${el.classe}</td>
+                <td class="p-3">${badge}</td>
+                <td class="p-3 text-center space-x-1">
+                    <button onclick="changerStatutPresenceAdmin('${elKey}', '${dateStr}', 'present')" class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-xs font-semibold">P</button>
+                    <button onclick="changerStatutPresenceAdmin('${elKey}', '${dateStr}', 'absent')" class="px-2 py-1 bg-red-50 text-red-700 rounded text-xs font-semibold">A</button>
+                    <button onclick="changerStatutPresenceAdmin('${elKey}', '${dateStr}', 'retard')" class="px-2 py-1 bg-amber-50 text-amber-700 rounded text-xs font-semibold">R</button>
+                </td>
+            </tr>
+        `;
+    });
+    if(count === 0) tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Aucun élève trouvé.</td></tr>`;
+}
+
+window.changerStatutPresenceAdmin = function(elKey, dateStr, statut) {
+    update(ref(db, `ecole_rdc_complet/eleves/${elKey}/presences`), {
+        [dateStr]: statut
+    }).then(() => {
+        chargerCalendrierAdmin();
+    });
+}
+
+// ================= TABLEAU DE BORD ÉLÈVE =================
+window.changerTrimestreEleve = function() {
+    if(cacheDonnees && utilisateurConnecte) mettreAJourDashboardEleve(cacheDonnees);
+}
+
+function mettreAJourDashboardEleve(data) {
+    if(!utilisateurConnecte) return;
+    const trimestre = document.getElementById('select-trimestre-eleve').value;
+    const coursFiltre = document.getElementById('select-cours-eleve').value;
+    
+    // Retrouver l'élève frais à jour dans cacheDonnees
+    let eleveActuel = null;
+    let eleveKey = null;
+    Object.keys(data.eleves || {}).forEach(k => {
+        if(data.eleves[k].codeEleve === utilisateurConnecte.codeEleve) {
+            eleveActuel = data.eleves[k];
+            eleveKey = k;
+        }
+    });
+    if(!eleveActuel) return;
+
+    const cotationsTrim = eleveActuel.cotations && eleveActuel.cotations[trimestre] ? eleveActuel.cotations[trimestre] : {};
+    const contenuDiv = document.getElementById('contenu-cotations');
+    contenuDiv.innerHTML = '';
+
+    let totalGlobalObt = 0;
+    let totalGlobalMax = 0;
+    let lignesBulletinHTML = '';
+
+    const profs = data.profs || {};
+    const coursRecenses = new Set();
+    Object.values(profs).forEach(p => { if(p.cours) coursRecenses.add(p.cours); });
+
+    coursRecenses.forEach(coursNom => {
+        if(coursFiltre && coursNom !== coursFiltre) return;
+
+        // Trouver les barèmes du prof pour ce cours
+        let maxCours = 60; // Valeur par défaut
+        Object.values(profs).forEach(p => {
+            if(p.cours === coursNom && p.baremes) {
+                let m = (p.baremes.nbInterros || 4) * (p.baremes.maxInterro || 10);
+                if(p.baremes.actifDevoir === 'oui') m += (p.baremes.maxDevoir || 10);
+                if(p.baremes.actifExamen === 'oui') m += (p.baremes.maxExamen || 50);
+                maxCours = m;
             }
+        });
+
+        const cot = cotationsTrim[coursNom] || { int1: 0, int2: 0, int3: 0, int4: 0, devoir: 0, examen: 0 };
+        let obtenu = 0;
+        Object.keys(cot).forEach(k => { obtenu += parseFloat(cot[k]) || 0; });
+
+        totalGlobalObt += obtenu;
+        totalGlobalMax += maxCours;
+
+        let pourcentage = maxCours > 0 ? ((obtenu / maxCours) * 100).toFixed(1) : 0;
+
+        contenuDiv.innerHTML += `
+            <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-1.5">
+                <div class="flex justify-between items-center font-bold text-slate-900 text-xs">
+                    <span>${coursNom}</span>
+                    <span>${obtenu.toFixed(1)} / ${maxCours} pts (${pourcentage}%)</span>
+                </div>
+                <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <div class="bg-blue-600 h-full rounded-full" style="width: ${Math.min(pourcentage, 100)}%;"></div>
+                </div>
+            </div>
+        `;
+
+        lignesBulletinHTML += `
+            <tr>
+                <td class="p-2.5 border border-slate-300 font-semibold">${coursNom}</td>
+                <td class="p-2.5 border border-slate-300 text-center">${maxCours}</td>
+                <td class="p-2.5 border border-slate-300 text-center font-bold">${obtenu.toFixed(1)}</td>
+            </tr>
+        `;
+    });
+
+    if(contenuDiv.innerHTML === '') {
+        contenuDiv.innerHTML = `<div class="text-slate-400 text-center py-4">Aucune cotation disponible.</div>`;
+    }
+
+    document.getElementById('eleve-pourcentage-global').innerText = `${totalGlobalObt.toFixed(1)} pts / ${totalGlobalMax} pts`;
+
+    // Mettre à jour le Bulletin Officiel
+    document.getElementById('bul-trimestre-txt').innerText = `TRIMESTRE ${trimestre.replace('T', '')}`;
+    document.getElementById('bul-nom').innerText = eleveActuel.nom;
+    document.getElementById('bul-prenom').innerText = `${eleveActuel.postnom || ''} ${eleveActuel.prenom}`;
+    document.getElementById('bul-classe').innerText = eleveActuel.classe;
+    document.getElementById('bul-code').innerText = eleveActuel.codeEleve;
+    document.getElementById('bul-tuteur').innerText = eleveActuel.tuteur;
+    document.getElementById('bul-date').innerText = new Date().toLocaleDateString();
+    document.getElementById('bul-lignes-cours').innerHTML = lignesBulletinHTML;
+    document.getElementById('bul-total-max').innerText = totalGlobalMax;
+    document.getElementById('bul-total-obt').innerText = totalGlobalObt.toFixed(1);
+
+    // Afficher le calendrier de l'élève
+    afficherCalendrierEleve(eleveActuel);
+}
+
+// ================= CALENDRIER INTERACTIF ÉLÈVE & PARENT =================
+window.changerMoisCalendrierEleve = function(sens) {
+    moisActuelCalendrier.setMonth(moisActuelCalendrier.getMonth() + sens);
+    if(cacheDonnees && utilisateurConnecte) {
+        let eleveActuel = null;
+        Object.values(cacheDonnees.eleves || {}).forEach(el => {
+            if(el.codeEleve === utilisateurConnecte.codeEleve) eleveActuel = el;
+            if(modeActif === 'parent' && el.codeParent === utilisateurConnecte.codeParent) eleveActuel = el;
+        });
+        if(eleveActuel) afficherCalendrierEleve(eleveActuel);
+    }
+}
+
+window.changerMoisCalendrierParent = function(sens) {
+    changerMoisCalendrierEleve(sens);
+}
+
+function afficherCalendrierEleve(eleve) {
+    const annee = moisActuelCalendrier.getFullYear();
+    const mois = moisActuelCalendrier.getMonth();
+    const nomsMois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+    
+    if(document.getElementById('label-mois-eleve')) document.getElementById('label-mois-eleve').innerText = `${nomsMois[mois]} ${annee}`;
+    if(document.getElementById('label-mois-parent')) document.getElementById('label-mois-parent').innerText = `${nomsMois[mois]} ${annee}`;
+
+    const premierJour = new Date(annee, mois, 1).getDay();
+    const dernierJour = new Date(annee, mois + 1, 0).getDate();
+    const decalage = (premierJour + 6) % 7; // Lundi comme premier jour
+
+    let html = `
+        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-500 mb-1">
+            <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+        </div>
+        <div class="grid grid-cols-7 gap-1 text-center text-xs">
+    `;
+
+    for(let i=0; i<decalage; i++) {
+        html += `<div></div>`;
+    }
+
+    const presences = eleve.presences || {};
+
+    for(let jour=1; jour<=dernierJour; jour++) {
+        const moisStr = String(mois + 1).padStart(2, '0');
+        const jourStr = String(jour).padStart(2, '0');
+        const dateKey = `${annee}-${moisStr}-${jourStr}`;
+        const statut = presences[dateKey] || 'present';
+
+        let bgClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+        let tooltip = 'Présent(e)';
+        if(statut === 'absent') {
+            bgClass = 'bg-red-50 text-red-800 border-red-200 font-bold';
+            tooltip = 'Absent(e)';
+        } else if(statut === 'retard') {
+            bgClass = 'bg-amber-50 text-amber-800 border-amber-200 font-bold';
+            tooltip = 'Retard';
+        }
+
+        html += `
+            <div class="p-1 rounded-lg border ${bgClass} flex flex-col items-center justify-center" title="${dateKey}: ${tooltip}">
+                <span class="font-bold">${jour}</span>
+                <span class="text-[9px] uppercase">${statut.charAt(0)}</span>
+            </div>
+        `;
+    }
+
+    html += `</div>`;
+
+    if(document.getElementById('contenu-calendrier-eleve')) document.getElementById('contenu-calendrier-eleve').innerHTML = html;
+    if(document.getElementById('contenu-calendrier-parent')) document.getElementById('contenu-calendrier-parent').innerHTML = html;
+}
+
+// ================= TABLEAU DE BORD PARENT & MESSAGERIE WHATSAPP =================
+window.changerTrimestreParent = function() {
+    if(cacheDonnees && utilisateurConnecte) mettreAJourDashboardParent(cacheDonnees);
+}
+
+function mettreAJourDashboardParent(data) {
+    if(!utilisateurConnecte) return;
+    const parentCode = utilisateurConnecte.codeParent;
+    const trimestre = document.getElementById('select-trimestre-parent').value;
+    const coursFiltre = document.getElementById('select-cours-parent').value;
+    const container = document.getElementById('parent-liste-enfants');
+    if(!container) return;
+    container.innerHTML = '';
+
+    let fraisNonOrdreDetecte = false;
+    let premierEnfant = null;
+
+    Object.values(data.eleves || {}).forEach(el => {
+        if(el.codeParent === parentCode) {
+            if(!premierEnfant) premierEnfant = el;
+            if(el.frais === 'non_ordre') fraisNonOrdreDetecte = true;
+
+            const cotationsTrim = el.cotations && el.cotations[trimestre] ? el.cotations[trimestre] : {};
+            let totalObt = 0;
+            let totalMax = 0;
+            let lignesHtml = '';
+
+            const profs = data.profs || {};
+            const coursSet = new Set();
+            Object.values(profs).forEach(p => { if(p.cours) coursSet.add(p.cours); });
+
+            coursSet.forEach(coursNom => {
+                if(coursFiltre && coursNom !== coursFiltre) return;
+                let maxC = 60;
+                Object.values(profs).forEach(p => {
+                    if(p.cours === coursNom && p.baremes) {
+                        let m = (p.baremes.nbInterros || 4) * (p.baremes.maxInterro || 10);
+                        if(p.baremes.actifDevoir === 'oui') m += (p.baremes.maxDevoir || 10);
+                        if(p.baremes.actifExamen === 'oui') m += (p.baremes.maxExamen || 50);
+                        maxC = m;
+                    }
+                });
+
+                const cot = cotationsTrim[coursNom] || { int1: 0, int2: 0, int3: 0, int4: 0, devoir: 0, examen: 0 };
+                let obt = 0;
+                Object.keys(cot).forEach(k => { obt += parseFloat(cot[k]) || 0; });
+                totalObt += obt;
+                totalMax += maxC;
+
+                lignesHtml += `
+                    <div class="flex justify-between items-center text-xs py-1 border-b border-slate-100">
+                        <span class="font-semibold text-slate-800">${coursNom}</span>
+                        <span class="font-bold text-slate-900">${obt.toFixed(1)} / ${maxC} pts</span>
+                    </div>
+                `;
+            });
+
+            container.innerHTML += `
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-slate-900 text-xs">${el.nom} ${el.postnom || ''} ${el.prenom} (${el.classe})</h4>
+                        <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-semibold rounded-full">Total : ${totalObt.toFixed(1)} / ${totalMax} pts</span>
+                    </div>
+                    <div class="space-y-1">${lignesHtml}</div>
+                </div>
+            `;
         }
     });
 
-    if(!messagesTrouves) {
-        chatContainer.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto font-medium">Aucun message échangé avec ce tuteur pour le moment.</div>`;
+    if(fraisNonOrdreDetecte) {
+        document.getElementById('alerte-frais-parent').classList.remove('hidden');
+    } else {
+        document.getElementById('alerte-frais-parent').classList.add('hidden');
     }
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    if(premierEnfant) afficherCalendrierEleve(premierEnfant);
+    chargerMessagesParentWhatsApp(data);
+}
+
+// Messagerie Style WhatsApp Parent <-> Administration
+window.envoyerMessageParent = function() {
+    if(!utilisateurConnecte || modeActif !== 'parent') return;
+    const input = document.getElementById('parent-msg-input');
+    const texte = input.value.trim();
+    if(!texte) return;
+
+    const parentCode = utilisateurConnecte.codeParent;
+    push(ref(db, `ecole_rdc_complet/messages/${parentCode}`), {
+        auteur: utilisateurConnecte.tuteur,
+        role: 'parent',
+        texte: texte,
+        timestamp: Date.now()
+    }).then(() => {
+        input.value = '';
+    });
+}
+
+function chargerMessagesParentWhatsApp(data) {
+    if(!utilisateurConnecte || modeActif !== 'parent') return;
+    const parentCode = utilisateurConnecte.codeParent;
+    const chatBox = document.getElementById('parent-chat-box');
+    if(!chatBox) return;
+    chatBox.innerHTML = '';
+
+    const msgs = data.messages && data.messages[parentCode] ? data.messages[parentCode] : {};
+    const cles = Object.keys(msgs);
+
+    if(cles.length === 0) {
+        chatBox.innerHTML = `<div class="text-center text-slate-400 my-auto">Commencez la discussion avec l'administration.</div>`;
+        return;
+    }
+
+    cles.forEach(k => {
+        const m = msgs[k];
+        const estMoi = m.role === 'parent';
+        const alignClass = estMoi ? 'ml-auto bg-blue-600 text-white rounded-br-none' : 'mr-auto bg-slate-200 text-slate-800 rounded-bl-none';
+        
+        chatBox.innerHTML += `
+            <div class="max-w-[80%] p-3 rounded-2xl text-xs space-y-0.5 shadow-xs ${alignClass}">
+                <p class="font-bold text-[10px] opacity-80">${m.auteur}</p>
+                <p class="leading-relaxed">${m.texte}</p>
+            </div>
+        `;
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Messagerie Style WhatsApp Administration
+function initialiserWhatsAppAdmin(data) {
+    const contactsDiv = document.getElementById('admin-whatsapp-contacts');
+    if(!contactsDiv) return;
+    contactsDiv.innerHTML = '';
+
+    const eleves = data.eleves || {};
+    const parentsMap = {};
+
+    Object.values(eleves).forEach(el => {
+        if(el.codeParent && el.tuteur) {
+            parentsMap[el.codeParent] = { tuteur: el.tuteur, nomEleve: `${el.nom} ${el.prenom}` };
+        }
+    });
+
+    const clesParents = Object.keys(parentsMap);
+    if(clesParents.length === 0) {
+        contactsDiv.innerHTML = `<div class="p-3 text-xs text-slate-400">Aucun tuteur disponible.</div>`;
+        return;
+    }
+
+    clesParents.forEach(pCode => {
+        const p = parentsMap[pCode];
+        contactsDiv.innerHTML += `
+            <div onclick="selectionnerParentAdmin('${pCode}', '${p.tuteur}')" class="p-3 hover:bg-slate-200/60 cursor-pointer transition border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h5 class="font-bold text-xs text-slate-900">${p.tuteur}</h5>
+                    <p class="text-[10px] text-slate-500">Élève : ${p.nomEleve}</p>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+            </div>
+        `;
+    });
+    if(typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+window.selectionnerParentAdmin = function(parentCode, nomTuteur) {
+    adminSelectedParentCode = parentCode;
+    document.getElementById('admin-whatsapp-header').innerHTML = `<span>Discussion avec : <strong>${nomTuteur}</strong></span>`;
+    document.getElementById('admin-whatsapp-input').removeAttribute('disabled');
+    const btn = document.getElementById('admin-whatsapp-send-btn');
+    btn.removeAttribute('disabled');
+    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+    chargerChatAdminWhatsApp();
 }
 
 window.envoyerMessageAdminWhatsApp = function() {
@@ -1201,662 +1699,43 @@ window.envoyerMessageAdminWhatsApp = function() {
     const texte = input.value.trim();
     if(!texte) return;
 
-    const messages = cacheDonnees?.messages || {};
-    let targetMsgKey = null;
-
-    Object.keys(messages).forEach(k => {
-        if(messages[k].codeParent === adminSelectedParentCode) {
-            targetMsgKey = k;
-        }
+    push(ref(db, `ecole_rdc_complet/messages/${adminSelectedParentCode}`), {
+        auteur: "Administration",
+        role: 'admin',
+        texte: texte,
+        timestamp: Date.now()
+    }).then(() => {
+        input.value = '';
+        chargerChatAdminWhatsApp();
     });
-
-    const dateStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-    if(targetMsgKey) {
-        push(ref(db, `ecole_rdc_complet/messages/${targetMsgKey}/reponses`), {
-            texte: texte,
-            date: dateStr
-        }).then(() => {
-            input.value = '';
-        }).catch(err => alert("Erreur : " + err.message));
-    } else {
-        let nomTuteurRattache = "Tuteur";
-        Object.values(cacheDonnees.eleves || {}).forEach(el => {
-            if(el.codeParent === adminSelectedParentCode) nomTuteurRattache = el.tuteur;
-        });
-
-        push(ref(db, 'ecole_rdc_complet/messages'), {
-            codeParent: adminSelectedParentCode,
-            tuteur: nomTuteurRattache,
-            texte: "Discussion initialisée par l'administration",
-            date: dateStr,
-            reponses: {
-                0: { texte: texte, date: dateStr }
-            }
-        }).then(() => {
-            input.value = '';
-        }).catch(err => alert("Erreur : " + err.message));
-    }
 }
 
-// GESTION DU CALENDRIER DES PRÉSENCES ADMIN (PAR JOUR)
-function chargerCalendrierAdmin(data) {
-    const tbody = document.getElementById('admin-liste-calendrier-presences');
-    if(!tbody) return;
-    const dateInput = document.getElementById('admin-cal-date').value || aujourdhuiStr;
-    const eleves = data.eleves || {};
+function chargerChatAdminWhatsApp() {
+    if(!adminSelectedParentCode || !cacheDonnees) return;
+    const chatDiv = document.getElementById('admin-whatsapp-chat');
+    chatDiv.innerHTML = '';
 
-    tbody.innerHTML = "";
-    if(Object.keys(eleves).length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Aucun élève enregistré</td></tr>`;
+    const msgs = cacheDonnees.messages && cacheDonnees.messages[adminSelectedParentCode] ? cacheDonnees.messages[adminSelectedParentCode] : {};
+    const cles = Object.keys(msgs);
+
+    if(cles.length === 0) {
+        chatDiv.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto">Aucun message dans cette conversation.</div>`;
         return;
     }
 
-    Object.keys(eleves).forEach(key => {
-        const el = eleves[key];
-        const statutActuel = el.presences?.[dateInput] || 'Présent';
+    cles.forEach(k => {
+        const m = msgs[k];
+        const estAdmin = m.role === 'admin';
+        const alignClass = estAdmin ? 'ml-auto bg-slate-900 text-white rounded-br-none' : 'mr-auto bg-slate-200 text-slate-800 rounded-bl-none';
 
-        tbody.innerHTML += `
-            <tr class="hover:bg-slate-100 transition-colors">
-                <td class="p-3 font-semibold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
-                <td class="p-3 text-slate-700 font-medium">${el.classe}</td>
-                <td class="p-3">
-                    <select id="admin-pres-${key}" class="bg-white border border-slate-200 p-1.5 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-blue-600 focus:outline-none">
-                        <option value="Présent" ${statutActuel === 'Présent' ? 'selected' : ''}>Présent</option>
-                        <option value="Absent" ${statutActuel === 'Absent' ? 'selected' : ''}>Absent</option>
-                        <option value="Retard" ${statutActuel === 'Retard' ? 'selected' : ''}>Retard</option>
-                        <option value="Exclu" ${statutActuel === 'Exclu' ? 'selected' : ''}>Exclu</option>
-                    </select>
-                </td>
-                <td class="p-3 text-center">
-                    <button onclick="mettreAJourPresenceAdmin('${key}', '${dateInput}')" class="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold transition shadow-xs">Enregistrer</button>
-                </td>
-            </tr>`;
+        chatDiv.innerHTML += `
+            <div class="max-w-[80%] p-3 rounded-2xl text-xs space-y-0.5 shadow-xs ${alignClass}">
+                <p class="font-bold text-[10px] opacity-80">${m.auteur}</p>
+                <p class="leading-relaxed">${m.texte}</p>
+            </div>
+        `;
     });
-}
-
-window.mettreAJourPresenceAdmin = function(eleveKey, dateStr) {
-    const select = document.getElementById(`admin-pres-${eleveKey}`);
-    if(!select) return;
-    const nouveauStatut = select.value;
-    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/presences`), {
-        [dateStr]: nouveauStatut
-    }).then(() => {
-        alert("Statut de présence journalier mis à jour !");
-    }).catch(err => alert("Erreur : " + err.message));
-}
-
-// GESTION DES PRÉSENCES PAR JOUR (ESPACE PROF)
-window.chargerPresencesProf = function() {
-    const tbody = document.getElementById('prof-table-presences-corps');
-    if(!tbody) return;
-    const dateStr = document.getElementById('prof-date-presence').value || aujourdhuiStr;
-    const classeVal = document.getElementById('prof-classe-presence').value;
-    const eleves = cacheDonnees?.eleves || {};
-
-    tbody.innerHTML = "";
-    if(!classeVal) {
-        tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 font-medium">Veuillez sélectionner une classe pour faire l'appel</td></tr>`;
-        return;
-    }
-
-    let nbTrouves = 0;
-    Object.keys(eleves).forEach(key => {
-        const el = eleves[key];
-        if(el.classe !== classeVal) return;
-        nbTrouves++;
-
-        const statutJour = el.presences?.[dateStr] || 'Présent';
-
-        tbody.innerHTML += `
-            <tr class="hover:bg-slate-100 transition-colors">
-                <td class="p-3 font-semibold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
-                <td class="p-3">
-                    <select id="prof-pres-jour-${key}" class="bg-white border border-slate-200 p-1.5 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-emerald-600 focus:outline-none">
-                        <option value="Présent" ${statutJour === 'Présent' ? 'selected' : ''}>Présent</option>
-                        <option value="Absent" ${statutJour === 'Absent' ? 'selected' : ''}>Absent</option>
-                        <option value="Retard" ${statutJour === 'Retard' ? 'selected' : ''}>Retard</option>
-                    </select>
-                </td>
-                <td class="p-3 text-center">
-                    <button onclick="enregistrerPresenceProfJour('${key}', '${dateStr}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-[11px] font-semibold transition shadow-xs">Valider</button>
-                </td>
-            </tr>`;
-    });
-
-    if(nbTrouves === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 font-medium">Aucun élève dans cette classe</td></tr>`;
-    }
-}
-
-window.enregistrerPresenceProfJour = function(eleveKey, dateStr) {
-    const select = document.getElementById(`prof-pres-jour-${eleveKey}`);
-    if(!select) return;
-    const statut = select.value;
-    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/presences`), {
-        [dateStr]: statut
-    }).then(() => {
-        alert(`Présence enregistrée pour le ${dateStr} !`);
-    }).catch(err => alert("Erreur : " + err.message));
-}
-
-// RENDU DU CALENDRIER VISUEL (MOIS PAR MOIS) POUR ÉLÈVE & PARENT
-function genererHTMLCalendrierPresences(eleveData, containerId, labelId) {
-    const container = document.getElementById(containerId);
-    const labelMois = document.getElementById(labelId);
-    if(!container || !labelMois) return;
-
-    const annee = moisActuelCalendrier.getFullYear();
-    const mois = moisActuelCalendrier.getMonth();
-    const nomsMois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-    labelMois.innerText = `${nomsMois[mois]} ${annee}`;
-
-    const premierJour = new Date(annee, mois, 1);
-    const dernierJour = new Date(annee, mois + 1, 0);
-    const nbJours = dernierJour.getDate();
-    let indexJourDebut = premierJour.getDay() - 1; // Lundi comme premier jour
-    if(indexJourDebut === -1) indexJourDebut = 6;
-
-    const presences = eleveData?.presences || {};
-
-    let html = `
-        <div class="grid grid-cols-7 gap-1 text-center text-[10px]">
-            <div class="font-bold text-slate-500">Lun</div>
-            <div class="font-bold text-slate-500">Mar</div>
-            <div class="font-bold text-slate-500">Mer</div>
-            <div class="font-bold text-slate-500">Jeu</div>
-            <div class="font-bold text-slate-500">Ven</div>
-            <div class="font-bold text-slate-500">Sam</div>
-            <div class="font-bold text-slate-500">Dim</div>`;
-
-    for(let i=0; i<indexJourDebut; i++) {
-        html += `<div></div>`;
-    }
-
-    for(let jour=1; jour<=nbJours; jour++) {
-        const moisStr = String(mois + 1).padStart(2, '0');
-        const jourStr = String(jour).padStart(2, '0');
-        const dateKey = `${annee}-${moisStr}-${jourStr}`;
-        const statut = presences[dateKey];
-
-        let bgClass = "bg-white text-slate-700 border border-slate-200";
-        let titre = "Aucun pointage";
-
-        if(statut === 'Présent') {
-            bgClass = "bg-emerald-100 text-emerald-800 font-bold border border-emerald-200";
-            titre = "Présent";
-        } else if(statut === 'Absent') {
-            bgClass = "bg-red-100 text-red-800 font-bold border border-red-200";
-            titre = "Absent";
-        } else if(statut === 'Retard') {
-            bgClass = "bg-amber-100 text-amber-800 font-bold border border-amber-200";
-            titre = "Retard";
-        } else if(statut === 'Exclu') {
-            bgClass = "bg-purple-100 text-purple-800 font-bold border border-purple-200";
-            titre = "Exclu";
-        }
-
-        html += `<div class="p-2 rounded-lg flex flex-col items-center justify-center ${bgClass}" title="${dateKey} : ${titre}">
-            <span class="text-xs">${jour}</span>
-            <span class="text-[8px] truncate max-w-full">${statut ? statut[0] : '-'}</span>
-        </div>`;
-    }
-
-    html += `</div>`;
-    container.innerHTML = html;
-}
-
-window.changerMoisCalendrierEleve = function(delta) {
-    moisActuelCalendrier.setMonth(moisActuelCalendrier.getMonth() + delta);
-    if(cacheDonnees && utilisateurConnecte && modeActif === 'eleve') {
-        let elTrouve = null;
-        Object.values(cacheDonnees.eleves || {}).forEach(el => {
-            if(el.codeEleve === utilisateurConnecte.codeEleve) elTrouve = el;
-        });
-        if(elTrouve) genererHTMLCalendrierPresences(elTrouve, 'contenu-calendrier-eleve', 'label-mois-eleve');
-    }
-}
-
-window.changerMoisCalendrierParent = function(delta) {
-    moisActuelCalendrier.setMonth(moisActuelCalendrier.getMonth() + delta);
-    if(cacheDonnees && utilisateurConnecte && modeActif === 'parent') {
-        let elTrouve = null;
-        Object.values(cacheDonnees.eleves || {}).forEach(el => {
-            if(el.codeParent === utilisateurConnecte.codeParent) {
-                if(!elTrouve) elTrouve = el;
-            }
-        });
-        if(elTrouve) genererHTMLCalendrierPresences(elTrouve, 'contenu-calendrier-parent', 'label-mois-parent');
-    }
-}
-
-// MISE À JOUR DASHBOARD ÉLÈVE
-function mettreAJourDashboardEleve(data) {
-    let elData = null;
-    Object.values(data.eleves || {}).forEach(el => {
-        if(el.codeEleve === utilisateurConnecte.codeEleve) elData = el;
-    });
-    if(!elData) return;
-    utilisateurConnecte = elData;
-
-    genererHTMLCalendrierPresences(elData, 'contenu-calendrier-eleve', 'label-mois-eleve');
-
-    const trimestre = document.getElementById('select-trimestre-eleve')?.value || 'T1';
-    const coursFiltre = document.getElementById('select-cours-eleve')?.value || '';
-    const cotations = elData.cotations?.[trimestre] || {};
-    const profs = data.profs || {};
-
-    const container = document.getElementById('contenu-cotations');
-    container.innerHTML = "";
-
-    let totalObtGlobal = 0;
-    let totalMaxGlobal = 0;
-    let nbCoursAffiches = 0;
-
-    Object.keys(profs).forEach(pKey => {
-        const prof = profs[pKey];
-        const coursNom = prof.cours;
-        if(!coursNom) return;
-        if(coursFiltre && coursFiltre !== coursNom) return;
-        nbCoursAffiches++;
-
-        const baremes = prof.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
-        const notesCours = cotations[coursNom] || {};
-
-        let totalCoursObt = 0;
-        let totalCoursMax = 0;
-
-        for(let i=1; i<=baremes.nbInterros; i++) {
-            const val = parseFloat(notesCours[`int${i}`]) || 0;
-            totalCoursObt += val;
-            totalCoursMax += baremes.maxInterro;
-        }
-
-        if(baremes.actifDevoir === 'oui') {
-            const valDev = parseFloat(notesCours.devoir) || 0;
-            totalCoursObt += valDev;
-            totalCoursMax += baremes.maxDevoir;
-        }
-
-        if(baremes.actifExamen === 'oui') {
-            const valEx = parseFloat(notesCours.examen) || 0;
-            totalCoursObt += valEx;
-            totalCoursMax += baremes.maxExamen;
-        }
-
-        totalObtGlobal += totalCoursObt;
-        totalMaxGlobal += totalCoursMax;
-
-        container.innerHTML += `
-            <div class="border border-slate-200 bg-white p-3.5 rounded-xl space-y-1.5 shadow-xs">
-                <div class="flex justify-between items-center font-bold text-slate-900">
-                    <span>${coursNom}</span>
-                    <span class="text-blue-600">${totalCoursObt.toFixed(1)} / ${totalCoursMax} pts</span>
-                </div>
-                <div class="text-[10px] text-slate-500 font-medium">
-                    Professeur : ${prof.nom}
-                </div>
-            </div>`;
-    });
-
-    if(nbCoursAffiches === 0) {
-        container.innerHTML = `<div class="text-slate-400 text-xs text-center py-4 font-medium">Aucun cours trouvé</div>`;
-    }
-
-    document.getElementById('eleve-pourcentage-global').innerText = `${totalObtGlobal.toFixed(1)} pts / ${totalMaxGlobal} pts`;
-
-    // Mettre à jour le bulletin officiel d'impression
-    document.getElementById('bul-trimestre-txt').innerText = `TRIMESTRE ${trimestre.replace('T', '')}`;
-    document.getElementById('bul-nom').innerText = elData.nom;
-    document.getElementById('bul-prenom').innerText = `${elData.postnom || ''} ${elData.prenom}`;
-    document.getElementById('bul-classe').innerText = elData.classe;
-    document.getElementById('bul-code').innerText = elData.codeEleve;
-    document.getElementById('bul-tuteur').innerText = elData.tuteur;
-    document.getElementById('bul-date').innerText = new Date().toLocaleDateString();
-
-    const tbodyBulletin = document.getElementById('bul-lignes-cours');
-    tbodyBulletin.innerHTML = "";
-
-    Object.keys(profs).forEach(pKey => {
-        const prof = profs[pKey];
-        const coursNom = prof.cours;
-        if(!coursNom) return;
-
-        const baremes = prof.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
-        const notesCours = cotations[coursNom] || {};
-
-        let totalCoursObt = 0;
-        let totalCoursMax = 0;
-
-        for(let i=1; i<=baremes.nbInterros; i++) {
-            totalCoursObt += parseFloat(notesCours[`int${i}`]) || 0;
-            totalCoursMax += baremes.maxInterro;
-        }
-        if(baremes.actifDevoir === 'oui') {
-            totalCoursObt += parseFloat(notesCours.devoir) || 0;
-            totalCoursMax += baremes.maxDevoir;
-        }
-        if(baremes.actifExamen === 'oui') {
-            totalCoursObt += parseFloat(notesCours.examen) || 0;
-            totalCoursMax += baremes.maxExamen;
-        }
-
-        tbodyBulletin.innerHTML += `
-            <tr>
-                <td class="p-2.5 border border-slate-300 font-semibold">${coursNom}</td>
-                <td class="p-2.5 border border-slate-300 text-center">${totalCoursMax}</td>
-                <td class="p-2.5 border border-slate-300 text-center font-bold text-slate-900">${totalCoursObt.toFixed(1)}</td>
-            </tr>`;
-    });
-
-    document.getElementById('bul-total-max').innerText = totalMaxGlobal;
-    document.getElementById('bul-total-obt').innerText = totalObtGlobal.toFixed(1);
-}
-
-window.changerTrimestreEleve = function() {
-    if(cacheDonnees && utilisateurConnecte && modeActif === 'eleve') {
-        mettreAJourDashboardEleve(cacheDonnees);
-    }
-}
-
-// MISE À JOUR DASHBOARD PROF
-function mettreAJourDashboardProf(data) {
-    const classeVal = document.getElementById('prof-select-classe').value;
-    const trimestre = document.getElementById('prof-select-trimestre').value;
-    const eleves = data.eleves || {};
-    const tbody = document.getElementById('prof-liste-eleves-action');
-    if(!tbody) return;
-
-    tbody.innerHTML = "";
-    const baremes = utilisateurConnecte.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
-
-    // Adapter les en-têtes dynamiquement
-    for(let i=1; i<=4; i++) {
-        const th = document.getElementById(`th-int${i}`);
-        if(th) {
-            if(i <= baremes.nbInterros) {
-                th.style.display = '';
-                th.innerText = `Int. ${i} (/${baremes.maxInterro})`;
-            } else {
-                th.style.display = 'none';
-            }
-        }
-    }
-    const thDev = document.getElementById('th-dev');
-    if(thDev) {
-        if(baremes.actifDevoir === 'oui') {
-            thDev.style.display = '';
-            thDev.innerText = `Devoir (/${baremes.maxDevoir})`;
-        } else {
-            thDev.style.display = 'none';
-        }
-    }
-    const thEx = document.getElementById('th-ex');
-    if(thEx) {
-        if(baremes.actifExamen === 'oui') {
-            thEx.style.display = '';
-            thEx.innerText = `Examen (/${baremes.maxExamen})`;
-        } else {
-            thEx.style.display = 'none';
-        }
-    }
-
-    let nbTrouves = 0;
-    Object.keys(eleves).forEach(elKey => {
-        const el = eleves[elKey];
-        if(classeVal && el.classe !== classeVal) return;
-        nbTrouves++;
-
-        const notesCours = el.cotations?.[trimestre]?.[utilisateurConnecte.cours] || {};
-
-        let inputsHTML = '';
-        let totalObt = 0;
-        let totalMax = 0;
-
-        for(let i=1; i<=baremes.nbInterros; i++) {
-            const val = notesCours[`int${i}`] !== undefined ? notesCours[`int${i}`] : '';
-            totalObt += parseFloat(val) || 0;
-            totalMax += baremes.maxInterro;
-            inputsHTML += `<td class="p-2 text-center"><input id="note-${elKey}-int${i}" type="number" step="0.5" min="0" max="${baremes.maxInterro}" value="${val}" onchange="sauvegarderNoteProf('${elKey}', '${trimestre}')" class="w-14 bg-white border border-slate-200 text-center p-1.5 rounded-lg font-semibold text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
-        }
-
-        if(baremes.actifDevoir === 'oui') {
-            const valDev = notesCours.devoir !== undefined ? notesCours.devoir : '';
-            totalObt += parseFloat(valDev) || 0;
-            totalMax += baremes.maxDevoir;
-            inputsHTML += `<td class="p-2 text-center"><input id="note-${elKey}-devoir" type="number" step="0.5" min="0" max="${baremes.maxDevoir}" value="${valDev}" onchange="sauvegarderNoteProf('${elKey}', '${trimestre}')" class="w-14 bg-white border border-slate-200 text-center p-1.5 rounded-lg font-semibold text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
-        }
-
-        if(baremes.actifExamen === 'oui') {
-            const valEx = notesCours.examen !== undefined ? notesCours.examen : '';
-            totalObt += parseFloat(valEx) || 0;
-            totalMax += baremes.maxExamen;
-            inputsHTML += `<td class="p-2 text-center"><input id="note-${elKey}-examen" type="number" step="0.5" min="0" max="${baremes.maxExamen}" value="${valEx}" onchange="sauvegarderNoteProf('${elKey}', '${trimestre}')" class="w-16 bg-white border border-slate-200 text-center p-1.5 rounded-lg font-bold text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
-        }
-
-        tbody.innerHTML += `
-            <tr class="hover:bg-slate-100 transition-colors">
-                <td class="p-2.5 font-semibold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
-                <td class="p-2.5 text-slate-700 font-medium">${el.classe}</td>
-                ${inputsHTML}
-                <td class="p-2.5 text-center font-bold text-slate-900 bg-slate-100">${totalObt.toFixed(1)} / ${totalMax}</td>
-            </tr>`;
-    });
-
-    if(nbTrouves === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-slate-400 font-medium">Aucun élève trouvé</td></tr>`;
-    }
-}
-
-window.changerClasseProf = function() {
-    if(cacheDonnees && utilisateurConnecte && modeActif === 'prof') {
-        mettreAJourDashboardProf(cacheDonnees);
-    }
-}
-
-window.changerTrimestreProf = function() {
-    if(cacheDonnees && utilisateurConnecte && modeActif === 'prof') {
-        mettreAJourDashboardProf(cacheDonnees);
-    }
-}
-
-window.sauvegarderNoteProf = function(eleveKey, trimestre) {
-    if(!utilisateurConnecte || modeActif !== 'prof') return;
-    const cours = utilisateurConnecte.cours;
-    const baremes = utilisateurConnecte.baremes || { nbInterros: 4, actifDevoir: 'oui', actifExamen: 'oui' };
-
-    const notesObj = {};
-    for(let i=1; i<=baremes.nbInterros; i++) {
-        const val = document.getElementById(`note-${eleveKey}-int${i}`)?.value;
-        if(val !== undefined && val !== '') notesObj[`int${i}`] = parseFloat(val);
-    }
-    if(baremes.actifDevoir === 'oui') {
-        const valDev = document.getElementById(`note-${eleveKey}-devoir`)?.value;
-        if(valDev !== undefined && valDev !== '') notesObj[`devoir`] = parseFloat(valDev);
-    }
-    if(baremes.actifExamen === 'oui') {
-        const valEx = document.getElementById(`note-${eleveKey}-examen`)?.value;
-        if(valEx !== undefined && valEx !== '') notesObj[`examen`] = parseFloat(valEx);
-    }
-
-    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/cotations/${trimestre}/${cours}`), notesObj).then(() => {
-        if(cacheDonnees) mettreAJourDashboardProf(cacheDonnees);
-    });
-}
-
-// MISE À JOUR DASHBOARD PARENT
-function mettreAJourDashboardParent(data) {
-    const codeParent = utilisateurConnecte.codeParent;
-    const eleves = data.eleves || {};
-    const container = document.getElementById('parent-liste-enfants');
-    if(!container) return;
-
-    container.innerHTML = "";
-    let fraisEnOrdreGlobal = true;
-    let premierEnfant = null;
-
-    Object.values(eleves).forEach(el => {
-        if(el.codeParent === codeParent) {
-            if(!premierEnfant) premierEnfant = el;
-            if(el.frais === 'non_ordre') fraisEnOrdreGlobal = false;
-
-            const trimestre = document.getElementById('select-trimestre-parent')?.value || 'T1';
-            const coursFiltre = document.getElementById('select-cours-parent')?.value || '';
-            const cotations = el.cotations?.[trimestre] || {};
-            const profs = data.profs || {};
-
-            let notesHTML = '';
-            let totalObt = 0;
-            let totalMax = 0;
-
-            Object.keys(profs).forEach(pKey => {
-                const prof = profs[pKey];
-                const coursNom = prof.cours;
-                if(!coursNom) return;
-                if(coursFiltre && coursFiltre !== coursNom) return;
-
-                const baremes = prof.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
-                const notesCours = cotations[coursNom] || {};
-
-                let cObt = 0;
-                let cMax = 0;
-                for(let i=1; i<=baremes.nbInterros; i++) {
-                    cObt += parseFloat(notesCours[`int${i}`]) || 0;
-                    cMax += baremes.maxInterro;
-                }
-                if(baremes.actifDevoir === 'oui') {
-                    cObt += parseFloat(notesCours.devoir) || 0;
-                    cMax += baremes.maxDevoir;
-                }
-                if(baremes.actifExamen === 'oui') {
-                    cObt += parseFloat(notesCours.examen) || 0;
-                    cMax += baremes.maxExamen;
-                }
-
-                totalObt += cObt;
-                totalMax += cMax;
-
-                notesHTML += `
-                    <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs">
-                        <span class="font-bold text-slate-800">${coursNom}</span>
-                        <span class="font-bold text-blue-600">${cObt.toFixed(1)} / ${cMax} pts</span>
-                    </div>`;
-            });
-
-            container.innerHTML += `
-                <div class="border border-slate-200 bg-white p-4 rounded-2xl space-y-3 shadow-xs">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="font-bold text-slate-900 text-sm">${el.nom} ${el.postnom || ''} ${el.prenom}</div>
-                            <div class="text-xs text-slate-600 font-medium">Classe : ${el.classe} | Numéro : ${el.codeEleve}</div>
-                        </div>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${el.frais === 'en_ordre' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-red-100 text-red-800 border border-red-200'}">${el.frais === 'en_ordre' ? 'Frais en ordre' : 'Frais non payés'}</span>
-                    </div>
-                    <div class="space-y-1.5">${notesHTML}</div>
-                    <div class="pt-2 border-t border-slate-100 flex justify-between items-center font-bold text-xs">
-                        <span class="text-slate-600">Total Général Trimestriel :</span>
-                        <span class="text-slate-900">${totalObt.toFixed(1)} / ${totalMax} pts</span>
-                    </div>
-                </div>`;
-        }
-    });
-
-    if(premierEnfant) {
-        genererHTMLCalendrierPresences(premierEnfant, 'contenu-calendrier-parent', 'label-mois-parent');
-    }
-
-    const alerteFrais = document.getElementById('alerte-frais-parent');
-    if(!fraisEnOrdreGlobal) {
-        alerteFrais.classList.remove('hidden');
-    } else {
-        alerteFrais.classList.add('hidden');
-    }
-
-    afficherMessagesWhatsAppParent(data, codeParent);
-}
-
-window.changerTrimestreParent = function() {
-    if(cacheDonnees && utilisateurConnecte && modeActif === 'parent') {
-        mettreAJourDashboardParent(cacheDonnees);
-    }
-}
-
-function afficherMessagesWhatsAppParent(data, codeParent) {
-    const chatBox = document.getElementById('parent-chat-box');
-    if(!chatBox) return;
-    chatBox.innerHTML = "";
-
-    const messages = data.messages || {};
-    let trouve = false;
-
-    Object.keys(messages).forEach(mKey => {
-        const m = messages[mKey];
-        if(m.codeParent === codeParent) {
-            trouve = true;
-            chatBox.innerHTML += `
-                <div class="flex flex-col items-end mb-2">
-                    <div class="bg-blue-600 text-white rounded-2xl rounded-tr-sm p-3 max-w-[85%] text-xs space-y-1 shadow-xs">
-                        <div class="font-bold text-[9px] text-blue-200 uppercase tracking-wide">Moi (${m.tuteur})</div>
-                        <div class="font-medium">${m.texte}</div>
-                        <div class="text-[8px] text-blue-200 text-right font-semibold">${m.date}</div>
-                    </div>
-                </div>`;
-
-            if(m.reponses) {
-                Object.values(m.reponses).forEach(rep => {
-                    chatBox.innerHTML += `
-                        <div class="flex flex-col items-start mb-2">
-                            <div class="bg-slate-200/80 border border-slate-300 rounded-2xl rounded-tl-sm p-3 max-w-[85%] text-xs space-y-1">
-                                <div class="font-bold text-[9px] text-slate-600 uppercase tracking-wide">Administration</div>
-                                <div class="text-slate-900 font-medium">${rep.texte}</div>
-                                <div class="text-[8px] text-slate-500 text-right font-semibold">${rep.date}</div>
-                            </div>
-                        </div>`;
-                });
-            }
-        }
-    });
-
-    if(!trouve) {
-        chatBox.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto font-medium">Aucun message. Envoyez un message à l'administration pour commencer la discussion.</div>`;
-    }
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-window.envoyerMessageParent = function() {
-    if(!utilisateurConnecte || modeActif !== 'parent') return;
-    const input = document.getElementById('parent-msg-input');
-    const texte = input.value.trim();
-    if(!texte) return;
-
-    const codeParent = utilisateurConnecte.codeParent;
-    const nomTuteur = utilisateurConnecte.tuteur;
-    const dateStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-    const messages = cacheDonnees?.messages || {};
-    let targetMsgKey = null;
-
-    Object.keys(messages).forEach(k => {
-        if(messages[k].codeParent === codeParent) targetMsgKey = k;
-    });
-
-    if(targetMsgKey) {
-        push(ref(db, `ecole_rdc_complet/messages/${targetMsgKey}/reponses`), {
-            texte: texte,
-            date: dateStr
-        }).then(() => {
-            input.value = '';
-        });
-    } else {
-        push(ref(db, 'ecole_rdc_complet/messages'), {
-            codeParent: codeParent,
-            tuteur: nomTuteur,
-            texte: texte,
-            date: dateStr
-        }).then(() => {
-            input.value = '';
-        });
-    }
+    chatDiv.scrollTop = chatDiv.scrollHeight;
 }
 </script>
 </body>
