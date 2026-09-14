@@ -205,7 +205,14 @@
             </div>
             <div class="grid md:grid-cols-1 gap-6">
                 <div class="bg-emerald-50 border border-emerald-200 p-5 rounded-xl space-y-4">
-                    <h3 class="font-bold text-emerald-900">Gestion des notes et présences (Attribution exclusive professeur)</h3>
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-emerald-900">Gestion des notes et présences (Attribution exclusive professeur)</h3>
+                        <select id="prof-select-trimestre" class="border p-1.5 rounded bg-white text-sm">
+                            <option value="T1">Trimestre 1 (T1)</option>
+                            <option value="T2">Trimestre 2 (T2)</option>
+                            <option value="T3">Trimestre 3 (T3)</option>
+                        </select>
+                    </div>
                     <div id="prof-liste-eleves-action" class="space-y-2 max-h-96 overflow-y-auto"></div>
                 </div>
             </div>
@@ -341,7 +348,7 @@ window.validerConnexion = function() {
                 if(el.codeEleve === code) {
                     if(el.frais === 'non_ordre') {
                         alert("Accès refusé : Frais scolaires non réglés.");
-                        throw new Error("Bloqué");
+                        return;
                     }
                     trouve = el;
                 }
@@ -406,14 +413,12 @@ window.enregistrerOuModifierEleve = function() {
     if(!nom || !prenom || !classe || !tuteur) return alert("Veuillez remplir les champs obligatoires.");
 
     if(editKey) {
-        // Mode Modification (L'admin modifie identité, classe, frais, adresse, tuteur sans toucher aux cotations)
         update(ref(db, `ecole_rdc_complet/eleves/${editKey}`), {
             nom, postnom, prenom, classe, adresse, datenais, tuteur, frais
         });
         annulerModificationEleve();
         alert("Informations de l'élève mises à jour avec succès !");
     } else {
-        // Mode Ajout d'un nouvel élève
         const codeEleve = `ELV-${Math.floor(1000 + Math.random() * 9000)}`;
         const codeParent = `PAR-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -564,7 +569,7 @@ function mettreAJourDashboardProf(data) {
 window.sauvegarderNoteProf = function(eleveKey) {
     const note = document.getElementById(`note-${eleveKey}`).value;
     const presence = document.getElementById(`pres-${eleveKey}`).value;
-    const trimestre = document.getElementById('select-trimestre')?.value || 'T1';
+    const trimestre = document.getElementById('prof-select-trimestre')?.value || 'T1';
     if(!note) return alert("Veuillez entrer une note.");
     
     update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/cotations/${trimestre}`), { [utilisateurConnecte.cours]: note });
@@ -596,8 +601,8 @@ function mettreAJourDashboardParent(data) {
 
     const chatBox = document.getElementById('parent-chat-box');
     chatBox.innerHTML = "";
-    Object.values(data.messages || {}).messages = data.messages || {};
-    Object.values(data.messages || {}).forEach(m => {
+    const messages = data.messages || {};
+    Object.values(messages).forEach(m => {
         if(m.codeParent === utilisateurConnecte.codeParent) {
             chatBox.innerHTML += `<div class="p-2 rounded bg-blue-50 text-blue-900"><strong>Vous :</strong> ${m.texte} <div class="text-[10px] text-slate-400">${m.date}</div></div>`;
         }
