@@ -13,6 +13,12 @@
     body {
         font-family: 'Plus Jakarta Sans', sans-serif;
         -webkit-text-size-adjust: 100%;
+        /* Fond noir avec un paysage d'école en arrière-plan */
+        background-color: #050505;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.85)), url('https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=1920&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
     }
 
     @media print {
@@ -36,15 +42,15 @@
     }
     .card-hover:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
     }
 </style>
 </head>
-<body class="bg-slate-50 min-h-full flex items-center justify-center p-2 sm:p-6 text-slate-700">
+<body class="min-h-full flex items-center justify-center p-2 sm:p-6 text-slate-700">
 
-<div class="max-w-6xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200/80 transition-all duration-300" id="app">
+<div class="max-w-6xl w-full bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-white/20 transition-all duration-300" id="app">
     <!-- En-tête -->
-    <div class="bg-white border-b border-slate-100 p-4 sm:p-8 text-center no-print">
+    <div class="bg-white/80 backdrop-blur-sm border-b border-slate-100 p-4 sm:p-8 text-center no-print">
         <div class="space-y-2">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full uppercase tracking-wider border border-blue-100 mb-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> République Démocratique du Congo
@@ -74,7 +80,7 @@
                 <div onclick="changerVue('prof-login', true)" class="group bg-white border border-slate-200/80 p-5 sm:p-6 rounded-xl card-hover cursor-pointer text-center relative shadow-xs">
                     <div class="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg sm:text-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">👨‍🏫</div>
                     <h3 class="font-bold text-slate-900 text-sm mb-1">Espace Professeur</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed font-medium">Notes, présences par jour & saisie</p>
+                    <p class="text-xs text-slate-500 leading-relaxed font-medium">Notes, calendrier des présences & saisie</p>
                 </div>
 
                 <div onclick="changerVue('eleve-login', true)" class="group bg-white border border-slate-200/80 p-5 sm:p-6 rounded-xl card-hover cursor-pointer text-center relative shadow-xs">
@@ -86,7 +92,7 @@
                 <div onclick="changerVue('parent-login', true)" class="group bg-white border border-slate-200/80 p-5 sm:p-6 rounded-xl card-hover cursor-pointer text-center relative shadow-xs">
                     <div class="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center text-lg sm:text-xl group-hover:bg-violet-600 group-hover:text-white transition-colors">👪</div>
                     <h3 class="font-bold text-slate-900 text-sm mb-1">Espace Parent</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed font-medium">Suivi par cours & bulletin officiel</p>
+                    <p class="text-xs text-slate-500 leading-relaxed font-medium">Suivi par cours, calendrier & bulletin officiel</p>
                 </div>
             </div>
         </div>
@@ -292,10 +298,17 @@
                     </div>
                     <div id="contenu-cotations" class="space-y-2.5 text-xs"></div>
                 </div>
-                <div class="bg-slate-50/70 border border-slate-200/80 p-4 sm:p-5 rounded-xl space-y-2.5">
-                    <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wide">Registre de présence journalier</h3>
-                    <p class="text-xs text-slate-500 font-medium">Historique des présences par jour enregistré par l'école.</p>
-                    <div id="contenu-presences" class="space-y-2 text-xs bg-white p-3.5 rounded-xl border border-slate-200 max-h-64 overflow-y-auto"></div>
+                <div class="bg-slate-50/70 border border-slate-200/80 p-4 sm:p-5 rounded-xl space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wide">Calendrier de Présence</h3>
+                        <div class="flex items-center gap-2 text-[10px] font-semibold text-slate-600">
+                            <button onclick="changerMoisCalendrierEleve(-1)" class="px-2 py-1 bg-white border border-slate-200 rounded-lg hover:bg-slate-100">◀</button>
+                            <span id="label-mois-eleve" class="w-28 text-center uppercase tracking-wider">Mois</span>
+                            <button onclick="changerMoisCalendrierEleve(1)" class="px-2 py-1 bg-white border border-slate-200 rounded-lg hover:bg-slate-100">▶</button>
+                        </div>
+                    </div>
+                    <!-- Vue Calendrier Interactif des Présences -->
+                    <div id="contenu-calendrier-eleve" class="bg-white p-3.5 rounded-xl border border-slate-200"></div>
                 </div>
             </div>
 
@@ -424,7 +437,7 @@
             <!-- ONGLET PROF: NOTES VS PRESENCES PAR JOUR -->
             <div class="flex gap-2 border-b border-slate-100 pb-2 no-print">
                 <button onclick="changerOngletProf('notes')" id="prof-tab-notes" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition">Cotations & Notes</button>
-                <button onclick="changerOngletProf('presences')" id="prof-tab-presences" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition">Feuille de Présence (Par Jour)</button>
+                <button onclick="changerOngletProf('presences')" id="prof-tab-presences" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition">Calendrier de Présence (Par Jour)</button>
             </div>
 
             <!-- SECTION COTATIONS PROF -->
@@ -488,12 +501,12 @@
                 </div>
             </div>
 
-            <!-- SECTION PRESENCES JOURNALIERES PROF -->
+            <!-- SECTION PRESENCES JOURNALIERES PROF (CALENDRIER) -->
             <div id="prof-sec-presences" class="space-y-4 hidden">
                 <div class="bg-slate-50/70 border border-slate-200/80 p-4 sm:p-5 rounded-xl space-y-3">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                         <div>
-                            <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wide">Appel & Présence par Jour en Classe</h3>
+                            <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wide">Calendrier d'appel & Présence par Jour</h3>
                             <p class="text-xs text-slate-500 font-medium">Sélectionnez la date du jour et la classe pour pointer les élèves.</p>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
@@ -576,12 +589,24 @@
                     </div>
                 </div>
             </div>
+            <!-- CALENDRIER DE PRESENCE POUR LE PARENT -->
+            <div class="bg-slate-50/70 border border-slate-200/80 p-4 sm:p-5 rounded-xl space-y-3">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wide">Calendrier des présences de l'enfant</h3>
+                    <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                        <button onclick="changerMoisCalendrierParent(-1)" class="px-2 py-1 bg-white border border-slate-200 rounded-lg hover:bg-slate-100">◀</button>
+                        <span id="label-mois-parent" class="w-32 text-center uppercase tracking-wider">Mois</span>
+                        <button onclick="changerMoisCalendrierParent(1)" class="px-2 py-1 bg-white border border-slate-200 rounded-lg hover:bg-slate-100">▶</button>
+                    </div>
+                </div>
+                <div id="contenu-calendrier-parent" class="bg-white p-4 rounded-xl border border-slate-200"></div>
+            </div>
         </div>
 
     </div>
 
     <!-- Pied de page -->
-    <div class="bg-slate-50 border-t border-slate-100 px-6 py-3.5 flex justify-between items-center text-[11px] text-slate-400 no-print font-medium">
+    <div class="bg-white/80 backdrop-blur-sm border-t border-slate-100 px-6 py-3.5 flex justify-between items-center text-[11px] text-slate-400 no-print font-medium">
         <span id="status-connexion" class="flex items-center">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
         </span>
@@ -611,6 +636,7 @@ let modeActif = '';
 let utilisateurConnecte = null;
 let cacheDonnees = null;
 let adminSelectedParentCode = null;
+let moisActuelCalendrier = new Date();
 const statusEl = document.getElementById('status-connexion');
 
 // Initialiser les dates par défaut du jour
@@ -1235,6 +1261,88 @@ window.enregistrerPresenceProfJour = function(eleveKey, dateStr) {
     }).catch(err => alert("Erreur : " + err.message));
 }
 
+// RENDU DU CALENDRIER VISUEL (MOIS PAR MOIS) POUR ÉLÈVE & PARENT
+function genererHTMLCalendrierPresences(eleveData, containerId, labelId) {
+    const container = document.getElementById(containerId);
+    const labelMois = document.getElementById(labelId);
+    if(!container || !labelMois) return;
+
+    const annee = moisActuelCalendrier.getFullYear();
+    const mois = moisActuelCalendrier.getMonth();
+    const nomsMois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+    labelMois.innerText = `${nomsMois[mois]} ${annee}`;
+
+    const premierJour = new Date(annee, mois, 1);
+    const dernierJour = new Date(annee, mois + 1, 0);
+    const nbJours = dernierJour.getDate();
+    let indexJourDebut = premierJour.getDay() - 1; // Lundi comme premier jour
+    if(indexJourDebut === -1) indexJourDebut = 6;
+
+    const presences = eleveData?.presences || {};
+
+    let html = `
+        <div class="grid grid-cols-7 gap-1 text-center text-[10px]">
+            <div class="font-bold text-slate-400 p-1">Lun</div>
+            <div class="font-bold text-slate-400 p-1">Mar</div>
+            <div class="font-bold text-slate-400 p-1">Mer</div>
+            <div class="font-bold text-slate-400 p-1">Jeu</div>
+            <div class="font-bold text-slate-400 p-1">Ven</div>
+            <div class="font-bold text-slate-400 p-1">Sam</div>
+            <div class="font-bold text-slate-400 p-1">Dim</div>
+    `;
+
+    for(let i=0; i<indexJourDebut; i++) {
+        html += `<div></div>`;
+    }
+
+    for(let jour=1; jour<=nbJours; jour++) {
+        const moisStr = String(mois + 1).padStart(2, '0');
+        const jourStr = String(jour).padStart(2, '0');
+        const dateCle = `${annee}-${moisStr}-${jourStr}`;
+        const statut = presences[dateCle];
+
+        let bgClass = "bg-slate-50 text-slate-600 border-slate-200";
+        let title = "Aucun pointage";
+        if(statut === 'Présent') {
+            bgClass = "bg-emerald-100 text-emerald-800 border-emerald-300 font-bold";
+            title = "Présent(e)";
+        } else if(statut === 'Absent') {
+            bgClass = "bg-red-100 text-red-800 border-red-300 font-bold";
+            title = "Absent(e)";
+        } else if(statut === 'Retard') {
+            bgClass = "bg-amber-100 text-amber-800 border-amber-300 font-bold";
+            title = "En retard";
+        } else if(statut === 'Exclu') {
+            bgClass = "bg-purple-100 text-purple-800 border-purple-300 font-bold";
+            title = "Exclu(e)";
+        }
+
+        html += `
+            <div class="border rounded-lg p-1.5 flex flex-col items-center justify-center ${bgClass}" title="${dateCle}: ${title}">
+                <span class="text-xs">${jour}</span>
+                <span class="text-[8px] truncate w-full">${statut ? statut.substring(0,3) : '-'}</span>
+            </div>
+        `;
+    }
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+window.changerMoisCalendrierEleve = function(sens) {
+    moisActuelCalendrier.setMonth(moisActuelCalendrier.getMonth() + sens);
+    if(utilisateurConnecte && cacheDonnees) {
+        mettreAJourDashboardEleve(cacheDonnees);
+    }
+}
+
+window.changerMoisCalendrierParent = function(sens) {
+    moisActuelCalendrier.setMonth(moisActuelCalendrier.getMonth() + sens);
+    if(cacheDonnees) {
+        mettreAJourDashboardParent(cacheDonnees);
+    }
+}
+
 // ESPACE ÉLÈVE
 function mettreAJourDashboardEleve(data) {
     if(!utilisateurConnecte) return;
@@ -1309,38 +1417,20 @@ function mettreAJourDashboardEleve(data) {
 
     document.getElementById('eleve-pourcentage-global').innerText = `${totalObtGeneral.toFixed(1)} pts / ${totalMaxGeneral} pts`;
 
-    // Présences par jour pour l'élève
-    const contPresences = document.getElementById('contenu-presences');
-    contPresences.innerHTML = "";
-    const presencesMap = eleveActuel.presences || {};
-    const datesPresences = Object.keys(presencesMap).sort().reverse();
+    // Générer le calendrier de présence élève
+    genererHTMLCalendrierPresences(eleveActuel, 'contenu-calendrier-eleve', 'label-mois-eleve');
 
-    if(datesPresences.length === 0) {
-        contPresences.innerHTML = `<div class="text-slate-400 text-xs text-center py-2 font-medium">Aucune présence enregistrée pour l'instant.</div>`;
-    } else {
-        datesPresences.forEach(date => {
-            const statut = presencesMap[date];
-            const badgeColor = statut === 'Présent' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
-            contPresences.innerHTML += `
-                <div class="flex justify-between items-center p-2 rounded-lg bg-slate-50 border border-slate-100 font-medium">
-                    <span>Date : <strong>${date}</strong></span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeColor}">${statut}</span>
-                </div>`;
-        });
-    }
-
-    // Remplissage Bulletin Officiel PDF
-    document.getElementById('bul-trimestre-txt').innerText = `TRIMESTRE ${trimestre.replace('T', '')}`;
+    // Préparer le bulletin
     document.getElementById('bul-nom').innerText = eleveActuel.nom;
     document.getElementById('bul-prenom').innerText = `${eleveActuel.postnom || ''} ${eleveActuel.prenom}`;
     document.getElementById('bul-classe').innerText = eleveActuel.classe;
     document.getElementById('bul-code').innerText = eleveActuel.codeEleve;
     document.getElementById('bul-tuteur').innerText = eleveActuel.tuteur;
     document.getElementById('bul-date').innerText = new Date().toLocaleDateString();
+    document.getElementById('bul-trimestre-txt').innerText = `TRIMESTRE ${trimestre.replace('T','')}`;
 
     const bulLignes = document.getElementById('bul-lignes-cours');
     bulLignes.innerHTML = "";
-
     Object.values(profs).forEach(p => {
         const coursNom = p.cours;
         const baremes = p.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
@@ -1355,7 +1445,9 @@ function mettreAJourDashboardEleve(data) {
         if(baremes.actifDevoir === 'oui') maxCours += baremes.maxDevoir;
         if(baremes.actifExamen === 'oui') maxCours += baremes.maxExamen;
 
-        const totalObtenuCours = sumInterros + (baremes.actifDevoir === 'oui' ? (parseFloat(notesCours.devoir) || 0) : 0) + (baremes.actifExamen === 'oui' ? (parseFloat(notesCours.examen) || 0) : 0);
+        const valDevoir = baremes.actifDevoir === 'oui' ? (parseFloat(notesCours.devoir) || 0) : 0;
+        const valExamen = baremes.actifExamen === 'oui' ? (parseFloat(notesCours.examen) || 0) : 0;
+        const totalObtenuCours = sumInterros + valDevoir + valExamen;
 
         bulLignes.innerHTML += `
             <tr class="border-b border-slate-200">
@@ -1373,156 +1465,93 @@ window.changerTrimestreEleve = function() {
     if(cacheDonnees) mettreAJourDashboardEleve(cacheDonnees);
 }
 
-// ESPACE PROFESSEUR
+// ESPACE PROFESSEUR (TABLEAU DE COTATIONS)
 function mettreAJourDashboardProf(data) {
-    if(!utilisateurConnecte) return;
+    if(!utilisateurConnecte || modeActif !== 'prof') return;
     const classeFiltre = document.getElementById('prof-select-classe').value;
     const trimestre = document.getElementById('prof-select-trimestre').value;
-    const coursProf = utilisateurConnecte.cours;
+    const tbody = document.getElementById('prof-liste-eleves-action');
+    tbody.innerHTML = "";
+
     const baremes = utilisateurConnecte.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
 
     for(let i=1; i<=4; i++) {
         const th = document.getElementById(`th-int${i}`);
-        if(th) {
-            if(i <= baremes.nbInterros) {
-                th.style.display = '';
-                th.innerText = `Int. ${i} (/${baremes.maxInterro})`;
-            } else {
-                th.style.display = 'none';
-            }
+        if(i <= baremes.nbInterros) {
+            if(th) { th.style.display = ''; th.innerText = `Int. ${i} (/${baremes.maxInterro})`; }
+        } else {
+            if(th) th.style.display = 'none';
         }
     }
 
     const thDev = document.getElementById('th-dev');
-    if(thDev) {
-        if(baremes.actifDevoir === 'oui') {
-            thDev.style.display = '';
-            thDev.innerText = `Devoir (/${baremes.maxDevoir})`;
-        } else {
-            thDev.style.display = 'none';
-        }
+    if(baremes.actifDevoir === 'oui') {
+        thDev.style.display = '';
+        thDev.innerText = `Devoir (/${baremes.maxDevoir})`;
+    } else {
+        thDev.style.display = 'none';
     }
 
     const thEx = document.getElementById('th-ex');
-    if(thEx) {
-        if(baremes.actifExamen === 'oui') {
-            thEx.style.display = '';
-            thEx.innerText = `Examen (/${baremes.maxExamen})`;
-        } else {
-            thEx.style.display = 'none';
-        }
+    if(baremes.actifExamen === 'oui') {
+        thEx.style.display = '';
+        thEx.innerText = `Examen (/${baremes.maxExamen})`;
+    } else {
+        thEx.style.display = 'none';
     }
 
-    const tbody = document.getElementById('prof-liste-eleves-action');
-    tbody.innerHTML = "";
-
     const eleves = data.eleves || {};
-    let nbElevesAffiches = 0;
+    let nbEleves = 0;
 
-    Object.keys(eleves).forEach(key => {
-        const el = eleves[key];
+    Object.keys(eleves).forEach(elKey => {
+        const el = eleves[elKey];
         if(classeFiltre && el.classe !== classeFiltre) return;
-        nbElevesAffiches++;
+        nbEleves++;
 
-        const notes = el.cotations?.[trimestre]?.[coursProf] || {};
-        
-        let htmlInts = '';
-        let sumInt = 0;
+        const notes = el.cotations?.[trimestre]?.[utilisateurConnecte.cours] || {};
 
-        for(let i=1; i<=4; i++) {
-            if(i <= baremes.nbInterros) {
-                const val = notes[`int${i}`] !== undefined ? notes[`int${i}`] : '';
-                sumInt += parseFloat(val) || 0;
-                htmlInts += `<td class="p-2.5 text-center"><input type="number" id="note-${key}-int${i}" value="${val}" min="0" max="${baremes.maxInterro}" onchange="sauvegarderNoteProf('${key}', '${trimestre}', '${coursProf}')" class="w-14 bg-white border border-slate-200 p-1.5 rounded-lg text-center font-mono text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
-            } else {
-                htmlInts += `<td class="p-2.5 text-center" style="display:none;"></td>`;
-            }
+        let inputsHtml = '';
+        let sumInterros = 0;
+        for(let i=1; i<=baremes.nbInterros; i++) {
+            const val = notes[`int${i}`] !== undefined ? notes[`int${i}`] : '';
+            sumInterros += parseFloat(val) || 0;
+            inputsHtml += `<td class="p-2 text-center"><input type="number" id="note-${elKey}-int${i}" value="${val}" onchange="sauvegarderNoteProf('${elKey}', '${trimestre}')" class="w-12 bg-white border border-slate-200 p-1 text-center rounded text-xs font-mono font-bold focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
         }
 
-        let htmlDev = '';
-        let valDev = 0;
+        for(let i=baremes.nbInterros+1; i<=4; i++) {
+            inputsHtml += `<td class="p-2 text-center hidden"></td>`;
+        }
+
+        let valDev = notes.devoir !== undefined ? notes.devoir : '';
+        let numDev = parseFloat(valDev) || 0;
         if(baremes.actifDevoir === 'oui') {
-            valDev = notes.devoir !== undefined ? notes.devoir : '';
-            htmlDev = `<td class="p-2.5 text-center"><input type="number" id="note-${key}-devoir" value="${valDev}" min="0" max="${baremes.maxDevoir}" onchange="sauvegarderNoteProf('${key}', '${trimestre}', '${coursProf}')" class="w-14 bg-white border border-slate-200 p-1.5 rounded-lg text-center font-mono text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
+            inputsHtml += `<td class="p-2 text-center"><input type="number" id="note-${elKey}-devoir" value="${valDev}" onchange="sauvegarderNoteProf('${elKey}', '${trimestre}')" class="w-12 bg-white border border-slate-200 p-1 text-center rounded text-xs font-mono font-bold focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
         } else {
-            htmlDev = `<td class="p-2.5 text-center" style="display:none;"></td>`;
+            inputsHtml += `<td class="p-2 text-center hidden"></td>`;
         }
 
-        let htmlEx = '';
-        let valEx = 0;
+        let valEx = notes.examen !== undefined ? notes.examen : '';
+        let numEx = parseFloat(valEx) || 0;
         if(baremes.actifExamen === 'oui') {
-            valEx = notes.examen !== undefined ? notes.examen : '';
-            htmlEx = `<td class="p-2.5 text-center"><input type="number" id="note-${key}-examen" value="${valEx}" min="0" max="${baremes.maxExamen}" onchange="sauvegarderNoteProf('${key}', '${trimestre}', '${coursProf}')" class="w-14 bg-white border border-slate-200 p-1.5 rounded-lg text-center font-mono text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
+            inputsHtml += `<td class="p-2 text-center"><input type="number" id="note-${elKey}-examen" value="${valEx}" onchange="sauvegarderNoteProf('${elKey}', '${trimestre}')" class="w-12 bg-white border border-slate-200 p-1 text-center rounded text-xs font-mono font-bold focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
         } else {
-            htmlEx = `<td class="p-2.5 text-center" style="display:none;"></td>`;
+            inputsHtml += `<td class="p-2 text-center hidden"></td>`;
         }
 
-        const totalEleveCours = sumInt + (baremes.actifDevoir === 'oui' ? (parseFloat(valDev) || 0) : 0) + (baremes.actifExamen === 'oui' ? (parseFloat(valEx) || 0) : 0);
+        const totalObtenu = sumInterros + (baremes.actifDevoir === 'oui' ? numDev : 0) + (baremes.actifExamen === 'oui' ? numEx : 0);
 
         tbody.innerHTML += `
             <tr class="hover:bg-slate-50 transition-colors">
                 <td class="p-2.5 font-semibold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
                 <td class="p-2.5 text-slate-600 font-medium">${el.classe}</td>
-                ${htmlInts}
-                ${htmlDev}
-                ${htmlEx}
-                <td class="p-2.5 text-center font-mono font-bold text-slate-900 bg-slate-50" id="total-${key}">${totalEleveCours}</td>
+                ${inputsHtml}
+                <td class="p-2.5 text-center font-mono font-bold bg-slate-100 text-slate-900" id="total-${elKey}">${totalObtenu}</td>
             </tr>`;
     });
 
-    if(nbElevesAffiches === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-slate-400 font-medium">Aucun élève trouvé</td></tr>`;
+    if(nbEleves === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-400 font-medium">Aucun élève trouvé</td></tr>`;
     }
-}
-
-window.sauvegarderNoteProf = function(eleveKey, trimestre, coursProf) {
-    const baremes = utilisateurConnecte.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
-    const notesMaj = {};
-
-    let sum = 0;
-    for(let i=1; i<=baremes.nbInterros; i++) {
-        const input = document.getElementById(`note-${eleveKey}-int${i}`);
-        if(input) {
-            const val = parseFloat(input.value);
-            if(!isNaN(val)) {
-                notesMaj[`int${i}`] = val;
-                sum += val;
-            } else {
-                notesMaj[`int${i}`] = 0;
-            }
-        }
-    }
-
-    if(baremes.actifDevoir === 'oui') {
-        const inputDev = document.getElementById(`note-${eleveKey}-devoir`);
-        if(inputDev) {
-            const val = parseFloat(inputDev.value);
-            if(!isNaN(val)) {
-                notesMaj['devoir'] = val;
-                sum += val;
-            } else {
-                notesMaj['devoir'] = 0;
-            }
-        }
-    }
-
-    if(baremes.actifExamen === 'oui') {
-        const inputEx = document.getElementById(`note-${eleveKey}-examen`);
-        if(inputEx) {
-            const val = parseFloat(inputEx.value);
-            if(!isNaN(val)) {
-                notesMaj['examen'] = val;
-                sum += val;
-            } else {
-                notesMaj['examen'] = 0;
-            }
-        }
-    }
-
-    const totalCell = document.getElementById(`total-${eleveKey}`);
-    if(totalCell) totalCell.innerText = sum;
-
-    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/cotations/${trimestre}/${coursProf}`), notesMaj);
 }
 
 window.changerClasseProf = function() {
@@ -1533,31 +1562,73 @@ window.changerTrimestreProf = function() {
     if(cacheDonnees) mettreAJourDashboardProf(cacheDonnees);
 }
 
+window.sauvegarderNoteProf = function(eleveKey, trimestre) {
+    if(!utilisateurConnecte || modeActif !== 'prof') return;
+    const baremes = utilisateurConnecte.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+    const cours = utilisateurConnecte.cours;
+
+    let notesMaj = {};
+    let sumInterros = 0;
+
+    for(let i=1; i<=baremes.nbInterros; i++) {
+        const elInput = document.getElementById(`note-${eleveKey}-int${i}`);
+        if(elInput) {
+            const val = parseFloat(elInput.value) || 0;
+            notesMaj[`int${i}`] = val;
+            sumInterros += val;
+        }
+    }
+
+    let numDev = 0;
+    if(baremes.actifDevoir === 'oui') {
+        const elDev = document.getElementById(`note-${eleveKey}-devoir`);
+        if(elDev) {
+            numDev = parseFloat(elDev.value) || 0;
+            notesMaj['devoir'] = numDev;
+        }
+    }
+
+    let numEx = 0;
+    if(baremes.actifExamen === 'oui') {
+        const elEx = document.getElementById(`note-${eleveKey}-examen`);
+        if(elEx) {
+            numEx = parseFloat(elEx.value) || 0;
+            notesMaj['examen'] = numEx;
+        }
+    }
+
+    const totalEl = document.getElementById(`total-${eleveKey}`);
+    if(totalEl) {
+        totalEl.innerText = sumInterros + (baremes.actifDevoir === 'oui' ? numDev : 0) + (baremes.actifExamen === 'oui' ? numEx : 0);
+    }
+
+    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/cotations/${trimestre}/${cours}`), notesMaj);
+}
+
 // ESPACE PARENT / TUTEUR
 function mettreAJourDashboardParent(data) {
-    if(!utilisateurConnecte) return;
+    if(!utilisateurConnecte || modeActif !== 'parent') return;
     const codeParent = utilisateurConnecte.codeParent;
     const trimestre = document.getElementById('select-trimestre-parent').value;
     const coursFiltre = document.getElementById('select-cours-parent').value;
-
-    const contEnfants = document.getElementById('parent-liste-enfants');
-    contEnfants.innerHTML = "";
+    const container = document.getElementById('parent-liste-enfants');
+    container.innerHTML = "";
 
     const eleves = data.eleves || {};
     const profs = data.profs || {};
-    let unEnfantNonOrdre = false;
-    let nbEnfants = 0;
+    let unFraisBloque = false;
+    let premierEnfant = null;
 
-    Object.keys(eleves).forEach(key => {
-        const el = eleves[key];
+    Object.keys(eleves).forEach(elKey => {
+        const el = eleves[elKey];
         if(el.codeParent === codeParent) {
-            nbEnfants++;
-            if(el.frais === 'non_ordre') unEnfantNonOrdre = true;
+            if(!premierEnfant) premierEnfant = el;
+            if(el.frais === 'non_ordre') unFraisBloque = true;
 
             const cotationsTrim = el.cotations?.[trimestre] || {};
             let htmlCours = '';
-            let totalMaxEl = 0;
-            let totalObtEl = 0;
+            let totalMax = 0;
+            let totalObt = 0;
 
             Object.values(profs).forEach(p => {
                 const coursNom = p.cours;
@@ -1573,52 +1644,53 @@ function mettreAJourDashboardParent(data) {
                     sumInterros += (parseFloat(notesCours[`int${i}`]) || 0);
                 }
                 if(baremes.actifDevoir === 'oui') maxCours += baremes.maxDevoir;
-                let valDev = baremes.actifDevoir === 'oui' ? (parseFloat(notesCours.devoir) || 0) : 0;
                 if(baremes.actifExamen === 'oui') maxCours += baremes.maxExamen;
-                let valEx = baremes.actifExamen === 'oui' ? (parseFloat(notesCours.examen) || 0) : 0;
 
-                const totalObtenuCours = sumInterros + valDev + valEx;
-                totalMaxEl += maxCours;
-                totalObtEl += totalObtenuCours;
+                const valDevoir = baremes.actifDevoir === 'oui' ? (parseFloat(notesCours.devoir) || 0) : 0;
+                const valExamen = baremes.actifExamen === 'oui' ? (parseFloat(notesCours.examen) || 0) : 0;
+                const totalObtenuCours = sumInterros + valDevoir + valExamen;
+
+                totalMax += maxCours;
+                totalObt += totalObtenuCours;
 
                 htmlCours += `
-                    <div class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-slate-200">
-                        <span class="font-semibold text-slate-800">${coursNom}</span>
+                    <div class="bg-white border border-slate-200 p-2.5 rounded-lg flex justify-between items-center text-xs">
+                        <span class="font-bold text-slate-800">${coursNom}</span>
                         <span class="font-mono text-blue-600 font-bold">${totalObtenuCours} / ${maxCours} pts</span>
                     </div>`;
             });
 
-            contEnfants.innerHTML += `
+            container.innerHTML += `
                 <div class="bg-white border border-slate-200 p-4 rounded-xl space-y-3 shadow-xs">
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <div class="flex justify-between items-center border-b pb-2">
                         <div>
-                            <h4 class="font-bold text-slate-900">${el.nom} ${el.postnom || ''} ${el.prenom}</h4>
-                            <p class="text-[11px] text-slate-500 font-medium">Classe : ${el.classe}</p>
+                            <h4 class="font-bold text-slate-900 text-sm">${el.nom} ${el.postnom || ''} ${el.prenom}</h4>
+                            <p class="text-[11px] text-slate-500 font-medium">Classe : ${el.classe} | Réf : ${el.codeEleve}</p>
                         </div>
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${el.frais === 'en_ordre' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}">${el.frais === 'en_ordre' ? 'Frais en ordre' : 'Frais non payés'}</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${el.frais === 'en_ordre' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}">${el.frais === 'en_ordre' ? 'En ordre' : 'Frais non payés'}</span>
                     </div>
-                    <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                        ${htmlCours || '<p class="text-slate-400 text-xs">Aucun cours trouvé</p>'}
-                    </div>
-                    <div class="text-right font-bold text-xs pt-1 text-slate-900">Total Général : <span class="text-blue-600 font-mono">${totalObtEl.toFixed(1)} / ${totalMaxEl} pts</span></div>
+                    <div class="space-y-2 max-h-48 overflow-y-auto">${htmlCours}</div>
+                    <div class="text-right text-xs font-bold text-slate-900 pt-1">Total Trimestriel : ${totalObt.toFixed(1)} / ${totalMax} pts</div>
                 </div>`;
         }
     });
 
-    if(unEnfantNonOrdre) {
-        document.getElementById('alerte-frais-parent').classList.remove('hidden');
-    } else {
-        document.getElementById('alerte-frais-parent').classList.add('hidden');
+    const alerteFrais = document.getElementById('alerte-frais-parent');
+    if(unFraisBloque) alerteFrais.classList.remove('hidden');
+    else alerteFrais.classList.add('hidden');
+
+    if(premierEnfant) {
+        genererHTMLCalendrierPresences(premierEnfant, 'contenu-calendrier-parent', 'label-mois-parent');
     }
 
-    initialiserChatParent(data, codeParent);
+    afficherMessagesWhatsAppParent(data, codeParent);
 }
 
 window.changerTrimestreParent = function() {
     if(cacheDonnees) mettreAJourDashboardParent(cacheDonnees);
 }
 
-function initialiserChatParent(data, codeParent) {
+function afficherMessagesWhatsAppParent(data, codeParent) {
     const chatBox = document.getElementById('parent-chat-box');
     if(!chatBox) return;
     chatBox.innerHTML = "";
@@ -1631,22 +1703,22 @@ function initialiserChatParent(data, codeParent) {
         if(m.codeParent === codeParent) {
             trouve = true;
             chatBox.innerHTML += `
-                <div class="flex flex-col items-start mb-2">
-                    <div class="bg-slate-100 rounded-xl rounded-tl-sm p-2.5 max-w-[85%] text-xs border border-slate-200/60 space-y-1">
-                        <div class="font-bold text-[9px] text-slate-500 uppercase tracking-wide">Moi (${m.tuteur})</div>
-                        <div class="text-slate-800 font-medium">${m.texte}</div>
-                        <div class="text-[8px] text-slate-400 text-right">${m.date}</div>
+                <div class="flex flex-col items-end mb-2">
+                    <div class="bg-blue-600 text-white rounded-xl rounded-tr-sm p-2.5 max-w-[85%] text-xs space-y-1 shadow-xs">
+                        <div class="font-bold text-[9px] text-blue-200">Moi (Tuteur)</div>
+                        <div>${m.texte}</div>
+                        <div class="text-[8px] text-blue-200 text-right font-semibold">${m.date}</div>
                     </div>
                 </div>`;
 
             if(m.reponses) {
                 Object.values(m.reponses).forEach(rep => {
                     chatBox.innerHTML += `
-                        <div class="flex flex-col items-end mb-2">
-                            <div class="bg-slate-900 text-white rounded-xl rounded-tr-sm p-2.5 max-w-[85%] text-xs space-y-1 shadow-xs">
-                                <div class="font-bold text-[9px] text-slate-400 uppercase tracking-wide">Administration</div>
-                                <div class="font-medium">${rep.texte}</div>
-                                <div class="text-[8px] text-slate-400 text-right">${rep.date}</div>
+                        <div class="flex flex-col items-start mb-2">
+                            <div class="bg-slate-100 border border-slate-200 rounded-xl rounded-tl-sm p-2.5 max-w-[85%] text-xs space-y-1">
+                                <div class="font-bold text-[9px] text-slate-500">Administration</div>
+                                <div class="text-slate-800">${rep.texte}</div>
+                                <div class="text-[8px] text-slate-400 text-right font-semibold">${rep.date}</div>
                             </div>
                         </div>`;
                 });
@@ -1667,32 +1739,30 @@ window.envoyerMessageParent = function() {
     if(!texte) return;
 
     const codeParent = utilisateurConnecte.codeParent;
-    const nomTuteur = utilisateurConnecte.tuteur;
     const dateStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
     const messages = cacheDonnees?.messages || {};
-    let targetMsgKey = null;
-
+    let targetKey = null;
     Object.keys(messages).forEach(k => {
-        if(messages[k].codeParent === codeParent) targetMsgKey = k;
+        if(messages[k].codeParent === codeParent) targetKey = k;
     });
 
-    if(targetMsgKey) {
-        push(ref(db, `ecole_rdc_complet/messages/${targetMsgKey}/reponses`), {
+    if(targetKey) {
+        push(ref(db, `ecole_rdc_complet/messages/${targetKey}/reponses`), {
             texte: texte,
             date: dateStr
         }).then(() => {
             input.value = '';
-        }).catch(err => alert("Erreur : " + err.message));
+        });
     } else {
         push(ref(db, 'ecole_rdc_complet/messages'), {
             codeParent: codeParent,
-            tuteur: nomTuteur,
+            tuteur: utilisateurConnecte.tuteur,
             texte: texte,
             date: dateStr
         }).then(() => {
             input.value = '';
-        }).catch(err => alert("Erreur : " + err.message));
+        });
     }
 }
 </script>
