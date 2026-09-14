@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portail Scolaire RDC - Administration & Consultation</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- Inclusion de html2pdf.js pour le téléchargement PDF non modifiable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
     @media print {
         body * { visibility: hidden; }
@@ -16,38 +18,38 @@
     }
 </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-2 sm:p-4">
 
 <div class="max-w-6xl w-full bg-white rounded-2xl shadow-xl overflow-hidden" id="app">
     <!-- En-tête -->
-    <div class="bg-blue-900 text-white p-6 text-center no-print">
-        <h1 class="text-3xl font-bold">République Démocratique du Congo</h1>
-        <p class="text-blue-200 text-sm mt-1">Portail de gestion, pondération dynamique & calcul des points</p>
+    <div class="bg-blue-900 text-white p-4 sm:p-6 text-center no-print">
+        <h1 class="text-2xl sm:text-3xl font-bold">République Démocratique du Congo</h1>
+        <p class="text-blue-200 text-xs sm:text-sm mt-1">Portail de gestion, pondération dynamique & calcul des points</p>
     </div>
 
     <!-- Contenu dynamique -->
-    <div class="p-6 md:p-8" id="main-content">
+    <div class="p-4 sm:p-6 md:p-8" id="main-content">
         
         <!-- ÉCRAN D'ACCUEIL -->
         <div id="vue-accueil" class="space-y-6">
-            <h2 class="text-xl font-semibold text-center text-slate-700 mb-6">Sélectionnez votre espace de connexion</h2>
-            <div class="grid md:grid-cols-4 gap-4">
-                <div onclick="changerVue('admin-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
+            <h2 class="text-lg sm:text-xl font-semibold text-center text-slate-700 mb-6">Sélectionnez votre espace de connexion</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div onclick="changerVue('admin-login', true)" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">⚙️</div>
                     <h3 class="font-bold text-slate-800">Administration</h3>
                     <p class="text-xs text-slate-500 mt-1">Gestion complète, modification & impression</p>
                 </div>
-                <div onclick="changerVue('prof-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
+                <div onclick="changerVue('prof-login', true)" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">👨‍🏫</div>
                     <h3 class="font-bold text-slate-800">Espace Professeur</h3>
                     <p class="text-xs text-slate-500 mt-1">Paramètres de notes (/10, /20...) & saisie</p>
                 </div>
-                <div onclick="changerVue('eleve-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
+                <div onclick="changerVue('eleve-login', true)" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">🎓</div>
                     <h3 class="font-bold text-slate-800">Espace Élève</h3>
                     <p class="text-xs text-slate-500 mt-1">Consultation détaillée & bulletin officiel</p>
                 </div>
-                <div onclick="changerVue('parent-login')" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
+                <div onclick="changerVue('parent-login', true)" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
                     <div class="text-3xl mb-2">👪</div>
                     <h3 class="font-bold text-slate-800">Espace Parent</h3>
                     <p class="text-xs text-slate-500 mt-1">Suivi par cours & bulletin officiel</p>
@@ -57,7 +59,7 @@
 
         <!-- FORMULAIRES DE CONNEXION -->
         <div id="vue-connexion" class="hidden max-w-md mx-auto space-y-4">
-            <button onclick="changerVue('accueil')" class="text-sm text-blue-600 hover:underline mb-2">← Retour à l'accueil</button>
+            <button onclick="changerVue('accueil', true)" class="text-sm text-blue-600 hover:underline mb-2">← Retour à l'accueil</button>
             <h2 id="titre-connexion" class="text-xl font-bold text-slate-800">Connexion</h2>
             <div>
                 <label id="label-code" class="block text-sm font-medium text-slate-600 mb-1">Code d'accès</label>
@@ -69,26 +71,26 @@
 
         <!-- TABLEAU DE BORD ADMINISTRATION -->
         <div id="vue-admin-dashboard" class="hidden space-y-6">
-            <div class="flex justify-between items-center border-b pb-4 no-print">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-3 no-print">
                 <h2 class="text-xl font-bold text-slate-800">Administration Centrale</h2>
-                <div class="flex gap-3">
+                <div class="flex flex-wrap gap-3">
                     <button onclick="imprimerListeEleves()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700">🖨️ Imprimer la liste</button>
-                    <button onclick="changerVue('accueil')" class="text-sm text-red-600 hover:underline">Déconnexion</button>
+                    <button onclick="changerVue('accueil', true)" class="text-sm text-red-600 hover:underline">Déconnexion</button>
                 </div>
             </div>
 
-            <div class="flex gap-2 border-b pb-2 no-print">
-                <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">Élèves & Gestion</button>
-                <button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Professeurs</button>
-                <button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Messagerie Parents</button>
-                <button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Calendrier Présences (Admin)</button>
+            <div class="flex flex-wrap gap-2 border-b pb-2 no-print overflow-x-auto">
+                <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap">Élèves & Gestion</button>
+                <button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-3 sm:px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap">Professeurs</button>
+                <button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-3 sm:px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap">Messagerie Parents</button>
+                <button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-3 sm:px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap">Calendrier Présences</button>
             </div>
 
             <div id="admin-sec-eleves" class="space-y-4">
                 <div class="bg-slate-50 p-4 rounded-xl border no-print">
-                    <h3 id="titre-form-eleve" class="font-bold text-slate-700 mb-3">Enregistrer un nouvel élève</h3>
+                    <h3 id="titre-form-eleve" class="font-bold text-slate-700 mb-3 text-sm sm:text-base">Enregistrer un nouvel élève</h3>
                     <input type="hidden" id="edit-eleve-key" value="">
-                    <div class="grid md:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                         <input id="el-nom" placeholder="Nom" class="border p-2 rounded text-sm">
                         <input id="el-postnom" placeholder="Post-nom" class="border p-2 rounded text-sm">
                         <input id="el-prenom" placeholder="Prénom" class="border p-2 rounded text-sm">
@@ -131,7 +133,7 @@
                         <h3 class="text-md font-semibold text-slate-600">Liste officielle des élèves inscrits</h3>
                         <p class="text-xs text-slate-400">Date d'impression : <span id="date-impression"></span></p>
                     </div>
-                    <table class="w-full text-left border-collapse text-sm">
+                    <table class="w-full text-left border-collapse text-sm min-w-[600px]">
                         <thead>
                             <tr class="bg-slate-100 text-slate-600 uppercase text-xs">
                                 <th class="p-2 border">Nom complet</th>
@@ -149,15 +151,15 @@
 
             <div id="admin-sec-professeurs" class="space-y-4 hidden">
                 <div class="bg-slate-50 p-4 rounded-xl border">
-                    <h3 class="font-bold text-slate-700 mb-3">Enregistrer un professeur</h3>
-                    <div class="grid md:grid-cols-4 gap-3">
+                    <h3 class="font-bold text-slate-700 mb-3 text-sm sm:text-base">Enregistrer un professeur</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <input id="prf-nom" placeholder="Nom complet" class="border p-2 rounded text-sm">
                         <input id="prf-cours" placeholder="Cours principal" class="border p-2 rounded text-sm">
                         <button onclick="enregistrerProfesseur()" class="bg-blue-600 text-white p-2 rounded text-sm font-medium">Générer code prof</button>
                     </div>
                 </div>
                 <h3 class="font-bold text-slate-700 mt-4">Professeurs actifs</h3>
-                <div id="liste-admin-profs" class="grid md:grid-cols-2 gap-3"></div>
+                <div id="liste-admin-profs" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
             </div>
 
             <div id="admin-sec-messages" class="space-y-4 hidden">
@@ -167,7 +169,7 @@
 
             <div id="admin-sec-calendrier" class="space-y-4 hidden">
                 <h3 class="font-bold text-slate-700">Gestion globale des calendriers de présence (Élèves)</h3>
-                <p class="text-xs text-slate-500">Modifiez le statut de présence des élèves par trimestre. Seule l'administration peut effectuer ces modifications.</p>
+                <p class="text-xs text-slate-500">Modifiez le statut de présence des élèves par trimestre.</p>
                 <div class="flex gap-3 items-center">
                     <select id="admin-cal-trimestre" onchange="chargerCalendrierAdmin()" class="border p-2 rounded text-sm bg-white">
                         <option value="T1">Trimestre 1 (T1)</option>
@@ -176,7 +178,7 @@
                     </select>
                 </div>
                 <div class="overflow-x-auto border rounded-xl bg-white">
-                    <table class="w-full text-left border-collapse text-sm">
+                    <table class="w-full text-left border-collapse text-sm min-w-[500px]">
                         <thead>
                             <tr class="bg-slate-100 text-slate-600 uppercase text-xs">
                                 <th class="p-2 border">Élève</th>
@@ -193,14 +195,15 @@
 
         <!-- TABLEAU DE BORD ÉLÈVE -->
         <div id="vue-eleve-dashboard" class="hidden space-y-6">
-            <div class="flex justify-between items-center border-b pb-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-3">
                 <div>
                     <h2 class="text-xl font-bold text-slate-800">Espace Élève</h2>
                     <p id="welcome-eleve" class="text-sm text-slate-500"></p>
                 </div>
-                <div class="flex gap-3 items-center">
-                    <button onclick="imprimerBulletinEleve()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700 no-print">🖨️ Imprimer mon Bulletin Officiel</button>
-                    <button onclick="changerVue('accueil')" class="text-sm text-red-600 hover:underline no-print">Déconnexion</button>
+                <div class="flex flex-wrap gap-2 sm:gap-3 items-center">
+                    <!-- Bouton Téléchargement PDF non modifiable (Réservé à l'élève) -->
+                    <button onclick="telechargerBulletinPDF()" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 no-print">📥 Télécharger mon Bulletin (PDF)</button>
+                    <button onclick="changerVue('accueil', true)" class="text-sm text-red-600 hover:underline no-print">Déconnexion</button>
                 </div>
             </div>
             
@@ -208,16 +211,16 @@
             <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 rounded-xl shadow flex justify-between items-center">
                 <div>
                     <h3 class="text-sm font-semibold uppercase tracking-wider opacity-80">Total Général Trimestriel</h3>
-                    <div class="text-3xl font-extrabold mt-1" id="eleve-pourcentage-global">0.0 pts / 0 pts</div>
+                    <div class="text-2xl sm:text-3xl font-extrabold mt-1" id="eleve-pourcentage-global">0.0 pts / 0 pts</div>
                     <p class="text-xs opacity-90 mt-1">Cumul des points obtenus / Maximum total général</p>
                 </div>
-                <div class="text-4xl">📊</div>
+                <div class="text-3xl sm:text-4xl">📊</div>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-blue-50 border border-blue-200 p-4 sm:p-5 rounded-xl space-y-4">
                     <div class="flex flex-wrap justify-between items-center gap-2">
-                        <h3 class="font-bold text-blue-900">Détails par cours & Cotations</h3>
+                        <h3 class="font-bold text-blue-900 text-sm sm:text-base">Détails par cours & Cotations</h3>
                         <div class="flex gap-2">
                             <select id="select-trimestre-eleve" onchange="changerTrimestreEleve()" class="border p-1.5 rounded bg-white text-xs">
                                 <option value="T1">Trimestre 1 (T1)</option>
@@ -232,13 +235,13 @@
                     <div id="contenu-cotations" class="space-y-3 text-sm"></div>
                 </div>
                 <div class="bg-slate-50 border p-5 rounded-xl space-y-4">
-                    <h3 class="font-bold text-slate-800">Calendrier & Registre de présence</h3>
+                    <h3 class="font-bold text-slate-800 text-sm sm:text-base">Calendrier & Registre de présence</h3>
                     <p class="text-xs text-slate-500">Statut officiel validé par l'administration (lecture seule).</p>
                     <div id="contenu-presences" class="space-y-2 text-sm bg-white p-4 rounded-lg border"></div>
                 </div>
             </div>
 
-            <!-- BULLETIN OFFICIEL RDC (Caché pour impression) -->
+            <!-- BULLETIN OFFICIEL RDC (Caché pour impression / Export PDF non modifiable) -->
             <div id="bulletin-impression" class="hidden p-6 bg-white text-slate-900 border-2 border-slate-900 space-y-6 max-w-4xl mx-auto">
                 <div class="text-center border-b-2 border-slate-900 pb-4 space-y-1">
                     <h4 class="font-extrabold text-sm uppercase tracking-wide">REPUBLIQUE DEMOCRATIQUE DU CONGO</h4>
@@ -259,7 +262,7 @@
                     <div>
                         <p><strong>Numéro d'ordre :</strong> <span id="bul-code"></span></p>
                         <p><strong>Tuteur :</strong> <span id="bul-tuteur"></span></p>
-                        <p><strong>Date d'impression :</strong> <span id="bul-date"></span></p>
+                        <p><strong>Date d'édition :</strong> <span id="bul-date"></span></p>
                     </div>
                 </div>
 
@@ -308,21 +311,21 @@
 
         <!-- TABLEAU DE BORD PROFESSEUR -->
         <div id="vue-prof-dashboard" class="hidden space-y-6">
-            <div class="flex justify-between items-center border-b pb-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-3">
                 <div>
                     <h2 class="text-xl font-bold text-slate-800">Espace Professeur</h2>
                     <p id="welcome-prof" class="text-sm text-slate-500"></p>
                 </div>
                 <div class="flex gap-2 items-center">
                     <button onclick="imprimerFicheProf()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700 no-print">🖨️ Imprimer la fiche</button>
-                    <button onclick="changerVue('accueil')" class="text-sm text-red-600 hover:underline no-print">Déconnexion</button>
+                    <button onclick="changerVue('accueil', true)" class="text-sm text-red-600 hover:underline no-print">Déconnexion</button>
                 </div>
             </div>
 
             <!-- Configuration des Maxima et du nombre d'évaluations -->
             <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-3 no-print">
                 <h3 class="font-bold text-amber-900 text-sm">⚙️ Configuration des Barèmes et du Nombre d'Évaluations</h3>
-                <div class="grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs">
                     <div>
                         <label class="block font-medium text-slate-700 mb-1">Nombre d'Interros (1-4)</label>
                         <select id="cfg-nb-interros" onchange="sauvegarderBaremesProf()" class="w-full border p-1.5 rounded bg-white">
@@ -361,10 +364,10 @@
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-1 gap-6">
-                <div class="bg-emerald-50 border border-emerald-200 p-5 rounded-xl space-y-4">
+            <div class="grid grid-cols-1 gap-6">
+                <div class="bg-emerald-50 border border-emerald-200 p-4 sm:p-5 rounded-xl space-y-4">
                     <div class="flex flex-wrap justify-between items-center gap-2 no-print">
-                        <h3 class="font-bold text-emerald-900">Saisie des Notes & Évaluations</h3>
+                        <h3 class="font-bold text-emerald-900 text-sm sm:text-base">Saisie des Notes & Évaluations</h3>
                         <div class="flex items-center gap-2">
                             <select id="prof-select-classe" onchange="changerClasseProf()" class="border p-1.5 rounded bg-white text-xs">
                                 <option value="">Toutes les classes</option>
@@ -401,7 +404,7 @@
                             <p class="text-xs text-slate-500">Professeur : <span id="print-prof-nom"></span> | Cours : <span id="print-prof-cours"></span> | Trimestre : <span id="print-prof-trim"></span> | Classe : <span id="print-prof-classe">Toutes</span></p>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs">
+                            <table class="w-full text-left border-collapse text-xs min-w-[700px]">
                                 <thead>
                                     <tr class="bg-slate-100 text-slate-600 uppercase text-[10px]">
                                         <th class="p-2 border">Élève</th>
@@ -426,21 +429,21 @@
 
         <!-- TABLEAU DE BORD PARENT / TUTEUR -->
         <div id="vue-parent-dashboard" class="hidden space-y-6">
-            <div class="flex justify-between items-center border-b pb-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-3">
                 <div>
                     <h2 class="text-xl font-bold text-slate-800">Espace Parent / Tuteur</h2>
                     <p id="welcome-parent" class="text-sm text-slate-500"></p>
                 </div>
-                <button onclick="changerVue('accueil')" class="text-sm text-red-600 hover:underline">Déconnexion</button>
+                <button onclick="changerVue('accueil', true)" class="text-sm text-red-600 hover:underline">Déconnexion</button>
             </div>
             <div id="alerte-frais-parent" class="hidden bg-amber-50 border border-amber-300 p-4 rounded-xl text-amber-800">
                 <h4 class="font-bold">⚠️ Paiement des frais scolaires requis</h4>
-                <p class="text-sm mt-1">L'un de vos enfants rattachés n'est pas en ordre de frais. Veuillez régulariser la situation auprès de l'administration.</p>
+                <p class="text-sm mt-1">L'un de vos enfants rattachés n'est pas en ordre de frais.</p>
             </div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-slate-50 border p-5 rounded-xl space-y-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-50 border p-4 sm:p-5 rounded-xl space-y-3">
                     <div class="flex flex-wrap justify-between items-center gap-2">
-                        <h3 class="font-bold text-slate-700">Enfants rattachés, Calendrier de présence & Notes</h3>
+                        <h3 class="font-bold text-slate-700 text-sm sm:text-base">Enfants rattachés & Notes</h3>
                         <div class="flex gap-2">
                             <select id="select-trimestre-parent" onchange="changerTrimestreParent()" class="border p-1.5 rounded bg-white text-xs">
                                 <option value="T1">Trimestre 1 (T1)</option>
@@ -454,11 +457,11 @@
                     </div>
                     <div id="parent-liste-enfants" class="space-y-3"></div>
                 </div>
-                <div class="bg-white border p-5 rounded-xl space-y-4">
-                    <h3 class="font-bold text-slate-700">Discussion directe avec l'administration</h3>
+                <div class="bg-white border p-4 sm:p-5 rounded-xl space-y-4">
+                    <h3 class="font-bold text-slate-700 text-sm sm:text-base">Discussion directe avec l'administration</h3>
                     <div id="parent-chat-box" class="h-48 overflow-y-auto border p-3 rounded-lg bg-slate-50 space-y-2 text-sm"></div>
                     <div class="flex gap-2">
-                        <input id="parent-msg-input" placeholder="Écrire un message à l'administration..." class="border p-2 rounded flex-1 text-sm">
+                        <input id="parent-msg-input" placeholder="Écrire un message..." class="border p-2 rounded flex-1 text-sm">
                         <button onclick="envoyerMessageParent()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">Envoyer</button>
                     </div>
                 </div>
@@ -468,7 +471,7 @@
     </div>
 
     <!-- Pied de page -->
-    <div class="bg-slate-50 border-t px-6 py-3 flex justify-between items-center text-xs text-slate-500 no-print">
+    <div class="bg-slate-50 border-t px-4 sm:px-6 py-3 flex justify-between items-center text-xs text-slate-500 no-print">
         <span id="status-connexion" class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Connexion au serveur...
         </span>
@@ -496,22 +499,28 @@ const dbRef = ref(db, 'ecole_rdc_complet');
 
 let modeActif = '';
 let utilisateurConnecte = null;
+let cacheDonnees = null;
 const statusEl = document.getElementById('status-connexion');
 
 onValue(dbRef, (snapshot) => {
     statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Connecté en temps réel actif';
-    const data = snapshot.val() || { eleves: {}, profs: {}, messages: {} };
-    actualiserInterfaceAdmin(data);
+    cacheDonnees = snapshot.val() || { eleves: {}, profs: {}, messages: {} };
     
-    if(modeActif === 'eleve' && utilisateurConnecte) mettreAJourDashboardEleve(data);
-    if(modeActif === 'prof' && utilisateurConnecte) mettreAJourDashboardProf(data);
-    if(modeActif === 'parent' && utilisateurConnecte) mettreAJourDashboardParent(data);
+    actualiserInterfaceAdmin(cacheDonnees);
+    if(modeActif === 'eleve' && utilisateurConnecte) mettreAJourDashboardEleve(cacheDonnees);
+    if(modeActif === 'prof' && utilisateurConnecte) mettreAJourDashboardProf(cacheDonnees);
+    if(modeActif === 'parent' && utilisateurConnecte) mettreAJourDashboardParent(cacheDonnees);
 });
 
-window.changerVue = function(vue) {
+// Gestion fluide des écrans et de l'historique du navigateur (Retour en arrière sans quitter le site)
+window.changerVue = function(vue, pousserHistorique = false) {
     ['accueil', 'connexion', 'admin-dashboard', 'eleve-dashboard', 'prof-dashboard', 'parent-dashboard'].forEach(v => {
         document.getElementById(`vue-${v}`).classList.add('hidden');
     });
+
+    if(pousserHistorique) {
+        history.pushState({ vue: vue }, "", `#${vue}`);
+    }
 
     if(vue === 'accueil') {
         document.getElementById('vue-accueil').classList.remove('hidden');
@@ -531,8 +540,24 @@ window.changerVue = function(vue) {
         document.getElementById('label-code').innerText = "Code d'accès unique";
         document.getElementById('input-code').value = '';
         document.getElementById('erreur-connexion').classList.add('hidden');
+    } else if(vue === 'admin-dashboard') {
+        document.getElementById('vue-admin-dashboard').classList.remove('hidden');
+    } else if(vue === 'eleve-dashboard') {
+        document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
+    } else if(vue === 'prof-dashboard') {
+        document.getElementById('vue-prof-dashboard').classList.remove('hidden');
+    } else if(vue === 'parent-dashboard') {
+        document.getElementById('vue-parent-dashboard').classList.remove('hidden');
     }
 }
+
+window.addEventListener('popstate', (event) => {
+    if(event.state && event.state.vue) {
+        changerVue(event.state.vue, false);
+    } else {
+        changerVue('accueil', false);
+    }
+});
 
 window.changerOngletAdmin = function(onglet) {
     ['eleves', 'professeurs', 'messages', 'calendrier'].forEach(o => {
@@ -540,16 +565,16 @@ window.changerOngletAdmin = function(onglet) {
         const sec = document.getElementById(`admin-sec-${o}`);
         if(sec) sec.classList.add('hidden');
         const btn = document.getElementById(`tab-btn-${btnId}`);
-        if(btn) btn.className = "px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium";
+        if(btn) btn.className = "px-3 sm:px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap";
     });
     const activeSec = document.getElementById(`admin-sec-${onglet}`);
     if(activeSec) activeSec.classList.remove('hidden');
     const activeBtnId = onglet === 'eleves' ? 'eleves' : onglet === 'professeurs' ? 'profs' : onglet === 'messages' ? 'msgs' : 'cal';
     const activeBtn = document.getElementById(`tab-btn-${activeBtnId}`);
-    if(activeBtn) activeBtn.className = "px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium";
+    if(activeBtn) activeBtn.className = "px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap";
 
-    if(onglet === 'calendrier') {
-        onValue(dbRef, (snapshot) => { chargerCalendrierAdmin(snapshot.val()); }, { onlyOnce: true });
+    if(onglet === 'calendrier' && cacheDonnees) {
+        chargerCalendrierAdmin(cacheDonnees);
     }
 }
 
@@ -559,72 +584,68 @@ window.validerConnexion = function() {
 
     if(modeActif === 'admin') {
         if(code === 'PR1999') {
-            document.getElementById('vue-connexion').classList.add('hidden');
-            document.getElementById('vue-admin-dashboard').classList.remove('hidden');
-            onValue(dbRef, (snapshot) => { chargerCalendrierAdmin(snapshot.val()); }, { onlyOnce: true });
+            changerVue('admin-dashboard', true);
+            if(cacheDonnees) chargerCalendrierAdmin(cacheDonnees);
         } else {
             document.getElementById('erreur-connexion').classList.remove('hidden');
         }
         return;
     }
 
-    onValue(dbRef, (snapshot) => {
-        const data = snapshot.val() || {};
-        let trouve = null;
+    const data = cacheDonnees || {};
+    let trouve = null;
 
-        if(modeActif === 'eleve') {
-            Object.values(data.eleves || {}).forEach(el => {
-                if(el.codeEleve === code) {
-                    if(el.frais === 'non_ordre') {
-                        alert("Accès refusé : Frais scolaires non réglés.");
-                        return;
-                    }
-                    trouve = el;
+    if(modeActif === 'eleve') {
+        Object.values(data.eleves || {}).forEach(el => {
+            if(el.codeEleve === code) {
+                if(el.frais === 'non_ordre') {
+                    alert("Accès refusé : Frais scolaires non réglés.");
+                    return;
                 }
-            });
-        } else if(modeActif === 'prof') {
-            Object.values(data.profs || {}).forEach(p => {
-                if(p.codeProf === code) trouve = p;
-            });
-        } else if(modeActif === 'parent') {
-            Object.values(data.eleves || {}).forEach(el => {
-                if(el.codeParent === code) trouve = { tuteur: el.tuteur, codeParent: code };
-            });
-        }
-
-        if(trouve) {
-            utilisateurConnecte = trouve;
-            document.getElementById('vue-connexion').classList.add('hidden');
-            if(modeActif === 'eleve') {
-                document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
-                document.getElementById('welcome-eleve').innerText = `Bienvenue, ${trouve.prenom} ${trouve.nom} (${trouve.classe})`;
-                peuplerSelectCours(data, 'select-cours-eleve');
-                mettreAJourDashboardEleve(data);
-            } else if(modeActif === 'prof') {
-                document.getElementById('vue-prof-dashboard').classList.remove('hidden');
-                document.getElementById('welcome-prof').innerText = `Prof. ${trouve.nom} - Cours : ${trouve.cours}`;
-                document.getElementById('print-prof-nom').innerText = trouve.nom;
-                document.getElementById('print-prof-cours').innerText = trouve.cours;
-                
-                if(trouve.baremes) {
-                    document.getElementById('cfg-nb-interros').value = trouve.baremes.nbInterros || 4;
-                    document.getElementById('cfg-max-interro').value = trouve.baremes.maxInterro || 10;
-                    document.getElementById('cfg-actif-devoir').value = trouve.baremes.actifDevoir || 'oui';
-                    document.getElementById('cfg-max-devoir').value = trouve.baremes.maxDevoir || 10;
-                    document.getElementById('cfg-actif-examen').value = trouve.baremes.actifExamen || 'oui';
-                    document.getElementById('cfg-max-examen').value = trouve.baremes.maxExamen || 50;
-                }
-                mettreAJourDashboardProf(data);
-            } else if(modeActif === 'parent') {
-                document.getElementById('vue-parent-dashboard').classList.remove('hidden');
-                document.getElementById('welcome-parent').innerText = `Tuteur : ${trouve.tuteur}`;
-                peuplerSelectCours(data, 'select-cours-parent');
-                mettreAJourDashboardParent(data);
+                trouve = el;
             }
-        } else {
-            document.getElementById('erreur-connexion').classList.remove('hidden');
+        });
+    } else if(modeActif === 'prof') {
+        Object.values(data.profs || {}).forEach(p => {
+            if(p.codeProf === code) trouve = p;
+        });
+    } else if(modeActif === 'parent') {
+        Object.values(data.eleves || {}).forEach(el => {
+            if(el.codeParent === code) trouve = { tuteur: el.tuteur, codeParent: code };
+        });
+    }
+
+    if(trouve) {
+        utilisateurConnecte = trouve;
+        if(modeActif === 'eleve') {
+            changerVue('eleve-dashboard', true);
+            document.getElementById('welcome-eleve').innerText = `Bienvenue, ${trouve.prenom} ${trouve.nom} (${trouve.classe})`;
+            peuplerSelectCours(data, 'select-cours-eleve');
+            mettreAJourDashboardEleve(data);
+        } else if(modeActif === 'prof') {
+            changerVue('prof-dashboard', true);
+            document.getElementById('welcome-prof').innerText = `Prof. ${trouve.nom} - Cours : ${trouve.cours}`;
+            document.getElementById('print-prof-nom').innerText = trouve.nom;
+            document.getElementById('print-prof-cours').innerText = trouve.cours;
+            
+            if(trouve.baremes) {
+                document.getElementById('cfg-nb-interros').value = trouve.baremes.nbInterros || 4;
+                document.getElementById('cfg-max-interro').value = trouve.baremes.maxInterro || 10;
+                document.getElementById('cfg-actif-devoir').value = trouve.baremes.actifDevoir || 'oui';
+                document.getElementById('cfg-max-devoir').value = trouve.baremes.maxDevoir || 10;
+                document.getElementById('cfg-actif-examen').value = trouve.baremes.actifExamen || 'oui';
+                document.getElementById('cfg-max-examen').value = trouve.baremes.maxExamen || 50;
+            }
+            mettreAJourDashboardProf(data);
+        } else if(modeActif === 'parent') {
+            changerVue('parent-dashboard', true);
+            document.getElementById('welcome-parent').innerText = `Tuteur : ${trouve.tuteur}`;
+            peuplerSelectCours(data, 'select-cours-parent');
+            mettreAJourDashboardParent(data);
         }
-    }, { onlyOnce: true });
+    } else {
+        document.getElementById('erreur-connexion').classList.remove('hidden');
+    }
 }
 
 function peuplerSelectCours(data, selectId) {
@@ -658,34 +679,45 @@ window.imprimerFicheProf = function() {
     window.print();
 }
 
-window.imprimerBulletinEleve = function() {
-    window.print();
+// Fonction de téléchargement du bulletin PDF non modifiable pour l'élève
+window.telechargerBulletinPDF = function() {
+    const element = document.getElementById('bulletin-impression');
+    element.classList.remove('hidden');
+    
+    const opt = {
+        margin:       10,
+        filename:     `Bulletin_Officiel_${utilisateurConnecte.nom}_${utilisateurConnecte.prenom}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().from(element).set(opt).save().then(() => {
+        element.classList.add('hidden');
+    });
 }
 
 window.sauvegarderBaremesProf = function() {
     if(!utilisateurConnecte || modeActif !== 'prof') return;
-    
-    onValue(dbRef, (snapshot) => {
-        const data = snapshot.val() || {};
-        let profKey = null;
-        Object.keys(data.profs || {}).forEach(k => {
-            if(data.profs[k].codeProf === utilisateurConnecte.codeProf) profKey = k;
-        });
+    const data = cacheDonnees || {};
+    let profKey = null;
+    Object.keys(data.profs || {}).forEach(k => {
+        if(data.profs[k].codeProf === utilisateurConnecte.codeProf) profKey = k;
+    });
 
-        if(profKey) {
-            const baremes = {
-                nbInterros: parseInt(document.getElementById('cfg-nb-interros').value),
-                maxInterro: parseFloat(document.getElementById('cfg-max-interro').value) || 10,
-                actifDevoir: document.getElementById('cfg-actif-devoir').value,
-                maxDevoir: parseFloat(document.getElementById('cfg-max-devoir').value) || 10,
-                actifExamen: document.getElementById('cfg-actif-examen').value,
-                maxExamen: parseFloat(document.getElementById('cfg-max-examen').value) || 50
-            };
-            update(ref(db, `ecole_rdc_complet/profs/${profKey}`), { baremes });
-            utilisateurConnecte.baremes = baremes;
-            mettreAJourDashboardProf(data);
-        }
-    }, { onlyOnce: true });
+    if(profKey) {
+        const baremes = {
+            nbInterros: parseInt(document.getElementById('cfg-nb-interros').value),
+            maxInterro: parseFloat(document.getElementById('cfg-max-interro').value) || 10,
+            actifDevoir: document.getElementById('cfg-actif-devoir').value,
+            maxDevoir: parseFloat(document.getElementById('cfg-max-devoir').value) || 10,
+            actifExamen: document.getElementById('cfg-actif-examen').value,
+            maxExamen: parseFloat(document.getElementById('cfg-max-examen').value) || 50
+        };
+        update(ref(db, `ecole_rdc_complet/profs/${profKey}`), { baremes });
+        utilisateurConnecte.baremes = baremes;
+        mettreAJourDashboardProf(data);
+    }
 }
 
 window.enregistrerOuModifierEleve = function() {
@@ -834,7 +866,7 @@ function actualiserInterfaceAdmin(data) {
                 <div><strong>Tuteur (${m.tuteur}) :</strong> ${m.texte} <div class="text-xs text-slate-400">${m.date}</div></div>
                 ${reponsesHtml}
                 <div class="mt-2 flex gap-2">
-                    <input id="admin-rep-${mKey}" placeholder="Répondre au tuteur..." class="border p-1.5 rounded flex-1 text-xs">
+                    <input id="admin-rep-${mKey}" placeholder="Répondre..." class="border p-1.5 rounded flex-1 text-xs">
                     <button onclick="repondreMessageAdmin('${mKey}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium">Répondre</button>
                 </div>
             </div>`;
@@ -882,16 +914,12 @@ function chargerCalendrierAdmin(data) {
 window.mettreAJourPresenceAdmin = function(eleveKey, trimestre) {
     const nouveauStatut = document.getElementById(`admin-pres-${eleveKey}`).value;
     update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/presences`), { [trimestre]: nouveauStatut })
-        .then(() => {
-            alert("Statut de présence mis à jour avec succès par l'administration !");
-        })
-        .catch((err) => {
-            alert("Erreur lors de la mise à jour : " + err.message);
-        });
+        .then(() => { alert("Statut de présence mis à jour avec succès !"); })
+        .catch((err) => { alert("Erreur : " + err.message); });
 }
 
 window.changerTrimestreEleve = function() {
-    onValue(dbRef, (snapshot) => { mettreAJourDashboardEleve(snapshot.val()); }, { onlyOnce: true });
+    if(cacheDonnees) mettreAJourDashboardEleve(cacheDonnees);
 }
 
 function calculerTotauxEtPourcentageCours(cData, baremes) {
@@ -940,7 +968,6 @@ function mettreAJourDashboardEleve(data) {
 
     const profs = data.profs || {};
 
-    // Remplissage des données du bulletin officiel
     const statutPresence = eleveActuel.presences?.[trimestre] || 'Présent';
     document.getElementById('bul-trimestre-txt').innerText = `TRIMESTRE ${trimestre.replace('T', '')}`;
     document.getElementById('bul-nom').innerText = eleveActuel.nom;
@@ -1018,7 +1045,7 @@ function mettreAJourDashboardEleve(data) {
         <div class="p-3 rounded-lg bg-white border space-y-2">
             <div class="flex justify-between items-center text-xs text-slate-500 border-b pb-1">
                 <span>Trimestre sélectionné : <strong>${trimestre}</strong></span>
-                <span class="italic text-[10px] text-amber-600">Modification réservée à l'admin</span>
+                <span class="italic text-[10px] text-amber-600">Modifiable par l'admin</span>
             </div>
             <div class="p-2 rounded bg-blue-50 text-blue-900 flex justify-between items-center">
                 <span>Statut de présence officiel :</span>
@@ -1028,11 +1055,11 @@ function mettreAJourDashboardEleve(data) {
 }
 
 window.changerClasseProf = function() {
-    onValue(dbRef, (snapshot) => { mettreAJourDashboardProf(snapshot.val()); }, { onlyOnce: true });
+    if(cacheDonnees) mettreAJourDashboardProf(cacheDonnees);
 }
 
 window.changerTrimestreProf = function() {
-    onValue(dbRef, (snapshot) => { mettreAJourDashboardProf(snapshot.val()); }, { onlyOnce: true });
+    if(cacheDonnees) mettreAJourDashboardProf(cacheDonnees);
 }
 
 function mettreAJourDashboardProf(data) {
@@ -1153,116 +1180,96 @@ window.repondreMessageAdmin = function(msgKey) {
 }
 
 window.changerTrimestreParent = function() {
-    onValue(dbRef, (snapshot) => { mettreAJourDashboardParent(snapshot.val()); }, { onlyOnce: true });
+    if(cacheDonnees) mettreAJourDashboardParent(cacheDonnees);
 }
 
 function mettreAJourDashboardParent(data) {
     if(!utilisateurConnecte) return;
-    const trimestre = document.getElementById('select-trimestre-parent')?.value || 'T1';
-    const coursFiltre = document.getElementById('select-cours-parent')?.value || '';
-    const enfantsContainer = document.getElementById('parent-liste-enfants');
-    enfantsContainer.innerHTML = "";
-    let unEnfantBloque = false;
+    const trimestre = document.getElementById('select-trimestre-parent').value;
+    const coursFiltre = document.getElementById('select-cours-parent').value;
+    const eleves = data.eleves || {};
     const profs = data.profs || {};
+    const container = document.getElementById('parent-liste-enfants');
+    const alerteFrais = document.getElementById('alerte-frais-parent');
+    container.innerHTML = "";
 
-    Object.values(data.eleves || {}).forEach(el => {
+    let unEnfantNonEnOrdre = false;
+    let enfantsTrouves = 0;
+
+    Object.values(eleves).forEach(el => {
         if(el.codeParent === utilisateurConnecte.codeParent) {
-            if(el.frais === 'non_ordre') unEnfantBloque = true;
-            
-            const statutPresence = el.presences?.[trimestre] || 'Présent';
+            enfantsTrouves++;
+            if(el.frais === 'non_ordre') unEnfantNonEnOrdre = true;
+
             const cotationsTrimestre = el.cotations?.[trimestre] || {};
-            let notesHtml = '';
-            let coursTrouves = 0;
+            let detailsCoursHtml = '';
             let totalObtenuEnfant = 0;
-            let totalMaximumEnfant = 0;
+            let totalMaxEnfant = 0;
 
             Object.keys(cotationsTrimestre).forEach(cours => {
                 if(coursFiltre && cours !== coursFiltre) return;
-                coursTrouves++;
                 const cData = cotationsTrimestre[cours] || {};
-
+                
                 let baremesCours = { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
                 Object.values(profs).forEach(p => {
                     if(p.cours === cours && p.baremes) baremesCours = p.baremes;
                 });
 
-                const resCalc = calculerTotauxEtPourcentageCours(cData, baremesCours);
-                totalObtenuEnfant += resCalc.obtenu;
-                totalMaximumEnfant += resCalc.maximum;
+                const resCalcul = calculerTotauxEtPourcentageCours(cData, baremesCours);
+                totalObtenuEnfant += resCalcul.obtenu;
+                totalMaxEnfant += resCalcul.maximum;
 
-                let detailsLignes = '';
-                for(let i=1; i<=baremesCours.nbInterros; i++) {
-                    detailsLignes += `<div>Interro ${i} (/${baremesCours.maxInterro}) : <strong>${cData['interro'+i] !== undefined && cData['interro'+i] !== '' ? cData['interro'+i] : '-'}</strong></div>`;
-                }
-                if(baremesCours.actifDevoir !== 'non') {
-                    detailsLignes += `<div>Devoir (/${baremesCours.maxDevoir}) : <strong>${cData.devoir !== undefined && cData.devoir !== '' ? cData.devoir : '-'}</strong></div>`;
-                }
-                if(baremesCours.actifExamen !== 'non') {
-                    detailsLignes += `<div>Examen (/${baremesCours.maxExamen}) : <strong>${cData.examen !== undefined && cData.examen !== '' ? cData.examen : '-'}</strong></div>`;
-                }
-
-                notesHtml += `
-                    <div class="mt-2 text-xs space-y-1 bg-white p-2.5 rounded border shadow-sm">
-                        <div class="flex justify-between font-bold text-slate-800 border-b pb-1 mb-1">
-                            <span>${cours}</span>
-                            <span class="text-blue-700">Total : ${resCalc.obtenu}/${resCalc.maximum}</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-1 text-slate-600">
-                            ${detailsLignes}
-                        </div>
-                    </div>`;
+                detailsCoursHtml += `<div class="text-xs border-b pb-1 mb-1"><strong>${cours} :</strong> ${resCalcul.obtenu} / ${resCalcul.maximum} pts (${resCalcul.pourcentage}%)</div>`;
             });
 
-            if(coursTrouves === 0) {
-                notesHtml = `<p class="text-xs text-slate-400 mt-1">Aucune note enregistrée pour ce trimestre.</p>`;
-            }
+            const statutPresence = el.presences?.[trimestre] || 'Présent';
 
-            enfantsContainer.innerHTML += `
-                <div class="border p-4 rounded-xl bg-slate-50 text-sm space-y-3 shadow-sm">
-                    <div class="flex justify-between items-center border-b pb-2">
-                        <div>
-                            <strong>${el.nom} ${el.prenom}</strong> (${el.classe})<br>
-                            <span class="text-xs">Frais : <span class="${el.frais === 'en_ordre' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}">${el.frais === 'en_ordre' ? 'En ordre' : 'Bloqué'}</span></span>
-                        </div>
-                        <div class="flex flex-col items-end gap-2">
-                            <div class="text-right bg-blue-600 text-white px-3 py-1.5 rounded-lg">
-                                <div class="text-[10px] uppercase opacity-90">Total Général</div>
-                                <div class="font-extrabold text-base">${totalObtenuEnfant} pts / ${totalMaximumEnfant} pts</div>
-                            </div>
-                            <button onclick="imprimerBulletinEleve()" class="bg-emerald-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-emerald-700">🖨️ Imprimer Bulletin</button>
-                        </div>
+            container.innerHTML += `
+                <div class="border p-4 rounded-lg bg-white space-y-2 shadow-sm">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</h4>
+                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-semibold">${el.classe}</span>
                     </div>
-                    <div class="p-2.5 rounded bg-blue-50 border text-xs text-blue-900 flex justify-between items-center">
-                        <span>Calendrier de présence (${trimestre}) :</span>
-                        <span class="font-bold px-2 py-0.5 rounded bg-white border">${statutPresence}</span>
+                    <p class="text-xs text-slate-500">Présence : <strong>${statutPresence}</strong></p>
+                    <div class="bg-slate-50 p-3 rounded border space-y-1">
+                        <div class="text-xs font-semibold text-slate-700 mb-1">Notes pour ${trimestre} :</div>
+                        ${detailsCoursHtml || '<p class="text-xs text-slate-400">Aucune cotation disponible.</p>'}
+                        <div class="text-right text-xs font-bold text-blue-900 pt-1">Total : ${totalObtenuEnfant} / ${totalMaxEnfant} pts</div>
                     </div>
-                    <div class="mt-2"><strong>Notes par cours (${trimestre}) :</strong></div>
-                    ${notesHtml}
                 </div>`;
         }
     });
 
-    document.getElementById('alerte-frais-parent').classList.toggle('hidden', !unEnfantBloque);
+    if(unEnfantNonEnOrdre) {
+        alerteFrais.classList.remove('hidden');
+    } else {
+        alerteFrais.classList.add('hidden');
+    }
 
     const chatBox = document.getElementById('parent-chat-box');
     chatBox.innerHTML = "";
     const messages = data.messages || {};
+    let msgCount = 0;
     Object.keys(messages).forEach(mKey => {
         const m = messages[mKey];
         if(m.codeParent === utilisateurConnecte.codeParent) {
+            msgCount++;
             let reponsesHtml = '';
             if(m.reponses) {
                 Object.values(m.reponses).forEach(rep => {
-                    reponsesHtml += `<div class="mt-1 p-2 rounded bg-white border text-xs text-slate-800"><strong>Administration :</strong> ${rep.texte} <div class="text-[10px] text-slate-400">${rep.date}</div></div>`;
+                    reponsesHtml += `<div class="ml-4 mt-1 p-2 rounded bg-blue-50 border-l-2 border-blue-600 text-xs"><strong>Administration :</strong> ${rep.texte} <div class="text-[10px] text-slate-400">${rep.date}</div></div>`;
                 });
             }
             chatBox.innerHTML += `
-                <div class="p-2.5 rounded bg-blue-50 text-blue-900 space-y-2">
-                    <div><strong>Vous :</strong> ${m.texte} <div class="text-[10px] text-slate-400">${m.date}</div></div>
+                <div class="border p-2.5 rounded bg-white space-y-1">
+                    <div class="text-xs"><strong>Vous :</strong> ${m.texte} <span class="text-[10px] text-slate-400">(${m.date})</span></div>
                     ${reponsesHtml}
                 </div>`;
         }
     });
+    if(msgCount === 0) {
+        chatBox.innerHTML = `<p class="text-slate-400 text-xs">Aucun message échangé avec l'administration.</p>`;
+    }
 }
 </script>
 </body>
