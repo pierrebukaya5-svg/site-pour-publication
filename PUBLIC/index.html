@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,12 @@
 <!-- Inclusion de html2pdf.js pour le téléchargement PDF non modifiable -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
     @media print {
         body * { visibility: hidden; }
         #section-impression-admin, #section-impression-admin *, #section-impression-prof, #section-impression-prof *, #bulletin-impression, #bulletin-impression * { visibility: visible; }
@@ -16,91 +22,131 @@
         #bulletin-impression { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: white !important; z-index: 9999; }
         .no-print { display: none !important; }
     }
+    
     /* Amélioration du défilement tactile sur mobile */
     .table-responsive {
         width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
+
+    /* Effets de verre élégants & Animations fluides */
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(12px);
+    }
+    
+    .card-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
 </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-2 sm:p-4">
+<body class="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 min-h-full flex items-center justify-center p-3 sm:p-6 text-slate-800">
 
-<div class="max-w-6xl w-full bg-white rounded-2xl shadow-xl overflow-hidden" id="app">
+<div class="max-w-6xl w-full bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20 transition-all duration-300" id="app">
     <!-- En-tête -->
-    <div class="bg-blue-900 text-white p-4 sm:p-6 text-center no-print">
-        <h1 class="text-lg sm:text-3xl font-bold">République Démocratique du Congo</h1>
-        <p class="text-blue-200 text-xs sm:text-sm mt-1">Portail de gestion, pondération dynamique & calcul des points</p>
+    <div class="relative bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white p-6 sm:p-8 text-center no-print overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent_50%)]"></div>
+        <div class="relative z-10 space-y-1">
+            <span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-200 text-xs font-semibold rounded-full uppercase tracking-wider border border-blue-400/30 mb-2">République Démocratique du Congo</span>
+            <h1 class="text-xl sm:text-3xl font-extrabold tracking-tight">Portail Scolaire RDC</h1>
+            <p class="text-blue-200/80 text-xs sm:text-sm font-medium">Gestion académique intelligente, pondération dynamique & calcul des points</p>
+        </div>
     </div>
 
     <!-- Contenu dynamique -->
-    <div class="p-3 sm:p-6 md:p-8 overflow-hidden" id="main-content">
+    <div class="p-4 sm:p-8 md:p-10" id="main-content">
         
         <!-- ÉCRAN D'ACCUEIL -->
-        <div id="vue-accueil" class="space-y-6">
-            <h2 class="text-base sm:text-xl font-semibold text-center text-slate-700 mb-6">Sélectionnez votre espace de connexion</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <div onclick="changerVue('admin-login', true)" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
-                    <div class="text-3xl mb-2">⚙️</div>
-                    <h3 class="font-bold text-slate-800">Administration</h3>
-                    <p class="text-xs text-slate-500 mt-1">Gestion complète, modification & impression</p>
+        <div id="vue-accueil" class="space-y-8 animate-fadeIn">
+            <div class="text-center space-y-2">
+                <h2 class="text-lg sm:text-2xl font-bold text-slate-800">Sélectionnez votre espace de connexion</h2>
+                <p class="text-xs sm:text-sm text-slate-500">Choisissez votre profil pour accéder à vos services dédiés en temps réel</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+                <div onclick="changerVue('admin-login', true)" class="group bg-gradient-to-b from-white to-slate-50/80 border border-slate-200/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-blue-600 opacity-0 group-hover:opacity-150 transition-opacity"></div>
+                    <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-sm">⚙️</div>
+                    <h3 class="font-bold text-slate-800 text-base mb-1">Administration</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Gestion complète, modification & impression</p>
                 </div>
-                <div onclick="changerVue('prof-login', true)" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
-                    <div class="text-3xl mb-2">👨‍🏫</div>
-                    <h3 class="font-bold text-slate-800">Espace Professeur</h3>
-                    <p class="text-xs text-slate-500 mt-1">Paramètres de notes (/10, /20...) & saisie</p>
+
+                <div onclick="changerVue('prof-login', true)" class="group bg-gradient-to-b from-white to-slate-50/80 border border-slate-200/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-sm">👨‍🏫</div>
+                    <h3 class="font-bold text-slate-800 text-base mb-1">Espace Professeur</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Paramètres de notes (/10, /20...) & saisie</p>
                 </div>
-                <div onclick="changerVue('eleve-login', true)" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
-                    <div class="text-3xl mb-2">🎓</div>
-                    <h3 class="font-bold text-slate-800">Espace Élève</h3>
-                    <p class="text-xs text-slate-500 mt-1">Consultation détaillée & bulletin officiel</p>
+
+                <div onclick="changerVue('eleve-login', true)" class="group bg-gradient-to-b from-white to-slate-50/80 border border-slate-200/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-sm">🎓</div>
+                    <h3 class="font-bold text-slate-800 text-base mb-1">Espace Élève</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Consultation détaillée & bulletin officiel</p>
                 </div>
-                <div onclick="changerVue('parent-login', true)" class="bg-slate-50 border p-5 rounded-xl hover:border-blue-600 hover:shadow-md cursor-pointer transition text-center">
-                    <div class="text-3xl mb-2">👪</div>
-                    <h3 class="font-bold text-slate-800">Espace Parent</h3>
-                    <p class="text-xs text-slate-500 mt-1">Suivi par cours & bulletin officiel</p>
+
+                <div onclick="changerVue('parent-login', true)" class="group bg-gradient-to-b from-white to-slate-50/80 border border-slate-200/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-violet-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-sm">👪</div>
+                    <h3 class="font-bold text-slate-800 text-base mb-1">Espace Parent</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Suivi par cours & bulletin officiel</p>
                 </div>
             </div>
         </div>
 
         <!-- FORMULAIRES DE CONNEXION -->
-        <div id="vue-connexion" class="hidden max-w-md mx-auto space-y-4">
-            <button onclick="changerVue('accueil', true)" class="text-sm text-blue-600 hover:underline mb-2">← Retour à l'accueil</button>
-            <h2 id="titre-connexion" class="text-xl font-bold text-slate-800">Connexion</h2>
-            <div>
-                <label id="label-code" class="block text-sm font-medium text-slate-600 mb-1">Code d'accès</label>
-                <input id="input-code" type="password" placeholder="Entrez votre code" class="w-full border p-3 rounded-lg font-mono text-base">
+        <div id="vue-connexion" class="hidden max-w-md mx-auto space-y-6 bg-slate-50/50 p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm">
+            <button onclick="changerVue('accueil', true)" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 transition">
+                <span>←</span> Retour à l'accueil
+            </button>
+            <div class="space-y-1">
+                <h2 id="titre-connexion" class="text-xl font-bold text-slate-900 tracking-tight">Connexion</h2>
+                <p class="text-xs text-slate-500">Veuillez entrer vos identifiants pour continuer</p>
             </div>
-            <button onclick="validerConnexion()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-medium hover:bg-blue-700 transition">Se connecter</button>
-            <p id="erreur-connexion" class="text-red-500 text-xs text-center hidden">Code incorrect ou accès non autorisé.</p>
+            <div class="space-y-4">
+                <div>
+                    <label id="label-code" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Code d'accès</label>
+                    <input id="input-code" type="password" placeholder="Entrez votre code" class="w-full bg-white border border-slate-200 p-3.5 rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition shadow-sm">
+                </div>
+                <button onclick="validerConnexion()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3.5 rounded-xl font-semibold text-sm shadow-lg shadow-blue-600/20 transition-all transform active:scale-[0.99]">Se connecter</button>
+                <p id="erreur-connexion" class="text-red-500 text-xs text-center font-medium hidden bg-red-50 p-3 rounded-xl border border-red-100">Code incorrect ou accès non autorisé.</p>
+            </div>
         </div>
 
         <!-- TABLEAU DE BORD ADMINISTRATION -->
         <div id="vue-admin-dashboard" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-3 no-print">
-                <h2 class="text-lg sm:text-xl font-bold text-slate-800">Administration Centrale</h2>
-                <div class="flex flex-wrap gap-3">
-                    <button onclick="imprimerListeEleves()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700">🖨️ Imprimer la liste</button>
-                    <button onclick="changerVue('accueil', true)" class="text-sm text-red-600 hover:underline">Déconnexion</button>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-4 gap-4 no-print">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Administration Centrale</h2>
+                    <p class="text-xs text-slate-500">Supervision générale et gestion globale des utilisateurs</p>
+                </div>
+                <div class="flex flex-wrap gap-2 sm:gap-3">
+                    <button onclick="imprimerListeEleves()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition flex items-center gap-2"><span>🖨️</span> Imprimer la liste</button>
+                    <button onclick="changerVue('accueil', true)" class="text-xs sm:text-sm font-semibold text-red-600 hover:text-red-700 px-3 py-2">Déconnexion</button>
                 </div>
             </div>
 
-            <div class="flex gap-2 border-b pb-2 no-print overflow-x-auto w-full">
-                <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap shrink-0">Élèves & Gestion</button>
-                <button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-3 sm:px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap shrink-0">Professeurs</button>
-                <button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-3 sm:px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap shrink-0">Messagerie Parents</button>
-                <button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-3 sm:px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap shrink-0">Calendrier Présences</button>
+            <div class="flex gap-2 border-b border-slate-200 pb-3 no-print overflow-x-auto w-full scrollbar-none">
+                <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap shadow-sm transition">Élèves & Gestion</button>
+                <button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition">Professeurs</button>
+                <button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition">Messagerie Parents</button>
+                <button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition">Calendrier Présences</button>
             </div>
 
-            <div id="admin-sec-eleves" class="space-y-4">
-                <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border no-print">
-                    <h3 id="titre-form-eleve" class="font-bold text-slate-700 mb-3 text-sm sm:text-base">Enregistrer un nouvel élève</h3>
+            <div id="admin-sec-eleves" class="space-y-6">
+                <div class="bg-slate-50/80 p-4 sm:p-6 rounded-2xl border border-slate-200 no-print space-y-4 shadow-sm">
+                    <h3 id="titre-form-eleve" class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2"><span>👤</span> Enregistrer un nouvel élève</h3>
                     <input type="hidden" id="edit-eleve-key" value="">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                        <input id="el-nom" placeholder="Nom" class="border p-2 rounded text-sm w-full">
-                        <input id="el-postnom" placeholder="Post-nom" class="border p-2 rounded text-sm w-full">
-                        <input id="el-prenom" placeholder="Prénom" class="border p-2 rounded text-sm w-full">
-                        <select id="el-classe" class="border p-2 rounded text-sm w-full bg-white">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                        <input id="el-nom" placeholder="Nom" class="bg-white border border-slate-200 p-3 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition">
+                        <input id="el-postnom" placeholder="Post-nom" class="bg-white border border-slate-200 p-3 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition">
+                        <input id="el-prenom" placeholder="Prénom" class="bg-white border border-slate-200 p-3 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition">
+                        <select id="el-classe" class="bg-white border border-slate-200 p-3 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition">
                             <option value="">Sélectionner la classe</option>
                             <option value="1ère Primaire">1ère Primaire</option>
                             <option value="2ème Primaire">2ème Primaire</option>
@@ -119,103 +165,103 @@
                             <option value="3ème Humanité - Coupe & Couture">3ème Humanité - Coupe & Couture</option>
                             <option value="4ème Humanité - Coupe & Couture">4ème Humanité - Coupe & Couture</option>
                         </select>
-                        <input id="el-adresse" placeholder="Adresse" class="border p-2 rounded text-sm w-full">
-                        <input id="el-datenais" type="date" class="border p-2 rounded text-sm w-full">
-                        <input id="el-tuteur" placeholder="Nom du tuteur / parent" class="border p-2 rounded text-sm w-full">
-                        <select id="el-frais" class="border p-2 rounded text-sm w-full bg-white">
+                        <input id="el-adresse" placeholder="Adresse" class="bg-white border border-slate-200 p-3 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition">
+                        <input id="el-datenais" type="date" class="bg-white border border-slate-200 p-3 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition">
+                        <input id="el-tuteur" placeholder="Nom du tuteur / parent" class="bg-white border border-slate-200 p-3 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition">
+                        <select id="el-frais" class="bg-white border border-slate-200 p-3 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition">
                             <option value="en_ordre">Frais payés (En ordre)</option>
                             <option value="non_ordre">Frais non payés (Bloqué)</option>
                         </select>
-                        <div class="flex gap-2 sm:col-span-2 md:col-span-3">
-                            <button onclick="enregistrerOuModifierEleve()" id="btn-valider-eleve" class="bg-blue-600 text-white p-2.5 rounded text-sm font-medium hover:bg-blue-700 flex-1">Enregistrer</button>
-                            <button onclick="annulerModificationEleve()" id="btn-annuler-eleve" class="bg-slate-300 text-slate-700 p-2.5 rounded text-sm font-medium hidden">Annuler</button>
+                        <div class="flex gap-3 sm:col-span-2 md:col-span-3 pt-2">
+                            <button onclick="enregistrerOuModifierEleve()" id="btn-valider-eleve" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm font-semibold shadow-md shadow-blue-600/20 transition flex-1">Enregistrer</button>
+                            <button onclick="annulerModificationEleve()" id="btn-annuler-eleve" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-6 py-3 rounded-xl text-sm font-semibold transition hidden">Annuler</button>
                         </div>
                     </div>
                 </div>
 
-                <div id="section-impression-admin" class="table-responsive">
-                    <div class="hidden print:block mb-4">
+                <div id="section-impression-admin" class="table-responsive rounded-2xl border border-slate-200 shadow-sm bg-white overflow-hidden">
+                    <div class="hidden print:block mb-4 p-4">
                         <h2 class="text-xl font-bold">République Démocratique du Congo</h2>
                         <h3 class="text-md font-semibold text-slate-600">Liste officielle des élèves inscrits</h3>
                         <p class="text-xs text-slate-400">Date d'impression : <span id="date-impression"></span></p>
                     </div>
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
-                            <tr class="bg-slate-100 text-slate-600 uppercase text-xs">
-                                <th class="p-2 border">Nom complet</th>
-                                <th class="p-2 border">Classe</th>
-                                <th class="p-2 border">Tuteur & Adresse</th>
-                                <th class="p-2 border">Codes d'accès (Masqués)</th>
-                                <th class="p-2 border">Statut frais</th>
-                                <th class="p-2 border text-center no-print">Actions admin</th>
+                            <tr class="bg-slate-100 text-slate-600 uppercase text-xs tracking-wider border-b border-slate-200">
+                                <th class="p-3.5 font-semibold">Nom complet</th>
+                                <th class="p-3.5 font-semibold">Classe</th>
+                                <th class="p-3.5 font-semibold">Tuteur & Adresse</th>
+                                <th class="p-3.5 font-semibold">Codes d'accès (Masqués)</th>
+                                <th class="p-3.5 font-semibold">Statut frais</th>
+                                <th class="p-3.5 font-semibold text-center no-print">Actions admin</th>
                             </tr>
                         </thead>
-                        <tbody id="liste-admin-eleves"></tbody>
+                        <tbody id="liste-admin-eleves" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div id="admin-sec-professeurs" class="space-y-4 hidden">
-                <div class="bg-slate-50 p-4 rounded-xl border">
-                    <h3 class="font-bold text-slate-700 mb-3 text-sm sm:text-base">Enregistrer un professeur</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <input id="prf-nom" placeholder="Nom complet" class="border p-2 rounded text-sm w-full">
-                        <input id="prf-cours" placeholder="Cours principal" class="border p-2 rounded text-sm w-full">
-                        <button onclick="enregistrerProfesseur()" class="bg-blue-600 text-white p-2.5 rounded text-sm font-medium w-full">Générer code prof</button>
+            <div id="admin-sec-professeurs" class="space-y-6 hidden">
+                <div class="bg-slate-50/80 p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2"><span>👨‍🏫</span> Enregistrer un professeur</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                        <input id="prf-nom" placeholder="Nom complet" class="bg-white border border-slate-200 p-3 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition">
+                        <input id="prf-cours" placeholder="Cours principal" class="bg-white border border-slate-200 p-3 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition">
+                        <button onclick="enregistrerProfesseur()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-md shadow-blue-600/20 transition w-full">Générer code prof</button>
                     </div>
                 </div>
-                <h3 class="font-bold text-slate-700 mt-4">Professeurs actifs</h3>
-                <div id="liste-admin-profs" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                <h3 class="font-bold text-slate-800 text-base">Professeurs actifs</h3>
+                <div id="liste-admin-profs" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
             </div>
 
             <!-- SECTION MESSAGERIE ADMIN STYLE WHATSAPP -->
             <div id="admin-sec-messages" class="space-y-4 hidden">
-                <h3 class="font-bold text-slate-700">Messagerie style WhatsApp (Administration & Tuteurs)</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border rounded-xl bg-white overflow-hidden shadow-sm" style="min-height: 500px;">
+                <h3 class="font-bold text-slate-800 text-base">Messagerie style WhatsApp (Administration & Tuteurs)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-sm" style="min-height: 520px;">
                     <!-- Liste des tuteurs (contacts) -->
-                    <div class="border-r bg-slate-50 flex flex-col">
-                        <div class="p-3 bg-slate-100 border-b font-semibold text-xs text-slate-600 uppercase">Tuteurs / Conversations</div>
-                        <div id="admin-whatsapp-contacts" class="overflow-y-auto flex-1 divide-y">
-                            <!-- Les contacts seront injectés ici -->
-                        </div>
+                    <div class="border-r border-slate-200 bg-slate-50/70 flex flex-col">
+                        <div class="p-3.5 bg-slate-100/80 border-b border-slate-200 font-semibold text-xs text-slate-600 uppercase tracking-wider">Tuteurs / Conversations</div>
+                        <div id="admin-whatsapp-contacts" class="overflow-y-auto flex-1 divide-y divide-slate-100"></div>
                     </div>
                     <!-- Fenêtre de discussion active -->
-                    <div class="md:col-span-2 flex flex-col justify-between bg-slate-50">
-                        <div id="admin-whatsapp-header" class="p-3 bg-white border-b font-semibold text-sm text-slate-800 flex items-center justify-between">
+                    <div class="md:col-span-2 flex flex-col justify-between bg-slate-50/30">
+                        <div id="admin-whatsapp-header" class="p-4 bg-white border-b border-slate-200 font-semibold text-sm text-slate-800 flex items-center justify-between shadow-sm">
                             <span>Sélectionnez un tuteur pour lire et répondre</span>
                         </div>
-                        <div id="admin-whatsapp-chat" class="p-4 overflow-y-auto flex-1 space-y-3 bg-slate-100">
+                        <div id="admin-whatsapp-chat" class="p-4 overflow-y-auto flex-1 space-y-3 bg-slate-100/50">
                             <div class="text-center text-slate-400 text-xs my-auto">Aucune conversation sélectionnée</div>
                         </div>
-                        <div class="p-3 bg-white border-t flex gap-2 items-center">
-                            <input id="admin-whatsapp-input" placeholder="Écrire un message en tant qu'admin..." class="border p-2.5 rounded-lg flex-1 text-sm bg-slate-50 focus:bg-white transition" disabled>
-                            <button onclick="envoyerMessageAdminWhatsApp()" id="admin-whatsapp-send-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shrink-0 opacity-50 cursor-not-allowed" disabled>Envoyer</button>
+                        <div class="p-3.5 bg-white border-t border-slate-200 flex gap-2.5 items-center shadow-sm">
+                            <input id="admin-whatsapp-input" placeholder="Écrire un message en tant qu'admin..." class="bg-slate-50 border border-slate-200 p-3 rounded-xl flex-1 text-sm focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition" disabled>
+                            <button onclick="envoyerMessageAdminWhatsApp()" id="admin-whatsapp-send-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-semibold transition shrink-0 opacity-50 cursor-not-allowed shadow-sm" disabled>Envoyer</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div id="admin-sec-calendrier" class="space-y-4 hidden">
-                <h3 class="font-bold text-slate-700 text-sm sm:text-base">Gestion globale des calendriers de présence (Élèves)</h3>
-                <p class="text-xs text-slate-500">Modifiez le statut de présence des élèves par trimestre.</p>
+                <div class="space-y-1">
+                    <h3 class="font-bold text-slate-800 text-sm sm:text-base">Gestion globale des calendriers de présence (Élèves)</h3>
+                    <p class="text-xs text-slate-500">Modifiez le statut de présence des élèves par trimestre.</p>
+                </div>
                 <div class="flex gap-3 items-center">
-                    <select id="admin-cal-trimestre" onchange="chargerCalendrierAdmin()" class="border p-2 rounded text-sm bg-white">
+                    <select id="admin-cal-trimestre" onchange="chargerCalendrierAdmin()" class="bg-white border border-slate-200 p-2.5 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none shadow-sm">
                         <option value="T1">Trimestre 1 (T1)</option>
                         <option value="T2">Trimestre 2 (T2)</option>
                         <option value="T3">Trimestre 3 (T3)</option>
                     </select>
                 </div>
-                <div class="table-responsive border rounded-xl bg-white">
+                <div class="table-responsive border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
-                            <tr class="bg-slate-100 text-slate-600 uppercase text-xs">
-                                <th class="p-2 border">Élève</th>
-                                <th class="p-2 border">Classe</th>
-                                <th class="p-2 border">Statut de présence</th>
-                                <th class="p-2 border text-center">Action</th>
+                            <tr class="bg-slate-100 text-slate-600 uppercase text-xs tracking-wider border-b border-slate-200">
+                                <th class="p-3.5 font-semibold">Élève</th>
+                                <th class="p-3.5 font-semibold">Classe</th>
+                                <th class="p-3.5 font-semibold">Statut de présence</th>
+                                <th class="p-3.5 font-semibold text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-liste-calendrier-presences"></tbody>
+                        <tbody id="admin-liste-calendrier-presences" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
@@ -223,69 +269,70 @@
 
         <!-- TABLEAU DE BORD ÉLÈVE -->
         <div id="vue-eleve-dashboard" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-3">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-4 gap-4">
                 <div>
-                    <h2 class="text-lg sm:text-xl font-bold text-slate-800">Espace Élève</h2>
-                    <p id="welcome-eleve" class="text-xs sm:text-sm text-slate-500"></p>
+                    <h2 class="text-xl font-bold text-slate-900">Espace Élève</h2>
+                    <p id="welcome-eleve" class="text-xs sm:text-sm text-slate-500 font-medium"></p>
                 </div>
-                <div class="flex flex-wrap gap-2 sm:gap-3 items-center w-full sm:w-auto">
-                    <button onclick="telechargerBulletinPDF()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-blue-700 no-print flex-1 sm:flex-initial text-center">📥 Télécharger mon Bulletin (PDF)</button>
-                    <button onclick="changerVue('accueil', true)" class="text-sm text-red-600 hover:underline no-print">Déconnexion</button>
+                <div class="flex flex-wrap gap-2.5 items-center w-full sm:w-auto">
+                    <button onclick="telechargerBulletinPDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-blue-600/20 no-print flex-1 sm:flex-initial text-center transition">📥 Télécharger mon Bulletin (PDF)</button>
+                    <button onclick="changerVue('accueil', true)" class="text-sm font-semibold text-red-600 hover:text-red-700 no-print">Déconnexion</button>
                 </div>
             </div>
             
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 sm:p-5 rounded-xl shadow flex justify-between items-center">
-                <div>
-                    <h3 class="text-xs sm:text-sm font-semibold uppercase tracking-wider opacity-80">Total Général Trimestriel</h3>
-                    <div class="text-xl sm:text-3xl font-extrabold mt-1" id="eleve-pourcentage-global">0.0 pts / 0 pts</div>
-                    <p class="text-[10px] sm:text-xs opacity-90 mt-1">Cumul des points obtenus / Maximum total général</p>
+            <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white p-5 sm:p-6 rounded-2xl shadow-xl flex justify-between items-center relative overflow-hidden">
+                <div class="absolute right-0 top-0 bottom-0 w-1/3 bg-white/5 skew-x-12"></div>
+                <div class="relative z-10 space-y-1">
+                    <h3 class="text-xs sm:text-sm font-semibold uppercase tracking-wider text-blue-100/80">Total Général Trimestriel</h3>
+                    <div class="text-2xl sm:text-4xl font-black tracking-tight" id="eleve-pourcentage-global">0.0 pts / 0 pts</div>
+                    <p class="text-[11px] sm:text-xs text-blue-100/90 font-medium">Cumul des points obtenus / Maximum total général</p>
                 </div>
-                <div class="text-2xl sm:text-4xl">📊</div>
+                <div class="text-3xl sm:text-5xl opacity-80">📊</div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-blue-50 border border-blue-200 p-3 sm:p-5 rounded-xl space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div class="bg-blue-50/50 border border-blue-100 p-4 sm:p-6 rounded-2xl space-y-4 shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <h3 class="font-bold text-blue-900 text-sm sm:text-base">Détails par cours & Cotations</h3>
                         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                            <select id="select-trimestre-eleve" onchange="changerTrimestreEleve()" class="border p-1.5 rounded bg-white text-xs flex-1">
+                            <select id="select-trimestre-eleve" onchange="changerTrimestreEleve()" class="bg-white border border-blue-200 p-2 rounded-xl text-xs flex-1 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-600">
                                 <option value="T1">Trimestre 1 (T1)</option>
                                 <option value="T2">Trimestre 2 (T2)</option>
                                 <option value="T3">Trimestre 3 (T3)</option>
                             </select>
-                            <select id="select-cours-eleve" onchange="changerTrimestreEleve()" class="border p-1.5 rounded bg-white text-xs flex-1">
+                            <select id="select-cours-eleve" onchange="changerTrimestreEleve()" class="bg-white border border-blue-200 p-2 rounded-xl text-xs flex-1 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-600">
                                 <option value="">Tous les cours</option>
                             </select>
                         </div>
                     </div>
                     <div id="contenu-cotations" class="space-y-3 text-sm"></div>
                 </div>
-                <div class="bg-slate-50 border p-3 sm:p-5 rounded-xl space-y-4">
+                <div class="bg-slate-50/80 border border-slate-200 p-4 sm:p-6 rounded-2xl space-y-3 shadow-sm">
                     <h3 class="font-bold text-slate-800 text-sm sm:text-base">Calendrier & Registre de présence</h3>
                     <p class="text-xs text-slate-500">Statut officiel validé par l'administration (lecture seule).</p>
-                    <div id="contenu-presences" class="space-y-2 text-sm bg-white p-4 rounded-lg border"></div>
+                    <div id="contenu-presences" class="space-y-2.5 text-sm bg-white p-4 rounded-xl border border-slate-200 shadow-sm"></div>
                 </div>
             </div>
 
             <!-- BULLETIN OFFICIEL RDC -->
-            <div id="bulletin-impression" class="hidden p-6 bg-white text-slate-900 border-2 border-slate-900 space-y-6 max-w-4xl mx-auto">
-                <div class="text-center border-b-2 border-slate-900 pb-4 space-y-1">
-                    <h4 class="font-extrabold text-sm uppercase tracking-wide">REPUBLIQUE DEMOCRATIQUE DU CONGO</h4>
-                    <p class="text-xs font-semibold">MINISTERE DE L'ENSEIGNEMENT PRIMAIRE, SECONDAIRE ET TECHNIQUE</p>
-                    <div class="flex justify-between items-center mt-2 px-4 text-xs font-medium">
+            <div id="bulletin-impression" class="hidden p-8 bg-white text-slate-900 border-2 border-slate-900 space-y-6 max-w-4xl mx-auto rounded-xl shadow-2xl">
+                <div class="text-center border-b-2 border-slate-900 pb-4 space-y-1.5">
+                    <h4 class="font-extrabold text-sm uppercase tracking-wider">REPUBLIQUE DEMOCRATIQUE DU CONGO</h4>
+                    <p class="text-xs font-bold text-slate-700">MINISTERE DE L'ENSEIGNEMENT PRIMAIRE, SECONDAIRE ET TECHNIQUE</p>
+                    <div class="flex justify-between items-center mt-3 px-4 text-xs font-semibold">
                         <span>PROVINCE EDUCATIONNELLE : KINSHASA</span>
                         <span>ANNEE SCOLAIRE 2025 - 2026</span>
                     </div>
-                    <h2 class="text-xl font-black uppercase mt-3 bg-slate-900 text-white py-1">BULLETIN SCOLAIRE OFFICIEL - <span id="bul-trimestre-txt">TRIMESTRE 1</span></h2>
+                    <h2 class="text-xl font-black uppercase mt-3 bg-slate-900 text-white py-1.5 tracking-wide">BULLETIN SCOLAIRE OFFICIEL - <span id="bul-trimestre-txt">TRIMESTRE 1</span></h2>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 text-xs border p-3 bg-slate-50 rounded">
-                    <div>
+                <div class="grid grid-cols-2 gap-4 text-xs border border-slate-300 p-4 bg-slate-50/50 rounded-lg">
+                    <div class="space-y-1">
                         <p><strong>Nom :</strong> <span id="bul-nom"></span></p>
                         <p><strong>Post-nom / Prénom :</strong> <span id="bul-prenom"></span></p>
                         <p><strong>Classe :</strong> <span id="bul-classe"></span></p>
                     </div>
-                    <div>
+                    <div class="space-y-1">
                         <p><strong>Numéro d'ordre :</strong> <span id="bul-code"></span></p>
                         <p><strong>Tuteur :</strong> <span id="bul-tuteur"></span></p>
                         <p><strong>Date d'édition :</strong> <span id="bul-date"></span></p>
@@ -295,24 +342,24 @@
                 <div class="table-responsive">
                     <table class="w-full text-left border-collapse text-xs border border-slate-900">
                         <thead>
-                            <tr class="bg-slate-200 text-slate-900 uppercase text-[10px] border-b border-slate-900">
-                                <th class="p-2 border border-slate-900">Branches / Cours</th>
-                                <th class="p-2 border border-slate-900 text-center">Max Total</th>
-                                <th class="p-2 border border-slate-900 text-center">Total Obtenu</th>
+                            <tr class="bg-slate-200 text-slate-900 uppercase text-[10px] border-b border-slate-900 tracking-wider">
+                                <th class="p-2.5 border border-slate-900 font-bold">Branches / Cours</th>
+                                <th class="p-2.5 border border-slate-900 text-center font-bold">Max Total</th>
+                                <th class="p-2.5 border border-slate-900 text-center font-bold">Total Obtenu</th>
                             </tr>
                         </thead>
                         <tbody id="bul-lignes-cours"></tbody>
                         <tfoot>
                             <tr class="bg-slate-100 font-bold border-t-2 border-slate-900">
-                                <td class="p-2 border border-slate-900 text-right">TOTAUX GENERAUX :</td>
-                                <td class="p-2 border border-slate-900 text-center" id="bul-total-max">0</td>
-                                <td class="p-2 border border-slate-900 text-center text-blue-900 font-extrabold" id="bul-total-obt">0</td>
+                                <td class="p-2.5 border border-slate-900 text-right">TOTAUX GENERAUX :</td>
+                                <td class="p-2.5 border border-slate-900 text-center" id="bul-total-max">0</td>
+                                <td class="p-2.5 border border-slate-900 text-center text-blue-900 font-black" id="bul-total-obt">0</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 text-xs border p-3 rounded bg-slate-50">
+                <div class="grid grid-cols-2 gap-4 text-xs border border-slate-300 p-4 rounded-lg bg-slate-50/50">
                     <div>
                         <p><strong>Conduite :</strong> Bonne</p>
                         <p><strong>Présence :</strong> <span id="bul-presence-txt">Présent</span></p>
@@ -322,14 +369,14 @@
                     </div>
                 </div>
 
-                <div class="flex justify-between items-end pt-8 px-8 text-xs font-bold">
+                <div class="flex justify-between items-end pt-10 px-8 text-xs font-bold">
                     <div class="text-center">
                         <p>Sceau de l'Établissement</p>
-                        <div class="h-16 w-32 border border-dashed border-slate-400 mx-auto mt-2"></div>
+                        <div class="h-16 w-32 border border-dashed border-slate-400 mx-auto mt-2 rounded"></div>
                     </div>
                     <div class="text-center">
                         <p>Signature du Chef d'Établissement</p>
-                        <div class="h-12 w-40 border-b border-slate-900 mx-auto mt-6"></div>
+                        <div class="h-12 w-40 border-b border-slate-900 mx-auto mt-8"></div>
                     </div>
                 </div>
             </div>
@@ -337,24 +384,24 @@
 
         <!-- TABLEAU DE BORD PROFESSEUR -->
         <div id="vue-prof-dashboard" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-3">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-4 gap-4">
                 <div>
-                    <h2 class="text-lg sm:text-xl font-bold text-slate-800">Espace Professeur</h2>
-                    <p id="welcome-prof" class="text-xs sm:text-sm text-slate-500"></p>
+                    <h2 class="text-xl font-bold text-slate-900">Espace Professeur</h2>
+                    <p id="welcome-prof" class="text-xs sm:text-sm text-slate-500 font-medium"></p>
                 </div>
-                <div class="flex gap-2 items-center w-full sm:w-auto">
-                    <button onclick="imprimerFicheProf()" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-emerald-700 no-print flex-1 sm:flex-initial text-center">🖨️ Imprimer la fiche</button>
-                    <button onclick="changerVue('accueil', true)" class="text-sm text-red-600 hover:underline no-print">Déconnexion</button>
+                <div class="flex gap-2.5 items-center w-full sm:w-auto">
+                    <button onclick="imprimerFicheProf()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-emerald-600/20 no-print flex-1 sm:flex-initial text-center transition">🖨️ Imprimer la fiche</button>
+                    <button onclick="changerVue('accueil', true)" class="text-sm font-semibold text-red-600 hover:text-red-700 no-print">Déconnexion</button>
                 </div>
             </div>
 
             <!-- Configuration des Maxima et du nombre d'évaluations -->
-            <div class="bg-amber-50 border border-amber-200 p-3 sm:p-4 rounded-xl space-y-3 no-print">
-                <h3 class="font-bold text-amber-900 text-xs sm:text-sm">⚙️ Configuration des Barèmes et du Nombre d'Évaluations</h3>
+            <div class="bg-amber-50/70 border border-amber-200/80 p-4 sm:p-5 rounded-2xl space-y-3.5 no-print shadow-sm">
+                <h3 class="font-bold text-amber-900 text-xs sm:text-sm flex items-center gap-2"><span>⚙️</span> Configuration des Barèmes et du Nombre d'Évaluations</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Nombre d'Interros (1-4)</label>
-                        <select id="cfg-nb-interros" onchange="sauvegarderBaremesProf()" class="w-full border p-1.5 rounded bg-white">
+                        <label class="block font-semibold text-slate-700 mb-1.5">Nombre d'Interros (1-4)</label>
+                        <select id="cfg-nb-interros" onchange="sauvegarderBaremesProf()" class="w-full bg-white border border-amber-200 p-2 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
                             <option value="1">1 Interro</option>
                             <option value="2">2 Interros</option>
                             <option value="3">3 Interros</option>
@@ -362,40 +409,40 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Max Interros (/X)</label>
-                        <input id="cfg-max-interro" type="number" value="10" onchange="sauvegarderBaremesProf()" class="w-full border p-1.5 rounded text-center">
+                        <label class="block font-semibold text-slate-700 mb-1.5">Max Interros (/X)</label>
+                        <input id="cfg-max-interro" type="number" value="10" onchange="sauvegarderBaremesProf()" class="w-full bg-white border border-amber-200 p-2 rounded-xl text-center font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Activer Devoir ?</label>
-                        <select id="cfg-actif-devoir" onchange="sauvegarderBaremesProf()" class="w-full border p-1.5 rounded bg-white">
+                        <label class="block font-semibold text-slate-700 mb-1.5">Activer Devoir ?</label>
+                        <select id="cfg-actif-devoir" onchange="sauvegarderBaremesProf()" class="w-full bg-white border border-amber-200 p-2 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
                             <option value="oui" selected>Oui</option>
                             <option value="non">Non</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Max Devoir (/X)</label>
-                        <input id="cfg-max-devoir" type="number" value="10" onchange="sauvegarderBaremesProf()" class="w-full border p-1.5 rounded text-center">
+                        <label class="block font-semibold text-slate-700 mb-1.5">Max Devoir (/X)</label>
+                        <input id="cfg-max-devoir" type="number" value="10" onchange="sauvegarderBaremesProf()" class="w-full bg-white border border-amber-200 p-2 rounded-xl text-center font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Activer Examen ?</label>
-                        <select id="cfg-actif-examen" onchange="sauvegarderBaremesProf()" class="w-full border p-1.5 rounded bg-white">
+                        <label class="block font-semibold text-slate-700 mb-1.5">Activer Examen ?</label>
+                        <select id="cfg-actif-examen" onchange="sauvegarderBaremesProf()" class="w-full bg-white border border-amber-200 p-2 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
                             <option value="oui" selected>Oui</option>
                             <option value="non">Non</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Max Examen (/X)</label>
-                        <input id="cfg-max-examen" type="number" value="50" onchange="sauvegarderBaremesProf()" class="w-full border p-1.5 rounded text-center">
+                        <label class="block font-semibold text-slate-700 mb-1.5">Max Examen (/X)</label>
+                        <input id="cfg-max-examen" type="number" value="50" onchange="sauvegarderBaremesProf()" class="w-full bg-white border border-amber-200 p-2 rounded-xl text-center font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none">
                     </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 gap-6">
-                <div class="bg-emerald-50 border border-emerald-200 p-3 sm:p-5 rounded-xl space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 no-print">
+                <div class="bg-emerald-50/40 border border-emerald-100 p-4 sm:p-6 rounded-2xl space-y-4 shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 no-print">
                         <h3 class="font-bold text-emerald-900 text-sm sm:text-base">Saisie des Notes & Évaluations</h3>
                         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                            <select id="prof-select-classe" onchange="changerClasseProf()" class="border p-1.5 rounded bg-white text-xs flex-1">
+                            <select id="prof-select-classe" onchange="changerClasseProf()" class="bg-white border border-emerald-200 p-2 rounded-xl text-xs flex-1 shadow-sm focus:outline-none focus:ring-1 focus:ring-emerald-600">
                                 <option value="">Toutes les classes</option>
                                 <option value="1ère Primaire">1ère Primaire</option>
                                 <option value="2ème Primaire">2ème Primaire</option>
@@ -414,7 +461,7 @@
                                 <option value="3ème Humanité - Coupe & Couture">3ème Humanité - Coupe & Couture</option>
                                 <option value="4ème Humanité - Coupe & Couture">4ème Humanité - Coupe & Couture</option>
                             </select>
-                            <select id="prof-select-trimestre" onchange="changerTrimestreProf()" class="border p-1.5 rounded bg-white text-xs flex-1">
+                            <select id="prof-select-trimestre" onchange="changerTrimestreProf()" class="bg-white border border-emerald-200 p-2 rounded-xl text-xs flex-1 shadow-sm focus:outline-none focus:ring-1 focus:ring-emerald-600">
                                 <option value="T1">Trimestre 1 (T1)</option>
                                 <option value="T2">Trimestre 2 (T2)</option>
                                 <option value="T3">Trimestre 3 (T3)</option>
@@ -423,7 +470,7 @@
                     </div>
 
                     <!-- Fiche imprimable du professeur -->
-                    <div id="section-impression-prof" class="bg-white rounded-lg border p-3 sm:p-4 space-y-4">
+                    <div id="section-impression-prof" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 space-y-4 shadow-sm">
                         <div class="hidden print:block mb-4 border-b pb-2">
                             <h2 class="text-xl font-bold">République Démocratique du Congo</h2>
                             <h3 class="text-md font-semibold text-slate-600">Fiche de Cotations officielle</h3>
@@ -432,20 +479,20 @@
                         <div class="table-responsive">
                             <table class="w-full text-left border-collapse text-xs">
                                 <thead>
-                                    <tr class="bg-slate-100 text-slate-600 uppercase text-[10px]">
-                                        <th class="p-2 border">Élève</th>
-                                        <th class="p-2 border">Classe</th>
-                                        <th class="p-2 border text-center" id="th-int1">Int. 1</th>
-                                        <th class="p-2 border text-center" id="th-int2">Int. 2</th>
-                                        <th class="p-2 border text-center" id="th-int3">Int. 3</th>
-                                        <th class="p-2 border text-center" id="th-int4">Int. 4</th>
-                                        <th class="p-2 border text-center" id="th-dev">Devoir</th>
-                                        <th class="p-2 border text-center" id="th-ex">Examen</th>
-                                        <th class="p-2 border text-center bg-blue-50">Total</th>
-                                        <th class="p-2 border text-center no-print">Action</th>
+                                    <tr class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                        <th class="p-3 font-semibold">Élève</th>
+                                        <th class="p-3 font-semibold">Classe</th>
+                                        <th class="p-3 font-semibold text-center" id="th-int1">Int. 1</th>
+                                        <th class="p-3 font-semibold text-center" id="th-int2">Int. 2</th>
+                                        <th class="p-3 font-semibold text-center" id="th-int3">Int. 3</th>
+                                        <th class="p-3 font-semibold text-center" id="th-int4">Int. 4</th>
+                                        <th class="p-3 font-semibold text-center" id="th-dev">Devoir</th>
+                                        <th class="p-3 font-semibold text-center" id="th-ex">Examen</th>
+                                        <th class="p-3 font-semibold text-center bg-blue-50 text-blue-900">Total</th>
+                                        <th class="p-3 font-semibold text-center no-print">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody id="prof-liste-eleves-action"></tbody>
+                                <tbody id="prof-liste-eleves-action" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
                     </div>
@@ -455,41 +502,41 @@
 
         <!-- TABLEAU DE BORD PARENT / TUTEUR -->
         <div id="vue-parent-dashboard" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-3">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-4 gap-4">
                 <div>
-                    <h2 class="text-lg sm:text-xl font-bold text-slate-800">Espace Parent / Tuteur</h2>
-                    <p id="welcome-parent" class="text-xs sm:text-sm text-slate-500"></p>
+                    <h2 class="text-xl font-bold text-slate-900">Espace Parent / Tuteur</h2>
+                    <p id="welcome-parent" class="text-xs sm:text-sm text-slate-500 font-medium"></p>
                 </div>
-                <button onclick="changerVue('accueil', true)" class="text-sm text-red-600 hover:underline">Déconnexion</button>
+                <button onclick="changerVue('accueil', true)" class="text-sm font-semibold text-red-600 hover:text-red-700">Déconnexion</button>
             </div>
-            <div id="alerte-frais-parent" class="hidden bg-amber-50 border border-amber-300 p-4 rounded-xl text-amber-800">
-                <h4 class="font-bold">⚠️ Paiement des frais scolaires requis</h4>
-                <p class="text-sm mt-1">L'un de vos enfants rattachés n'est pas en ordre de frais.</p>
+            <div id="alerte-frais-parent" class="hidden bg-amber-50 border border-amber-200 p-4 rounded-2xl text-amber-800 shadow-sm">
+                <h4 class="font-bold flex items-center gap-2"><span>⚠️</span> Paiement des frais scolaires requis</h4>
+                <p class="text-xs sm:text-sm mt-1">L'un de vos enfants rattachés n'est pas en ordre de frais.</p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-50 border p-3 sm:p-5 rounded-xl space-y-3">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <h3 class="font-bold text-slate-700 text-sm sm:text-base">Enfants rattachés & Notes</h3>
+                <div class="bg-slate-50/80 border border-slate-200 p-4 sm:p-6 rounded-2xl space-y-4 shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <h3 class="font-bold text-slate-800 text-sm sm:text-base">Enfants rattachés & Notes</h3>
                         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                            <select id="select-trimestre-parent" onchange="changerTrimestreParent()" class="border p-1.5 rounded bg-white text-xs flex-1">
+                            <select id="select-trimestre-parent" onchange="changerTrimestreParent()" class="bg-white border border-slate-200 p-2 rounded-xl text-xs flex-1 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-600">
                                 <option value="T1">Trimestre 1 (T1)</option>
                                 <option value="T2">Trimestre 2 (T2)</option>
                                 <option value="T3">Trimestre 3 (T3)</option>
                             </select>
-                            <select id="select-cours-parent" onchange="changerTrimestreParent()" class="border p-1.5 rounded bg-white text-xs flex-1">
+                            <select id="select-cours-parent" onchange="changerTrimestreParent()" class="bg-white border border-slate-200 p-2 rounded-xl text-xs flex-1 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-600">
                                 <option value="">Tous les cours</option>
                             </select>
                         </div>
                     </div>
-                    <div id="parent-liste-enfants" class="space-y-3"></div>
+                    <div id="parent-liste-enfants" class="space-y-3.5"></div>
                 </div>
                 <!-- SECTION MESSAGERIE PARENT STYLE WHATSAPP -->
-                <div class="bg-white border p-3 sm:p-5 rounded-xl space-y-4 flex flex-col justify-between" style="min-height: 400px;">
-                    <h3 class="font-bold text-slate-700 text-sm sm:text-base border-b pb-2">Discussion directe avec l'administration</h3>
-                    <div id="parent-chat-box" class="h-64 overflow-y-auto border p-3 rounded-lg bg-slate-100 space-y-3 flex-1 my-2"></div>
-                    <div class="flex gap-2">
-                        <input id="parent-msg-input" placeholder="Écrire un message..." class="border p-2.5 rounded-lg flex-1 text-sm bg-slate-50 focus:bg-white transition">
-                        <button onclick="envoyerMessageParent()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shrink-0">Envoyer</button>
+                <div class="bg-white border border-slate-200 p-4 sm:p-6 rounded-2xl space-y-4 flex flex-col justify-between shadow-sm" style="min-height: 440px;">
+                    <h3 class="font-bold text-slate-800 text-sm sm:text-base border-b border-slate-200 pb-3">Discussion directe avec l'administration</h3>
+                    <div id="parent-chat-box" class="h-64 overflow-y-auto border border-slate-200 p-3.5 rounded-xl bg-slate-50/50 space-y-3 flex-1 my-2"></div>
+                    <div class="flex gap-2.5 pt-1">
+                        <input id="parent-msg-input" placeholder="Écrire un message..." class="bg-slate-50 border border-slate-200 p-3 rounded-xl flex-1 text-sm focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition">
+                        <button onclick="envoyerMessageParent()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-sm font-semibold transition shrink-0 shadow-sm">Envoyer</button>
                     </div>
                 </div>
             </div>
@@ -498,11 +545,11 @@
     </div>
 
     <!-- Pied de page -->
-    <div class="bg-slate-50 border-t px-4 sm:px-6 py-3 flex justify-between items-center text-xs text-slate-500 no-print">
-        <span id="status-connexion" class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Connexion au serveur...
+    <div class="bg-slate-50 border-t border-slate-200 px-6 py-4 flex justify-between items-center text-xs text-slate-500 no-print">
+        <span id="status-connexion" class="flex items-center gap-2 font-medium">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span> Connexion au serveur...
         </span>
-        <span>Portail officiel - RDC</span>
+        <span class="font-semibold text-slate-600">Portail officiel - RDC</span>
     </div>
 </div>
 
@@ -531,7 +578,7 @@ let adminSelectedParentCode = null;
 const statusEl = document.getElementById('status-connexion');
 
 onValue(dbRef, (snapshot) => {
-    statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Connecté en temps réel actif';
+    statusEl.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Connecté en temps réel actif';
     cacheDonnees = snapshot.val() || { eleves: {}, profs: {}, messages: {} };
     
     actualiserInterfaceAdmin(cacheDonnees);
@@ -592,13 +639,13 @@ window.changerOngletAdmin = function(onglet) {
         const sec = document.getElementById(`admin-sec-${o}`);
         if(sec) sec.classList.add('hidden');
         const btn = document.getElementById(`tab-btn-${btnId}`);
-        if(btn) btn.className = "px-3 sm:px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap shrink-0";
+        if(btn) btn.className = "px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition";
     });
     const activeSec = document.getElementById(`admin-sec-${onglet}`);
     if(activeSec) activeSec.classList.remove('hidden');
     const activeBtnId = onglet === 'eleves' ? 'eleves' : onglet === 'professeurs' ? 'profs' : onglet === 'messages' ? 'msgs' : 'cal';
     const activeBtn = document.getElementById(`tab-btn-${activeBtnId}`);
-    if(activeBtn) activeBtn.className = "px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap shrink-0";
+    if(activeBtn) activeBtn.className = "px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap shadow-sm transition";
 
     if(onglet === 'calendrier' && cacheDonnees) {
         chargerCalendrierAdmin(cacheDonnees);
@@ -842,7 +889,7 @@ function actualiserInterfaceAdmin(data) {
     tbody.innerHTML = "";
 
     if(Object.keys(eleves).length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Aucun élève enregistré</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Aucun élève enregistré</td></tr>`;
     }
 
     Object.keys(eleves).reverse().forEach((key, index) => {
@@ -850,18 +897,18 @@ function actualiserInterfaceAdmin(data) {
         const idCode = `code-sec-${index}`;
         const elJson = encodeURIComponent(JSON.stringify(el));
         const tr = document.createElement('tr');
-        tr.className = "border-b hover:bg-slate-50";
+        tr.className = "hover:bg-slate-50/80 transition-colors";
         tr.innerHTML = `
-            <td class="p-2 font-medium">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
-            <td class="p-2">${el.classe}</td>
-            <td class="p-2 text-xs"><strong>Tuteur :</strong> ${el.tuteur}<br><span class="text-slate-500">Adr. : ${el.adresse || 'Non renseignée'}</span></td>
-            <td class="p-2 font-mono text-xs cursor-pointer" title="Cliquer pour voir/masquer" onclick="basculerAffichageCode('${idCode}')">
-                <span id="${idCode}" class="blur-sm bg-slate-200 px-1 rounded select-none">Élève : ${el.codeEleve} | Parent : ${el.codeParent}</span>
+            <td class="p-3.5 font-semibold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
+            <td class="p-3.5 text-slate-600">${el.classe}</td>
+            <td class="p-3.5 text-xs text-slate-600"><strong>Tuteur :</strong> ${el.tuteur}<br><span class="text-slate-400">Adr. : ${el.adresse || 'Non renseignée'}</span></td>
+            <td class="p-3.5 font-mono text-xs cursor-pointer" title="Cliquer pour voir/masquer" onclick="basculerAffichageCode('${idCode}')">
+                <span id="${idCode}" class="blur-sm bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md text-slate-700 select-none transition">Élève : ${el.codeEleve} | Parent : ${el.codeParent}</span>
             </td>
-            <td class="p-2"><span class="px-2 py-1 rounded text-xs font-semibold ${el.frais === 'en_ordre' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${el.frais === 'en_ordre' ? 'En ordre' : 'Non payé'}</span></td>
-            <td class="p-2 text-center space-x-1 no-print">
-                <button onclick="preparerModificationEleve('${key}', '${elJson}')" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">Modifier</button>
-                <button onclick="supprimerEleve('${key}')" class="text-red-500 font-bold px-1 text-sm" title="Supprimer">✕</button>
+            <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${el.frais === 'en_ordre' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50' : 'bg-red-50 text-red-700 border border-red-200/50'}">${el.frais === 'en_ordre' ? 'En ordre' : 'Non payé'}</span></td>
+            <td class="p-3.5 text-center space-x-2 no-print">
+                <button onclick="preparerModificationEleve('${key}', '${elJson}')" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg font-semibold transition">Modifier</button>
+                <button onclick="supprimerEleve('${key}')" class="text-red-500 hover:text-red-700 font-bold px-1.5 py-1 rounded-lg text-sm transition" title="Supprimer">✕</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -873,9 +920,12 @@ function actualiserInterfaceAdmin(data) {
     Object.values(profs).forEach((p, idx) => {
         const idProfCode = `prof-code-${idx}`;
         profsContainer.innerHTML += `
-            <div class="border p-3 rounded-lg bg-slate-50 text-sm">
-                <strong>Prof. ${p.nom}</strong> - Cours : ${p.cours} <br>
-                <span class="font-mono text-xs cursor-pointer blur-sm bg-slate-200 px-1 rounded select-none inline-block mt-1" id="${idProfCode}" onclick="basculerAffichageCode('${idProfCode}')">Code : ${p.codeProf}</span>
+            <div class="border border-slate-200 p-4 rounded-2xl bg-white shadow-sm space-y-2 text-sm">
+                <div class="font-bold text-slate-800">Prof. ${p.nom}</div>
+                <div class="text-slate-500 text-xs">Cours : <span class="font-semibold text-slate-700">${p.cours}</span></div>
+                <div>
+                    <span class="font-mono text-xs cursor-pointer blur-sm bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md select-none inline-block text-slate-700 transition" id="${idProfCode}" onclick="basculerAffichageCode('${idProfCode}')">Code : ${p.codeProf}</span>
+                </div>
             </div>`;
     });
 
@@ -906,17 +956,17 @@ function initialiserWhatsAppAdmin(data) {
     const tuteursList = Object.values(tuteursMap);
 
     if(tuteursList.length === 0) {
-        contactsContainer.innerHTML = `<div class="p-4 text-slate-400 text-xs text-center">Aucun tuteur enregistré</div>`;
+        contactsContainer.innerHTML = `<div class="p-6 text-slate-400 text-xs text-center">Aucun tuteur enregistré</div>`;
         return;
     }
 
     tuteursList.forEach(t => {
         const isSelected = adminSelectedParentCode === t.codeParent;
         contactsContainer.innerHTML += `
-            <div onclick="selectionnerTuteurWhatsApp('${t.codeParent}', '${t.tuteur.replace(/'/g, "\\'")}')" class="p-3 cursor-pointer transition hover:bg-slate-100 ${isSelected ? 'bg-blue-50 border-l-4 border-blue-600' : ''}">
+            <div onclick="selectionnerTuteurWhatsApp('${t.codeParent}', '${t.tuteur.replace(/'/g, "\\'")}')" class="p-3.5 cursor-pointer transition hover:bg-slate-100/80 ${isSelected ? 'bg-blue-50/80 border-l-4 border-blue-600' : ''}">
                 <div class="font-bold text-xs sm:text-sm text-slate-800">${t.tuteur}</div>
-                <div class="text-[10px] text-slate-500 truncate">Élève(s) : ${t.enfants.join(', ')}</div>
-                <div class="text-[10px] font-mono text-blue-600">Code : ${t.codeParent}</div>
+                <div class="text-[11px] text-slate-500 truncate mt-0.5">Élève(s) : ${t.enfants.join(', ')}</div>
+                <div class="text-[10px] font-mono text-blue-600 mt-1 font-semibold">Code : ${t.codeParent}</div>
             </div>`;
     });
 
@@ -951,22 +1001,22 @@ function afficherMessagesWhatsAppAdmin(data, codeParent) {
         if(m.codeParent === codeParent) {
             messagesTrouves = true;
             chatContainer.innerHTML += `
-                <div class="flex flex-col items-start mb-2">
-                    <div class="bg-white border rounded-2xl rounded-tl-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
-                        <div class="font-bold text-[10px] text-blue-700 mb-0.5">Tuteur (${m.tuteur})</div>
-                        <div>${m.texte}</div>
-                        <div class="text-[9px] text-slate-400 text-right mt-1">${m.date}</div>
+                <div class="flex flex-col items-start mb-3">
+                    <div class="bg-white border border-slate-200/80 rounded-2xl rounded-tl-sm p-3.5 max-w-[80%] shadow-sm text-xs sm:text-sm space-y-1">
+                        <div class="font-bold text-[10px] text-blue-700 uppercase tracking-wide">Tuteur (${m.tuteur})</div>
+                        <div class="text-slate-800">${m.texte}</div>
+                        <div class="text-[9px] text-slate-400 text-right pt-0.5">${m.date}</div>
                     </div>
                 </div>`;
 
             if(m.reponses) {
                 Object.values(m.reponses).forEach(rep => {
                     chatContainer.innerHTML += `
-                        <div class="flex flex-col items-end mb-2">
-                            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl rounded-tr-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
-                                <div class="font-bold text-[10px] text-emerald-800 mb-0.5">Administration</div>
-                                <div>${rep.texte}</div>
-                                <div class="text-[9px] text-slate-400 text-right mt-1">${rep.date}</div>
+                        <div class="flex flex-col items-end mb-3">
+                            <div class="bg-emerald-50 border border-emerald-200/80 rounded-2xl rounded-tr-sm p-3.5 max-w-[80%] shadow-sm text-xs sm:text-sm space-y-1">
+                                <div class="font-bold text-[10px] text-emerald-800 uppercase tracking-wide">Administration</div>
+                                <div class="text-slate-800">${rep.texte}</div>
+                                <div class="text-[9px] text-slate-400 text-right pt-0.5">${rep.date}</div>
                             </div>
                         </div>`;
                 });
@@ -1037,7 +1087,7 @@ function chargerCalendrierAdmin(data) {
     const trimestre = document.getElementById('admin-cal-trimestre')?.value || 'T1';
 
     if(Object.keys(eleves).length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Aucun élève enregistré</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400">Aucun élève enregistré</td></tr>`;
         return;
     }
 
@@ -1045,19 +1095,19 @@ function chargerCalendrierAdmin(data) {
         const el = eleves[key];
         const statutActuel = el.presences?.[trimestre] || 'Présent';
         tbody.innerHTML += `
-            <tr class="border-b hover:bg-slate-50">
-                <td class="p-2 font-medium">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
-                <td class="p-2">${el.classe}</td>
-                <td class="p-2">
-                    <select id="admin-pres-${key}" class="border p-1 rounded text-xs bg-white">
+            <tr class="hover:bg-slate-50/80 transition-colors">
+                <td class="p-3.5 font-semibold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
+                <td class="p-3.5 text-slate-600">${el.classe}</td>
+                <td class="p-3.5">
+                    <select id="admin-pres-${key}" class="bg-white border border-slate-200 p-2 rounded-xl text-xs shadow-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
                         <option value="Présent" ${statutActuel === 'Présent' ? 'selected' : ''}>Présent</option>
                         <option value="Absent" ${statutActuel === 'Absent' ? 'selected' : ''}>Absent</option>
                         <option value="Retard" ${statutActuel === 'Retard' ? 'selected' : ''}>Retard</option>
                         <option value="Excusé" ${statutActuel === 'Excusé' ? 'selected' : ''}>Excusé</option>
                     </select>
                 </td>
-                <td class="p-2 text-center">
-                    <button onclick="mettreAJourPresenceAdmin('${key}', '${trimestre}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-blue-700">Mettre à jour</button>
+                <td class="p-3.5 text-center">
+                    <button onclick="mettreAJourPresenceAdmin('${key}', '${trimestre}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition">Mettre à jour</button>
                 </td>
             </tr>`;
     });
@@ -1139,34 +1189,34 @@ function mettreAJourDashboardEleve(data) {
 
         lignesBulletinHtml += `
             <tr class="border-b border-slate-900">
-                <td class="p-2 border border-slate-900 font-medium">${p.cours} <span class="text-[10px] text-slate-500">(Prof. ${p.nom})</span></td>
-                <td class="p-2 border border-slate-900 text-center">${res.maximum}</td>
-                <td class="p-2 border border-slate-900 text-center font-bold">${res.obtenu}</td>
+                <td class="p-2.5 border border-slate-900 font-semibold text-slate-800">${p.cours} <span class="text-[10px] text-slate-500">(Prof. ${p.nom})</span></td>
+                <td class="p-2.5 border border-slate-900 text-center">${res.maximum}</td>
+                <td class="p-2.5 border border-slate-900 text-center font-bold text-slate-900">${res.obtenu}</td>
             </tr>`;
 
         let interrosDetails = '';
         const nbInt = p.baremes?.nbInterros || 4;
         for(let i=1; i<=nbInt; i++) {
-            interrosDetails += `<span class="bg-white px-2 py-0.5 rounded border">Int.${i}: <strong>${cData[`interro${i}`] !== undefined ? cData[`interro${i}`] : '-'}/${p.baremes?.maxInterro || 10}</strong></span>`;
+            interrosDetails += `<span class="bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-xs">Int.${i}: <strong>${cData[`interro${i}`] !== undefined ? cData[`interro${i}`] : '-'}/${p.baremes?.maxInterro || 10}</strong></span>`;
         }
 
-        let devoirDetail = p.baremes?.actifDevoir !== 'non' ? `<span class="bg-white px-2 py-0.5 rounded border">Devoir: <strong>${cData.devoir !== undefined ? cData.devoir : '-'}/${p.baremes?.maxDevoir || 10}</strong></span>` : '';
-        let examenDetail = p.baremes?.actifExamen !== 'non' ? `<span class="bg-white px-2 py-0.5 rounded border">Examen: <strong>${cData.examen !== undefined ? cData.examen : '-'}/${p.baremes?.maxExamen || 50}</strong></span>` : '';
+        let devoirDetail = p.baremes?.actifDevoir !== 'non' ? `<span class="bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-xs">Devoir: <strong>${cData.devoir !== undefined ? cData.devoir : '-'}/${p.baremes?.maxDevoir || 10}</strong></span>` : '';
+        let examenDetail = p.baremes?.actifExamen !== 'non' ? `<span class="bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-xs">Examen: <strong>${cData.examen !== undefined ? cData.examen : '-'}/${p.baremes?.maxExamen || 50}</strong></span>` : '';
 
         containerCotations.innerHTML += `
-            <div class="bg-white p-3 rounded-lg border space-y-2">
+            <div class="bg-white p-4 rounded-2xl border border-blue-100 space-y-2.5 shadow-sm">
                 <div class="flex justify-between items-center font-bold text-slate-800">
-                    <span>${p.cours}</span>
-                    <span class="text-blue-600">${res.obtenu} / ${res.maximum} (${res.pourcentage}%)</span>
+                    <span class="text-slate-900">${p.cours}</span>
+                    <span class="text-blue-600 font-extrabold">${res.obtenu} / ${res.maximum} (${res.pourcentage}%)</span>
                 </div>
-                <div class="flex flex-wrap gap-1 text-xs text-slate-600">
+                <div class="flex flex-wrap gap-1.5 text-xs text-slate-600">
                     ${interrosDetails} ${devoirDetail} ${examenDetail}
                 </div>
             </div>`;
     });
 
     if(containerCotations.innerHTML === "") {
-        containerCotations.innerHTML = `<div class="text-slate-400 text-xs">Aucun cours trouvé.</div>`;
+        containerCotations.innerHTML = `<div class="text-slate-400 text-xs py-4 text-center">Aucun cours trouvé.</div>`;
     }
 
     document.getElementById('eleve-pourcentage-global').innerText = `${totalGlobalObtenu} pts / ${totalGlobalMax} pts`;
@@ -1188,17 +1238,17 @@ function mettreAJourDashboardEleve(data) {
 
     const contPres = document.getElementById('contenu-presences');
     contPres.innerHTML = `
-        <div class="flex justify-between items-center">
-            <span>Trimestre 1 (T1) :</span>
-            <span class="font-bold px-2 py-0.5 rounded text-xs ${eleveActuel.presences?.T1 === 'Absent' ? 'bg-red-100 text-red-700' : eleveActuel.presences?.T1 === 'Retard' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}">${eleveActuel.presences?.T1 || 'Présent'}</span>
+        <div class="flex justify-between items-center py-1">
+            <span class="font-medium text-slate-700">Trimestre 1 (T1) :</span>
+            <span class="font-bold px-2.5 py-1 rounded-full text-xs ${eleveActuel.presences?.T1 === 'Absent' ? 'bg-red-50 text-red-700 border border-red-200' : eleveActuel.presences?.T1 === 'Retard' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">${eleveActuel.presences?.T1 || 'Présent'}</span>
         </div>
-        <div class="flex justify-between items-center">
-            <span>Trimestre 2 (T2) :</span>
-            <span class="font-bold px-2 py-0.5 rounded text-xs ${eleveActuel.presences?.T2 === 'Absent' ? 'bg-red-100 text-red-700' : eleveActuel.presences?.T2 === 'Retard' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}">${eleveActuel.presences?.T2 || 'Présent'}</span>
+        <div class="flex justify-between items-center py-1">
+            <span class="font-medium text-slate-700">Trimestre 2 (T2) :</span>
+            <span class="font-bold px-2.5 py-1 rounded-full text-xs ${eleveActuel.presences?.T2 === 'Absent' ? 'bg-red-50 text-red-700 border border-red-200' : eleveActuel.presences?.T2 === 'Retard' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">${eleveActuel.presences?.T2 || 'Présent'}</span>
         </div>
-        <div class="flex justify-between items-center">
-            <span>Trimestre 3 (T3) :</span>
-            <span class="font-bold px-2 py-0.5 rounded text-xs ${eleveActuel.presences?.T3 === 'Absent' ? 'bg-red-100 text-red-700' : eleveActuel.presences?.T3 === 'Retard' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}">${eleveActuel.presences?.T3 || 'Présent'}</span>
+        <div class="flex justify-between items-center py-1">
+            <span class="font-medium text-slate-700">Trimestre 3 (T3) :</span>
+            <span class="font-bold px-2.5 py-1 rounded-full text-xs ${eleveActuel.presences?.T3 === 'Absent' ? 'bg-red-50 text-red-700 border border-red-200' : eleveActuel.presences?.T3 === 'Retard' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">${eleveActuel.presences?.T3 || 'Présent'}</span>
         </div>`;
 }
 
@@ -1268,46 +1318,46 @@ function mettreAJourDashboardProf(data) {
         let inputsHtml = '';
         for(let i=1; i<=nbInt; i++) {
             const val = cData[`interro${i}`] !== undefined ? cData[`interro${i}`] : '';
-            inputsHtml += `<td class="p-1 border text-center"><input id="note-${elKey}-int${i}" type="number" step="0.5" value="${val}" class="w-12 border p-1 rounded text-center text-xs"></td>`;
+            inputsHtml += `<td class="p-2 border border-slate-200 text-center"><input id="note-${elKey}-int${i}" type="number" step="0.5" value="${val}" class="w-12 bg-slate-50 border border-slate-200 p-1.5 rounded-lg text-center text-xs font-semibold focus:bg-white focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
         }
         for(let i=nbInt+1; i<=4; i++) {
-            inputsHtml += `<td class="p-1 border text-center" style="display:none;"></td>`;
+            inputsHtml += `<td class="p-2 border border-slate-200 text-center" style="display:none;"></td>`;
         }
 
         let devHtml = '';
         if(baremes.actifDevoir !== 'non') {
             const valDev = cData.devoir !== undefined ? cData.devoir : '';
-            devHtml = `<td class="p-1 border text-center"><input id="note-${elKey}-dev" type="number" step="0.5" value="${valDev}" class="w-12 border p-1 rounded text-center text-xs"></td>`;
+            devHtml = `<td class="p-2 border border-slate-200 text-center"><input id="note-${elKey}-dev" type="number" step="0.5" value="${valDev}" class="w-12 bg-slate-50 border border-slate-200 p-1.5 rounded-lg text-center text-xs font-semibold focus:bg-white focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
         } else {
-            devHtml = `<td class="p-1 border text-center" style="display:none;"></td>`;
+            devHtml = `<td class="p-2 border border-slate-200 text-center" style="display:none;"></td>`;
         }
 
         let exHtml = '';
         if(baremes.actifExamen !== 'non') {
             const valEx = cData.examen !== undefined ? cData.examen : '';
-            exHtml = `<td class="p-1 border text-center"><input id="note-${elKey}-ex" type="number" step="0.5" value="${valEx}" class="w-12 border p-1 rounded text-center text-xs"></td>`;
+            exHtml = `<td class="p-2 border border-slate-200 text-center"><input id="note-${elKey}-ex" type="number" step="0.5" value="${valEx}" class="w-12 bg-slate-50 border border-slate-200 p-1.5 rounded-lg text-center text-xs font-semibold focus:bg-white focus:ring-1 focus:ring-emerald-600 focus:outline-none"></td>`;
         } else {
-            exHtml = `<td class="p-1 border text-center" style="display:none;"></td>`;
+            exHtml = `<td class="p-2 border border-slate-200 text-center" style="display:none;"></td>`;
         }
 
         const resCalc = calculerTotauxEtPourcentageCours(cData, baremes);
 
         tbody.innerHTML += `
-            <tr class="border-b hover:bg-slate-50">
-                <td class="p-2 font-medium">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
-                <td class="p-2 text-xs">${el.classe}</td>
+            <tr class="hover:bg-slate-50/80 transition-colors">
+                <td class="p-3 font-semibold text-slate-800">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
+                <td class="p-3 text-xs text-slate-600">${el.classe}</td>
                 ${inputsHtml}
                 ${devHtml}
                 ${exHtml}
-                <td class="p-2 border text-center font-bold bg-blue-50 text-blue-900" id="total-${elKey}">${resCalc.obtenu} / ${resCalc.maximum}</td>
-                <td class="p-2 border text-center no-print">
-                    <button onclick="enregistrerNotesEleve('${elKey}', '${trimestre}', '${utilisateurConnecte.cours}')" class="bg-blue-600 text-white px-2.5 py-1 rounded text-xs font-medium hover:bg-blue-700">Enregistrer</button>
+                <td class="p-3 border border-slate-200 text-center font-bold bg-blue-50/50 text-blue-900" id="total-${elKey}">${resCalc.obtenu} / ${resCalc.maximum}</td>
+                <td class="p-3 border border-slate-200 text-center no-print">
+                    <button onclick="enregistrerNotesEleve('${elKey}', '${trimestre}', '${utilisateurConnecte.cours}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition">Enregistrer</button>
                 </td>
             </tr>`;
     });
 
     if(count === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-slate-400">Aucun élève trouvé dans cette classe.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-slate-400">Aucun élève trouvé dans cette classe.</td></tr>`;
     }
 }
 
@@ -1383,25 +1433,25 @@ function mettreAJourDashboardParent(data) {
             totalMax += res.maximum;
 
             notesHtml += `
-                <div class="border-b pb-2 mb-2 text-xs">
+                <div class="border-b border-slate-100 pb-2 mb-2 text-xs">
                     <div class="flex justify-between font-bold text-slate-800">
-                        <span>${p.cours}</span>
-                        <span class="text-blue-600">${res.obtenu} / ${res.maximum} (${res.pourcentage}%)</span>
+                        <span class="text-slate-900">${p.cours}</span>
+                        <span class="text-blue-600 font-extrabold">${res.obtenu} / ${res.maximum} (${res.pourcentage}%)</span>
                     </div>
                 </div>`;
         });
 
         container.innerHTML += `
-            <div class="bg-white border p-4 rounded-xl space-y-3 shadow-sm">
-                <div class="flex justify-between items-center border-b pb-2">
+            <div class="bg-white border border-slate-200 p-4 sm:p-5 rounded-2xl space-y-3.5 shadow-sm">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                     <div>
-                        <h4 class="font-bold text-slate-800 text-sm">${el.nom} ${el.postnom || ''} ${el.prenom}</h4>
-                        <p class="text-xs text-slate-500">Classe : ${el.classe} | Code : ${el.codeEleve}</p>
+                        <h4 class="font-bold text-slate-900 text-sm">${el.nom} ${el.postnom || ''} ${el.prenom}</h4>
+                        <p class="text-xs text-slate-500 font-medium">Classe : ${el.classe} | Code : <span class="font-mono">${el.codeEleve}</span></p>
                     </div>
-                    <span class="px-2 py-1 rounded text-xs font-semibold ${el.frais === 'en_ordre' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${el.frais === 'en_ordre' ? 'Frais en ordre' : 'Frais non payés'}</span>
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${el.frais === 'en_ordre' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}">${el.frais === 'en_ordre' ? 'Frais en ordre' : 'Frais non payés'}</span>
                 </div>
-                <div class="text-xs font-semibold text-slate-600">Total ${trimestre} : <span class="text-blue-900 font-bold">${totalObt} / ${totalMax} pts</span></div>
-                <div class="space-y-1">${notesHtml}</div>
+                <div class="text-xs font-semibold text-slate-600">Total ${trimestre} : <span class="text-blue-900 font-black text-sm">${totalObt} / ${totalMax} pts</span></div>
+                <div class="space-y-1.5">${notesHtml}</div>
             </div>`;
     });
 
@@ -1421,22 +1471,22 @@ function afficherMessagesWhatsAppParent(data, codeParent) {
         if(m.codeParent === codeParent) {
             messagesTrouves = true;
             chatContainer.innerHTML += `
-                <div class="flex flex-col items-end mb-2">
-                    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl rounded-tr-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
-                        <div class="font-bold text-[10px] text-emerald-800 mb-0.5">Vous (${m.tuteur})</div>
-                        <div>${m.texte}</div>
-                        <div class="text-[9px] text-slate-400 text-right mt-1">${m.date}</div>
+                <div class="flex flex-col items-end mb-3">
+                    <div class="bg-emerald-50 border border-emerald-200/80 rounded-2xl rounded-tr-sm p-3.5 max-w-[80%] shadow-sm text-xs sm:text-sm space-y-1">
+                        <div class="font-bold text-[10px] text-emerald-800 uppercase tracking-wide">Vous (${m.tuteur})</div>
+                        <div class="text-slate-800">${m.texte}</div>
+                        <div class="text-[9px] text-slate-400 text-right pt-0.5">${m.date}</div>
                     </div>
                 </div>`;
 
             if(m.reponses) {
                 Object.values(m.reponses).forEach(rep => {
                     chatContainer.innerHTML += `
-                        <div class="flex flex-col items-start mb-2">
-                            <div class="bg-white border rounded-2xl rounded-tl-sm p-3 max-w-[80%] shadow-sm text-xs sm:text-sm">
-                                <div class="font-bold text-[10px] text-blue-700 mb-0.5">Administration</div>
-                                <div>${rep.texte}</div>
-                                <div class="text-[9px] text-slate-400 text-right mt-1">${rep.date}</div>
+                        <div class="flex flex-col items-start mb-3">
+                            <div class="bg-white border border-slate-200/80 rounded-2xl rounded-tl-sm p-3.5 max-w-[80%] shadow-sm text-xs sm:text-sm space-y-1">
+                                <div class="font-bold text-[10px] text-blue-700 uppercase tracking-wide">Administration</div>
+                                <div class="text-slate-800">${rep.texte}</div>
+                                <div class="text-[9px] text-slate-400 text-right pt-0.5">${rep.date}</div>
                             </div>
                         </div>`;
                 });
