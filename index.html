@@ -81,6 +81,7 @@
                 <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">Élèves & Gestion</button>
                 <button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Professeurs</button>
                 <button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Messagerie Parents</button>
+                <button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Calendrier Présences (Admin)</button>
             </div>
 
             <div id="admin-sec-eleves" class="space-y-4">
@@ -163,6 +164,31 @@
                 <h3 class="font-bold text-slate-700">Boîte de dialogue avec les tuteurs</h3>
                 <div id="admin-box-messages" class="space-y-3 max-h-96 overflow-y-auto p-2 border rounded-xl bg-slate-50"></div>
             </div>
+
+            <div id="admin-sec-calendrier" class="space-y-4 hidden">
+                <h3 class="font-bold text-slate-700">Gestion globale des calendriers de présence (Élèves)</h3>
+                <p class="text-xs text-slate-500">Modifiez le statut de présence des élèves par trimestre. Seule l'administration peut effectuer ces modifications.</p>
+                <div class="flex gap-3 items-center">
+                    <select id="admin-cal-trimestre" onchange="chargerCalendrierAdmin()" class="border p-2 rounded text-sm bg-white">
+                        <option value="T1">Trimestre 1 (T1)</option>
+                        <option value="T2">Trimestre 2 (T2)</option>
+                        <option value="T3">Trimestre 3 (T3)</option>
+                    </select>
+                </div>
+                <div class="overflow-x-auto border rounded-xl bg-white">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 uppercase text-xs">
+                                <th class="p-2 border">Élève</th>
+                                <th class="p-2 border">Classe</th>
+                                <th class="p-2 border">Statut de présence</th>
+                                <th class="p-2 border text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-liste-calendrier-presences"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- TABLEAU DE BORD ÉLÈVE -->
@@ -206,7 +232,8 @@
                     <div id="contenu-cotations" class="space-y-3 text-sm"></div>
                 </div>
                 <div class="bg-slate-50 border p-5 rounded-xl space-y-4">
-                    <h3 class="font-bold text-slate-800">Registre de présence</h3>
+                    <h3 class="font-bold text-slate-800">Calendrier & Registre de présence</h3>
+                    <p class="text-xs text-slate-500">Statut officiel validé par l'administration (lecture seule).</p>
                     <div id="contenu-presences" class="space-y-2 text-sm bg-white p-4 rounded-lg border"></div>
                 </div>
             </div>
@@ -259,7 +286,7 @@
                 <div class="grid grid-cols-2 gap-4 text-xs border p-3 rounded bg-slate-50">
                     <div>
                         <p><strong>Conduite :</strong> Bonne</p>
-                        <p><strong>Absences injustifiées :</strong> 0 heure</p>
+                        <p><strong>Présence :</strong> <span id="bul-presence-txt">Présent</span></p>
                     </div>
                     <div>
                         <p><strong>Statut des Frais :</strong> En ordre</p>
@@ -386,7 +413,6 @@
                                         <th class="p-2 border text-center" id="th-dev">Devoir</th>
                                         <th class="p-2 border text-center" id="th-ex">Examen</th>
                                         <th class="p-2 border text-center bg-blue-50">Total</th>
-                                        <th class="p-2 border">Présence</th>
                                         <th class="p-2 border text-center no-print">Action</th>
                                     </tr>
                                 </thead>
@@ -414,7 +440,7 @@
             <div class="grid md:grid-cols-2 gap-6">
                 <div class="bg-slate-50 border p-5 rounded-xl space-y-3">
                     <div class="flex flex-wrap justify-between items-center gap-2">
-                        <h3 class="font-bold text-slate-700">Enfants rattachés & Notes</h3>
+                        <h3 class="font-bold text-slate-700">Enfants rattachés, Calendrier de présence & Notes</h3>
                         <div class="flex gap-2">
                             <select id="select-trimestre-parent" onchange="changerTrimestreParent()" class="border p-1.5 rounded bg-white text-xs">
                                 <option value="T1">Trimestre 1 (T1)</option>
@@ -509,12 +535,22 @@ window.changerVue = function(vue) {
 }
 
 window.changerOngletAdmin = function(onglet) {
-    ['eleves', 'professeurs', 'messages'].forEach(o => {
-        document.getElementById(`admin-sec-${o}`).classList.add('hidden');
-        document.getElementById(`tab-btn-${o === 'eleves' ? 'eleves' : o === 'professeurs' ? 'profs' : 'msgs'}`).className = "px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium";
+    ['eleves', 'professeurs', 'messages', 'calendrier'].forEach(o => {
+        const btnId = o === 'eleves' ? 'eleves' : o === 'professeurs' ? 'profs' : o === 'messages' ? 'msgs' : 'cal';
+        const sec = document.getElementById(`admin-sec-${o}`);
+        if(sec) sec.classList.add('hidden');
+        const btn = document.getElementById(`tab-btn-${btnId}`);
+        if(btn) btn.className = "px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium";
     });
-    document.getElementById(`admin-sec-${onglet}`).classList.remove('hidden');
-    document.getElementById(`tab-btn-${onglet === 'eleves' ? 'eleves' : onglet === 'professeurs' ? 'profs' : 'msgs'}`).className = "px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium";
+    const activeSec = document.getElementById(`admin-sec-${onglet}`);
+    if(activeSec) activeSec.classList.remove('hidden');
+    const activeBtnId = onglet === 'eleves' ? 'eleves' : onglet === 'professeurs' ? 'profs' : onglet === 'messages' ? 'msgs' : 'cal';
+    const activeBtn = document.getElementById(`tab-btn-${activeBtnId}`);
+    if(activeBtn) activeBtn.className = "px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium";
+
+    if(onglet === 'calendrier') {
+        onValue(dbRef, (snapshot) => { chargerCalendrierAdmin(snapshot.val()); }, { onlyOnce: true });
+    }
 }
 
 window.validerConnexion = function() {
@@ -525,6 +561,7 @@ window.validerConnexion = function() {
         if(code === 'PR1999') {
             document.getElementById('vue-connexion').classList.add('hidden');
             document.getElementById('vue-admin-dashboard').classList.remove('hidden');
+            onValue(dbRef, (snapshot) => { chargerCalendrierAdmin(snapshot.val()); }, { onlyOnce: true });
         } else {
             document.getElementById('erreur-connexion').classList.remove('hidden');
         }
@@ -802,6 +839,55 @@ function actualiserInterfaceAdmin(data) {
                 </div>
             </div>`;
     });
+
+    chargerCalendrierAdmin(data);
+}
+
+function chargerCalendrierAdmin(data) {
+    if(!data) return;
+    const eleves = data.eleves || {};
+    const tbody = document.getElementById('admin-liste-calendrier-presences');
+    if(!tbody) return;
+    tbody.innerHTML = "";
+
+    const trimestre = document.getElementById('admin-cal-trimestre')?.value || 'T1';
+
+    if(Object.keys(eleves).length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Aucun élève enregistré</td></tr>`;
+        return;
+    }
+
+    Object.keys(eleves).forEach(key => {
+        const el = eleves[key];
+        const statutActuel = el.presences?.[trimestre] || 'Présent';
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-slate-50">
+                <td class="p-2 font-medium">${el.nom} ${el.postnom || ''} ${el.prenom}</td>
+                <td class="p-2">${el.classe}</td>
+                <td class="p-2">
+                    <select id="admin-pres-${key}" class="border p-1 rounded text-xs bg-white">
+                        <option value="Présent" ${statutActuel === 'Présent' ? 'selected' : ''}>Présent</option>
+                        <option value="Absent" ${statutActuel === 'Absent' ? 'selected' : ''}>Absent</option>
+                        <option value="Retard" ${statutActuel === 'Retard' ? 'selected' : ''}>Retard</option>
+                        <option value="Excusé" ${statutActuel === 'Excusé' ? 'selected' : ''}>Excusé</option>
+                    </select>
+                </td>
+                <td class="p-2 text-center">
+                    <button onclick="mettreAJourPresenceAdmin('${key}', '${trimestre}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-blue-700">Mettre à jour</button>
+                </td>
+            </tr>`;
+    });
+}
+
+window.mettreAJourPresenceAdmin = function(eleveKey, trimestre) {
+    const nouveauStatut = document.getElementById(`admin-pres-${eleveKey}`).value;
+    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/presences`), { [trimestre]: nouveauStatut })
+        .then(() => {
+            alert("Statut de présence mis à jour avec succès par l'administration !");
+        })
+        .catch((err) => {
+            alert("Erreur lors de la mise à jour : " + err.message);
+        });
 }
 
 window.changerTrimestreEleve = function() {
@@ -855,6 +941,7 @@ function mettreAJourDashboardEleve(data) {
     const profs = data.profs || {};
 
     // Remplissage des données du bulletin officiel
+    const statutPresence = eleveActuel.presences?.[trimestre] || 'Présent';
     document.getElementById('bul-trimestre-txt').innerText = `TRIMESTRE ${trimestre.replace('T', '')}`;
     document.getElementById('bul-nom').innerText = eleveActuel.nom;
     document.getElementById('bul-prenom').innerText = `${eleveActuel.postnom || ''} ${eleveActuel.prenom}`;
@@ -862,6 +949,8 @@ function mettreAJourDashboardEleve(data) {
     document.getElementById('bul-code').innerText = eleveActuel.codeEleve;
     document.getElementById('bul-tuteur').innerText = eleveActuel.tuteur;
     document.getElementById('bul-date').innerText = new Date().toLocaleDateString();
+    const bulPresEl = document.getElementById('bul-presence-txt');
+    if(bulPresEl) bulPresEl.innerText = statutPresence;
 
     const bulLignes = document.getElementById('bul-lignes-cours');
     bulLignes.innerHTML = "";
@@ -880,7 +969,6 @@ function mettreAJourDashboardEleve(data) {
         totalObtenuGlobal += resCalcul.obtenu;
         totalMaximumGlobal += resCalcul.maximum;
 
-        // Ligne pour le bulletin officiel imprimable (sans pourcentage)
         bulLignes.innerHTML += `
             <tr class="border-b border-slate-900">
                 <td class="p-1.5 border border-slate-900 font-medium">${cours}</td>
@@ -917,10 +1005,7 @@ function mettreAJourDashboardEleve(data) {
             </div>`;
     });
 
-    // Affichage des totaux globaux en points bruts (sans pourcentage)
     document.getElementById('eleve-pourcentage-global').innerText = `${totalObtenuGlobal} pts / ${totalMaximumGlobal} pts`;
-
-    // Mise à jour des totaux du bulletin officiel
     document.getElementById('bul-total-max').innerText = totalMaximumGlobal;
     document.getElementById('bul-total-obt').innerText = totalObtenuGlobal;
 
@@ -929,7 +1014,17 @@ function mettreAJourDashboardEleve(data) {
         bulLignes.innerHTML = `<tr><td colspan="3" class="p-2 text-center text-slate-400">Aucune cotation enregistrée</td></tr>`;
     }
 
-    document.getElementById('contenu-presences').innerHTML = `<div class="p-2 rounded bg-green-50 text-green-800">Statut (${trimestre}) : <strong>${eleveActuel.presences?.[trimestre] || 'Présent'}</strong></div>`;
+    document.getElementById('contenu-presences').innerHTML = `
+        <div class="p-3 rounded-lg bg-white border space-y-2">
+            <div class="flex justify-between items-center text-xs text-slate-500 border-b pb-1">
+                <span>Trimestre sélectionné : <strong>${trimestre}</strong></span>
+                <span class="italic text-[10px] text-amber-600">Modification réservée à l'admin</span>
+            </div>
+            <div class="p-2 rounded bg-blue-50 text-blue-900 flex justify-between items-center">
+                <span>Statut de présence officiel :</span>
+                <span class="font-bold px-2.5 py-1 rounded bg-white border text-xs shadow-sm">${statutPresence}</span>
+            </div>
+        </div>`;
 }
 
 window.changerClasseProf = function() {
@@ -994,7 +1089,6 @@ function mettreAJourDashboardProf(data) {
         nbEleves++;
 
         const cData = el.cotations?.[trimestre]?.[utilisateurConnecte.cours] || {};
-        const presenceActuelle = el.presences?.[trimestre] || 'Présent';
         const resCalc = calculerTotauxEtPourcentageCours(cData, baremesActuels);
 
         let inputsInterrosHtml = '';
@@ -1014,12 +1108,6 @@ function mettreAJourDashboardProf(data) {
                 ${inputDevoirHtml}
                 ${inputExamenHtml}
                 <td class="p-2 text-center bg-blue-50 font-bold text-xs text-blue-900">${resCalc.obtenu}/${resCalc.maximum}</td>
-                <td class="p-2">
-                    <select id="pres-${key}" class="border p-1.5 rounded text-xs">
-                        <option value="Présent" ${presenceActuelle === 'Présent' ? 'selected' : ''}>Présent</option>
-                        <option value="Absent" ${presenceActuelle === 'Absent' ? 'selected' : ''}>Absent</option>
-                    </select>
-                </td>
                 <td class="p-2 text-center no-print">
                     <button onclick="sauvegarderNoteProf('${key}')" class="bg-emerald-600 text-white px-2.5 py-1 rounded text-xs font-medium hover:bg-emerald-700">Enregistrer</button>
                 </td>
@@ -1027,7 +1115,7 @@ function mettreAJourDashboardProf(data) {
     });
 
     if(nbEleves === 0) {
-        container.innerHTML = `<tr><td colspan="12" class="p-4 text-center text-slate-400">Aucun élève trouvé pour cette sélection.</td></tr>`;
+        container.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-slate-400">Aucun élève trouvé pour cette sélection.</td></tr>`;
     }
 }
 
@@ -1044,11 +1132,9 @@ window.sauvegarderNoteProf = function(eleveKey) {
         objetCotation.examen = document.getElementById(`ex-${eleveKey}`).value;
     }
 
-    const presence = document.getElementById(`pres-${eleveKey}`).value;
     const trimestre = document.getElementById('prof-select-trimestre')?.value || 'T1';
 
     update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/cotations/${trimestre}`), { [utilisateurConnecte.cours]: objetCotation });
-    update(ref(db, `ecole_rdc_complet/eleves/${eleveKey}/presences`), { [trimestre]: presence });
     alert("Cotations et totaux mis à jour avec succès !");
 }
 
@@ -1083,6 +1169,7 @@ function mettreAJourDashboardParent(data) {
         if(el.codeParent === utilisateurConnecte.codeParent) {
             if(el.frais === 'non_ordre') unEnfantBloque = true;
             
+            const statutPresence = el.presences?.[trimestre] || 'Présent';
             const cotationsTrimestre = el.cotations?.[trimestre] || {};
             let notesHtml = '';
             let coursTrouves = 0;
@@ -1131,7 +1218,7 @@ function mettreAJourDashboardParent(data) {
             }
 
             enfantsContainer.innerHTML += `
-                <div class="border p-4 rounded-xl bg-slate-50 text-sm space-y-2 shadow-sm">
+                <div class="border p-4 rounded-xl bg-slate-50 text-sm space-y-3 shadow-sm">
                     <div class="flex justify-between items-center border-b pb-2">
                         <div>
                             <strong>${el.nom} ${el.prenom}</strong> (${el.classe})<br>
@@ -1144,6 +1231,10 @@ function mettreAJourDashboardParent(data) {
                             </div>
                             <button onclick="imprimerBulletinEleve()" class="bg-emerald-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-emerald-700">🖨️ Imprimer Bulletin</button>
                         </div>
+                    </div>
+                    <div class="p-2.5 rounded bg-blue-50 border text-xs text-blue-900 flex justify-between items-center">
+                        <span>Calendrier de présence (${trimestre}) :</span>
+                        <span class="font-bold px-2 py-0.5 rounded bg-white border">${statutPresence}</span>
                     </div>
                     <div class="mt-2"><strong>Notes par cours (${trimestre}) :</strong></div>
                     ${notesHtml}
