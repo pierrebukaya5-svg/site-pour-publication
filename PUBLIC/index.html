@@ -1433,15 +1433,18 @@
                 contactsEl.innerHTML = '';
 
                 if(Object.keys(tuteurs).length === 0) {
-                    contactsEl.innerHTML = '<p class="p-3 text-xs text-slate-500 italic">Aucun tuteur disponible.</p>';
+                    contactsEl.innerHTML = '<p class="text-[11px] text-slate-500 p-3 text-center">Aucun tuteur enregistré.</p>';
                     return;
                 }
 
-                Object.entries(tuteurs).forEach(([tId, t]) => {
+                Object.entries(tuteurs).forEach(([tutId, tut]) => {
                     contactsEl.innerHTML += `
-                        <div onclick="selectionnerConversationAdmin('${tId}', '${t.nom}')" class="p-3 hover:bg-slate-800 cursor-pointer transition border-b border-slate-800">
-                            <h4 class="font-bold text-white text-xs">${t.nom} ${t.postnom || ''}</h4>
-                            <p class="text-[11px] text-slate-400">Tél : ${t.tel || 'N/A'}</p>
+                        <div onclick="selectionnerConversationAdmin('${tutId}', '${tut.nom}')" class="p-3 hover:bg-slate-800/80 cursor-pointer transition flex items-center justify-between border-b border-slate-800/60">
+                            <div>
+                                <h4 class="font-bold text-white text-xs">${tut.nom}</h4>
+                                <p class="text-[10px] text-slate-400">Tél: ${tut.tel || 'N/A'}</p>
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                         </div>
                     `;
                 });
@@ -1449,30 +1452,31 @@
         });
     }
 
-    let tuteurActifChatId = null;
+    let tuteurActifMessageAdmin = null;
 
-    function selectionnerConversationAdmin(tId, tNom) {
-        tuteurActifChatId = tId;
-        document.getElementById('admin-whatsapp-header').innerHTML = `<span>Discussion avec : ${tNom}</span>`;
-        document.getElementById('admin-whatsapp-input').disabled = false;
+    function selectionnerConversationAdmin(tutId, tutNom) {
+        tuteurActifMessageAdmin = tutId;
+        document.getElementById('admin-whatsapp-header').innerHTML = `<span>Conversation avec : <strong class="text-blue-400">${tutNom}</strong></span>`;
+        const input = document.getElementById('admin-whatsapp-input');
         const btn = document.getElementById('admin-whatsapp-send-btn');
+        input.disabled = false;
         btn.disabled = false;
-        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition shrink-0 shadow-xs flex items-center gap-1";
 
-        db.ref(`messages/${tId}`).on('value', (snap) => {
+        db.ref(`messages/${tutId}`).on('value', (snap) => {
             const chatEl = document.getElementById('admin-whatsapp-chat');
             if(!chatEl) return;
             chatEl.innerHTML = '';
             const msgs = snap.val();
             if(!msgs) {
-                chatEl.innerHTML = '<div class="text-center text-slate-500 text-xs my-auto">Aucun message pour le moment.</div>';
+                chatEl.innerHTML = '<div class="text-center text-slate-500 text-xs my-auto">Démarrez la conversation...</div>';
                 return;
             }
             Object.values(msgs).forEach(m => {
-                const isadmin = m.expediteur === 'admin';
+                const isAdmin = m.expediteur === 'admin';
                 chatEl.innerHTML += `
-                    <div class="flex ${isadmin ? 'justify-end' : 'justify-start'}">
-                        <div class="max-w-xs p-2.5 rounded-xl text-xs ${isadmin ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-200'}">
+                    <div class="flex ${isAdmin ? 'justify-end' : 'justify-start'}">
+                        <div class="max-w-xs p-2.5 rounded-xl text-xs ${isAdmin ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-200'} shadow-xs">
                             <p>${m.texte}</p>
                             <span class="text-[9px] opacity-70 block text-right mt-1">${m.date || ''}</span>
                         </div>
@@ -1486,10 +1490,10 @@
     function envoyerMessageAdminWhatsApp() {
         const input = document.getElementById('admin-whatsapp-input');
         const texte = input.value.trim();
-        if(!texte || !tuteurActifChatId) return;
-
+        if(!texte || !tuteurActifMessageAdmin) return;
         const date = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        db.ref(`messages/${tuteurActifChatId}`).push({
+
+        db.ref(`messages/${tuteurActifMessageAdmin}`).push({
             expediteur: 'admin',
             texte,
             date
@@ -1499,37 +1503,40 @@
     }
 
     function chargerCalendrierAdmin() {
-        const dateVal = document.getElementById('admin-cal-date').value || new Date().toISOString().split('T')[0];
-        const classeVal = document.getElementById('admin-cal-classe').value;
+        const date = document.getElementById('admin-cal-date').value || new Date().toISOString().split('T')[0];
+        document.getElementById('admin-cal-date').value = date;
+        const classeFiltre = document.getElementById('admin-cal-classe').value;
 
         db.ref('eleves').once('value', (elSnap) => {
             const eleves = elSnap.val() || {};
-            db.ref(`presences/${dateVal}`).once('value', (presSnap) => {
-                const pres = presSnap.val() || {};
+            db.ref(`presences/${date}`).once('value', (presSnap) => {
+                const presData = presSnap.val() || {};
                 const tbody = document.getElementById('admin-liste-calendrier-presences');
                 if(!tbody) return;
                 tbody.innerHTML = '';
 
                 let count = 0;
                 Object.entries(eleves).forEach(([elId, el]) => {
-                    if(classeVal && el.classe !== classeVal) return;
+                    if(classeFiltre && el.classe !== classeFiltre) return;
                     count++;
-                    const statut = pres[elId] || 'Present';
+                    const statut = presData[elId] || 'present';
+
                     tbody.innerHTML += `
-                        <tr class="border-b border-slate-700/40">
+                        <tr class="border-b border-slate-700/40 hover:bg-slate-700/20">
                             <td class="p-3 font-bold text-white">${el.nom} ${el.postnom || ''}</td>
                             <td class="p-3 text-slate-300">${el.classe}</td>
                             <td class="p-3">
-                                <select onchange="changerStatutPresenceAdmin('${elId}', '${dateVal}', this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 p-1.5 rounded-lg text-xs focus:outline-none">
-                                    <option value="Present" ${statut === 'Present' ? 'selected' : ''}>Présent</option>
-                                    <option value="Absent" ${statut === 'Absent' ? 'selected' : ''}>Absent</option>
-                                    <option value="Justifie" ${statut === 'Justifie' ? 'selected' : ''}>Justifié</option>
+                                <select onchange="changerStatutPresenceAdmin('${elId}', '${date}', this.value)" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded-xl focus:outline-none ${statut === 'present' ? 'text-emerald-400 font-semibold' : statut === 'absent' ? 'text-red-400 font-semibold' : 'text-amber-400 font-semibold'}">
+                                    <option value="present" ${statut === 'present' ? 'selected' : ''}>Présent(e)</option>
+                                    <option value="absent" ${statut === 'absent' ? 'selected' : ''}>Absent(e)</option>
+                                    <option value="justifie" ${statut === 'justifie' ? 'selected' : ''}>Justifié(e)</option>
                                 </select>
                             </td>
-                            <td class="p-3 text-center text-emerald-400 font-semibold text-xs">Mis à jour</td>
+                            <td class="p-3 text-center text-slate-400 text-[11px]">Enregistré</td>
                         </tr>
                     `;
                 });
+
                 if(count === 0) {
                     tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">Aucun élève trouvé.</td></tr>';
                 }
@@ -1546,8 +1553,12 @@
         const nouveau = document.getElementById('admin-nouveau-mdp').value;
         const confirmation = document.getElementById('admin-confirmation-mdp').value;
 
-        if(!nouveau || nouveau !== confirmation) {
-            alert("Les mots de passe ne correspondent pas ou sont vides.");
+        if(!ancien || !nouveau || !confirmation) {
+            alert("Veuillez remplir tous les champs.");
+            return;
+        }
+        if(nouveau !== confirmation) {
+            alert("Le nouveau mot de passe et la confirmation ne correspondent pas.");
             return;
         }
 
@@ -1566,208 +1577,249 @@
         });
     }
 
-    // PDF Download Stubs & Initializers
-    function telechargerListeElevesPDF() {
-        const element = document.getElementById('section-pdf-admin-eleves');
-        html2pdf().from(element).save('liste_eleves_don_bosco.pdf');
-    }
-
-    function telechargerListeTuteursPDF() {
-        const element = document.getElementById('section-pdf-admin-tuteurs');
-        html2pdf().from(element).save('liste_tuteurs_don_bosco.pdf');
-    }
-
-    function telechargerListeProfsPDF() {
-        const element = document.getElementById('section-pdf-admin-profs');
-        html2pdf().from(element).save('liste_professeurs_don_bosco.pdf');
-    }
-
-    function telechargerBulletinPDF() {
-        const element = document.getElementById('bulletin-impression');
-        element.classList.remove('hidden');
-        html2pdf().from(element).save('bulletin_scolaire.pdf').then(() => {
-            element.classList.add('hidden');
-        });
-    }
-
-    function telechargerFicheProfPDF() {
-        const element = document.getElementById('section-pdf-prof');
-        html2pdf().from(element).save('fiche_cotations_prof.pdf');
-    }
+    // TABLEAU DE BORD ÉLÈVE & PARENT
+    let actifEnfantId = null;
+    let enfantsParentList = [];
 
     function initialiserDashboardEleveParent() {
-        const titleEl = document.getElementById('titre-espace-eleve-parent');
-        const welcomeEl = document.getElementById('welcome-eleve');
+        const isParent = typeUtilisateurActif === 'parent';
+        const containerEnfant = document.getElementById('selecteur-enfant-parent-container');
         const parentMsgSec = document.getElementById('parent-section-messagerie');
-        const selectContainer = document.getElementById('selecteur-enfant-parent-container');
+        const titreEspace = document.getElementById('titre-espace-eleve-parent');
 
-        if(utilisateurActif.codeTuteur) {
-            titleEl.innerText = "Espace Parent";
+        if(isParent) {
+            titreEspace.innerText = "Espace Parent";
             parentMsgSec.classList.remove('hidden');
-            selectContainer.classList.remove('hidden');
-            selectContainer.classList.add('flex');
-            chargerEnfantsParent();
-        } else {
-            titleEl.innerText = "Espace Élève";
-            parentMsgSec.classList.add('hidden');
-            selectContainer.classList.add('hidden');
-            welcomeEl.innerText = `Bienvenue, ${utilisateurActif.nom} ${utilisateurActif.postnom || ''} - ${utilisateurActif.classe}`;
-            chargerDonneesEleveActif(utilisateurActif);
-        }
-    }
+            containerEnfant.classList.remove('hidden');
+            containerEnfant.style.display = 'flex';
 
-    let enfantActifId = null;
+            db.ref('eleves').once('value', (snap) => {
+                const eleves = snap.val() || {};
+                enfantsParentList = [];
+                Object.entries(eleves).forEach(([id, el]) => {
+                    if(el.tuteurId === utilisateurActif.id) {
+                        enfantsParentList.push({ id, ...el });
+                    }
+                });
 
-    function chargerEnfantsParent() {
-        db.ref('eleves').once('value', (snap) => {
-            const eleves = snap.val() || {};
-            const select = document.getElementById('select-enfant-parent');
-            select.innerHTML = '';
-            let premierId = null;
-
-            Object.entries(eleves).forEach(([id, el]) => {
-                if(el.tuteurId === utilisateurActif.id || el.codeTuteur === utilisateurActif.codeTuteur) {
-                    if(!premierId) premierId = id;
-                    select.innerHTML += `<option value="${id}">${el.nom} ${el.postnom || ''} (${el.classe})</option>`;
+                const select = document.getElementById('select-enfant-parent');
+                select.innerHTML = '';
+                if(enfantsParentList.length > 0) {
+                    enfantsParentList.forEach(enf => {
+                        select.innerHTML += `<option value="${enf.id}">${enf.nom} ${enf.postnom || ''} (${enf.classe})</option>`;
+                    });
+                    actifEnfantId = enfantsParentList[0].id;
+                    chargerDonneesEleveParentActif();
+                } else {
+                    select.innerHTML = '<option value="">Aucun enfant rattaché</option>';
+                    document.getElementById('welcome-eleve').innerText = "Aucun élève rattaché à votre compte tuteur.";
                 }
             });
-
-            if(premierId) {
-                enfantActifId = premierId;
-                changerEnfantActifParent(premierId);
-            }
-        });
+            chargerMessagerieParent();
+        } else {
+            titreEspace.innerText = "Espace Élève";
+            parentMsgSec.classList.add('hidden');
+            containerEnfant.classList.add('hidden');
+            containerEnfant.style.display = 'none';
+            actifEnfantId = utilisateurActif.id;
+            chargerDonneesEleveParentActif();
+        }
     }
 
     function changerEnfantActifParent(id) {
-        enfantActifId = id;
-        db.ref(`eleves/${id}`).once('value', (snap) => {
+        actifEnfantId = id;
+        chargerDonneesEleveParentActif();
+    }
+
+    function chargerDonneesEleveParentActif() {
+        if(!actifEnfantId) return;
+        db.ref(`eleves/${actifEnfantId}`).once('value', (snap) => {
             const el = snap.val();
-            if(el) {
-                document.getElementById('welcome-eleve').innerText = "Suivi de l'enfant : " + el.nom + " (" + el.classe + ")";
-                chargerDonneesEleveActif({ id, ...el });
-            }
+            if(!el) return;
+            document.getElementById('welcome-eleve').innerText = `Bienvenue, ${el.nom} ${el.postnom || ''} — Classe : ${el.classe}`;
+            chargerCotationsEleve();
+            chargerDocumentsEleve();
+            chargerCalendrierEleve();
         });
     }
 
-    function chargerDonneesEleveActif(el) {
-        document.getElementById('bul-nom').innerText = el.nom || '';
-        document.getElementById('bul-prenom').innerText = `${el.postnom || ''} ${el.prenom || ''}`;
-        document.getElementById('bul-classe').innerText = el.classe || '';
-        document.getElementById('bul-code').innerText = el.codeEleve || '';
-        document.getElementById('bul-tuteur').innerText = el.tuteurNom || 'N/A';
-        document.getElementById('bul-date').innerText = new Date().toLocaleDateString();
-        
-        // Charger documents, notes, calendrier...
-        chargerCotationsEleve(el.id, el.classe);
-        chargerDocumentsEleve(el.classe);
-        if(utilisateurActif.codeTuteur) {
-            chargerMessagerieParent(utilisateurActif.id);
-        }
-    }
-
-    function chargerCotationsEleve(eleveId, classe) {
+    function chargerCotationsEleve() {
         const trimestre = document.getElementById('select-trimestre-eleve').value;
-        db.ref(`notes/${classe}/${trimestre}`).once('value', (snap) => {
-            const notesData = snap.val() || {};
-            const contenu = document.getElementById('contenu-cotations');
-            const tbodyBul = document.getElementById('bul-lignes-cours');
-            if(!contenu || !tbodyBul) return;
+        db.ref(`eleves/${actifEnfantId}`).once('value', (elSnap) => {
+            const el = elSnap.val();
+            if(!el) return;
 
-            contenu.innerHTML = '';
-            tbodyBul.innerHTML = '';
+            db.ref('professeurs').once('value', (profSnap) => {
+                const profs = profSnap.val() || {};
+                db.ref(`notes/${el.classe}/${trimestre}`).once('value', (noteSnap) => {
+                    const notesData = noteSnap.val() || {};
+                    const cotationsContainer = document.getElementById('contenu-cotations');
+                    const selectCours = document.getElementById('select-cours-eleve');
+                    cotationsContainer.innerHTML = '';
+                    
+                    let totalObtGlobal = 0;
+                    let totalMaxGlobal = 0;
+                    let optionsCoursHtml = '<option value="">Tous les cours</option>';
+                    const coursSelectionne = selectCours.value;
 
-            let totalObtGlobal = 0;
-            let totalMaxGlobal = 0;
+                    // Rassembler tous les cours disponibles (via profs ou notes)
+                    const coursSet = new Set();
+                    Object.values(profs).forEach(p => coursSet.add(p.cours));
+                    Object.keys(notesData).forEach(c => coursSet.add(c));
 
-            Object.entries(notesData).forEach(([cours, elevesNotes]) => {
-                const noteEl = elevesNotes[eleveId] || { int1: 0, int2: 0, int3: 0, int4: 0, dev: 0, ex: 0 };
-                const maxInt = 10;
-                const totalObt = parseFloat(noteEl.int1 || 0) + parseFloat(noteEl.int2 || 0) + parseFloat(noteEl.int3 || 0) + parseFloat(noteEl.int4 || 0);
-                const maxTotal = maxInt * 4;
+                    if(coursSet.size === 0) {
+                        cotationsContainer.innerHTML = '<p class="text-xs text-slate-400 italic">Aucune cotation enregistrée.</p>';
+                        document.getElementById('eleve-pourcentage-global').innerText = "0.0 pts / 0 pts";
+                        return;
+                    }
 
-                totalObtGlobal += totalObt;
-                totalMaxGlobal += maxTotal;
+                    coursSet.forEach(cours => {
+                        optionsCoursHtml += `<option value="${cours}" ${coursSelectionne === cours ? 'selected' : ''}>${cours}</option>`;
+                        if(coursSelectionne && coursSelectionne !== cours) return;
 
-                contenu.innerHTML += `
-                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
-                        <div>
-                            <h4 class="font-bold text-white">${cours}</h4>
-                            <p class="text-[11px] text-slate-400">Total interros : ${totalObt} / ${maxTotal}</p>
-                        </div>
-                        <span class="font-bold text-blue-400">${totalObt} pts</span>
-                    </div>
-                `;
+                        const coursNotes = notesData[cours] && notesData[cours][actifEnfantId] ? notesData[cours][actifEnfantId] : {};
+                        const baremes = notesData[cours] && notesData[cours].baremes ? notesData[cours].baremes : { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
 
-                tbodyBul.innerHTML += `
-                    <tr class="border-b border-slate-200 text-xs">
-                        <td class="p-2 border border-slate-300 font-semibold">${cours}</td>
-                        <td class="p-2 border border-slate-300 text-center">${maxTotal}</td>
-                        <td class="p-2 border border-slate-300 text-center font-bold text-slate-900">${totalObt}</td>
-                    </tr>
-                `;
+                        let maxTotalCours = 0;
+                        let obtenuCours = 0;
+
+                        for(let i=1; i<=parseInt(baremes.nbInterros || 4); i++) {
+                            maxTotalCours += parseFloat(baremes.maxInterro || 10);
+                            obtenuCours += parseFloat(coursNotes[`int${i}`] || 0);
+                        }
+                        if(baremes.actifDevoir === 'oui') {
+                            maxTotalCours += parseFloat(baremes.maxDevoir || 10);
+                            obtenuCours += parseFloat(coursNotes.devoir || 0);
+                        }
+                        if(baremes.actifExamen === 'oui') {
+                            maxTotalCours += parseFloat(baremes.maxExamen || 50);
+                            obtenuCours += parseFloat(coursNotes.examen || 0);
+                        }
+
+                        totalObtGlobal += obtenuCours;
+                        totalMaxGlobal += maxTotalCours;
+
+                        cotationsContainer.innerHTML += `
+                            <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/60 space-y-1">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-bold text-white text-xs">${cours}</h4>
+                                    <span class="text-xs font-bold text-blue-400">${obtenuCours} / ${maxTotalCours} pts</span>
+                                </div>
+                                <p class="text-[10px] text-slate-400">Évaluations : Interros, Devoirs, Examen</p>
+                            </div>
+                        `;
+                    });
+
+                    selectCours.innerHTML = optionsCoursHtml;
+                    document.getElementById('eleve-pourcentage-global').innerText = `${totalObtGlobal.toFixed(1)} pts / ${totalMaxGlobal} pts`;
+                });
             });
-
-            document.getElementById('eleve-pourcentage-global').innerText = `${totalObtGlobal} pts / ${totalMaxGlobal} pts`;
-            document.getElementById('bul-total-max').innerText = totalMaxGlobal;
-            document.getElementById('bul-total-obt').innerText = totalObtGlobal;
         });
     }
 
     function changerTrimestreEleve() {
-        const id = utilisateurActif.codeTuteur ? enfantActifId : utilisateurActif.id;
-        const classe = utilisateurActif.codeTuteur ? document.getElementById('select-enfant-parent').selectedOptions[0]?.text.match(/\(([^)]+)\)/)?.[1] : utilisateurActif.classe;
-        if(id && classe) {
-            chargerCotationsEleve(id, classe);
-        }
+        chargerCotationsEleve();
     }
 
-    function chargerDocumentsEleve(classe) {
-        db.ref('documents').once('value', (snap) => {
-            const docs = snap.val() || {};
-            const container = document.getElementById('eleve-liste-documents');
-            if(!container) return;
-            container.innerHTML = '';
-
-            let count = 0;
-            Object.values(docs).forEach(d => {
-                count++;
-                container.innerHTML += `
-                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
-                        <div>
-                            <h4 class="font-bold text-white text-xs">${d.titre}</h4>
-                            <p class="text-[10px] text-slate-400">Professeur : ${d.profNom || 'N/A'}</p>
+    function chargerDocumentsEleve() {
+        db.ref(`eleves/${actifEnfantId}`).once('value', (snap) => {
+            const el = snap.val();
+            if(!el) return;
+            db.ref(`documents/${el.classe}`).on('value', (docSnap) => {
+                const container = document.getElementById('eleve-liste-documents');
+                if(!container) return;
+                container.innerHTML = '';
+                const docs = docSnap.val();
+                if(!docs) {
+                    container.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-2">Aucun document disponible pour le moment.</p>';
+                    return;
+                }
+                Object.values(docs).forEach(d => {
+                    container.innerHTML += `
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-white text-xs">${d.titre}</h4>
+                                <p class="text-[10px] text-slate-400">Publié par le professeur</p>
+                            </div>
+                            <a href="${d.url}" target="_blank" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition">Télécharger</a>
                         </div>
-                        <a href="${d.url}" target="_blank" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold">Télécharger</a>
-                    </div>
-                `;
+                    `;
+                });
             });
+        });
+    }
 
-            if(count === 0) {
-                container.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-2">Aucun document pédagogique disponible.</p>';
+    let moisActifCalendrierEleve = new Date().getMonth();
+    let anneeActifCalendrierEleve = new Date().getFullYear();
+
+    function chargerCalendrierEleve() {
+        const moisNoms = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+        document.getElementById('label-mois-eleve').innerText = `${moisNoms[moisActifCalendrierEleve]} ${anneeActifCalendrierEleve}`;
+
+        db.ref('presences').once('value', (snap) => {
+            const presAll = snap.val() || {};
+            const container = document.getElementById('contenu-calendrier-eleve');
+            if(!container) return;
+            container.innerHTML = `
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-slate-400 mb-2">
+                    <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+                </div>
+                <div id="grille-jours-eleve" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+            `;
+
+            const grille = document.getElementById('grille-jours-eleve');
+            const premierJour = new Date(anneeActifCalendrierEleve, moisActifCalendrierEleve, 1).getDay();
+            const nbJours = new Date(anneeActifCalendrierEleve, moisActifCalendrierEleve + 1, 0).getDate();
+            const decalage = (premierJour === 0) ? 6 : premierJour - 1;
+
+            for(let i=0; i<decalage; i++) {
+                grille.innerHTML += `<div></div>`;
+            }
+
+            for(let j=1; j<=nbJours; j++) {
+                const mStr = String(moisActifCalendrierEleve + 1).padStart(2, '0');
+                const jStr = String(j).padStart(2, '0');
+                const dateKey = `${anneeActifCalendrierEleve}-${mStr}-${jStr}`;
+                const statut = presAll[dateKey] && presAll[dateKey][actifEnfantId] ? presAll[dateKey][actifEnfantId] : 'present';
+
+                let bgClass = 'bg-slate-800 text-slate-300';
+                if(statut === 'present') bgClass = 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 font-bold';
+                else if(statut === 'absent') bgClass = 'bg-red-950/80 text-red-400 border border-red-800/60 font-bold';
+                else if(statut === 'justifie') bgClass = 'bg-amber-950/80 text-amber-400 border border-amber-800/60 font-bold';
+
+                grille.innerHTML += `<div class="p-1.5 rounded-lg ${bgClass}">${j}</div>`;
             }
         });
     }
 
-    function changerMoisCalendrierEleve(delta) {
-        // Simple navigation stubs for calendar view if required
+    function changerMoisCalendrierEleve(sens) {
+        moisActifCalendrierEleve += sens;
+        if(moisActifCalendrierEleve > 11) {
+            moisActifCalendrierEleve = 0;
+            anneeActifCalendrierEleve++;
+        } else if(moisActifCalendrierEleve < 0) {
+            moisActifCalendrierEleve = 11;
+            anneeActifCalendrierEleve--;
+        }
+        chargerCalendrierEleve();
     }
 
-    function chargerMessagerieParent(tuteurId) {
+    function chargerMessagerieParent() {
+        const tuteurId = utilisateurActif.id;
         db.ref(`messages/${tuteurId}`).on('value', (snap) => {
             const chatEl = document.getElementById('parent-whatsapp-chat');
             if(!chatEl) return;
             chatEl.innerHTML = '';
             const msgs = snap.val();
             if(!msgs) {
-                chatEl.innerHTML = '<div class="text-center text-slate-500 my-auto">Aucun message avec l\'administration.</div>';
+                chatEl.innerHTML = '<div class="text-center text-slate-500 my-auto">Écrivez un message à l\'administration...</div>';
                 return;
             }
             Object.values(msgs).forEach(m => {
-                const isadmin = m.expediteur === 'admin';
+                const isParent = m.expediteur !== 'admin';
                 chatEl.innerHTML += `
-                    <div class="flex ${isadmin ? 'justify-start' : 'justify-end'}">
-                        <div class="max-w-xs p-2.5 rounded-xl text-xs ${isadmin ? 'bg-slate-700 text-slate-200' : 'bg-violet-600 text-white'}">
+                    <div class="flex ${isParent ? 'justify-end' : 'justify-start'}">
+                        <div class="max-w-xs p-2 rounded-xl ${isParent ? 'bg-violet-600 text-white' : 'bg-slate-700 text-slate-200'} shadow-xs">
                             <p>${m.texte}</p>
                             <span class="text-[9px] opacity-70 block text-right mt-1">${m.date || ''}</span>
                         </div>
@@ -1781,11 +1833,12 @@
     function envoyerMessageParentWhatsApp() {
         const input = document.getElementById('parent-whatsapp-input');
         const texte = input.value.trim();
-        if(!texte || !utilisateurActif.id) return;
-
+        if(!texte) return;
+        const tuteurId = utilisateurActif.id;
         const date = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        db.ref(`messages/${utilisateurActif.id}`).push({
-            expediteur: 'parent',
+
+        db.ref(`messages/${tuteurId}`).push({
+            expediteur: tuteurId,
             texte,
             date
         }, () => {
@@ -1793,77 +1846,229 @@
         });
     }
 
+    function telechargerBulletinPDF() {
+        db.ref(`eleves/${actifEnfantId}`).once('value', (elSnap) => {
+            const el = elSnap.val();
+            if(!el) return;
+            const trimestre = document.getElementById('select-trimestre-eleve').value;
+
+            document.getElementById('bul-trimestre-txt').innerText = trimestre === 'T1' ? 'TRIMESTRE 1' : trimestre === 'T2' ? 'TRIMESTRE 2' : 'TRIMESTRE 3';
+            document.getElementById('bul-nom').innerText = el.nom;
+            document.getElementById('bul-prenom').innerText = `${el.postnom || ''} ${el.prenom || ''}`;
+            document.getElementById('bul-classe').innerText = el.classe;
+            document.getElementById('bul-code').innerText = el.codeEleve;
+            document.getElementById('bul-tuteur').innerText = el.tuteurNom || 'N/A';
+            document.getElementById('bul-date').innerText = new Date().toLocaleDateString();
+
+            db.ref(`notes/${el.classe}/${trimestre}`).once('value', (noteSnap) => {
+                const notesData = noteSnap.val() || {};
+                const tbody = document.getElementById('bul-lignes-cours');
+                tbody.innerHTML = '';
+
+                let totalMaxGen = 0;
+                let totalObtGen = 0;
+
+                Object.entries(notesData).forEach(([cours, coursObj]) => {
+                    if(cours === 'baremes') return;
+                    const coursNotes = coursObj && coursObj[actifEnfantId] ? coursObj[actifEnfantId] : {};
+                    const baremes = coursObj && coursObj.baremes ? coursObj.baremes : { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+
+                    let maxTotalCours = 0;
+                    let obtenuCours = 0;
+
+                    for(let i=1; i<=parseInt(baremes.nbInterros || 4); i++) {
+                        maxTotalCours += parseFloat(baremes.maxInterro || 10);
+                        obtenuCours += parseFloat(coursNotes[`int${i}`] || 0);
+                    }
+                    if(baremes.actifDevoir === 'oui') {
+                        maxTotalCours += parseFloat(baremes.maxDevoir || 10);
+                        obtenuCours += parseFloat(coursNotes.devoir || 0);
+                    }
+                    if(baremes.actifExamen === 'oui') {
+                        maxTotalCours += parseFloat(baremes.maxExamen || 50);
+                        obtenuCours += parseFloat(coursNotes.examen || 0);
+                    }
+
+                    totalMaxGen += maxTotalCours;
+                    totalObtGen += obtenuCours;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="p-2 border border-slate-300 font-semibold">${cours}</td>
+                            <td class="p-2 border border-slate-300 text-center">${maxTotalCours}</td>
+                            <td class="p-2 border border-slate-300 text-center font-bold text-slate-900">${obtenuCours}</td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('bul-total-max').innerText = totalMaxGen;
+                document.getElementById('bul-total-obt').innerText = totalObtGen.toFixed(1);
+
+                const bulletinEl = document.getElementById('bulletin-impression');
+                bulletinEl.classList.remove('hidden');
+
+                const opt = {
+                    margin: 0.5,
+                    filename: `Bulletin_${el.nom}_${trimestre}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
+
+                html2pdf().from(bulletinEl).set(opt).save().then(() => {
+                    bulletinEl.classList.add('hidden');
+                });
+            });
+        });
+    }
+
+    // TABLEAU DE BORD PROFESSEUR
+    let coursValidesProfList = [];
+
     function initialiserDashboardProf() {
-        document.getElementById('welcome-prof').innerText = `Professeur : ${utilisateurActif.nom} - Cours principal : ${utilisateurActif.cours}`;
-        const selectCours = document.getElementById('prof-select-cours-actif');
-        selectCours.innerHTML = `<option value="${utilisateurActif.cours}">${utilisateurActif.cours}</option>`;
-        chargerNotesProf();
+        document.getElementById('welcome-prof').innerText = `Bienvenue, Prof. ${utilisateurActif.nom} — Cours principal : ${utilisateurActif.cours}`;
+        chargerCoursValidesProf();
+    }
+
+    function chargerCoursValidesProf() {
+        db.ref('professeursValidations').once('value', (snap) => {
+            const valid = snap.val() || {};
+            coursValidesProfList = [utilisateurActif.cours];
+            Object.values(valid).forEach(v => {
+                if(v.profId === utilisateurActif.id && v.statut === 'valide') {
+                    if(!coursValidesProfList.includes(v.cours)) coursValidesProfList.push(v.cours);
+                }
+            });
+
+            const select = document.getElementById('prof-select-cours-actif');
+            select.innerHTML = '';
+            coursValidesProfList.forEach(c => {
+                select.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+
+            chargerDocumentsProf();
+            chargerTableauNotesProf();
+        });
     }
 
     function changerCoursActifProf(cours) {
-        chargerNotesProf();
+        utilisateurActif.cours = cours;
+        chargerTableauNotesProf();
     }
 
     function ouvrirModalDemandeCours() {
-        const coursDemande = prompt("Entrez le nom du cours supplémentaire demandé :");
-        if(coursDemande) {
-            db.ref('demandesCours').push({
-                profNom: utilisateurActif.nom,
-                cours: coursDemande,
-                statut: 'En attente'
-            }, () => {
-                alert("Demande envoyée à l'administration avec succès !");
-            });
-        }
+        const coursDemande = prompt("Entrez le nom du cours supplémentaire que vous souhaitez enseigner :");
+        if(!coursDemande) return;
+
+        db.ref('professeursDemandes').push({
+            profId: utilisateurActif.id,
+            profNom: utilisateurActif.nom,
+            cours: coursDemande,
+            statut: 'en_attente'
+        }, () => {
+            alert("Demande envoyée à l'administration avec succès !");
+        });
     }
 
     function uploaderDocumentProf() {
         const titre = document.getElementById('doc-titre').value.trim();
         const fileInput = document.getElementById('doc-fichier');
+        const classe = document.getElementById('prof-select-classe').value || '1ère Primaire';
+
         if(!titre || fileInput.files.length === 0) {
             alert("Veuillez entrer un titre et sélectionner un fichier.");
             return;
         }
-        // Simulated upload for offline/demo compatibility
-        db.ref('documents').push({
-            titre,
-            profNom: utilisateurActif.nom,
-            url: '#'
-        }, () => {
-            alert("Document publié avec succès !");
-            document.getElementById('doc-titre').value = '';
-            fileInput.value = '';
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64Url = e.target.result;
+            db.ref(`documents/${classe}`).push({
+                titre,
+                url: base64Url,
+                profNom: utilisateurActif.nom
+            }, () => {
+                alert("Document publié avec succès !");
+                document.getElementById('doc-titre').value = '';
+                fileInput.value = '';
+                chargerDocumentsProf();
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function chargerDocumentsProf() {
+        const classe = document.getElementById('prof-select-classe').value || '1ère Primaire';
+        db.ref(`documents/${classe}`).on('value', (snap) => {
+            const container = document.getElementById('prof-liste-mes-documents');
+            if(!container) return;
+            container.innerHTML = '';
+            const docs = snap.val();
+            if(!docs) {
+                container.innerHTML = '<p class="text-xs text-slate-400 italic">Aucun document publié pour cette classe.</p>';
+                return;
+            }
+            Object.entries(docs).forEach(([id, d]) => {
+                container.innerHTML += `
+                    <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
+                        <span class="font-bold text-white">${d.titre}</span>
+                        <button onclick="supprimerDocumentProf('${classe}', '${id}')" class="text-red-400 hover:text-red-300">Supprimer</button>
+                    </div>
+                `;
+            });
         });
     }
 
-    function sauvegarderBaremesProf() {
-        // Paramètres de barèmes sauvegardés localement ou en session
-    }
-
-    function changerOngletProf(onglet) {
-        if(onglet === 'notes') {
-            document.getElementById('prof-sec-notes').classList.remove('hidden');
-            document.getElementById('prof-sec-presences').classList.add('hidden');
-            document.getElementById('prof-tab-notes').className = "px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
-            document.getElementById('prof-tab-presences').className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50";
-        } else {
-            document.getElementById('prof-sec-notes').classList.add('hidden');
-            document.getElementById('prof-sec-presences').classList.remove('hidden');
-            document.getElementById('prof-tab-presences').className = "px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
-            document.getElementById('prof-tab-notes').className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50";
-            chargerCalendrierProf();
+    function supprimerDocumentProf(classe, id) {
+        if(confirm("Supprimer ce document ?")) {
+            db.ref(`documents/${classe}/${id}`).remove();
         }
     }
 
-    function chargerNotesProf() {
+    function sauvegarderBaremesProf() {
+        const nbInterros = document.getElementById('cfg-nb-interros').value;
+        const maxInterro = document.getElementById('cfg-max-interro').value;
+        const actifDevoir = document.getElementById('cfg-actif-devoir').value;
+        const maxDevoir = document.getElementById('cfg-max-devoir').value;
+        const actifExamen = document.getElementById('cfg-actif-examen').value;
+        const maxExamen = document.getElementById('cfg-max-examen').value;
+
+        const classe = document.getElementById('prof-select-classe').value || '1ère Primaire';
+        const trimestre = document.getElementById('prof-select-trimestre').value;
+        const cours = utilisateurActif.cours;
+
+        db.ref(`notes/${classe}/${trimestre}/${cours}/baremes`).set({
+            nbInterros, maxInterro, actifDevoir, maxDevoir, actifExamen, maxExamen
+        }, () => {
+            chargerTableauNotesProf();
+        });
+    }
+
+    function chargerTableauNotesProf() {
         const classe = document.getElementById('prof-select-classe').value;
         const trimestre = document.getElementById('prof-select-trimestre').value;
         const cours = utilisateurActif.cours;
 
         db.ref('eleves').once('value', (elSnap) => {
             const eleves = elSnap.val() || {};
-            db.ref(`notes/${classe}/${cours}/${trimestre}`).once('value', (notesSnap) => {
-                const notes = notesSnap.val() || {};
+            db.ref(`notes/${classe || 'all'}/${trimestre}/${cours}`).once('value', (noteSnap) => {
+                const coursData = noteSnap.val() || {};
+                const baremes = coursData.baremes || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+
+                // Mettre à jour l'en-tête du tableau
+                for(let i=1; i<=4; i++) {
+                    const th = document.getElementById(`th-int${i}`);
+                    if(th) {
+                        if(i <= parseInt(baremes.nbInterros)) {
+                            th.style.display = '';
+                            th.innerText = `Int. ${i} (/${baremes.maxInterro})`;
+                        } else {
+                            th.style.display = 'none';
+                        }
+                    }
+                }
+
                 const tbody = document.getElementById('prof-liste-notes');
                 if(!tbody) return;
                 tbody.innerHTML = '';
@@ -1872,18 +2077,24 @@
                 Object.entries(eleves).forEach(([elId, el]) => {
                     if(classe && el.classe !== classe) return;
                     count++;
-                    const noteEl = notes[elId] || { int1: '', int2: '', int3: '', int4: '' };
+                    const elNotes = coursData[elId] || {};
+
+                    let inputsHtml = '';
+                    for(let i=1; i<=4; i++) {
+                        if(i <= parseInt(baremes.nbInterros)) {
+                            inputsHtml += `<td class="p-2.5 text-center"><input type="number" value="${elNotes[`int${i}`] || ''}" onchange="sauvegarderNoteEleve('${elId}', 'int${i}', this.value)" class="w-14 bg-slate-900 border border-slate-700 text-white p-1.5 rounded-lg text-center font-bold text-xs focus:outline-none"></td>`;
+                        }
+                    }
+
                     tbody.innerHTML += `
-                        <tr class="border-b border-slate-700/40">
+                        <tr class="border-b border-slate-700/40 hover:bg-slate-700/20">
                             <td class="p-2.5 font-bold text-white">${el.nom} ${el.postnom || ''}</td>
                             <td class="p-2.5 text-slate-300">${el.classe}</td>
-                            <td class="p-2.5 text-center"><input type="number" value="${noteEl.int1 || ''}" onchange="sauvegarderNoteProf('${elId}', 'int1', this.value)" class="w-14 bg-slate-900 border border-slate-700 text-white text-center p-1 rounded-lg text-xs"></td>
-                            <td class="p-2.5 text-center"><input type="number" value="${noteEl.int2 || ''}" onchange="sauvegarderNoteProf('${elId}', 'int2', this.value)" class="w-14 bg-slate-900 border border-slate-700 text-white text-center p-1 rounded-lg text-xs"></td>
-                            <td class="p-2.5 text-center"><input type="number" value="${noteEl.int3 || ''}" onchange="sauvegarderNoteProf('${elId}', 'int3', this.value)" class="w-14 bg-slate-900 border border-slate-700 text-white text-center p-1 rounded-lg text-xs"></td>
-                            <td class="p-2.5 text-center"><input type="number" value="${noteEl.int4 || ''}" onchange="sauvegarderNoteProf('${elId}', 'int4', this.value)" class="w-14 bg-slate-900 border border-slate-700 text-white text-center p-1 rounded-lg text-xs"></td>
+                            ${inputsHtml}
                         </tr>
                     `;
                 });
+
                 if(count === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Aucun élève trouvé.</td></tr>';
                 }
@@ -1891,46 +2102,130 @@
         });
     }
 
-    function changerClasseProf() { chargerNotesProf(); }
-    function changerTrimestreProf() { chargerNotesProf(); }
-
-    function sauvegarderNoteProf(elId, type, valeur) {
-        const classe = document.getElementById('prof-select-classe').value;
+    function sauvegarderNoteEleve(elId, champ, valeur) {
+        const classe = document.getElementById('prof-select-classe').value || '1ère Primaire';
         const trimestre = document.getElementById('prof-select-trimestre').value;
         const cours = utilisateurActif.cours;
-        if(!classe) return;
 
-        db.ref(`notes/${classe}/${cours}/${trimestre}/${elId}/${type}`).set(valeur);
+        db.ref(`notes/${classe}/${trimestre}/${cours}/${elId}/${champ}`).set(valeur);
+    }
+
+    function changerClasseProf() {
+        chargerDocumentsProf();
+        chargerTableauNotesProf();
+    }
+
+    function changerTrimestreProf() {
+        chargerTableauNotesProf();
+    }
+
+    function changerOngletProf(onglet) {
+        const notesSec = document.getElementById('prof-sec-notes');
+        const presSec = document.getElementById('prof-sec-presences');
+        const btnNotes = document.getElementById('prof-tab-notes');
+        const btnPres = document.getElementById('prof-tab-presences');
+
+        if(onglet === 'notes') {
+            notesSec.classList.remove('hidden');
+            presSec.classList.add('hidden');
+            btnNotes.className = "px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+            btnPres.className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50";
+        } else {
+            notesSec.classList.add('hidden');
+            presSec.classList.remove('hidden');
+            btnPres.className = "px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+            btnNotes.className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50";
+            chargerCalendrierProf();
+        }
     }
 
     function chargerCalendrierProf() {
-        const dateVal = document.getElementById('prof-cal-date').value || new Date().toISOString().split('T')[0];
+        const date = document.getElementById('prof-cal-date').value || new Date().toISOString().split('T')[0];
+        document.getElementById('prof-cal-date').value = date;
+        const classeFiltre = document.getElementById('prof-select-classe').value;
+
         db.ref('eleves').once('value', (elSnap) => {
             const eleves = elSnap.val() || {};
-            db.ref(`presences/${dateVal}`).once('value', (presSnap) => {
-                const pres = presSnap.val() || {};
+            db.ref(`presences/${date}`).once('value', (presSnap) => {
+                const presData = presSnap.val() || {};
                 const tbody = document.getElementById('prof-liste-presences');
                 if(!tbody) return;
                 tbody.innerHTML = '';
 
+                let count = 0;
                 Object.entries(eleves).forEach(([elId, el]) => {
-                    const statut = pres[elId] || 'Present';
+                    if(classeFiltre && el.classe !== classeFiltre) return;
+                    count++;
+                    const statut = presData[elId] || 'present';
+
                     tbody.innerHTML += `
-                        <tr class="border-b border-slate-700/40">
+                        <tr class="border-b border-slate-700/40 hover:bg-slate-700/20">
                             <td class="p-3 font-bold text-white">${el.nom} ${el.postnom || ''}</td>
                             <td class="p-3 text-slate-300">${el.classe}</td>
                             <td class="p-3">
-                                <select onchange="changerStatutPresenceAdmin('${elId}', '${dateVal}', this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 p-1.5 rounded-lg text-xs focus:outline-none">
-                                    <option value="Present" ${statut === 'Present' ? 'selected' : ''}>Présent</option>
-                                    <option value="Absent" ${statut === 'Absent' ? 'selected' : ''}>Absent</option>
-                                    <option value="Justifie" ${statut === 'Justifie' ? 'selected' : ''}>Justifié</option>
+                                <select onchange="changerStatutPresenceAdmin('${elId}', '${date}', this.value)" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded-xl focus:outline-none ${statut === 'present' ? 'text-emerald-400 font-semibold' : statut === 'absent' ? 'text-red-400 font-semibold' : 'text-amber-400 font-semibold'}">
+                                    <option value="present" ${statut === 'present' ? 'selected' : ''}>Présent(e)</option>
+                                    <option value="absent" ${statut === 'absent' ? 'selected' : ''}>Absent(e)</option>
+                                    <option value="justifie" ${statut === 'justifie' ? 'selected' : ''}>Justifié(e)</option>
                                 </select>
                             </td>
                         </tr>
                     `;
                 });
+
+                if(count === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400">Aucun élève trouvé.</td></tr>';
+                }
             });
         });
+    }
+
+    function telechargerListeElevesPDF() {
+        const element = document.getElementById('section-pdf-admin-eleves');
+        const opt = {
+            margin: 0.5,
+            filename: 'Liste_Eleves_Don_Bosco.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        };
+        html2pdf().from(element).set(opt).save();
+    }
+
+    function telechargerListeTuteursPDF() {
+        const element = document.getElementById('section-pdf-admin-tuteurs');
+        const opt = {
+            margin: 0.5,
+            filename: 'Liste_Tuteurs_Don_Bosco.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        };
+        html2pdf().from(element).set(opt).save();
+    }
+
+    function telechargerListeProfsPDF() {
+        const element = document.getElementById('section-pdf-admin-profs');
+        const opt = {
+            margin: 0.5,
+            filename: 'Liste_Professeurs_Don_Bosco.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().from(element).set(opt).save();
+    }
+
+    function telechargerFicheProfPDF() {
+        const element = document.getElementById('section-pdf-prof');
+        const opt = {
+            margin: 0.5,
+            filename: `Fiche_Cotations_${utilisateurActif.nom}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        };
+        html2pdf().from(element).set(opt).save();
     }
 </script>
 </body>
