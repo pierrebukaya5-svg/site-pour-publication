@@ -24,67 +24,21 @@
         font-family: 'Plus Jakarta Sans', sans-serif;
         -webkit-text-size-adjust: 100%;
         background-color: #0f172a;
-        overflow-x: hidden;
     }
 
-    /* CORRECTION IMPRESSION : Affichage complet et propre sur papier / PDF */
     @media print {
-        body, html {
-            background: white !important;
-            color: #000 !important;
-            height: auto !important;
-            overflow: visible !important;
-        }
         body * { visibility: hidden; }
-        
-        #section-impression-admin, #section-impression-admin *, 
-        #section-impression-prof, #section-impression-prof *, 
-        #bulletin-impression, #bulletin-impression * { 
-            visibility: visible !important; 
-        }
-        
-        #section-impression-admin { 
-            position: absolute !important; 
-            left: 0 !important; 
-            top: 0 !important; 
-            width: 100% !important; 
-            background: white !important;
-            color: black !important;
-        }
-        
-        #section-impression-prof { 
-            position: absolute !important; 
-            left: 0 !important; 
-            top: 0 !important; 
-            width: 100% !important; 
-            display: block !important; 
-            background: white !important;
-            color: black !important;
-        }
-
-        #bulletin-impression { 
-            position: absolute !important; 
-            left: 0 !important; 
-            top: 0 !important; 
-            width: 100% !important; 
-            display: block !important; 
-            background: white !important; 
-            color: #1e293b !important; 
-            z-index: 9999; 
-        }
-
+        #section-impression-admin, #section-impression-admin *, #section-impression-prof, #section-impression-prof *, #bulletin-impression, #bulletin-impression * { visibility: visible; }
+        #section-impression-admin { position: absolute; left: 0; top: 0; width: 100%; }
+        #section-impression-prof { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+        #bulletin-impression { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: white !important; color: #1e293b !important; z-index: 9999; }
         .no-print { display: none !important; }
-        table { width: 100% !important; border-collapse: collapse !important; page-break-inside: auto; }
-        tr { page-break-inside: avoid; page-break-after: auto; }
-        td, th { border: 1px solid #cbd5e1 !important; color: #0f172a !important; padding: 6px !important; }
     }
     
     .table-responsive {
         width: 100%;
-        overflow-x: visible;
-        overflow-y: visible;
-        display: block;
-        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .card-hover {
@@ -97,11 +51,11 @@
     }
 </style>
 </head>
-<body class="min-h-full flex items-center justify-center p-2 sm:p-6 text-slate-200 bg-slate-950">
+<body class="min-h-full flex items-center justify-center p-3 sm:p-6 text-slate-200 bg-slate-950">
 
 <div class="max-w-6xl w-full bg-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/60 overflow-hidden border border-slate-800 transition-all duration-300" id="app">
     <!-- En-tête -->
-    <div class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 p-4 sm:p-8 text-center no-print">
+    <div class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 p-5 sm:p-8 text-center no-print">
         <div class="space-y-2">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-950/80 text-blue-400 text-xs font-semibold rounded-full uppercase tracking-wider border border-blue-800/60 mb-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> République Démocratique du Congo
@@ -112,7 +66,7 @@
     </div>
 
     <!-- Contenu dynamique -->
-    <div class="p-3 sm:p-8 md:p-10" id="main-content">
+    <div class="p-4 sm:p-8 md:p-10" id="main-content">
         
         <!-- ÉCRAN D'ACCUEIL -->
         <div id="vue-accueil" class="space-y-6 sm:space-y-8">
@@ -122,30 +76,30 @@
             </div>
             
             <!-- ESPACE COMMUNIQUÉ GLOBAL SUR L'ACCUEIL -->
-            <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-700 pb-2.5 gap-2">
+            <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-sm space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-700 pb-2.5">
                     <h3 class="font-bold text-white text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide text-blue-400">
-                        <i data-lucide="megaphone" class="w-4 h-4 shrink-0"></i> Espace Communiqué Officiel (Visible pour tous)
+                        <i data-lucide="megaphone" class="w-4 h-4"></i> Espace Communiqué Officiel (Visible pour tous)
                     </h3>
                     <button onclick="changerVue('admin-login', true)" class="text-[11px] font-semibold text-blue-400 hover:text-blue-300 underline transition flex items-center gap-1">
                         <i data-lucide="shield" class="w-3.5 h-3.5"></i> Espace Admin (Écriture)
                     </button>
                 </div>
-                <div id="accueil-communiques-liste" class="space-y-2.5 overflow-y-auto pr-1">
+                <div id="accueil-communiques-liste" class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
                     <p class="text-xs text-slate-400 italic text-center py-2">Chargement des communiqués...</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
-                <div onclick="changerVue('admin-login', true)" class="group bg-slate-800/80 hover:bg-blue-950/40 border border-slate-700/80 p-5 sm:p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
+                <div onclick="changerVue('admin-login', true)" class="group bg-slate-800/80 hover:bg-blue-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
                     <div class="w-12 h-12 mx-auto mb-3.5 rounded-xl bg-blue-950 text-blue-400 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                         <i data-lucide="settings" class="w-6 h-6"></i>
                     </div>
                     <h3 class="font-bold text-white text-sm mb-1">Administration</h3>
-                    <p class="text-xs text-slate-400 leading-relaxed font-medium">Gestion complète, modification & impression</p>
+                    <p class="text-xs text-slate-400 leading-relaxed font-medium">Gestion complète, modification & téléchargement PDF</p>
                 </div>
 
-                <div onclick="changerVue('prof-login', true)" class="group bg-slate-800/80 hover:bg-emerald-950/40 border border-slate-700/80 p-5 sm:p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
+                <div onclick="changerVue('prof-login', true)" class="group bg-slate-800/80 hover:bg-emerald-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
                     <div class="w-12 h-12 mx-auto mb-3.5 rounded-xl bg-emerald-950 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
                         <i data-lucide="presentation" class="w-6 h-6"></i>
                     </div>
@@ -153,7 +107,7 @@
                     <p class="text-xs text-slate-400 leading-relaxed font-medium">Notes, calendrier des présences & saisie</p>
                 </div>
 
-                <div onclick="changerVue('eleve-login', true)" class="group bg-slate-800/80 hover:bg-indigo-950/40 border border-slate-700/80 p-5 sm:p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
+                <div onclick="changerVue('eleve-login', true)" class="group bg-slate-800/80 hover:bg-indigo-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
                     <div class="w-12 h-12 mx-auto mb-3.5 rounded-xl bg-indigo-950 text-indigo-400 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
                         <i data-lucide="graduation-cap" class="w-6 h-6"></i>
                     </div>
@@ -161,7 +115,7 @@
                     <p class="text-xs text-slate-400 leading-relaxed font-medium">Consultation détaillée & bulletin officiel</p>
                 </div>
 
-                <div onclick="changerVue('parent-login', true)" class="group bg-slate-800/80 hover:bg-violet-950/40 border border-slate-700/80 p-5 sm:p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
+                <div onclick="changerVue('parent-login', true)" class="group bg-slate-800/80 hover:bg-violet-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
                     <div class="w-12 h-12 mx-auto mb-3.5 rounded-xl bg-violet-950 text-violet-400 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-all shadow-sm">
                         <i data-lucide="users" class="w-6 h-6"></i>
                     </div>
@@ -172,7 +126,7 @@
         </div>
 
         <!-- FORMULAIRES DE CONNEXION -->
-        <div id="vue-connexion" class="hidden max-w-sm mx-auto space-y-4 sm:space-y-5 bg-slate-800 p-5 sm:p-8 rounded-2xl border border-slate-700 shadow-xl shadow-black/50">
+        <div id="vue-connexion" class="hidden max-w-sm mx-auto space-y-4 sm:space-y-5 bg-slate-800 p-6 sm:p-8 rounded-2xl border border-slate-700 shadow-xl shadow-black/50">
             <button onclick="changerVue('accueil', true)" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> Retour à l'accueil
             </button>
@@ -200,8 +154,8 @@
                     <p class="text-xs text-slate-400 font-medium">Supervision générale et gestion globale des utilisateurs</p>
                 </div>
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <button onclick="imprimerListeEleves()" class="bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs flex-1 sm:flex-initial justify-center border border-slate-700">
-                        <i data-lucide="printer" class="w-4 h-4"></i> Imprimer
+                    <button onclick="telechargerListeElevesPDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs flex-1 sm:flex-initial justify-center">
+                        <i data-lucide="download" class="w-4 h-4"></i> Télécharger Liste (PDF)
                     </button>
                     <button onclick="changerVue('accueil', true)" class="text-xs font-semibold text-red-400 hover:text-red-300 px-3 py-2 transition flex items-center gap-1">
                         <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Déconnexion
@@ -210,33 +164,32 @@
             </div>
 
             <div class="flex gap-2 border-b border-slate-800 pb-3 no-print overflow-x-auto w-full scrollbar-none">
-                <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5 shrink-0">
+                <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5">
                     <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Élèves
                 </button>
-                <button onclick="changerOngletAdmin('tuteurs')" id="tab-btn-tuteurs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50 shrink-0">
+                <button onclick="changerOngletAdmin('tuteurs')" id="tab-btn-tuteurs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
                     <i data-lucide="users" class="w-3.5 h-3.5"></i> Tuteurs
                 </button>
-                <button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50 shrink-0">
+                <button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
                     <i data-lucide="briefcase" class="w-3.5 h-3.5"></i> Professeurs
                 </button>
-                <button onclick="changerOngletAdmin('communiques')" id="tab-btn-communiques" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50 shrink-0">
+                <button onclick="changerOngletAdmin('communiques')" id="tab-btn-communiques" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
                     <i data-lucide="megaphone" class="w-3.5 h-3.5"></i> Communiqués
                 </button>
-                <button onclick="changerOngletAdmin('demandes')" id="tab-btn-demandes" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50 shrink-0">
+                <button onclick="changerOngletAdmin('demandes')" id="tab-btn-demandes" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
                     <i data-lucide="git-pull-request" class="w-3.5 h-3.5"></i> Demandes Cours
                 </button>
-                <button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50 shrink-0">
+                <button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
                     <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Messagerie
                 </button>
-                <button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50 shrink-0">
+                <button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
                     <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Présences
                 </button>
-                <button onclick="changerOngletAdmin('parametres')" id="tab-btn-parametres" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50 shrink-0">
+                <button onclick="changerOngletAdmin('parametres')" id="tab-btn-parametres" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
                     <i data-lucide="key" class="w-3.5 h-3.5"></i> Paramètres Admin
                 </button>
             </div>
 
-            <!-- SECTION ÉLÈVES -->
             <div id="admin-sec-eleves" class="space-y-5">
                 <div class="bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-700 no-print space-y-4 shadow-xs">
                     <h3 id="titre-form-eleve" class="font-bold text-white text-xs flex items-center gap-2 uppercase tracking-wide">
@@ -274,10 +227,10 @@
                         </select>
                     </div>
 
-                    <!-- BLOC INFORMATIONS DU TUTEUR -->
+                    <!-- BLOC INFORMATIONS DU TUTEUR (UNIQUE PAR TUTEUR) -->
                     <div class="border-t border-slate-700 pt-3 space-y-3">
                         <h4 class="font-bold text-slate-300 text-xs flex items-center gap-1.5">
-                            <i data-lucide="user-check" class="w-3.5 h-3.5 text-blue-400"></i> Informations du Tuteur / Parent
+                            <i data-lucide="user-check" class="w-3.5 h-3.5 text-blue-400"></i> Informations du Tuteur / Parent (Vérification anti-doublon)
                         </h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                             <input id="tut-nom" placeholder="Nom du tuteur" class="bg-slate-900 border border-slate-700 text-white placeholder-slate-500 p-2.5 rounded-xl text-xs focus:ring-1 focus:ring-blue-600 focus:bg-slate-900 focus:outline-none transition">
@@ -296,12 +249,29 @@
                 </div>
 
                 <div id="section-impression-admin" class="table-responsive rounded-2xl border border-slate-700 bg-slate-800 overflow-hidden shadow-xs">
-                    <div class="hidden print:block mb-4 p-4 bg-white text-slate-900">
-                        <h2 class="text-lg font-bold">République Démocratique du Congo</h2>
-                        <h3 class="text-sm font-semibold text-slate-600">Liste officielle des élèves inscrits</h3>
-                        <p class="text-xs text-slate-500">Date d'impression : <span id="date-impression"></span></p>
+                    <!-- Modèle PDF masqué pour le téléchargement -->
+                    <div id="pdf-liste-eleves-container" class="hidden p-6 bg-white text-slate-800 space-y-4">
+                        <div class="text-center border-b border-slate-300 pb-3 space-y-1">
+                            <h4 class="font-bold text-xs uppercase text-slate-600">REPUBLIQUE DEMOCRATIQUE DU CONGO</h4>
+                            <p class="text-[10px] font-bold text-slate-500">MINISTERE DE L'ENSEIGNEMENT PRIMAIRE, SECONDAIRE ET TECHNIQUE</p>
+                            <h2 class="text-sm font-bold uppercase mt-2 bg-slate-900 text-white py-1.5">LISTE OFFICIELLE DES ELEVES INSCRITS - LYCEE DON BOSCO</h2>
+                            <p class="text-[10px] text-slate-500 mt-1">Date d'édition : <span id="pdf-date-edition"></span></p>
+                        </div>
+                        <table class="w-full text-left border-collapse text-xs border border-slate-300">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 uppercase text-[10px] border-b border-slate-300 font-bold">
+                                    <th class="p-2 border border-slate-300">Nom complet élève</th>
+                                    <th class="p-2 border border-slate-300">Classe</th>
+                                    <th class="p-2 border border-slate-300">Tuteur & Téléphone</th>
+                                    <th class="p-2 border border-slate-300">Code d'accès</th>
+                                    <th class="p-2 border border-slate-300">Statut frais</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pdf-tbody-eleves"></tbody>
+                        </table>
                     </div>
-                    <table class="w-full text-left border-collapse text-xs min-w-[650px] sm:min-w-full">
+
+                    <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 font-semibold">
                                 <th class="p-3">Nom complet élève</th>
@@ -317,7 +287,7 @@
                 </div>
             </div>
 
-            <!-- SECTION GESTION DES TUTEURS -->
+            <!-- SECTION GESTION DES TUTEURS (LISTE UNIQUE PAR TUTEUR) -->
             <div id="admin-sec-tuteurs" class="space-y-4 hidden">
                 <div class="flex justify-between items-center">
                     <div>
@@ -326,7 +296,7 @@
                     </div>
                 </div>
                 <div class="table-responsive rounded-2xl border border-slate-700 bg-slate-800 overflow-hidden shadow-xs">
-                    <table class="w-full text-left border-collapse text-xs min-w-[600px] sm:min-w-full">
+                    <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 font-semibold">
                                 <th class="p-3">Nom complet du tuteur</th>
@@ -341,7 +311,6 @@
                 </div>
             </div>
 
-            <!-- SECTION PROFESSEURS -->
             <div id="admin-sec-professeurs" class="space-y-5 hidden">
                 <div class="bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-700 space-y-3 shadow-xs">
                     <h3 class="font-bold text-white text-xs flex items-center gap-2 uppercase tracking-wide">
@@ -359,7 +328,7 @@
                 <div id="liste-admin-profs" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
             </div>
 
-            <!-- SECTION GESTION DES COMMUNIQUÉS -->
+            <!-- SECTION GESTION DES COMMUNIQUÉS (ADMIN UNIQUEMENT) -->
             <div id="admin-sec-communiques" class="space-y-4 hidden">
                 <div class="bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-700 space-y-3 shadow-xs">
                     <h3 class="font-bold text-white text-xs flex items-center gap-2 uppercase tracking-wide text-blue-400">
@@ -377,11 +346,11 @@
                 <div id="admin-liste-communiques" class="space-y-2.5"></div>
             </div>
 
-            <!-- SECTION DEMANDES DE COURS -->
+            <!-- SECTION DEMANDES DE COURS SUPPLÉMENTAIRES (ADMIN) -->
             <div id="admin-sec-demandes" class="space-y-4 hidden">
                 <h3 class="font-bold text-white text-xs uppercase tracking-wide">Validation des demandes d'ajout de cours par les professeurs</h3>
                 <div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden shadow-xs">
-                    <table class="w-full text-left border-collapse text-xs min-w-[500px] sm:min-w-full">
+                    <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 font-semibold">
                                 <th class="p-3">Professeur</th>
@@ -395,11 +364,11 @@
                 </div>
             </div>
 
-            <!-- SECTION MESSAGERIE ADMIN -->
+            <!-- SECTION MESSAGERIE ADMIN STYLE WHATSAPP -->
             <div id="admin-sec-messages" class="space-y-3 hidden">
                 <h3 class="font-bold text-white text-xs uppercase tracking-wide">Messagerie tuteurs & administration</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden shadow-xs" style="min-height: 480px;">
-                    <div class="border-r border-slate-700 bg-slate-900/60 flex flex-col overflow-y-auto">
+                    <div class="border-r border-slate-700 bg-slate-900/60 flex flex-col max-h-48 md:max-h-none overflow-y-auto">
                         <div class="p-3 bg-slate-900 border-b border-slate-700 font-semibold text-[11px] text-slate-300 uppercase tracking-wider sticky top-0 z-10 flex items-center gap-1.5">
                             <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Conversations
                         </div>
@@ -409,7 +378,7 @@
                         <div id="admin-whatsapp-header" class="p-3.5 bg-slate-900 border-b border-slate-700 font-semibold text-xs text-slate-200 flex items-center justify-between">
                             <span>Sélectionnez un tuteur</span>
                         </div>
-                        <div id="admin-whatsapp-chat" class="p-4 overflow-y-auto flex-1 space-y-3 bg-slate-900/40">
+                        <div id="admin-whatsapp-chat" class="p-4 overflow-y-auto flex-1 space-y-3 bg-slate-900/40 max-h-80 md:max-h-none">
                             <div class="text-center text-slate-500 text-xs my-auto">Aucune conversation sélectionnée</div>
                         </div>
                         <div class="p-3 bg-slate-900 border-t border-slate-700 flex gap-2 items-center">
@@ -422,7 +391,7 @@
                 </div>
             </div>
 
-            <!-- GESTION GLOBALE DES PRÉSENCES -->
+            <!-- GESTION GLOBALE DES PRÉSENCES (ADMIN) -->
             <div id="admin-sec-calendrier" class="space-y-4 hidden">
                 <div class="bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-700 space-y-4 shadow-xs">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -458,7 +427,7 @@
                 </div>
 
                 <div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden shadow-xs">
-                    <table class="w-full text-left border-collapse text-xs min-w-[550px] sm:min-w-full">
+                    <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 font-semibold">
                                 <th class="p-3">Élève</th>
@@ -472,7 +441,7 @@
                 </div>
             </div>
 
-            <!-- SECTION PARAMÈTRES ADMIN -->
+            <!-- SECTION PARAMÈTRES ADMIN (CHANGEMENT DE CODE PIN/MOT DE PASSE) -->
             <div id="admin-sec-parametres" class="space-y-4 hidden">
                 <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4 max-w-lg shadow-xs">
                     <h3 class="font-bold text-white text-xs flex items-center gap-2 uppercase tracking-wide text-blue-400">
@@ -508,6 +477,7 @@
                     <p id="welcome-eleve" class="text-xs text-slate-400 font-semibold mt-0.5"></p>
                 </div>
                 <div class="flex flex-wrap gap-2 items-center w-full sm:w-auto">
+                    <!-- Sélecteur d'enfant pour les tuteurs ayant plusieurs élèves -->
                     <div id="selecteur-enfant-parent-container" class="hidden items-center gap-2">
                         <label class="text-xs text-slate-300 font-semibold">Enfant :</label>
                         <select id="select-enfant-parent" onchange="changerEnfantActifParent(this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-blue-600"></select>
@@ -541,7 +511,7 @@
                 </div>
             </div>
 
-            <!-- SECTION MESSAGERIE POUR LE TUTEUR -->
+            <!-- SECTION MESSAGERIE POUR LE TUTEUR / PARENT -->
             <div id="parent-section-messagerie" class="hidden bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-2xl space-y-3 shadow-xs">
                 <h3 class="font-bold text-white text-xs uppercase tracking-wide flex items-center gap-2 text-violet-400">
                     <i data-lucide="message-square" class="w-4 h-4"></i> Messagerie avec l'Administration
@@ -677,10 +647,10 @@
                 </div>
             </div>
 
-            <!-- BASCULE DE COURS -->
+            <!-- BASCULE DE COURS POUR LE PROFESSEUR -->
             <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 no-print shadow-xs">
                 <div class="flex items-center gap-2">
-                    <i data-lucide="git-branch" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                    <i data-lucide="git-branch" class="w-4 h-4 text-emerald-400"></i>
                     <div>
                         <h4 class="font-bold text-white text-xs">Cours Actif sur le Tableau de Bord</h4>
                         <p class="text-[11px] text-slate-400">Basculez instantanément entre vos cours validés sans perte de données.</p>
@@ -688,6 +658,7 @@
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <select id="prof-select-cours-actif" onchange="changerCoursActifProf(this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs font-semibold flex-1 sm:w-48 focus:ring-1 focus:ring-emerald-600 focus:outline-none">
+                        <!-- Généré dynamiquement -->
                     </select>
                     <button onclick="ouvrirModalDemandeCours()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 rounded-xl text-xs font-semibold transition whitespace-nowrap shadow-xs flex items-center gap-1.5">
                         <i data-lucide="plus-circle" class="w-4 h-4"></i> Demander un autre cours
@@ -753,12 +724,12 @@
                 </div>
             </div>
 
-            <!-- ONGLET PROF -->
-            <div class="flex gap-2 border-b border-slate-800 pb-2 no-print overflow-x-auto">
-                <button onclick="changerOngletProf('notes')" id="prof-tab-notes" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shrink-0">
+            <!-- ONGLET PROF: NOTES VS PRESENCES PAR JOUR -->
+            <div class="flex gap-2 border-b border-slate-800 pb-2 no-print">
+                <button onclick="changerOngletProf('notes')" id="prof-tab-notes" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Cotations & Notes
                 </button>
-                <button onclick="changerOngletProf('presences')" id="prof-tab-presences" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50 shrink-0">
+                <button onclick="changerOngletProf('presences')" id="prof-tab-presences" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50">
                     <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i> Calendrier de Présence (Par Jour)
                 </button>
             </div>
@@ -796,14 +767,14 @@
                         </div>
                     </div>
 
-                    <div id="section-impression-prof" class="bg-slate-800 rounded-2xl border border-slate-700 p-2 sm:p-4 space-y-3 shadow-xs">
+                    <div id="section-impression-prof" class="bg-slate-800 rounded-2xl border border-slate-700 p-4 space-y-3 shadow-xs">
                         <div class="hidden print:block mb-3 border-b pb-2 bg-white text-slate-900 p-2">
                             <h2 class="text-base font-bold">République Démocratique du Congo</h2>
                             <h3 class="text-xs font-semibold text-slate-600">Fiche de Cotations officielle</h3>
                             <p class="text-[10px] text-slate-500">Professeur : <span id="print-prof-nom"></span> | Cours : <span id="print-prof-cours"></span> | Trimestre : <span id="print-prof-trim"></span> | Classe : <span id="print-prof-classe">Toutes</span></p>
                         </div>
                         <div class="table-responsive">
-                            <table class="w-full text-left border-collapse text-xs min-w-[700px] sm:min-w-full">
+                            <table class="w-full text-left border-collapse text-xs">
                                 <thead>
                                     <tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 font-semibold">
                                         <th class="p-2.5">Élève</th>
@@ -824,7 +795,7 @@
                 </div>
             </div>
 
-            <!-- SECTION PRESENCES JOURNALIERES -->
+            <!-- SECTION PRESENCES JOURNALIERES PROF (CALENDRIER) -->
             <div id="prof-sec-presences" class="space-y-4 hidden">
                 <div class="bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-2xl space-y-3 shadow-xs">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
@@ -857,7 +828,7 @@
                     </div>
 
                     <div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden shadow-xs">
-                        <table class="w-full text-left border-collapse text-xs min-w-[500px] sm:min-w-full">
+                        <table class="w-full text-left border-collapse text-xs">
                             <thead>
                                 <tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 font-semibold">
                                     <th class="p-3">Élève</th>
@@ -876,7 +847,7 @@
     </div>
 </div>
 
-<!-- MODALE DEMANDE DE COURS -->
+<!-- MODALE DEMANDE DE COURS SUPPLÉMENTAIRE -->
 <div id="modal-demande-cours" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
         <h3 class="font-bold text-white text-sm flex items-center gap-2">
@@ -891,529 +862,279 @@
     </div>
 </div>
 
-<!-- Scripts applicatifs (Conservés à l'identique pour assurer la synchronisation et la compatibilité Firebase) -->
 <script>
-    // Configuration Firebase et fonctions de synchronisation globale
+    // Configuration Firebase pour synchroniser PC et Téléphone en temps réel
     const firebaseConfig = {
-        databaseURL: "https://ecoles-rdc-default-rtdb.firebaseio.com/"
+        databaseURL: "https://site-publication-default-rtdb.firebaseio.com/"
     };
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Variables globales de l'application
-    let vueActuelle = 'accueil';
-    let utilisateurConnecte = null;
-    let typeUtilisateur = null;
-    let elevesData = {};
-    let tuteursData = {};
-    let profsData = {};
-    let notesData = {};
-    let baremesData = {};
-    let presencesData = {};
-    let communiquesData = {};
-    let demandesCoursData = {};
-    let documentsData = {};
-    let messagesData = {};
-    let adminPassword = "admin";
-    let moisActuelCalendarEleve = new Date().getMonth();
-    let anneeActuelCalendarEleve = new Date().getFullYear();
+    // Variables d'état globales (synchronisées via Cloud Realtime Database)
+    let dbData = {
+        eleves: {},
+        tuteurs: {},
+        professeurs: {},
+        notes: {},
+        baremes: {},
+        presences: {},
+        communiques: {},
+        demandesCours: {},
+        messages: {},
+        documents: {},
+        parametres: { adminPassword: "ADMIN2026" }
+    };
 
-    // Initialisation au chargement de la page
-    document.addEventListener("DOMContentLoaded", () => {
-        lucide.createIcons();
-        chargerDonneesGlobalesFirebase();
-        
-        // Écouteurs de synchronisation en temps réel Firebase
-        db.ref("ecole_don_bosco").on("value", (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                elevesData = data.eleves || {};
-                tuteursData = data.tuteurs || {};
-                profsData = data.profs || {};
-                notesData = data.notes || {};
-                baremesData = data.baremes || {};
-                presencesData = data.presences || {};
-                communiquesData = data.communiques || {};
-                demandesCoursData = data.demandesCours || {};
-                documentsData = data.documents || {};
-                messagesData = data.messages || {};
-                if (data.adminPassword) adminPassword = data.adminPassword;
-            }
-            rafraichirInterfaceActuelle();
-        });
+    let sessionActive = { role: null, id: null, nom: null, classe: null, cours: null, tuteurId: null };
+    let anneeScolaireActuelle = "2025-2026";
+    let moisActuelIndex = new Date().getMonth();
+    let anneeActuelleCalendrier = new Date().getFullYear();
+    let chatAdminContactActif = null;
+    let enfantActifParentKey = null;
+
+    // Écouteur en temps réel Firebase (Cloud Database Listener)
+    db.ref().on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            dbData = {
+                eleves: data.eleves || {},
+                tuteurs: data.tuteurs || {},
+                professeurs: data.professeurs || {},
+                notes: data.notes || {},
+                baremes: data.baremes || {},
+                presences: data.presences || {},
+                communiques: data.communiques || {},
+                demandesCours: data.demandesCours || {},
+                messages: data.messages || {},
+                documents: data.documents || {},
+                parametres: data.parametres || { adminPassword: "ADMIN2026" }
+            };
+        }
+        rafraichirVueCourante();
     });
 
-    function chargerDonneesGlobalesFirebase() {
-        db.ref("ecole_don_bosco").once("value").then((snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                elevesData = data.eleves || {};
-                tuteursData = data.tuteurs || {};
-                profsData = data.profs || {};
-                notesData = data.notes || {};
-                baremesData = data.baremes || {};
-                presencesData = data.presences || {};
-                communiquesData = data.communiques || {};
-                demandesCoursData = data.demandesCours || {};
-                documentsData = data.documents || {};
-                messagesData = data.messages || {};
-                if (data.adminPassword) adminPassword = data.adminPassword;
-            }
-            rafraichirInterfaceActuelle();
+    // Fonction d'écriture unifiée sur le Cloud Firebase
+    function sauvegarderDB() {
+        return db.ref().set(dbData).catch((error) => {
+            console.error("Erreur de synchronisation Cloud :", error);
+            alert("Erreur d'enregistrement : Vérifiez votre connexion internet.");
         });
     }
 
-    function rafraichirInterfaceActuelle() {
-        afficherCommuniquesAccueil();
-        if (vueActuelle === 'admin-dashboard') {
-            chargerTableauDeBordAdmin();
-        } else if (vueActuelle === 'prof-dashboard' && utilisateurConnecte) {
+    function rafraichirVueCourante() {
+        chargerCommuniquesAccueil();
+        if (!document.getElementById("vue-admin-dashboard").classList.contains("hidden")) {
+            chargerDonneesAdmin();
+        } else if (!document.getElementById("vue-prof-dashboard").classList.contains("hidden")) {
             chargerTableauDeBordProf();
-        } else if (vueActuelle === 'eleve-dashboard' && utilisateurConnecte) {
-            if (typeUtilisateur === 'eleve') chargerTableauDeBordEleve();
-            else if (typeUtilisateur === 'parent') chargerTableauDeBordParent();
+        } else if (!document.getElementById("vue-eleve-dashboard").classList.contains("hidden")) {
+            chargerTableauDeBordEleve();
         }
-        lucide.createIcons();
     }
 
-    function changerVue(vue, reinitialiser = false) {
-        document.getElementById('vue-accueil').classList.add('hidden');
-        document.getElementById('vue-connexion').classList.add('hidden');
-        document.getElementById('vue-admin-dashboard').classList.add('hidden');
-        document.getElementById('vue-eleve-dashboard').classList.add('hidden');
-        document.getElementById('vue-prof-dashboard').classList.add('hidden');
+    // Initialisation des icônes Lucide au chargement
+    document.addEventListener("DOMContentLoaded", () => {
+        lucide.createIcons();
+        chargerCommuniquesAccueil();
+        const aujourdhuiStr = new Date().toISOString().split('T')[0];
+        if(document.getElementById("admin-cal-date")) document.getElementById("admin-cal-date").value = aujourdhuiStr;
+        if(document.getElementById("prof-date-presence")) document.getElementById("prof-date-presence").value = aujourdhuiStr;
+        if(document.getElementById("el-datenais")) document.getElementById("el-datenais").value = "2010-01-01";
+    });
 
-        vueActuelle = vue;
+    function changerVue(vue, resetForm = false) {
+        ['vue-accueil', 'vue-connexion', 'vue-admin-dashboard', 'vue-eleve-dashboard', 'vue-prof-dashboard'].forEach(v => {
+            const el = document.getElementById(v);
+            if(el) el.classList.add('hidden');
+        });
+
         if (vue === 'accueil') {
             document.getElementById('vue-accueil').classList.remove('hidden');
-            utilisateurConnecte = null;
-            typeUtilisateur = null;
+            chargerCommuniquesAccueil();
         } else if (vue === 'admin-login') {
             document.getElementById('vue-connexion').classList.remove('hidden');
-            document.getElementById('titre-connexion').innerText = "Connexion Administration";
+            document.getElementById('titre-connexion').textContent = 'Administration';
+            document.getElementById('label-code').textContent = 'Code d\'accès Admin';
             document.getElementById('input-code').value = '';
-            typeUtilisateur = 'admin';
+            document.getElementById('input-code').dataset.role = 'admin';
+            document.getElementById('erreur-connexion').classList.add('hidden');
         } else if (vue === 'prof-login') {
             document.getElementById('vue-connexion').classList.remove('hidden');
-            document.getElementById('titre-connexion').innerText = "Connexion Professeur";
+            document.getElementById('titre-connexion').textContent = 'Espace Professeur';
+            document.getElementById('label-code').textContent = 'Code d\'accès Professeur';
             document.getElementById('input-code').value = '';
-            typeUtilisateur = 'prof';
+            document.getElementById('input-code').dataset.role = 'prof';
+            document.getElementById('erreur-connexion').classList.add('hidden');
         } else if (vue === 'eleve-login') {
             document.getElementById('vue-connexion').classList.remove('hidden');
-            document.getElementById('titre-connexion').innerText = "Connexion Élève (Code d'ordre)";
+            document.getElementById('titre-connexion').textContent = 'Espace Élève';
+            document.getElementById('label-code').textContent = 'Code d\'accès Élève';
             document.getElementById('input-code').value = '';
-            typeUtilisateur = 'eleve';
+            document.getElementById('input-code').dataset.role = 'eleve';
+            document.getElementById('erreur-connexion').classList.add('hidden');
         } else if (vue === 'parent-login') {
             document.getElementById('vue-connexion').classList.remove('hidden');
-            document.getElementById('titre-connexion').innerText = "Connexion Tuteur / Parent (Code Unique)";
+            document.getElementById('titre-connexion').textContent = 'Espace Parent / Tuteur';
+            document.getElementById('label-code').textContent = 'Code d\'accès Unique Tuteur';
             document.getElementById('input-code').value = '';
-            typeUtilisateur = 'parent';
+            document.getElementById('input-code').dataset.role = 'parent';
+            document.getElementById('erreur-connexion').classList.add('hidden');
         } else if (vue === 'admin-dashboard') {
             document.getElementById('vue-admin-dashboard').classList.remove('hidden');
-            chargerTableauDeBordAdmin();
+            chargerDonneesAdmin();
         } else if (vue === 'prof-dashboard') {
             document.getElementById('vue-prof-dashboard').classList.remove('hidden');
             chargerTableauDeBordProf();
         } else if (vue === 'eleve-dashboard') {
             document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
-            if (typeUtilisateur === 'eleve') chargerTableauDeBordEleve();
-            else if (typeUtilisateur === 'parent') chargerTableauDeBordParent();
+            chargerTableauDeBordEleve();
         }
-        lucide.createIcons();
+        setTimeout(() => lucide.createIcons(), 50);
     }
 
+    // Gestion de la validation de connexion
     function validerConnexion() {
-        const code = document.getElementById('input-code').value.trim();
+        const inputCode = document.getElementById('input-code').value.trim();
+        const role = document.getElementById('input-code').dataset.role;
         const errEl = document.getElementById('erreur-connexion');
         errEl.classList.add('hidden');
 
-        if (!code) {
-            errEl.innerText = "Veuillez entrer un code valide.";
+        if (!inputCode) {
+            errEl.textContent = "Veuillez entrer un code valide.";
             errEl.classList.remove('hidden');
             return;
         }
 
-        if (typeUtilisateur === 'admin') {
-            if (code === adminPassword) {
+        if (role === 'admin') {
+            const mdpAdmin = dbData.parametres && dbData.parametres.adminPassword ? dbData.parametres.adminPassword : "ADMIN2026";
+            if (inputCode === mdpAdmin) {
+                sessionActive = { role: 'admin', nom: 'Administrateur Central' };
                 changerVue('admin-dashboard');
             } else {
-                errEl.innerText = "Mot de passe administrateur incorrect.";
+                errEl.textContent = "Mot de passe administrateur incorrect.";
                 errEl.classList.remove('hidden');
             }
-        } else if (typeUtilisateur === 'prof') {
-            if (profsData[code]) {
-                utilisateurConnecte = code;
+        } else if (role === 'prof') {
+            let profTrouve = null;
+            let profKey = null;
+            for (let k in dbData.professeurs) {
+                if (dbData.professeurs[k].code === inputCode) {
+                    profTrouve = dbData.professeurs[k];
+                    profKey = k;
+                    break;
+                }
+            }
+            if (profTrouve) {
+                sessionActive = { role: 'prof', id: profKey, nom: profTrouve.nom, cours: profTrouve.cours };
                 changerVue('prof-dashboard');
             } else {
-                errEl.innerText = "Code professeur inconnu.";
+                errEl.textContent = "Code professeur incorrect.";
                 errEl.classList.remove('hidden');
             }
-        } else if (typeUtilisateur === 'eleve') {
-            if (elevesData[code]) {
-                if (elevesData[code].frais === 'non_ordre') {
-                    errEl.innerText = "Accès bloqué : Frais scolaires non payés. Veuillez contacter l'administration.";
-                    errEl.classList.remove('hidden');
+        } else if (role === 'eleve') {
+            let eleveTrouve = null;
+            let eleveKey = null;
+            for (let k in dbData.eleves) {
+                if (dbData.eleves[k].codeEleve === inputCode) {
+                    eleveTrouve = dbData.eleves[k];
+                    eleveKey = k;
+                    break;
+                }
+            }
+            if (eleveTrouve) {
+                if (eleveTrouve.frais === 'non_ordre') {
+                    alert("Accès suspendu : Les frais scolaires ne sont pas en ordre pour cet élève. Veuillez contacter l'administration.");
                     return;
                 }
-                utilisateurConnecte = code;
+                sessionActive = { role: 'eleve', id: eleveKey, nom: eleveTrouve.nom + ' ' + eleveTrouve.postnom, classe: eleveTrouve.classe };
                 changerVue('eleve-dashboard');
             } else {
-                errEl.innerText = "Code d'élève inconnu ou incorrect.";
+                errEl.textContent = "Code élève incorrect.";
                 errEl.classList.remove('hidden');
             }
-        } else if (typeUtilisateur === 'parent') {
-            if (tuteursData[code]) {
-                utilisateurConnecte = code;
+        } else if (role === 'parent') {
+            let tuteurTrouve = null;
+            let tuteurKey = null;
+            for (let k in dbData.tuteurs) {
+                if (dbData.tuteurs[k].codeTuteur === inputCode) {
+                    tuteurTrouve = dbData.tuteurs[k];
+                    tuteurKey = k;
+                    break;
+                }
+            }
+            if (tuteurTrouve) {
+                sessionActive = { role: 'parent', tuteurId: tuteurKey, nom: tuteurTrouve.nom + ' ' + tuteurTrouve.prenom };
+                enfantActifParentKey = null;
                 changerVue('eleve-dashboard');
             } else {
-                errEl.innerText = "Code tuteur inconnu ou incorrect.";
+                errEl.textContent = "Code tuteur unique incorrect.";
                 errEl.classList.remove('hidden');
             }
         }
     }
 
-    // Fonctions d'affichage des communiqués sur l'accueil
-    function afficherCommuniquesAccueil() {
-        const container = document.getElementById('accueil-communiques-liste');
-        if (!container) return;
-        const keys = Object.keys(communiquesData || {});
+    // Téléchargement de la liste des élèves en PDF
+    function telechargerListeElevesPDF() {
+        const eleves = dbData.eleves || {};
+        const keys = Object.keys(eleves);
         if (keys.length === 0) {
-            container.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-2">Aucun communiqué officiel pour le moment.</p>';
+            alert("Aucun élève à exporter.");
             return;
         }
-        let html = '';
-        keys.sort((a,b) => b.localeCompare(a)).forEach(k => {
-            const com = communiquesData[k];
-            html += `<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 space-y-1">
-                <div class="flex justify-between items-center text-[10px] text-blue-400 font-semibold">
-                    <span>${com.titre}</span>
-                    <span>${com.date || ''}</span>
-                </div>
-                <p class="text-xs text-slate-300 leading-relaxed">${com.message}</p>
-            </div>`;
-        });
-        container.innerHTML = html;
-        lucide.createIcons();
-    }
 
-    // Gestion Administration
-    function changerOngletAdmin(onglet) {
-        document.getElementById('admin-sec-eleves').classList.add('hidden');
-        document.getElementById('admin-sec-tuteurs').classList.add('hidden');
-        document.getElementById('admin-sec-professeurs').classList.add('hidden');
-        document.getElementById('admin-sec-communiques').classList.add('hidden');
-        document.getElementById('admin-sec-demandes').classList.add('hidden');
-        document.getElementById('admin-sec-messages').classList.add('hidden');
-        document.getElementById('admin-sec-calendrier').classList.add('hidden');
-        document.getElementById('admin-sec-parametres').classList.add('hidden');
-
-        ['eleves','tuteurs','profs','communiques','demandes','msgs','cal','parametres'].forEach(o => {
-            const btn = document.getElementById(`tab-btn-${o}`);
-            if (btn) {
-                btn.className = "px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50 shrink-0";
-            }
-        });
-
-        if (onglet === 'eleves') {
-            document.getElementById('admin-sec-eleves').classList.remove('hidden');
-            document.getElementById('tab-btn-eleves').className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5 shrink-0";
-            chargerElevesAdmin();
-        } else if (onglet === 'tuteurs') {
-            document.getElementById('admin-sec-tuteurs').classList.remove('hidden');
-            document.getElementById('tab-btn-tuteurs').className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5 shrink-0";
-            chargerTuteursAdmin();
-        } else if (onglet === 'professeurs') {
-            document.getElementById('admin-sec-professeurs').classList.remove('hidden');
-            document.getElementById('tab-btn-profs').className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5 shrink-0";
-            chargerProfsAdmin();
-        } else if (onglet === 'communiques') {
-            document.getElementById('admin-sec-communiques').classList.remove('hidden');
-            document.getElementById('tab-btn-communiques').className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5 shrink-0";
-            chargerCommuniquesAdmin();
-        } else if (onglet === 'demandes') {
-            document.getElementById('admin-sec-demandes').classList.remove('hidden');
-            document.getElementById('tab-btn-demandes').className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5 shrink-0";
-            chargerDemandesAdmin();
-        } else if (onglet === 'messages') {
-            document.getElementById('admin-sec-messages').classList.remove('hidden');
-            document.getElementById('tab-btn-msgs').className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5 shrink-0";
-            chargerContactsWhatsAppAdmin();
-        } else if (onglet === 'calendrier') {
-            document.getElementById('admin-sec-calendrier').classList.remove('hidden');
-            document.getElementById('tab-btn-cal').className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 shrink-0";
-            const todayStr = new Date().toISOString().split('T')[0];
-            const dateInput = document.getElementById('admin-cal-date');
-            if (dateInput && !dateInput.value) dateInput.value = todayStr;
-            chargerCalendrierAdmin();
-        } else if (onglet === 'parametres') {
-            document.getElementById('admin-sec-parametres').classList.remove('hidden');
-            document.getElementById('tab-btn-parametres').className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 shrink-0";
-        }
-        lucide.createIcons();
-    }
-
-    function chargerTableauDeBordAdmin() {
-        chargerElevesAdmin();
-        chargerTuteursAdmin();
-        chargerProfsAdmin();
-        chargerCommuniquesAdmin();
-        chargerDemandesAdmin();
-        document.getElementById('date-impression').innerText = new Date().toLocaleDateString();
-    }
-
-    function chargerElevesAdmin() {
-        const tbody = document.getElementById('liste-admin-eleves');
-        if (!tbody) return;
-        const keys = Object.keys(elevesData || {});
-        if (keys.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Aucun élève enregistré.</td></tr>`;
-            return;
-        }
-        let html = '';
+        document.getElementById('pdf-date-edition').textContent = new Date().toLocaleDateString('fr-FR');
+        let pdfHtml = '';
         keys.forEach(k => {
-            const el = elevesData[k];
-            const tut = tuteursData[el.tuteurKey] || {};
-            const statutFraisBadge = el.frais === 'en_ordre' ? 
-                '<span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded-full text-[10px] font-semibold">En ordre</span>' : 
-                '<span class="px-2 py-0.5 bg-red-950 text-red-400 border border-red-800 rounded-full text-[10px] font-semibold">Bloqué (Non payé)</span>';
-            
-            html += `<tr class="hover:bg-slate-900/40 transition">
-                <td class="p-3 font-semibold text-white">${el.nom} ${el.postnom || ''} ${el.prenom || ''}</td>
-                <td class="p-3 text-slate-300">${el.classe}</td>
-                <td class="p-3 text-slate-300">${tut.nom || ''} ${tut.prenom || ''} <br><span class="text-[10px] text-slate-400">${tut.tel || 'Sans tél'}</span></td>
-                <td class="p-3 font-mono text-blue-400 text-xs">${k}</td>
-                <td class="p-3">${statutFraisBadge}</td>
-                <td class="p-3 text-center no-print space-x-1">
-                    <button onclick="preparerModificationEleve('${k}')" class="px-2 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition text-[11px] font-semibold">Modifier</button>
-                    <button onclick="supprimerEleve('${k}')" class="px-2 py-1 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition text-[11px] font-semibold">Supprimer</button>
-                </td>
+            const e = eleves[k];
+            const t = dbData.tuteurs[e.tuteurId] || {};
+            pdfHtml += `<tr class="border-b border-slate-300">
+                <td class="p-2 border border-slate-300 font-semibold">${e.nom} ${e.postnom} ${e.prenom || ''}</td>
+                <td class="p-2 border border-slate-300">${e.classe}</td>
+                <td class="p-2 border border-slate-300">${t.nom || 'N/A'} ${t.prenom || ''} (${t.telephone || 'N/A'})</td>
+                <td class="p-2 border border-slate-300 font-mono">${e.codeEleve}</td>
+                <td class="p-2 border border-slate-300">${e.frais === 'en_ordre' ? 'Payé' : 'Bloqué'}</td>
             </tr>`;
         });
-        tbody.innerHTML = html;
-        lucide.createIcons();
-    }
+        document.getElementById('pdf-tbody-eleves').innerHTML = pdfHtml;
 
-    function enregistrerOuModifierEleve() {
-        const editKey = document.getElementById('edit-eleve-key').value;
-        const nom = document.getElementById('el-nom').value.trim();
-        const postnom = document.getElementById('el-postnom').value.trim();
-        const prenom = document.getElementById('el-prenom').value.trim();
-        const classe = document.getElementById('el-classe').value;
-        const adresse = document.getElementById('el-adresse').value.trim();
-        const datenais = document.getElementById('el-datenais').value;
-        const frais = document.getElementById('el-frais').value;
+        const element = document.getElementById('pdf-liste-eleves-container');
+        element.classList.remove('hidden');
 
-        const tutNom = document.getElementById('tut-nom').value.trim();
-        const tutPostnom = document.getElementById('tut-postnom').value.trim();
-        const tutPrenom = document.getElementById('tut-prenom').value.trim();
-        const tutTel = document.getElementById('tut-tel').value.trim();
-
-        if (!nom || !classe || !tutNom || !tutTel) {
-            alert("Veuillez remplir au moins le nom de l'élève, sa classe, ainsi que le nom et le téléphone du tuteur.");
-            return;
-        }
-
-        // Gestion du tuteur unique (anti-doublon par téléphone ou nom complet)
-        let tuteurKeyFound = '';
-        Object.keys(tuteursData).forEach(tk => {
-            const t = tuteursData[tk];
-            if (t.tel === tutTel || (t.nom.toLowerCase() === tutNom.toLowerCase() && t.prenom.toLowerCase() === tutPrenom.toLowerCase())) {
-                tuteurKeyFound = tk;
-            }
-        });
-
-        if (!tuteurKeyFound) {
-            tuteurKeyFound = 'TUT_' + Math.floor(1000 + Math.random() * 9000);
-            const codeTuteurUnique = 'PAR_' + Math.floor(100000 + Math.random() * 900000);
-            tuteursData[tuteurKeyFound] = {
-                nom: tutNom,
-                postnom: tutPostnom,
-                prenom: tutPrenom,
-                tel: tutTel,
-                codeUnique: codeTuteurUnique
-            };
-        }
-
-        let eleveKey = editKey;
-        if (!eleveKey) {
-            eleveKey = 'ELV_' + Math.floor(10000 + Math.random() * 90000);
-        }
-
-        elevesData[eleveKey] = {
-            nom, postnom, prenom, classe, adresse, datenais, frais,
-            tuteurKey: tuteurKeyFound
+        const opt = {
+            margin:       10,
+            filename:     'Liste_Officielle_Eleves_Don_Bosco.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        db.ref("ecole_don_bosco").set({
-            eleves: elevesData,
-            tuteurs: tuteursData,
-            profs: profsData,
-            notes: notesData,
-            baremes: baremesData,
-            presences: presencesData,
-            communiques: communiquesData,
-            demandesCours: demandesCoursData,
-            documents: documentsData,
-            messages: messagesData,
-            adminPassword: adminPassword
-        }).then(() => {
-            alert("Élève et tuteur enregistrés avec succès !");
-            annulerModificationEleve();
-            chargerTableauDeBordAdmin();
+        html2pdf().from(element).set(opt).save().then(() => {
+            element.classList.add('hidden');
         });
     }
 
-    function preparerModificationEleve(k) {
-        const el = elevesData[k];
-        if (!el) return;
-        const tut = tuteursData[el.tuteurKey] || {};
-
-        document.getElementById('edit-eleve-key').value = k;
-        document.getElementById('el-nom').value = el.nom || '';
-        document.getElementById('el-postnom').value = el.postnom || '';
-        document.getElementById('el-prenom').value = el.prenom || '';
-        document.getElementById('el-classe').value = el.classe || '';
-        document.getElementById('el-adresse').value = el.adresse || '';
-        document.getElementById('el-datenais').value = el.datenais || '';
-        document.getElementById('el-frais').value = el.frais || 'en_ordre';
-
-        document.getElementById('tut-nom').value = tut.nom || '';
-        document.getElementById('tut-postnom').value = tut.postnom || '';
-        document.getElementById('tut-prenom').value = tut.prenom || '';
-        document.getElementById('tut-tel').value = tut.tel || '';
-
-        document.getElementById('titre-form-eleve').innerHTML = `<i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i> Modifier l'élève ${el.nom}`;
-        document.getElementById('btn-valider-eleve').innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Mettre à jour`;
-        document.getElementById('btn-annuler-eleve').classList.remove('hidden');
-        window.scrollTo({top: 0, behavior: 'smooth'});
-        lucide.createIcons();
-    }
-
-    function annulerModificationEleve() {
-        document.getElementById('edit-eleve-key').value = '';
-        document.getElementById('el-nom').value = '';
-        document.getElementById('el-postnom').value = '';
-        document.getElementById('el-prenom').value = '';
-        document.getElementById('el-classe').value = '';
-        document.getElementById('el-adresse').value = '';
-        document.getElementById('el-datenais').value = '';
-        document.getElementById('el-frais').value = 'en_ordre';
-
-        document.getElementById('tut-nom').value = '';
-        document.getElementById('tut-postnom').value = '';
-        document.getElementById('tut-prenom').value = '';
-        document.getElementById('tut-tel').value = '';
-
-        document.getElementById('titre-form-eleve').innerHTML = `<i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i> Enregistrer un nouvel élève & son tuteur`;
-        document.getElementById('btn-valider-eleve').innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Enregistrer`;
-        document.getElementById('btn-annuler-eleve').classList.add('hidden');
-        lucide.createIcons();
-    }
-
-    function supprimerEleve(k) {
-        if (confirm("Voulez-vous vraiment supprimer cet élève ?")) {
-            delete elevesData[k];
-            db.ref("ecole_don_bosco/eleves").set(elevesData).then(() => {
-                chargerTableauDeBordAdmin();
-            });
-        }
-    }
-
-    function chargerTuteursAdmin() {
-        const tbody = document.getElementById('liste-admin-tuteurs');
-        if (!tbody) return;
-        const keys = Object.keys(tuteursData || {});
+    // Fonctions de l'accueil et des communiqués
+    function chargerCommuniquesAccueil() {
+        const cont = document.getElementById('accueil-communiques-liste');
+        if (!cont) return;
+        const coms = dbData.communiques || {};
+        const keys = Object.keys(coms);
         if (keys.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Aucun tuteur enregistré.</td></tr>`;
+            cont.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-2">Aucun communiqué officiel pour le moment.</p>';
             return;
         }
         let html = '';
-        keys.forEach(tk => {
-            const t = tuteursData[tk];
-            // Trouver les enfants de ce tuteur
-            let enfantsListe = [];
-            Object.keys(elevesData || {}).forEach(ek => {
-                if (elevesData[ek].tuteurKey === tk) {
-                    enfantsListe.push(`${elevesData[ek].nom} ${elevesData[ek].prenom || ''} (${elevesData[ek].classe})`);
-                }
-            });
-
-            html += `<tr class="hover:bg-slate-900/40 transition">
-                <td class="p-3 font-semibold text-white">${t.nom} ${t.postnom || ''} ${t.prenom || ''}</td>
-                <td class="p-3 text-slate-300">${t.tel || 'Non renseigné'}</td>
-                <td class="p-3 font-mono text-violet-400 font-bold">${t.codeUnique}</td>
-                <td class="p-3 text-slate-300">${enfantsListe.join(', ') || '<span class="italic text-slate-500">Aucun enfant rattaché</span>'}</td>
-                <td class="p-3 text-center no-print">
-                    <button onclick="supprimerTuteur('${tk}')" class="px-2 py-1 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition text-[11px] font-semibold">Supprimer</button>
-                </td>
-            </tr>`;
-        });
-        tbody.innerHTML = html;
-        lucide.createIcons();
-    }
-
-    function supprimerTuteur(tk) {
-        if (confirm("Supprimer ce tuteur détachera ses enfants. Voulez-vous continuer ?")) {
-            delete tuteursData[tk];
-            db.ref("ecole_don_bosco/tuteurs").set(tuteursData).then(() => {
-                chargerTableauDeBordAdmin();
-            });
-        }
-    }
-
-    function chargerProfsAdmin() {
-        const container = document.getElementById('liste-admin-profs');
-        if (!container) return;
-        const keys = Object.keys(profsData || {});
-        if (keys.length === 0) {
-            container.innerHTML = '<p class="text-xs text-slate-400 italic col-span-2">Aucun professeur enregistré.</p>';
-            return;
-        }
-        let html = '';
-        keys.forEach(pk => {
-            const p = profsData[pk];
-            html += `<div class="bg-slate-900 border border-slate-700 p-4 rounded-2xl flex justify-between items-center shadow-xs">
-                <div class="space-y-1">
-                    <h4 class="font-bold text-white text-xs">${p.nom}</h4>
-                    <p class="text-[11px] text-emerald-400 font-semibold">Cours : ${p.cours}</p>
-                    <p class="text-[10px] font-mono text-slate-400">Code d'accès : ${pk}</p>
+        keys.reverse().forEach(k => {
+            const c = coms[k];
+            html += `<div class="bg-slate-900/60 border border-slate-700/60 p-3 rounded-xl space-y-1">
+                <div class="flex justify-between items-center text-[11px] text-blue-400 font-bold">
+                    <span>${c.titre}</span>
+                    <span class="text-[10px] text-slate-500 font-normal">${c.date || ''}</span>
                 </div>
-                <button onclick="supprimerProfesseur('${pk}')" class="p-2 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-xl transition">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
+                <p class="text-xs text-slate-300 leading-relaxed">${c.message}</p>
             </div>`;
         });
-        container.innerHTML = html;
-        lucide.createIcons();
-    }
-
-    function enregistrerProfesseur() {
-        const nom = document.getElementById('prf-nom').value.trim();
-        const cours = document.getElementById('prf-cours').value.trim();
-        if (!nom || !cours) {
-            alert("Veuillez remplir le nom et le cours principal du professeur.");
-            return;
-        }
-        const profKey = 'PRF_' + Math.floor(1000 + Math.random() * 9000);
-        profsData[profKey] = { nom, cours };
-
-        db.ref("ecole_don_bosco/profs").set(profsData).then(() => {
-            document.getElementById('prf-nom').value = '';
-            document.getElementById('prf-cours').value = '';
-            alert("Professeur enregistré avec succès !");
-            chargerProfsAdmin();
-        });
-    }
-
-    function supprimerProfesseur(pk) {
-        if (confirm("Voulez-vous vraiment supprimer ce professeur ?")) {
-            delete profsData[pk];
-            db.ref("ecole_don_bosco/profs").set(profsData).then(() => {
-                chargerProfsAdmin();
-            });
-        }
+        cont.innerHTML = html;
     }
 
     function publierCommuniqueAdmin() {
@@ -1423,1076 +1144,1039 @@
             alert("Veuillez remplir le titre et le contenu du communiqué.");
             return;
         }
-        const comKey = 'COM_' + Date.now();
-        communiquesData[comKey] = {
-            titre,
-            message,
-            date: new Date().toLocaleDateString() + ' à ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        const id = 'com_' + Date.now();
+        if (!dbData.communiques) dbData.communiques = {};
+        dbData.communiques[id] = {
+            titre: titre,
+            message: message,
+            date: new Date().toLocaleDateString('fr-FR')
         };
-
-        db.ref("ecole_don_bosco/communiques").set(communiquesData).then(() => {
+        sauvegarderDB().then(() => {
             document.getElementById('com-titre').value = '';
             document.getElementById('com-message').value = '';
-            alert("Communiqué publié avec succès sur l'accueil !");
-            chargerCommuniquesAdmin();
+            alert("Communiqué publié avec succès !");
         });
     }
 
-    function chargerCommuniquesAdmin() {
-        const container = document.getElementById('admin-liste-communiques');
-        if (!container) return;
-        const keys = Object.keys(communiquesData || {});
-        if (keys.length === 0) {
-            container.innerHTML = '<p class="text-xs text-slate-400 italic">Aucun communiqué publié.</p>';
-            return;
-        }
-        let html = '';
-        keys.sort((a,b) => b.localeCompare(a)).forEach(k => {
-            const com = communiquesData[k];
-            html += `<div class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex justify-between items-start gap-4">
-                <div class="space-y-1">
-                    <div class="flex items-center gap-2">
-                        <h4 class="font-bold text-white text-xs">${com.titre}</h4>
-                        <span class="text-[10px] text-slate-400">${com.date || ''}</span>
-                    </div>
-                    <p class="text-xs text-slate-300">${com.message}</p>
-                </div>
-                <button onclick="supprimerCommuniqueAdmin('${k}')" class="p-1.5 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition shrink-0">
-                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                </button>
-            </div>`;
+    // GESTION DES ONGLETS ADMIN & ENREGISTREMENT CORRIGÉ
+    function changerOngletAdmin(onglet) {
+        ['eleves', 'tuteurs', 'professeurs', 'communiques', 'demandes', 'messages', 'calendrier', 'parametres'].forEach(o => {
+            const sec = document.getElementById('admin-sec-' + o);
+            const btn = document.getElementById('tab-btn-' + (o === 'professeurs' ? 'profs' : (o === 'messages' ? 'msgs' : (o === 'calendrier' ? 'cal' : o))));
+            if (sec) sec.classList.add('hidden');
+            if (btn) {
+                btn.className = "px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50";
+            }
         });
-        container.innerHTML = html;
-        lucide.createIcons();
+        
+        const activeSec = document.getElementById('admin-sec-' + onglet);
+        const activeBtn = document.getElementById('tab-btn-' + (onglet === 'professeurs' ? 'profs' : (onglet === 'messages' ? 'msgs' : (onglet === 'calendrier' ? 'cal' : onglet))));
+        if (activeSec) activeSec.classList.remove('hidden');
+        if (activeBtn) {
+            activeBtn.className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5";
+        }
+        chargerDonneesAdmin();
+        setTimeout(() => lucide.createIcons(), 50);
     }
 
-    function supprimerCommuniqueAdmin(k) {
-        if (confirm("Supprimer ce communiqué ?")) {
-            delete communiquesData[k];
-            db.ref("ecole_don_bosco/communiques").set(communiquesData).then(() => {
-                chargerCommuniquesAdmin();
-            });
-        }
-    }
-
-    function chargerDemandesAdmin() {
-        const tbody = document.getElementById('admin-liste-demandes');
-        if (!tbody) return;
-        const keys = Object.keys(demandesCoursData || {});
-        if (keys.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Aucune demande de cours en attente.</td></tr>`;
-            return;
-        }
-        let html = '';
-        keys.forEach(k => {
-            const dem = demandesCoursData[k];
-            const prof = profsData[dem.profKey] || { nom: 'Professeur inconnu' };
-            const statutBadge = dem.statut === 'valide' ? 
-                '<span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded-full text-[10px] font-semibold">Validé</span>' :
-                '<span class="px-2 py-0.5 bg-amber-950 text-amber-400 border border-amber-800 rounded-full text-[10px] font-semibold">En attente</span>';
-
-            html += `<tr class="hover:bg-slate-900/40 transition">
-                <td class="p-3 font-semibold text-white">${prof.nom}</td>
-                <td class="p-3 text-slate-300 font-medium">${dem.cours}</td>
-                <td class="p-3">${statutBadge}</td>
-                <td class="p-3 text-center space-x-1">
-                    ${dem.statut !== 'valide' ? `<button onclick="validerDemandeCoursAdmin('${k}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-semibold transition">Approuver</button>` : ''}
-                    <button onclick="supprimerDemandeCoursAdmin('${k}')" class="px-2 py-1 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg text-[11px] font-semibold transition">Supprimer</button>
+    function chargerDonneesAdmin() {
+        // Table élèves & tuteurs
+        let htmlEleves = '';
+        const eleves = dbData.eleves || {};
+        for (let k in eleves) {
+            const e = eleves[k];
+            const t = dbData.tuteurs[e.tuteurId] || {};
+            htmlEleves += `<tr class="border-b border-slate-700/50 hover:bg-slate-900/30">
+                <td class="p-3 font-semibold text-white">${e.nom} ${e.postnom} ${e.prenom || ''}</td>
+                <td class="p-3 text-slate-300">${e.classe}</td>
+                <td class="p-3 text-slate-300">${t.nom || 'N/A'} ${t.prenom || ''} (${t.telephone || 'N/A'})</td>
+                <td class="p-3 font-mono text-blue-400 font-bold">${e.codeEleve}</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold ${e.frais === 'en_ordre' ? 'bg-emerald-950 text-emerald-400 border border-emerald-900' : 'bg-red-950 text-red-400 border border-red-900'}">${e.frais === 'en_ordre' ? 'Payé' : 'Bloqué'}</span></td>
+                <td class="p-3 text-center no-print">
+                    <button onclick="editerEleve('${k}')" class="text-blue-400 hover:text-blue-300 p-1"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                    <button onclick="supprimerEleve('${k}')" class="text-red-400 hover:text-red-300 p-1 ml-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                 </td>
             </tr>`;
-        });
-        tbody.innerHTML = html;
-        lucide.createIcons();
+        }
+        const listeEl = document.getElementById('liste-admin-eleves');
+        if (listeEl) listeEl.innerHTML = htmlEleves || '<tr><td colspan="6" class="p-4 text-center text-slate-500 italic">Aucun élève enregistré.</td></tr>';
+
+        // Table tuteurs uniques
+        let htmlTuteurs = '';
+        const tuteurs = dbData.tuteurs || {};
+        for (let tk in tuteurs) {
+            const tut = tuteurs[tk];
+            let elevesDuTuteur = [];
+            for (let ek in eleves) {
+                if (eleves[ek].tuteurId === tk) {
+                    elevesDuTuteur.push(eleves[ek].nom + ' ' + eleves[ek].prenom + ' (' + eleves[ek].classe + ')');
+                }
+            }
+            htmlTuteurs += `<tr class="border-b border-slate-700/50 hover:bg-slate-900/30">
+                <td class="p-3 font-semibold text-white">${tut.nom} ${tut.postnom || ''} ${tut.prenom || ''}</td>
+                <td class="p-3 text-slate-300">${tut.telephone || 'N/A'}</td>
+                <td class="p-3 font-mono text-violet-400 font-bold">${tut.codeTuteur}</td>
+                <td class="p-3 text-slate-300">${elevesDuTuteur.length > 0 ? elevesDuTuteur.join(', ') : 'Aucun enfant rattaché'}</td>
+                <td class="p-3 text-center no-print">
+                    <button onclick="supprimerTuteur('${tk}')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </td>
+            </tr>`;
+        }
+        const listeTut = document.getElementById('liste-admin-tuteurs');
+        if (listeTut) listeTut.innerHTML = htmlTuteurs || '<tr><td colspan="5" class="p-4 text-center text-slate-500 italic">Aucun tuteur enregistré.</td></tr>';
+
+        // Table professeurs
+        let htmlProfs = '';
+        const profs = dbData.professeurs || {};
+        for (let pk in profs) {
+            const p = profs[pk];
+            htmlProfs += `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center shadow-xs">
+                <div>
+                    <h4 class="font-bold text-white text-xs">${p.nom}</h4>
+                    <p class="text-[11px] text-emerald-400 font-medium">Cours : ${p.cours}</p>
+                    <p class="text-[10px] text-slate-400 font-mono mt-1">Code : <span class="text-blue-400 font-bold">${p.code}</span></p>
+                </div>
+                <button onclick="supprimerProfesseur('${pk}')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>`;
+        }
+        const listePrf = document.getElementById('liste-admin-profs');
+        if (listePrf) listePrf.innerHTML = htmlProfs || '<p class="text-xs text-slate-400 italic">Aucun professeur enregistré.</p>';
+
+        // Communiqués admin
+        let htmlComs = '';
+        const coms = dbData.communiques || {};
+        for (let ck in coms) {
+            const c = coms[ck];
+            htmlComs += `<div class="bg-slate-800 p-3.5 rounded-xl border border-slate-700 flex justify-between items-start">
+                <div class="space-y-1">
+                    <h4 class="text-xs font-bold text-blue-400">${c.titre} <span class="text-[10px] text-slate-500 font-normal">(${c.date || ''})</span></h4>
+                    <p class="text-xs text-slate-300">${c.message}</p>
+                </div>
+                <button onclick="supprimerCommunique('${ck}')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            </div>`;
+        }
+        const adminComsList = document.getElementById('admin-liste-communiques');
+        if (adminComsList) adminComsList.innerHTML = htmlComs || '<p class="text-xs text-slate-400 italic">Aucun communiqué publié.</p>';
+
+        // Demandes de cours
+        let htmlDemandes = '';
+        const dem = dbData.demandesCours || {};
+        for (let dk in dem) {
+            const d = dem[dk];
+            htmlDemandes += `<tr class="border-b border-slate-700/50">
+                <td class="p-3 font-semibold text-white">${d.profNom}</td>
+                <td class="p-3 text-emerald-400 font-semibold">${d.coursNom}</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold ${d.statut === 'Approuvé' ? 'bg-emerald-950 text-emerald-400 border border-emerald-900' : 'bg-amber-950 text-amber-400 border border-amber-900'}">${d.statut || 'En attente'}</span></td>
+                <td class="p-3 text-center">
+                    ${d.statut !== 'Approuvé' ? `<button onclick="approuverDemandeCours('${dk}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg text-[11px] font-semibold transition">Approuver</button>` : '<span class="text-slate-500 text-[11px]">Validé</span>'}
+                    <button onclick="supprimerDemandeCours('${dk}')" class="text-red-400 hover:text-red-300 ml-2 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </td>
+            </tr>`;
+        }
+        const adminDemList = document.getElementById('admin-liste-demandes');
+        if (adminDemList) adminDemList.innerHTML = htmlDemandes || '<tr><td colspan="4" class="p-4 text-center text-slate-500 italic">Aucune demande de cours.</td></tr>';
+
+        chargerMessagesAdminWhatsApp();
+        chargerCalendrierAdmin();
+        setTimeout(() => lucide.createIcons(), 50);
     }
 
-    function validerDemandeCoursAdmin(k) {
-        const dem = demandesCoursData[k];
-        if (!dem) return;
-        dem.statut = 'valide';
-        // Ajouter le cours validé au professeur si non présent
-        const prof = profsData[dem.profKey];
-        if (prof) {
-            if (!prof.coursSuppl) prof.coursSuppl = [];
-            if (!prof.coursSuppl.includes(dem.cours)) {
-                prof.coursSuppl.push(dem.cours);
+    // ENREGISTREMENT ÉLÈVE & TUTEUR
+    function enregistrerOuModifierEleve() {
+        const nom = document.getElementById('el-nom').value.trim();
+        const postnom = document.getElementById('el-postnom').value.trim();
+        const prenom = document.getElementById('el-prenom').value.trim();
+        const classe = document.getElementById('el-classe').value;
+        const adresse = document.getElementById('el-adresse').value.trim();
+        const datenais = document.getElementById('el-datenais').value;
+        const frais = document.getElementById('el-frais').value;
+        const editKey = document.getElementById('edit-eleve-key').value;
+
+        const tutNom = document.getElementById('tut-nom').value.trim();
+        const tutPostnom = document.getElementById('tut-postnom').value.trim();
+        const tutPrenom = document.getElementById('tut-prenom').value.trim();
+        const tutTel = document.getElementById('tut-tel').value.trim();
+
+        if (!nom || !classe || !tutNom || !tutTel) {
+            alert("Veuillez remplir au moins le nom de l'élève, la classe, ainsi que le nom et le téléphone du tuteur.");
+            return;
+        }
+
+        let tuteurKeyExistante = null;
+        const tutNomNorm = (tutNom + ' ' + (tutPostnom || '') + ' ' + (tutPrenom || '')).toLowerCase().replace(/\s+/g, ' ').trim();
+        
+        for (let tk in dbData.tuteurs) {
+            const t = dbData.tuteurs[tk];
+            const tNomComplet = (t.nom + ' ' + (t.postnom || '') + ' ' + (t.prenom || '')).toLowerCase().replace(/\s+/g, ' ').trim();
+            if ((tNomComplet === tutNomNorm) || (t.telephone && t.telephone === tutTel)) {
+                tuteurKeyExistante = tk;
+                break;
             }
         }
-        db.ref("ecole_don_bosco").set({
-            eleves: elevesData,
-            tuteurs: tuteursData,
-            profs: profsData,
-            notes: notesData,
-            baremes: baremesData,
-            presences: presencesData,
-            communiques: communiquesData,
-            demandesCours: demandesCoursData,
-            documents: documentsData,
-            messages: messagesData,
-            adminPassword: adminPassword
-        }).then(() => {
-            alert("Cours approuvé et attribué au professeur !");
-            chargerDemandesAdmin();
+
+        let tuteurKey = tuteurKeyExistante;
+        if (!tuteurKey) {
+            tuteurKey = 'tuteur_' + Date.now();
+            if (!dbData.tuteurs) dbData.tuteurs = {};
+            dbData.tuteurs[tuteurKey] = {
+                nom: tutNom,
+                postnom: tutPostnom,
+                prenom: tutPrenom,
+                telephone: tutTel,
+                codeTuteur: 'TUT-' + Math.floor(100000 + Math.random() * 900000)
+            };
+        }
+
+        if (editKey) {
+            if (dbData.eleves[editKey]) {
+                dbData.eleves[editKey].nom = nom;
+                dbData.eleves[editKey].postnom = postnom;
+                dbData.eleves[editKey].prenom = prenom;
+                dbData.eleves[editKey].classe = classe;
+                dbData.eleves[editKey].adresse = adresse;
+                dbData.eleves[editKey].datenais = datenais;
+                dbData.eleves[editKey].frais = frais;
+                dbData.eleves[editKey].tuteurId = tuteurKey;
+            }
+            document.getElementById('edit-eleve-key').value = '';
+            document.getElementById('titre-form-eleve').innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i> Enregistrer un nouvel élève & son tuteur';
+            document.getElementById('btn-valider-eleve').innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Enregistrer';
+            document.getElementById('btn-annuler-eleve').classList.add('hidden');
+        } else {
+            const eleveKey = 'eleve_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            if (!dbData.eleves) dbData.eleves = {};
+            dbData.eleves[eleveKey] = {
+                nom: nom,
+                postnom: postnom,
+                prenom: prenom,
+                classe: classe,
+                adresse: adresse,
+                datenais: datenais,
+                frais: frais,
+                tuteurId: tuteurKey,
+                codeEleve: 'ELV-' + Math.floor(100000 + Math.random() * 900000)
+            };
+        }
+
+        sauvegarderDB().then(() => {
+            document.getElementById('el-nom').value = '';
+            document.getElementById('el-postnom').value = '';
+            document.getElementById('el-prenom').value = '';
+            document.getElementById('el-classe').value = '';
+            document.getElementById('el-adresse').value = '';
+            document.getElementById('tut-nom').value = '';
+            document.getElementById('tut-postnom').value = '';
+            document.getElementById('tut-prenom').value = '';
+            document.getElementById('tut-tel').value = '';
+            alert("Élève et tuteur enregistrés avec succès !");
         });
     }
 
-    function supprimerDemandeCoursAdmin(k) {
-        if (confirm("Supprimer cette demande ?")) {
-            delete demandesCoursData[k];
-            db.ref("ecole_don_bosco/demandesCours").set(demandesCoursData).then(() => {
-                chargerDemandesAdmin();
-            });
+    function supprimerEleve(key) {
+        if (confirm("Voulez-vous vraiment supprimer cet élève ?")) {
+            delete dbData.eleves[key];
+            sauvegarderDB();
         }
     }
 
-    // Messagerie Administration <-> Tuteur
-    let adminContactSelectionne = null;
+    function supprimerTuteur(tk) {
+        if (confirm("Voulez-vous vraiment supprimer ce tuteur ?")) {
+            delete dbData.tuteurs[tk];
+            sauvegarderDB();
+        }
+    }
 
-    function chargerContactsWhatsAppAdmin() {
-        const container = document.getElementById('admin-whatsapp-contacts');
-        if (!container) return;
-        const keys = Object.keys(tuteursData || {});
-        if (keys.length === 0) {
-            container.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic">Aucun tuteur disponible.</div>';
+    function editerEleve(key) {
+        const e = dbData.eleves[key];
+        if(!e) return;
+        document.getElementById('edit-eleve-key').value = key;
+        document.getElementById('el-nom').value = e.nom || '';
+        document.getElementById('el-postnom').value = e.postnom || '';
+        document.getElementById('el-prenom').value = e.prenom || '';
+        document.getElementById('el-classe').value = e.classe || '';
+        document.getElementById('el-adresse').value = e.adresse || '';
+        document.getElementById('el-datenais').value = e.datenais || '';
+        document.getElementById('el-frais').value = e.frais || 'en_ordre';
+
+        const t = dbData.tuteurs[e.tuteurId] || {};
+        document.getElementById('tut-nom').value = t.nom || '';
+        document.getElementById('tut-postnom').value = t.postnom || '';
+        document.getElementById('tut-prenom').value = t.prenom || '';
+        document.getElementById('tut-tel').value = t.telephone || '';
+
+        document.getElementById('titre-form-eleve').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i> Modifier l\'élève & son tuteur';
+        document.getElementById('btn-valider-eleve').innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Mettre à jour';
+        document.getElementById('btn-annuler-eleve').classList.remove('hidden');
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function annulerModificationEleve() {
+        document.getElementById('edit-eleve-key').value = '';
+        document.getElementById('el-nom').value = '';
+        document.getElementById('el-postnom').value = '';
+        document.getElementById('el-prenom').value = '';
+        document.getElementById('el-classe').value = '';
+        document.getElementById('el-adresse').value = '';
+        document.getElementById('tut-nom').value = '';
+        document.getElementById('tut-postnom').value = '';
+        document.getElementById('tut-prenom').value = '';
+        document.getElementById('tut-tel').value = '';
+        document.getElementById('titre-form-eleve').innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i> Enregistrer un nouvel élève & son tuteur';
+        document.getElementById('btn-valider-eleve').innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Enregistrer';
+        document.getElementById('btn-annuler-eleve').classList.add('hidden');
+    }
+
+    function enregistrerProfesseur() {
+        const nom = document.getElementById('prf-nom').value.trim();
+        const cours = document.getElementById('prf-cours').value.trim();
+        if (!nom || !cours) {
+            alert("Veuillez remplir le nom et le cours du professeur.");
             return;
         }
-        let html = '';
-        keys.forEach(tk => {
-            const t = tuteursData[tk];
-            const isSelected = adminContactSelectionne === tk;
-            html += `<div onclick="selectionnerContactWhatsAppAdmin('${tk}')" class="p-3 cursor-pointer hover:bg-slate-800 transition ${isSelected ? 'bg-slate-800 border-l-2 border-blue-500' : ''}">
-                <h4 class="font-bold text-white text-xs">${t.nom} ${t.prenom || ''}</h4>
-                <p class="text-[10px] text-slate-400">${t.tel || 'Sans téléphone'}</p>
-            </div>`;
+        const key = 'prof_' + Date.now();
+        if (!dbData.professeurs) dbData.professeurs = {};
+        dbData.professeurs[key] = {
+            nom: nom,
+            cours: cours,
+            code: 'PROF-' + Math.floor(100000 + Math.random() * 900000)
+        };
+        sauvegarderDB().then(() => {
+            document.getElementById('prf-nom').value = '';
+            document.getElementById('prf-cours').value = '';
+            alert("Professeur enregistré avec succès !");
         });
-        container.innerHTML = html;
-        if (adminContactSelectionne) chargerChatWhatsAppAdmin(adminContactSelectionne);
     }
 
-    function selectionnerContactWhatsAppAdmin(tk) {
-        adminContactSelectionne = tk;
-        chargerContactsWhatsAppAdmin();
-        chargerChatWhatsAppAdmin(tk);
-        document.getElementById('admin-whatsapp-input').removeAttribute('disabled');
-        const sendBtn = document.getElementById('admin-whatsapp-send-btn');
-        sendBtn.removeAttribute('disabled');
-        sendBtn.className = "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition shrink-0 shadow-xs flex items-center gap-1";
-    }
-
-    function chargerChatWhatsAppAdmin(tk) {
-        const chatContainer = document.getElementById('admin-whatsapp-chat');
-        const header = document.getElementById('admin-whatsapp-header');
-        const t = tuteursData[tk];
-        if (!t) return;
-        header.innerHTML = `<span>Discussion avec ${t.nom} ${t.prenom || ''}</span><span class="text-[10px] text-slate-400">${t.tel || ''}</span>`;
-        
-        const convKey = tk;
-        const msgs = (messagesData[convKey] || {});
-        const msgKeys = Object.keys(msgs);
-        if (msgKeys.length === 0) {
-            chatContainer.innerHTML = '<div class="text-center text-slate-500 text-xs my-auto">Aucun message pour le moment. Envoyez le premier message !</div>';
-            return;
+    function supprimerProfesseur(key) {
+        if (confirm("Voulez-vous supprimer ce professeur ?")) {
+            delete dbData.professeurs[key];
+            sauvegarderDB();
         }
-        let html = '';
-        msgKeys.sort((a,b) => a.localeCompare(b)).forEach(mk => {
-            const m = msgs[mk];
-            const isAdmin = m.expediteur === 'admin';
-            html += `<div class="flex flex-col ${isAdmin ? 'items-end' : 'items-start'} space-y-0.5">
-                <div class="max-w-[75%] p-2.5 rounded-xl text-xs ${isAdmin ? 'bg-blue-600 text-white rounded-br-none' : 'bg-slate-800 border border-slate-700 text-slate-200 rounded-bl-none'}">
-                    ${m.texte}
-                </div>
-                <span class="text-[9px] text-slate-500">${m.date || ''}</span>
+    }
+
+    function supprimerCommunique(key) {
+        if(confirm("Supprimer ce communiqué ?")) {
+            delete dbData.communiques[key];
+            sauvegarderDB();
+        }
+    }
+
+    function approuverDemandeCours(key) {
+        if(dbData.demandesCours[key]) {
+            dbData.demandesCours[key].statut = 'Approuvé';
+            sauvegarderDB();
+        }
+    }
+
+    function supprimerDemandeCours(key) {
+        delete dbData.demandesCours[key];
+        sauvegarderDB();
+    }
+
+    // Gestion de la messagerie WhatsApp Admin
+    function chargerMessagesAdminWhatsApp() {
+        const contactsContainer = document.getElementById('admin-whatsapp-contacts');
+        if (!contactsContainer) return;
+        let htmlContacts = '';
+        const tuteurs = dbData.tuteurs || {};
+        for (let tk in tuteurs) {
+            const tut = tuteurs[tk];
+            const isSelected = chatAdminContactActif === tk;
+            htmlContacts += `<div onclick="selectionnerContactAdmin('${tk}')" class="p-3 cursor-pointer transition hover:bg-slate-800 ${isSelected ? 'bg-slate-800 border-l-4 border-blue-500' : ''}">
+                <div class="font-semibold text-xs text-white">${tut.nom} ${tut.prenom || ''}</div>
+                <div class="text-[10px] text-slate-400">Tél : ${tut.telephone || 'N/A'}</div>
             </div>`;
-        });
-        chatContainer.innerHTML = html;
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        contactsContainer.innerHTML = htmlContacts || '<div class="p-4 text-center text-xs text-slate-500">Aucun tuteur</div>';
+
+        if (chatAdminContactActif) {
+            const chatBox = document.getElementById('admin-whatsapp-chat');
+            const messages = dbData.messages && dbData.messages[chatAdminContactActif] ? dbData.messages[chatAdminContactActif] : {};
+            let htmlMsgs = '';
+            for (let mk in messages) {
+                const m = messages[mk];
+                const isAdmin = m.sender === 'admin';
+                htmlMsgs += `<div class="flex flex-col ${isAdmin ? 'items-end' : 'items-start'}">
+                    <div class="max-w-[75%] p-2.5 rounded-xl text-xs ${isAdmin ? 'bg-blue-600 text-white rounded-br-none' : 'bg-slate-700 text-slate-200 rounded-bl-none'}">
+                        ${m.text}
+                    </div>
+                    <span class="text-[9px] text-slate-500 mt-0.5">${m.date || ''}</span>
+                </div>`;
+            }
+            chatBox.innerHTML = htmlMsgs || '<div class="text-center text-slate-500 text-xs my-auto">Démarrez la conversation</div>';
+            chatBox.scrollTop = chatBox.scrollHeight;
+            document.getElementById('admin-whatsapp-input').removeAttribute('disabled');
+            const sendBtn = document.getElementById('admin-whatsapp-send-btn');
+            sendBtn.removeAttribute('disabled');
+            sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            sendBtn.classList.add('bg-blue-600', 'text-white');
+        }
+    }
+
+    function selectionnerContactAdmin(tk) {
+        chatAdminContactActif = tk;
+        const tut = dbData.tuteurs[tk] || {};
+        document.getElementById('admin-whatsapp-header').innerHTML = `<span>Discussion avec ${tut.nom} ${tut.prenom || ''}</span>`;
+        chargerMessagesAdminWhatsApp();
     }
 
     function envoyerMessageAdminWhatsApp() {
-        if (!adminContactSelectionne) return;
         const input = document.getElementById('admin-whatsapp-input');
-        const texte = input.value.trim();
-        if (!texte) return;
-
-        const convKey = adminContactSelectionne;
-        if (!messagesData[convKey]) messagesData[convKey] = {};
-        const msgId = 'MSG_' + Date.now();
-        messagesData[convKey][msgId] = {
-            expediteur: 'admin',
-            texte,
-            date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        const text = input.value.trim();
+        if(!text || !chatAdminContactActif) return;
+        if(!dbData.messages) dbData.messages = {};
+        if(!dbData.messages[chatAdminContactActif]) dbData.messages[chatAdminContactActif] = {};
+        const msgId = 'msg_' + Date.now();
+        dbData.messages[chatAdminContactActif][msgId] = {
+            sender: 'admin',
+            text: text,
+            date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
         };
-
-        db.ref("ecole_don_bosco/messages").set(messagesData).then(() => {
+        sauvegarderDB().then(() => {
             input.value = '';
-            chargerChatWhatsAppAdmin(adminContactSelectionne);
+            chargerMessagesAdminWhatsApp();
         });
     }
 
     function chargerCalendrierAdmin() {
-        const tbody = document.getElementById('admin-liste-calendrier-presences');
-        if (!tbody) return;
         const dateVal = document.getElementById('admin-cal-date').value;
         const classeVal = document.getElementById('admin-cal-classe').value;
-
-        if (!dateVal) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Veuillez sélectionner une date.</td></tr>`;
-            return;
-        }
-
-        const eleveKeys = Object.keys(elevesData || {});
-        if (eleveKeys.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Aucun élève enregistré.</td></tr>`;
-            return;
-        }
+        const tbody = document.getElementById('admin-liste-calendrier-presences');
+        if(!tbody) return;
 
         let html = '';
-        eleveKeys.forEach(ek => {
-            const el = elevesData[ek];
-            if (classeVal && el.classe !== classeVal) return;
-
-            const statutActuel = (presencesData[dateVal] && presencesData[dateVal][ek]) ? presencesData[dateVal][ek] : 'present';
-
-            html += `<tr class="hover:bg-slate-900/40 transition">
-                <td class="p-3 font-semibold text-white">${el.nom} ${el.postnom || ''} ${el.prenom || ''}</td>
-                <td class="p-3 text-slate-300">${el.classe}</td>
+        const eleves = dbData.eleves || {};
+        for(let ek in eleves) {
+            const e = eleves[ek];
+            if(classeVal && e.classe !== classeVal) continue;
+            const statutJour = dbData.presences && dbData.presences[dateVal] && dbData.presences[dateVal][ek] ? dbData.presences[dateVal][ek] : 'present';
+            html += `<tr class="border-b border-slate-700/50">
+                <td class="p-3 font-semibold text-white">${e.nom} ${e.postnom} ${e.prenom || ''}</td>
+                <td class="p-3 text-slate-300">${e.classe}</td>
                 <td class="p-3">
-                    <select id="adm_pres_${ek}" onchange="modifierPresenceAdmin('${ek}', '${dateVal}')" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-blue-600">
-                        <option value="present" ${statutActuel === 'present' ? 'selected' : ''}>Présent</option>
-                        <option value="absent" ${statutActuel === 'absent' ? 'selected' : ''}>Absent</option>
-                        <option value="justifie" ${statutActuel === 'justifie' ? 'selected' : ''}>Justifié</option>
+                    <select onchange="changerStatutPresenceAdmin('${dateVal}', '${ek}', this.value)" class="bg-slate-900 border border-slate-700 text-xs p-1.5 rounded-lg text-slate-200">
+                        <option value="present" ${statutJour === 'present' ? 'selected' : ''}>Présent</option>
+                        <option value="absent" ${statutJour === 'absent' ? 'selected' : ''}>Absent</option>
+                        <option value="justifie" ${statutJour === 'justifie' ? 'selected' : ''}>Absent Justifié</option>
                     </select>
                 </td>
-                <td class="p-3 text-center text-xs font-semibold text-blue-400">Synchronisé</td>
+                <td class="p-3 text-center text-xs text-emerald-400 font-semibold">Synchronisé</td>
             </tr>`;
-        });
-        tbody.innerHTML = html;
-        lucide.createIcons();
+        }
+        tbody.innerHTML = html || '<tr><td colspan="4" class="p-4 text-center text-slate-500 italic">Aucun élève trouvé.</td></tr>';
     }
 
-    function modifierPresenceAdmin(ek, dateVal) {
-        const select = document.getElementById(`adm_pres_${ek}`);
-        if (!select) return;
-        const statut = select.value;
-        if (!presencesData[dateVal]) presencesData[dateVal] = {};
-        presencesData[dateVal][ek] = statut;
-
-        db.ref("ecole_don_bosco/presences").set(presencesData).then(() => {
-            // Mise à jour silencieuse
-        });
+    function changerStatutPresenceAdmin(date, eleveKey, statut) {
+        if(!dbData.presences) dbData.presences = {};
+        if(!dbData.presences[date]) dbData.presences[date] = {};
+        dbData.presences[date][eleveKey] = statut;
+        sauvegarderDB();
     }
 
     function modifierMotDePasseAdmin() {
-        const ancien = document.getElementById('admin-ancien-mdp').value;
-        const nouveau = document.getElementById('admin-nouveau-mdp').value;
-        const confirmation = document.getElementById('admin-confirmation-mdp').value;
+        const ancien = document.getElementById('admin-ancien-mdp').value.trim();
+        const nouveau = document.getElementById('admin-nouveau-mdp').value.trim();
+        const confirmation = document.getElementById('admin-confirmation-mdp').value.trim();
+        const mdpActuel = dbData.parametres && dbData.parametres.adminPassword ? dbData.parametres.adminPassword : "ADMIN2026";
 
-        if (ancien !== adminPassword) {
+        if(ancien !== mdpActuel) {
             alert("L'ancien mot de passe est incorrect.");
             return;
         }
-        if (!nouveau || nouveau.length < 4) {
+        if(!nouveau || nouveau.length < 4) {
             alert("Le nouveau mot de passe doit contenir au moins 4 caractères.");
             return;
         }
-        if (nouveau !== confirmation) {
-            alert("La confirmation du mot de passe ne correspond pas.");
+        if(nouveau !== confirmation) {
+            alert("La confirmation du nouveau mot de passe ne correspond pas.");
             return;
         }
 
-        adminPassword = nouveau;
-        db.ref("ecole_don_bosco/adminPassword").set(adminPassword).then(() => {
-            alert("Mot de passe administrateur mis à jour avec succès !");
+        if(!dbData.parametres) dbData.parametres = {};
+        dbData.parametres.adminPassword = nouveau;
+        sauvegarderDB().then(() => {
             document.getElementById('admin-ancien-mdp').value = '';
             document.getElementById('admin-nouveau-mdp').value = '';
             document.getElementById('admin-confirmation-mdp').value = '';
+            alert("Mot de passe administrateur mis à jour avec succès !");
         });
     }
 
-    function imprimerListeEleves() {
-        window.print();
-    }
-
-    // Gestion Espace Professeur
+    // TABLEAU DE BORD PROFESSEUR
     function chargerTableauDeBordProf() {
-        const prof = profsData[utilisateurConnecte];
-        if (!prof) return;
-        document.getElementById('welcome-prof').innerText = `Professeur : ${prof.nom} | Cours principal : ${prof.cours}`;
-        document.getElementById('print-prof-nom').innerText = prof.nom;
-        document.getElementById('print-prof-cours').innerText = prof.cours;
+        if (sessionActive.role !== 'prof') return;
+        document.getElementById('welcome-prof').textContent = 'Prof. ' + sessionActive.nom + ' (' + sessionActive.cours + ')';
 
-        // Remplir le sélecteur de cours actif (cours principal + cours supplémentaires validés)
+        // Select cours actif
         const selectCours = document.getElementById('prof-select-cours-actif');
-        let optionsHtml = `<option value="${prof.cours}">${prof.cours} (Principal)</option>`;
-        if (prof.coursSuppl && Array.isArray(prof.coursSuppl)) {
-            prof.coursSuppl.forEach(cs => {
-                optionsHtml += `<option value="${cs}">${cs} (Supplémentaire)</option>`;
-            });
+        let optionsHtml = `<option value="${sessionActive.cours}">${sessionActive.cours} (Principal)</option>`;
+        const dem = dbData.demandesCours || {};
+        for(let dk in dem) {
+            const d = dem[dk];
+            if(d.profNom === sessionActive.nom && d.statut === 'Approuvé' && d.coursNom !== sessionActive.cours) {
+                optionsHtml += `<option value="${d.coursNom}">${d.coursNom}</option>`;
+            }
         }
         selectCours.innerHTML = optionsHtml;
+        selectCours.value = sessionActive.cours;
 
         chargerBaremesProf();
-        chargerTableauCotationsProf();
-        chargerMesDocumentsProf();
+        chargerNotesProf();
+        chargerDocumentsProf();
         chargerPresencesProf();
     }
 
-    function getCoursActifProf() {
-        const select = document.getElementById('prof-select-cours-actif');
-        return select ? select.value : (profsData[utilisateurConnecte] ? profsData[utilisateurConnecte].cours : '');
-    }
-
     function changerCoursActifProf(cours) {
-        chargerBaremesProf();
-        chargerTableauCotationsProf();
-    }
-
-    function changerOngletProf(onglet) {
-        if (onglet === 'notes') {
-            document.getElementById('prof-sec-notes').classList.remove('hidden');
-            document.getElementById('prof-sec-presences').classList.add('hidden');
-            document.getElementById('prof-tab-notes').className = "px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shrink-0";
-            document.getElementById('prof-tab-presences').className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50 shrink-0";
-        } else if (onglet === 'presences') {
-            document.getElementById('prof-sec-notes').classList.add('hidden');
-            document.getElementById('prof-sec-presences').classList.remove('hidden');
-            document.getElementById('prof-tab-notes').className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50 shrink-0";
-            document.getElementById('prof-tab-presences').className = "px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shrink-0";
-            
-            const todayStr = new Date().toISOString().split('T')[0];
-            const dateInput = document.getElementById('prof-date-presence');
-            if (dateInput && !dateInput.value) dateInput.value = todayStr;
-            chargerPresencesProf();
-        }
-        lucide.createIcons();
+        sessionActive.cours = cours;
+        chargerNotesProf();
     }
 
     function chargerBaremesProf() {
-        const cours = getCoursActifProf();
-        const baremeKey = `${utilisateurConnecte}_${cours}`;
-        const b = baremesData[baremeKey] || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
-
+        const cours = sessionActive.cours;
+        const b = dbData.baremes && dbData.baremes[cours] ? dbData.baremes[cours] : { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
         document.getElementById('cfg-nb-interros').value = b.nbInterros;
         document.getElementById('cfg-max-interro').value = b.maxInterro;
         document.getElementById('cfg-actif-devoir').value = b.actifDevoir;
         document.getElementById('cfg-max-devoir').value = b.maxDevoir;
         document.getElementById('cfg-actif-examen').value = b.actifExamen;
         document.getElementById('cfg-max-examen').value = b.maxExamen;
-
-        // Mettre à jour les en-têtes du tableau
-        const nb = parseInt(b.nbInterros);
-        for (let i = 1; i <= 4; i++) {
-            const th = document.getElementById(`th-int${i}`);
-            if (th) {
-                if (i <= nb) {
-                    th.style.display = '';
-                    th.innerText = `Int. ${i} (/${b.maxInterro})`;
-                } else {
-                    th.style.display = 'none';
-                }
-            }
-        }
-
-        const thDev = document.getElementById('th-dev');
-        if (thDev) {
-            if (b.actifDevoir === 'oui') {
-                thDev.style.display = '';
-                thDev.innerText = `Devoir (/${b.maxDevoir})`;
-            } else {
-                thDev.style.display = 'none';
-            }
-        }
-
-        const thEx = document.getElementById('th-ex');
-        if (thEx) {
-            if (b.actifExamen === 'oui') {
-                thEx.style.display = '';
-                thEx.innerText = `Examen (/${b.maxExamen})`;
-            } else {
-                thEx.style.display = 'none';
-            }
-        }
     }
 
     function sauvegarderBaremesProf() {
-        const cours = getCoursActifProf();
-        const baremeKey = `${utilisateurConnecte}_${cours}`;
-        baremesData[baremeKey] = {
+        const cours = sessionActive.cours;
+        if(!dbData.baremes) dbData.baremes = {};
+        dbData.baremes[cours] = {
             nbInterros: parseInt(document.getElementById('cfg-nb-interros').value),
-            maxInterro: parseFloat(document.getElementById('cfg-max-interro').value) || 10,
+            maxInterro: parseFloat(document.getElementById('cfg-max-interro').value),
             actifDevoir: document.getElementById('cfg-actif-devoir').value,
-            maxDevoir: parseFloat(document.getElementById('cfg-max-devoir').value) || 10,
+            maxDevoir: parseFloat(document.getElementById('cfg-max-devoir').value),
             actifExamen: document.getElementById('cfg-actif-examen').value,
-            maxExamen: parseFloat(document.getElementById('cfg-max-examen').value) || 50
+            maxExamen: parseFloat(document.getElementById('cfg-max-examen').value)
         };
-
-        db.ref("ecole_don_bosco/baremes").set(baremesData).then(() => {
-            chargerBaremesProf();
-            chargerTableauCotationsProf();
-        });
+        sauvegarderDB().then(() => chargerNotesProf());
     }
 
-    function changerClasseProf() {
-        chargerTableauCotationsProf();
-    }
-
-    function changerTrimestreProf() {
-        chargerTableauCotationsProf();
-    }
-
-    function chargerTableauCotationsProf() {
-        const tbody = document.getElementById('prof-liste-eleves-action');
-        if (!tbody) return;
-        const classeSelect = document.getElementById('prof-select-classe').value;
-        const trimestreSelect = document.getElementById('prof-select-trimestre').value;
-        document.getElementById('print-prof-trim').innerText = trimestreSelect;
-        document.getElementById('print-prof-classe').innerText = classeSelect || 'Toutes les classes';
-
-        const cours = getCoursActifProf();
-        const baremeKey = `${utilisateurConnecte}_${cours}`;
-        const b = baremesData[baremeKey] || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
-
-        const eleveKeys = Object.keys(elevesData || {});
-        if (eleveKeys.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400 italic">Aucun élève enregistré.</td></tr>`;
-            return;
+    function changerOngletProf(onglet) {
+        if(onglet === 'notes') {
+            document.getElementById('prof-sec-notes').classList.remove('hidden');
+            document.getElementById('prof-sec-presences').classList.add('hidden');
+            document.getElementById('prof-tab-notes').className = "px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+            document.getElementById('prof-tab-presences').className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50";
+        } else {
+            document.getElementById('prof-sec-notes').classList.add('hidden');
+            document.getElementById('prof-sec-presences').classList.remove('hidden');
+            document.getElementById('prof-tab-notes').className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700/50";
+            document.getElementById('prof-tab-presences').className = "px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+            chargerPresencesProf();
         }
+    }
+
+    function changerClasseProf() { chargerNotesProf(); }
+    function changerTrimestreProf() { chargerNotesProf(); }
+
+    function chargerNotesProf() {
+        const classeFiltre = document.getElementById('prof-select-classe').value;
+        const trimestre = document.getElementById('prof-select-trimestre').value;
+        const cours = sessionActive.cours;
+        const b = dbData.baremes && dbData.baremes[cours] ? dbData.baremes[cours] : { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+
+        // Configuration des en-têtes du tableau selon les barèmes
+        for(let i=1; i<=4; i++) {
+            const th = document.getElementById('th-int' + i);
+            if(i <= b.nbInterros) { th.style.display = ''; th.textContent = `Int. ${i} (/${b.maxInterro})`; }
+            else { th.style.display = 'none'; }
+        }
+        const thDev = document.getElementById('th-dev');
+        if(b.actifDevoir === 'oui') { thDev.style.display = ''; thDev.textContent = `Devoir (/${b.maxDevoir})`; } else { thDev.style.display = 'none'; }
+
+        const thEx = document.getElementById('th-ex');
+        if(b.actifExamen === 'oui') { thEx.style.display = ''; thEx.textContent = `Examen (/${b.maxExamen})`; } else { thEx.style.display = 'none'; }
 
         let html = '';
-        eleveKeys.forEach(ek => {
-            const el = elevesData[ek];
-            if (classeSelect && el.classe !== classeSelect) return;
+        const eleves = dbData.eleves || {};
+        for(let ek in eleves) {
+            const e = eleves[ek];
+            if(classeFiltre && e.classe !== classeFiltre) continue;
 
-            const noteKey = `${ek}_${cours}_${trimestreSelect}`;
-            const n = notesData[noteKey] || { int1: '', int2: '', int3: '', int4: '', devoir: '', examen: '' };
-
-            // Calcul du total obtenu
-            let totalObt = 0;
-            for (let i = 1; i <= b.nbInterros; i++) {
-                const val = parseFloat(n[`int${i}`]);
-                if (!isNaN(val)) totalObt += val;
+            const noteObj = dbData.notes && dbData.notes[ek] && dbData.notes[ek][trimestre] && dbData.notes[ek][trimestre][cours] ? dbData.notes[ek][trimestre][cours] : { int1: '', int2: '', int3: '', int4: '', devoir: '', examen: '' };
+            
+            let total = 0;
+            for(let i=1; i<=b.nbInterros; i++) {
+                const val = parseFloat(noteObj['int' + i]);
+                if(!isNaN(val)) total += val;
             }
-            if (b.actifDevoir === 'oui') {
-                const valDev = parseFloat(n.devoir);
-                if (!isNaN(valDev)) totalObt += valDev;
+            if(b.actifDevoir === 'oui') {
+                const valDev = parseFloat(noteObj.devoir);
+                if(!isNaN(valDev)) total += valDev;
             }
-            if (b.actifExamen === 'oui') {
-                const valEx = parseFloat(n.examen);
-                if (!isNaN(valEx)) totalObt += valEx;
+            if(b.actifExamen === 'oui') {
+                const valEx = parseFloat(noteObj.examen);
+                if(!isNaN(valEx)) total += valEx;
             }
 
-            html += `<tr class="hover:bg-slate-900/40 transition">
-                <td class="p-2.5 font-semibold text-white">${el.nom} ${el.postnom || ''} ${el.prenom || ''}</td>
-                <td class="p-2.5 text-slate-300 text-[11px]">${el.classe}</td>`;
-
-            for (let i = 1; i <= 4; i++) {
-                const styleDisplay = i <= b.nbInterros ? '' : 'display:none;';
-                html += `<td class="p-2 text-center" style="${styleDisplay}">
-                    <input id="note_${ek}_int${i}" type="number" step="0.5" value="${n[`int${i}`] !== undefined ? n[`int${i}`] : ''}" onchange="sauvegarderNoteProf('${ek}', 'int${i}')" class="w-14 bg-slate-900 border border-slate-700 text-white p-1.5 rounded-lg text-center font-semibold text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none">
+            html += `<tr class="border-b border-slate-700/50">
+                <td class="p-2.5 font-semibold text-white">${e.nom} ${e.postnom} ${e.prenom || ''}</td>
+                <td class="p-2.5 text-slate-300">${e.classe}</td>`;
+            
+            for(let i=1; i<=4; i++) {
+                html += `<td class="p-2.5 text-center" style="${i > b.nbInterros ? 'display:none;' : ''}">
+                    <input type="number" step="0.5" value="${noteObj['int' + i] !== undefined ? noteObj['int' + i] : ''}" onchange="mettreAJourNote('${ek}', '${trimestre}', '${cours}', 'int${i}', this.value)" class="w-14 bg-slate-900 border border-slate-700 text-white text-center p-1 rounded-lg text-xs font-bold focus:ring-1 focus:ring-emerald-600 focus:outline-none">
                 </td>`;
             }
 
-            const styleDev = b.actifDevoir === 'oui' ? '' : 'display:none;';
-            html += `<td class="p-2 text-center" style="${styleDev}">
-                <input id="note_${ek}_devoir" type="number" step="0.5" value="${n.devoir !== undefined ? n.devoir : ''}" onchange="sauvegarderNoteProf('${ek}', 'devoir')" class="w-14 bg-slate-900 border border-slate-700 text-white p-1.5 rounded-lg text-center font-semibold text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none">
-            </td>`;
-
-            const styleEx = b.actifExamen === 'oui' ? '' : 'display:none;';
-            html += `<td class="p-2 text-center" style="${styleEx}">
-                <input id="note_${ek}_examen" type="number" step="0.5" value="${n.examen !== undefined ? n.examen : ''}" onchange="sauvegarderNoteProf('${ek}', 'examen')" class="w-14 bg-slate-900 border border-slate-700 text-white p-1.5 rounded-lg text-center font-semibold text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none">
-            </td>`;
-
-            html += `<td class="p-2.5 text-center bg-slate-900 font-bold text-emerald-400 text-xs" id="total_${ek}">${totalObt}</td>
+            html += `<td class="p-2.5 text-center" style="${b.actifDevoir !== 'oui' ? 'display:none;' : ''}">
+                <input type="number" step="0.5" value="${noteObj.devoir !== undefined ? noteObj.devoir : ''}" onchange="mettreAJourNote('${ek}', '${trimestre}', '${cours}', 'devoir', this.value)" class="w-14 bg-slate-900 border border-slate-700 text-white text-center p-1 rounded-lg text-xs font-bold focus:ring-1 focus:ring-emerald-600 focus:outline-none">
+            </td>
+            <td class="p-2.5 text-center" style="${b.actifExamen !== 'oui' ? 'display:none;' : ''}">
+                <input type="number" step="0.5" value="${noteObj.examen !== undefined ? noteObj.examen : ''}" onchange="mettreAJourNote('${ek}', '${trimestre}', '${cours}', 'examen', this.value)" class="w-16 bg-slate-900 border border-slate-700 text-white text-center p-1 rounded-lg text-xs font-bold focus:ring-1 focus:ring-emerald-600 focus:outline-none">
+            </td>
+            <td class="p-2.5 text-center font-bold text-emerald-400 bg-slate-900/50">${total.toFixed(1)}</td>
             </tr>`;
-        });
-        tbody.innerHTML = html;
-        lucide.createIcons();
+        }
+        document.getElementById('prof-liste-eleves-action').innerHTML = html || '<tr><td colspan="9" class="p-4 text-center text-slate-500 italic">Aucun élève trouvé.</td></tr>';
     }
 
-    function sauvegarderNoteProf(ek, champ) {
-        const cours = getCoursActifProf();
-        const trimestreSelect = document.getElementById('prof-select-trimestre').value;
-        const noteKey = `${ek}_${cours}_${trimestreSelect}`;
-
-        const input = document.getElementById(`note_${ek}_${champ}`);
-        const val = input ? input.value : '';
-
-        if (!notesData[noteKey]) notesData[noteKey] = { int1: '', int2: '', int3: '', int4: '', devoir: '', examen: '' };
-        notesData[noteKey][champ] = val;
-
-        db.ref("ecole_don_bosco/notes").set(notesData).then(() => {
-            // Recalculer le total dynamiquement pour l'élève
-            const baremeKey = `${utilisateurConnecte}_${cours}`;
-            const b = baremesData[baremeKey] || { nbInterros: 4, actifDevoir: 'oui', actifExamen: 'oui' };
-            const n = notesData[noteKey];
-            let totalObt = 0;
-            for (let i = 1; i <= b.nbInterros; i++) {
-                const v = parseFloat(n[`int${i}`]);
-                if (!isNaN(v)) totalObt += v;
-            }
-            if (b.actifDevoir === 'oui') {
-                const vDev = parseFloat(n.devoir);
-                if (!isNaN(vDev)) totalObt += vDev;
-            }
-            if (b.actifExamen === 'oui') {
-                const vEx = parseFloat(n.examen);
-                if (!isNaN(vEx)) totalObt += vEx;
-            }
-            const totalEl = document.getElementById(`total_${ek}`);
-            if (totalEl) totalEl.innerText = totalObt;
-        });
+    function mettreAJourNote(eleveKey, trimestre, cours, champ, valeur) {
+        if(!dbData.notes) dbData.notes = {};
+        if(!dbData.notes[eleveKey]) dbData.notes[eleveKey] = {};
+        if(!dbData.notes[eleveKey][trimestre]) dbData.notes[eleveKey][trimestre] = {};
+        if(!dbData.notes[eleveKey][trimestre][cours]) dbData.notes[eleveKey][trimestre][cours] = {};
+        dbData.notes[eleveKey][trimestre][cours][champ] = valeur;
+        sauvegarderDB();
     }
 
     function chargerPresencesProf() {
-        const tbody = document.getElementById('prof-liste-presences-action');
-        if (!tbody) return;
         const dateVal = document.getElementById('prof-date-presence').value;
         const classeVal = document.getElementById('prof-classe-presence').value;
+        const tbody = document.getElementById('prof-liste-presences-action');
+        if(!tbody) return;
 
-        if (!dateVal || !classeVal) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Veuillez sélectionner une date et une classe.</td></tr>`;
-            return;
-        }
-
-        const eleveKeys = Object.keys(elevesData || {});
         let html = '';
-        let count = 0;
-        eleveKeys.forEach(ek => {
-            const el = elevesData[ek];
-            if (el.classe !== classeVal) return;
-            count++;
-
-            const statutActuel = (presencesData[dateVal] && presencesData[dateVal][ek]) ? presencesData[dateVal][ek] : 'present';
-
-            html += `<tr class="hover:bg-slate-900/40 transition">
-                <td class="p-3 font-semibold text-white">${el.nom} ${el.postnom || ''} ${el.prenom || ''}</td>
-                <td class="p-3 text-slate-300">${el.classe}</td>
+        const eleves = dbData.eleves || {};
+        for(let ek in eleves) {
+            const e = eleves[ek];
+            if(classeVal && e.classe !== classeVal) continue;
+            const statutJour = dbData.presences && dbData.presences[dateVal] && dbData.presences[dateVal][ek] ? dbData.presences[dateVal][ek] : 'present';
+            html += `<tr class="border-b border-slate-700/50">
+                <td class="p-3 font-semibold text-white">${e.nom} ${e.postnom} ${e.prenom || ''}</td>
+                <td class="p-3 text-slate-300">${e.classe}</td>
                 <td class="p-3">
-                    <select id="prof_pres_${ek}" onchange="modifierPresenceProf('${ek}', '${dateVal}')" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-600">
-                        <option value="present" ${statutActuel === 'present' ? 'selected' : ''}>Présent</option>
-                        <option value="absent" ${statutActuel === 'absent' ? 'selected' : ''}>Absent</option>
-                        <option value="justifie" ${statutActuel === 'justifie' ? 'selected' : ''}>Justifié</option>
+                    <select onchange="changerStatutPresenceProf('${dateVal}', '${ek}', this.value)" class="bg-slate-900 border border-slate-700 text-xs p-1.5 rounded-lg text-slate-200">
+                        <option value="present" ${statutJour === 'present' ? 'selected' : ''}>Présent</option>
+                        <option value="absent" ${statutJour === 'absent' ? 'selected' : ''}>Absent</option>
+                        <option value="justifie" ${statutJour === 'justifie' ? 'selected' : ''}>Absent Justifié</option>
                     </select>
                 </td>
-                <td class="p-3 text-center text-xs font-semibold text-emerald-400">Enregistré</td>
+                <td class="p-3 text-center text-xs text-emerald-400 font-semibold">Enregistré</td>
             </tr>`;
-        });
-
-        if (count === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Aucun élève dans cette classe.</td></tr>`;
-        } else {
-            tbody.innerHTML = html;
         }
-        lucide.createIcons();
+        tbody.innerHTML = html || '<tr><td colspan="4" class="p-4 text-center text-slate-500 italic">Veuillez sélectionner une classe.</td></tr>';
     }
 
-    function modifierPresenceProf(ek, dateVal) {
-        const select = document.getElementById(`prof_pres_${ek}`);
-        if (!select) return;
-        const statut = select.value;
-        if (!presencesData[dateVal]) presencesData[dateVal] = {};
-        presencesData[dateVal][ek] = statut;
-
-        db.ref("ecole_don_bosco/presences").set(presencesData).then(() => {});
+    function changerStatutPresenceProf(date, eleveKey, statut) {
+        if(!dbData.presences) dbData.presences = {};
+        if(!dbData.presences[date]) dbData.presences[date] = {};
+        dbData.presences[date][eleveKey] = statut;
+        sauvegarderDB();
     }
 
     function uploaderDocumentProf() {
         const titre = document.getElementById('doc-titre').value.trim();
         const fileInput = document.getElementById('doc-fichier');
-        if (!titre || fileInput.files.length === 0) {
-            alert("Veuillez entrer un titre et sélectionner un fichier (PDF ou DOC).");
+        if(!titre || fileInput.files.length === 0) {
+            alert("Veuillez saisir un titre et sélectionner un fichier.");
             return;
         }
-
         const file = fileInput.files[0];
         const reader = new FileReader();
         reader.onload = function(e) {
-            const base64Data = e.target.result;
-            const docKey = 'DOC_' + Date.now();
-            const prof = profsData[utilisateurConnecte] || {};
-            const cours = getCoursActifProf();
-
-            documentsData[docKey] = {
-                titre,
-                nomFichier: file.name,
-                cours,
-                profNom: prof.nom || 'Professeur',
-                dataUrl: base64Data,
-                date: new Date().toLocaleDateString()
+            const fileDataUrl = e.target.result;
+            const docId = 'doc_' + Date.now();
+            if(!dbData.documents) dbData.documents = {};
+            dbData.documents[docId] = {
+                titre: titre,
+                cours: sessionActive.cours,
+                profNom: sessionActive.nom,
+                fileName: file.name,
+                fileUrl: fileDataUrl,
+                date: new Date().toLocaleDateString('fr-FR')
             };
-
-            db.ref("ecole_don_bosco/documents").set(documentsData).then(() => {
+            sauvegarderDB().then(() => {
                 document.getElementById('doc-titre').value = '';
                 fileInput.value = '';
-                alert("Cours publié avec succès !");
-                chargerMesDocumentsProf();
+                alert("Cours mis en ligne avec succès !");
             });
         };
         reader.readAsDataURL(file);
     }
 
-    function chargerMesDocumentsProf() {
-        const container = document.getElementById('prof-liste-mes-documents');
-        if (!container) return;
-        const keys = Object.keys(documentsData || {});
+    function chargerDocumentsProf() {
+        const cont = document.getElementById('prof-liste-mes-documents');
+        if(!cont) return;
         let html = '';
-        let count = 0;
-        keys.forEach(dk => {
-            const doc = documentsData[dk];
-            count++;
-            html += `<div class="bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between items-center">
-                <div class="space-y-0.5">
-                    <h4 class="font-bold text-white text-xs">${doc.titre} <span class="text-[10px] text-emerald-400 font-medium">(${doc.cours})</span></h4>
-                    <p class="text-[10px] text-slate-400">${doc.nomFichier} - Publié le ${doc.date}</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <a href="${doc.dataUrl}" download="${doc.nomFichier}" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1">Télécharger</a>
-                    <button onclick="supprimerDocumentProf('${dk}')" class="p-1.5 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                    </button>
-                </div>
-            </div>`;
-        });
-        if (count === 0) {
-            container.innerHTML = '<p class="text-xs text-slate-400 italic">Aucun document publié pour le moment.</p>';
-        } else {
-            container.innerHTML = html;
+        const docs = dbData.documents || {};
+        for(let dk in docs) {
+            const d = docs[dk];
+            if(d.profNom === sessionActive.nom) {
+                html += `<div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs">
+                    <div>
+                        <span class="font-bold text-emerald-400">${d.titre}</span> <span class="text-slate-400">(${d.fileName})</span>
+                        <div class="text-[10px] text-slate-500">Cours : ${d.cours} - ${d.date}</div>
+                    </div>
+                    <button onclick="supprimerDocument('${dk}')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>`;
+            }
         }
-        lucide.createIcons();
+        cont.innerHTML = html || '<p class="text-xs text-slate-400 italic">Aucun document publié.</p>';
     }
 
-    function supprimerDocumentProf(dk) {
-        if (confirm("Supprimer ce document ?")) {
-            delete documentsData[dk];
-            db.ref("ecole_don_bosco/documents").set(documentsData).then(() => {
-                chargerMesDocumentsProf();
-            });
-        }
+    function supprimerDocument(dk) {
+        delete dbData.documents[dk];
+        sauvegarderDB();
     }
 
-    function ouvrirModalDemandeCours() {
-        document.getElementById('modal-demande-cours').classList.remove('hidden');
-    }
-
-    function fermerModalDemandeCours() {
-        document.getElementById('modal-demande-cours').classList.add('hidden');
-    }
-
+    function ouvrirModalDemandeCours() { document.getElementById('modal-demande-cours').classList.remove('hidden'); }
+    function fermerModalDemandeCours() { document.getElementById('modal-demande-cours').classList.add('hidden'); }
     function soumettreDemandeCours() {
-        const cours = document.getElementById('input-cours-demande').value.trim();
-        if (!cours) {
-            alert("Veuillez entrer le nom du cours.");
-            return;
-        }
-        const demKey = 'DEM_' + Date.now();
-        demandesCoursData[demKey] = {
-            profKey: utilisateurConnecte,
-            cours,
-            statut: 'en_attente'
+        const coursNom = document.getElementById('input-cours-demande').value.trim();
+        if(!coursNom) return;
+        const id = 'dem_' + Date.now();
+        if(!dbData.demandesCours) dbData.demandesCours = {};
+        dbData.demandesCours[id] = {
+            profNom: sessionActive.nom,
+            coursNom: coursNom,
+            statut: 'En attente'
         };
-
-        db.ref("ecole_don_bosco/demandesCours").set(demandesCoursData).then(() => {
+        sauvegarderDB().then(() => {
             document.getElementById('input-cours-demande').value = '';
             fermerModalDemandeCours();
-            alert("Demande de cours soumise à l'administration avec succès !");
+            alert("Demande de cours soumise à l'administration !");
         });
     }
 
-    function imprimerFicheProf() {
-        window.print();
-    }
-
-
-    // Gestion Espace Élève & Parent
-    let eleveActifKey = null;
-
+    // TABLEAU DE BORD ÉLÈVE & PARENT
     function chargerTableauDeBordEleve() {
-        eleveActifKey = utilisateurConnecte;
-        const el = elevesData[eleveActifKey];
-        if (!el) return;
+        let eleveKey = null;
+        let tuteurId = null;
 
-        document.getElementById('titre-espace-eleve-parent').innerText = "Espace Élève";
-        document.getElementById('welcome-eleve').innerText = `Élève : ${el.nom} ${el.postnom || ''} ${el.prenom || ''} | Classe : ${el.classe}`;
-        document.getElementById('selecteur-enfant-parent-container').classList.add('hidden');
-        document.getElementById('parent-section-messagerie').classList.add('hidden');
-
-        remplirSelectCoursEleve();
-        chargerCotationsEleve();
-        chargerCalendrierEleve();
-        chargerDocumentsEleve();
-    }
-
-    let parentTuteurKey = null;
-
-    function chargerTableauDeBordParent() {
-        parentTuteurKey = utilisateurConnecte;
-        const t = tuteursData[parentTuteurKey];
-        if (!t) return;
-
-        document.getElementById('titre-espace-eleve-parent').innerText = "Espace Tuteur / Parent";
-        document.getElementById('welcome-eleve').innerText = `Tuteur : ${t.nom} ${t.prenom || ''}`;
-        
-        // Trouver tous les enfants de ce tuteur
-        let enfantsKeys = [];
-        Object.keys(elevesData || {}).forEach(ek => {
-            if (elevesData[ek].tuteurKey === parentTuteurKey) {
-                enfantsKeys.push(ek);
+        if (sessionActive.role === 'eleve') {
+            eleveKey = sessionActive.id;
+        } else if (sessionActive.role === 'parent') {
+            tuteurId = sessionActive.tuteurId;
+            // Récupérer les enfants du tuteur
+            let enfants = [];
+            for (let ek in dbData.eleves) {
+                if (dbData.eleves[ek].tuteurId === tuteurId) {
+                    enfants.push({ key: ek, data: dbData.eleves[ek] });
+                }
             }
-        });
-
-        const selectEnfant = document.getElementById('select-enfant-parent');
-        let optionsHtml = '';
-        enfantsKeys.forEach(ek => {
-            const el = elevesData[ek];
-            optionsHtml += `<option value="${ek}">${el.nom} ${el.prenom || ''} (${el.classe})</option>`;
-        });
-        selectEnfant.innerHTML = optionsHtml;
-        document.getElementById('selecteur-enfant-parent-container').classList.remove('hidden');
-        document.getElementById('parent-section-messagerie').classList.remove('hidden');
-
-        if (enfantsKeys.length > 0) {
-            eleveActifKey = enfantsKeys[0];
-            selectEnfant.value = eleveActifKey;
+            const selectContainer = document.getElementById('selecteur-enfant-parent-container');
+            const selectEnfant = document.getElementById('select-enfant-parent');
+            
+            if (enfants.length > 1) {
+                selectContainer.classList.remove('hidden');
+                selectContainer.classList.add('flex');
+                let optHtml = '';
+                enfants.forEach(enf => {
+                    const selected = enfantActifParentKey === enf.key ? 'selected' : '';
+                    optHtml += `<option value="${enf.key}" ${selected}>${enf.data.nom} ${enf.data.prenom} (${enf.data.classe})</option>`;
+                });
+                selectEnfant.innerHTML = optHtml;
+                if (!enfantActifParentKey && enfants.length > 0) {
+                    enfantActifParentKey = enfants[0].key;
+                }
+                eleveKey = enfantActifParentKey;
+            } else if (enfants.length === 1) {
+                selectContainer.classList.add('hidden');
+                eleveKey = enfants[0].key;
+            } else {
+                alert("Aucun élève rattaché à ce compte tuteur.");
+                changerVue('accueil');
+                return;
+            }
+            document.getElementById('parent-section-messagerie').classList.remove('hidden');
+            chargerMessagerieParent(tuteurId);
         }
 
-        remplirSelectCoursEleve();
-        chargerCotationsEleve();
-        chargerCalendrierEleve();
-        chargerDocumentsEleve();
-        chargerChatParentWhatsApp();
-    }
+        const eleve = dbData.eleves[eleveKey];
+        if (!eleve) return;
 
-    function changerEnfantActifParent(ek) {
-        eleveActifKey = ek;
-        remplirSelectCoursEleve();
-        chargerCotationsEleve();
-        chargerCalendrierEleve();
-    }
+        const titreEspace = document.getElementById('titre-espace-eleve-parent');
+        titreEspace.textContent = sessionActive.role === 'parent' ? "Espace Parent - Suivi Scolaire" : "Espace Élève";
+        document.getElementById('welcome-eleve').textContent = `${eleve.nom} ${eleve.postnom} ${eleve.prenom || ''} - ${eleve.classe}`;
 
-    function remplirSelectCoursEleve() {
+        // Charger la liste des cours pour le filtre élève
         const selectCours = document.getElementById('select-cours-eleve');
-        let html = '<option value="">Tous les cours</option>';
-        Object.keys(profsData || {}).forEach(pk => {
-            const p = profsData[pk];
-            html += `<option value="${p.cours}">${p.cours}</option>`;
-            if (p.coursSuppl && Array.isArray(p.coursSuppl)) {
-                p.coursSuppl.forEach(cs => {
-                    html += `<option value="${cs}">${cs}</option>`;
-                });
-            }
+        let coursHtml = '<option value="">Tous les cours</option>';
+        // On récupère tous les cours configurés ou ayant des notes
+        let listeCoursSet = new Set();
+        for(let c in (dbData.baremes || {})) { listeCoursSet.add(c); }
+        for(let tr in (dbData.notes && dbData.notes[eleveKey] ? dbData.notes[eleveKey] : {})) {
+            for(let cr in dbData.notes[eleveKey][tr]) { listeCoursSet.add(cr); }
+        }
+        listeCoursSet.forEach(c => {
+            coursHtml += `<option value="${c}">${c}</option>`;
         });
-        selectCours.innerHTML = html;
+        selectCours.innerHTML = coursHtml;
+
+        chargerCotationsEleve(eleveKey);
+        chargerDocumentsEleve();
+        chargerCalendrierEleve(eleveKey);
+    }
+
+    function changerEnfantActifParent(key) {
+        enfantActifParentKey = key;
+        chargerTableauDeBordEleve();
     }
 
     function changerTrimestreEleve() {
-        chargerCotationsEleve();
+        let eleveKey = sessionActive.role === 'eleve' ? sessionActive.id : enfantActifParentKey;
+        if(eleveKey) chargerCotationsEleve(eleveKey);
     }
 
-    function chargerCotationsEleve() {
-        const container = document.getElementById('contenu-cotations');
-        const trim = document.getElementById('select-trimestre-eleve').value;
+    function chargerCotationsEleve(eleveKey) {
+        const trimestre = document.getElementById('select-trimestre-eleve').value;
         const coursFiltre = document.getElementById('select-cours-eleve').value;
-        const el = elevesData[eleveActifKey];
-        if (!el) return;
-
-        let totalGeneralObt = 0;
-        let totalGeneralMax = 0;
+        const cont = document.getElementById('contenu-cotations');
+        
         let html = '';
+        let totalGeneralObtenu = 0;
+        let totalGeneralMax = 0;
 
-        // Récupérer la liste des cours dispensés par tous les profs
-        let tousLesCours = [];
-        Object.keys(profsData || {}).forEach(pk => {
-            const p = profsData[pk];
-            if (p.cours && !tousLesCours.includes(p.cours)) tousLesCours.push(p.cours);
-            if (p.coursSuppl && Array.isArray(p.coursSuppl)) {
-                p.coursSuppl.forEach(cs => {
-                    if (!tousLesCours.includes(cs)) tousLesCours.push(cs);
-                });
-            }
-        });
-
-        if (tousLesCours.length === 0) {
-            container.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-2">Aucun cours enregistré par l\'administration.</p>';
-            document.getElementById('eleve-pourcentage-global').innerText = "0.0 pts / 0 pts";
-            return;
+        let listeCoursSet = new Set();
+        for(let c in (dbData.baremes || {})) { listeCoursSet.add(c); }
+        if(dbData.notes && dbData.notes[eleveKey] && dbData.notes[eleveKey][trimestre]) {
+            for(let c in dbData.notes[eleveKey][trimestre]) { listeCoursSet.add(c); }
         }
 
-        tousLesCours.forEach(cours => {
-            if (coursFiltre && cours !== coursFiltre) return;
+        listeCoursSet.forEach(cours => {
+            if(coursFiltre && cours !== coursFiltre) return;
+            const b = dbData.baremes && dbData.baremes[cours] ? dbData.baremes[cours] : { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+            const noteObj = dbData.notes && dbData.notes[eleveKey] && dbData.notes[eleveKey][trimestre] && dbData.notes[eleveKey][trimestre][cours] ? dbData.notes[eleveKey][trimestre][cours] : {};
 
-            // Trouver le prof de ce cours pour avoir les barèmes
-            let profKeyFound = '';
-            Object.keys(profsData || {}).forEach(pk => {
-                const p = profsData[pk];
-                if (p.cours === cours || (p.coursSuppl && p.coursSuppl.includes(cours))) {
-                    profKeyFound = pk;
-                }
-            });
-
-            const baremeKey = `${profKeyFound}_${cours}`;
-            const b = baremesData[baremeKey] || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
-
-            // Calcul du max total pour ce cours
             let maxCours = 0;
-            for (let i = 1; i <= b.nbInterros; i++) maxCours += b.maxInterro;
-            if (b.actifDevoir === 'oui') maxCours += b.maxDevoir;
-            if (b.actifExamen === 'oui') maxCours += b.maxExamen;
-
-            const noteKey = `${eleveActifKey}_${cours}_${trim}`;
-            const n = notesData[noteKey] || { int1: '', int2: '', int3: '', int4: '', devoir: '', examen: '' };
-
-            let obtCours = 0;
-            for (let i = 1; i <= b.nbInterros; i++) {
-                const v = parseFloat(n[`int${i}`]);
-                if (!isNaN(v)) obtCours += v;
+            let totalCours = 0;
+            for(let i=1; i<=b.nbInterros; i++) {
+                maxCours += b.maxInterro;
+                const v = parseFloat(noteObj['int' + i]);
+                if(!isNaN(v)) totalCours += v;
             }
-            if (b.actifDevoir === 'oui') {
-                const vDev = parseFloat(n.devoir);
-                if (!isNaN(vDev)) obtCours += vDev;
+            if(b.actifDevoir === 'oui') {
+                maxCours += b.maxDevoir;
+                const v = parseFloat(noteObj.devoir);
+                if(!isNaN(v)) totalCours += v;
             }
-            if (b.actifExamen === 'oui') {
-                const vEx = parseFloat(n.examen);
-                if (!isNaN(vEx)) obtCours += vEx;
+            if(b.actifExamen === 'oui') {
+                maxCours += b.maxExamen;
+                const v = parseFloat(noteObj.examen);
+                if(!isNaN(v)) totalCours += v;
             }
 
-            totalGeneralObt += obtCours;
+            totalGeneralObtenu += totalCours;
             totalGeneralMax += maxCours;
 
-            html += `<div class="bg-slate-900 border border-slate-700 p-3.5 rounded-xl space-y-1.5">
-                <div class="flex justify-between items-center font-bold text-white text-xs">
+            html += `<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 space-y-1.5">
+                <div class="flex justify-between items-center font-bold text-white">
                     <span>${cours}</span>
-                    <span class="text-blue-400">${obtCours} / ${maxCours} pts</span>
+                    <span class="text-blue-400">${totalCours.toFixed(1)} / ${maxCours} pts</span>
                 </div>
-                <div class="flex flex-wrap gap-2 text-[10px] text-slate-400">`;
-            for (let i = 1; i <= b.nbInterros; i++) {
-                html += `<span>Int${i}: ${n[`int${i}`] !== undefined && n[`int${i}`] !== '' ? n[`int${i}`] : '-'}/${b.maxInterro}</span>`;
+                <div class="text-[11px] text-slate-400 flex flex-wrap gap-2">`;
+            for(let i=1; i<=b.nbInterros; i++) {
+                html += `<span>Int${i}: ${noteObj['int' + i] !== undefined && noteObj['int' + i] !== '' ? noteObj['int' + i] : '-'}/${b.maxInterro}</span>`;
             }
-            if (b.actifDevoir === 'oui') {
-                html += `<span>Devoir: ${n.devoir !== undefined && n.devoir !== '' ? n.devoir : '-'}/${b.maxDevoir}</span>`;
+            if(b.actifDevoir === 'oui') {
+                html += `<span>Devoir: ${noteObj.devoir !== undefined && noteObj.devoir !== '' ? noteObj.devoir : '-'}/${b.maxDevoir}</span>`;
             }
-            if (b.actifExamen === 'oui') {
-                html += `<span>Examen: ${n.examen !== undefined && n.examen !== '' ? n.examen : '-'}/${b.maxExamen}</span>`;
+            if(b.actifExamen === 'oui') {
+                html += `<span>Examen: ${noteObj.examen !== undefined && noteObj.examen !== '' ? noteObj.examen : '-'}/${b.maxExamen}</span>`;
             }
             html += `</div></div>`;
         });
 
-        container.innerHTML = html || '<p class="text-xs text-slate-400 italic text-center py-2">Aucun cours trouvé pour ce filtre.</p>';
-        document.getElementById('eleve-pourcentage-global').innerText = `${totalGeneralObt.toFixed(1)} pts / ${totalGeneralMax} pts`;
-    }
-
-    function chargerCalendrierEleve() {
-        const container = document.getElementById('contenu-calendrier-eleve');
-        const labelMois = document.getElementById('label-mois-eleve');
-        if (!container) return;
-
-        const moisNoms = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-        labelMois.innerText = `${moisNoms[moisActuelCalendarEleve]} ${anneeActuelCalendarEleve}`;
-
-        const premierJour = new Date(anneeActuelCalendarEleve, moisActuelCalendarEleve, 1).getDay();
-        const dernierJourDate = new Date(anneeActuelCalendarEleve, moisActuelCalendarEleve + 1, 0).getDate();
-
-        let html = `<div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mb-2">
-            <div>Lu</div><div>Ma</div><div>Me</div><div>Je</div><div>Ve</div><div>Sa</div><div>Di</div>
-        </div>
-        <div class="grid grid-cols-7 gap-1 text-center text-xs">`;
-
-        let decalage = premierJour === 0 ? 6 : premierJour - 1;
-        for (let i = 0; i < decalage; i++) {
-            html += `<div></div>`;
-        }
-
-        for (let jour = 1; jour <= dernierJourDate; jour++) {
-            const mStr = String(moisActuelCalendarEleve + 1).padStart(2, '0');
-            const jStr = String(jour).padStart(2, '0');
-            const dateStr = `${anneeActuelCalendarEleve}-${mStr}-${jStr}`;
-
-            let statut = (presencesData[dateStr] && presencesData[dateStr][eleveActifKey]) ? presencesData[dateStr][eleveActifKey] : 'aucun';
-            let bgClass = "bg-slate-800 text-slate-300";
-            if (statut === 'present') bgClass = "bg-emerald-950 text-emerald-400 border border-emerald-800 font-bold";
-            else if (statut === 'absent') bgClass = "bg-red-950 text-red-400 border border-red-800 font-bold";
-            else if (statut === 'justifie') bgClass = "bg-amber-950 text-amber-400 border border-amber-800 font-bold";
-
-            html += `<div class="p-1.5 rounded-lg ${bgClass} flex flex-col items-center justify-center text-[11px]" title="${dateStr} : ${statut}">
-                <span>${jour}</span>
-            </div>`;
-        }
-
-        html += `</div>`;
-        container.innerHTML = html;
-    }
-
-    function changerMoisCalendrierEleve(direction) {
-        moisActuelCalendarEleve += direction;
-        if (moisActuelCalendarEleve > 11) {
-            moisActuelCalendarEleve = 0;
-            anneeActuelCalendarEleve++;
-        } else if (moisActuelCalendarEleve < 0) {
-            moisActuelCalendarEleve = 11;
-            anneeActuelCalendarEleve--;
-        }
-        chargerCalendrierEleve();
+        cont.innerHTML = html || '<p class="text-xs text-slate-400 italic text-center py-2">Aucune cotation enregistrée.</p>';
+        document.getElementById('eleve-pourcentage-global').textContent = `${totalGeneralObtenu.toFixed(1)} pts / ${totalGeneralMax} pts`;
     }
 
     function chargerDocumentsEleve() {
-        const container = document.getElementById('eleve-liste-documents');
-        if (!container) return;
-        const keys = Object.keys(documentsData || {});
+        const cont = document.getElementById('eleve-liste-documents');
+        if(!cont) return;
         let html = '';
-        let count = 0;
-        keys.forEach(dk => {
-            const doc = documentsData[dk];
-            count++;
-            html += `<div class="bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between items-center">
-                <div class="space-y-0.5">
-                    <h4 class="font-bold text-white text-xs">${doc.titre} <span class="text-[10px] text-blue-400 font-medium">(${doc.cours})</span></h4>
-                    <p class="text-[10px] text-slate-400">Prof. ${doc.profNom} - Publié le ${doc.date}</p>
+        const docs = dbData.documents || {};
+        for(let dk in docs) {
+            const d = docs[dk];
+            html += `<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs">
+                <div>
+                    <span class="font-bold text-blue-400">${d.titre}</span> <span class="text-slate-400">(${d.cours} - Prof. ${d.profNom})</span>
+                    <div class="text-[10px] text-slate-500">Publié le ${d.date}</div>
                 </div>
-                <a href="${doc.dataUrl}" download="${doc.nomFichier}" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1">Télécharger</a>
+                <a href="${d.fileUrl}" download="${d.fileName}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Télécharger
+                </a>
             </div>`;
-        });
-        if (count === 0) {
-            container.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-2">Aucun document disponible pour le moment.</p>';
-        } else {
-            container.innerHTML = html;
         }
+        cont.innerHTML = html || '<p class="text-xs text-slate-400 italic text-center py-2">Aucun document disponible pour le moment.</p>';
+        setTimeout(() => lucide.createIcons(), 50);
     }
 
-    // Messagerie Parent <-> Administration
-    function chargerChatParentWhatsApp() {
-        const chatContainer = document.getElementById('parent-whatsapp-chat');
-        if (!parentTuteurKey) return;
-        const convKey = parentTuteurKey;
-        const msgs = (messagesData[convKey] || {});
-        const msgKeys = Object.keys(msgs);
-        if (msgKeys.length === 0) {
-            chatContainer.innerHTML = '<div class="text-center text-slate-500 text-xs my-auto">Aucun message avec l\'administration. Écrivez votre premier message !</div>';
-            return;
+    function chargerCalendrierEleve(eleveKey) {
+        const moisNoms = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+        document.getElementById('label-mois-eleve').textContent = moisNoms[moisActuelIndex] + ' ' + anneeActuelleCalendrier;
+
+        const cont = document.getElementById('contenu-calendrier-eleve');
+        const premierJour = new Date(anneeActuelleCalendrier, moisActuelIndex, 1).getDay();
+        const nbJours = new Date(anneeActuelleCalendrier, moisActuelIndex + 1, 0).getDate();
+
+        let html = `<div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mb-1">
+            <div>Dim</div><div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div>
+        </div><div class="grid grid-cols-7 gap-1 text-center text-xs">`;
+
+        let decalage = (premierJour === 0) ? 6 : premierJour - 1; // Semaine commençant lundi
+        for(let i=0; i<decalage; i++) {
+            html += `<div></div>`;
         }
+
+        for(let jour=1; jour<=nbJours; jour++) {
+            const moisStr = String(moisActuelIndex + 1).padStart(2, '0');
+            const jourStr = String(jour).padStart(2, '0');
+            const dateKey = `${anneeActuelleCalendrier}-${moisStr}-${jourStr}`;
+
+            const statut = dbData.presences && dbData.presences[dateKey] && dbData.presences[dateKey][eleveKey] ? dbData.presences[dateKey][eleveKey] : 'present';
+            let bgCol = 'bg-slate-800 text-slate-300';
+            let titleText = 'Présent';
+            if(statut === 'absent') { bgCol = 'bg-red-950 text-red-400 border border-red-900'; titleText = 'Absent'; }
+            else if(statut === 'justifie') { bgCol = 'bg-amber-950 text-amber-400 border border-amber-900'; titleText = 'Absent Justifié'; }
+
+            html += `<div title="${titleText}" class="p-1.5 rounded-lg font-semibold ${bgCol}">${jour}</div>`;
+        }
+
+        html += `</div>`;
+        cont.innerHTML = html;
+    }
+
+    function changerMoisCalendrierEleve(sens) {
+        moisActuelIndex += sens;
+        if(moisActuelIndex > 11) { moisActuelIndex = 0; anneeActuelleCalendrier++; }
+        else if(moisActuelIndex < 0) { moisActuelIndex = 11; anneeActuelleCalendrier--; }
+        let eleveKey = sessionActive.role === 'eleve' ? sessionActive.id : enfantActifParentKey;
+        if(eleveKey) chargerCalendrierEleve(eleveKey);
+    }
+
+    function chargerMessagerieParent(tuteurId) {
+        const chatBox = document.getElementById('parent-whatsapp-chat');
+        if(!chatBox) return;
+        const messages = dbData.messages && dbData.messages[tuteurId] ? dbData.messages[tuteurId] : {};
         let html = '';
-        msgKeys.sort((a,b) => a.localeCompare(b)).forEach(mk => {
-            const m = msgs[mk];
-            const isParent = m.expediteur === 'parent';
-            html += `<div class="flex flex-col ${isParent ? 'items-end' : 'items-start'} space-y-0.5">
-                <div class="max-w-[75%] p-2.5 rounded-xl text-xs ${isParent ? 'bg-violet-600 text-white rounded-br-none' : 'bg-slate-800 border border-slate-700 text-slate-200 rounded-bl-none'}">
-                    ${m.texte}
+        for(let mk in messages) {
+            const m = messages[mk];
+            const isAdmin = m.sender === 'admin';
+            html += `<div class="flex flex-col ${!isAdmin ? 'items-end' : 'items-start'}">
+                <div class="max-w-[75%] p-2.5 rounded-xl text-xs ${!isAdmin ? 'bg-violet-600 text-white rounded-br-none' : 'bg-slate-800 text-slate-200 rounded-bl-none'}">
+                    ${m.text}
                 </div>
-                <span class="text-[9px] text-slate-500">${m.date || ''}</span>
+                <span class="text-[9px] text-slate-500 mt-0.5">${m.date || ''}</span>
             </div>`;
-        });
-        chatContainer.innerHTML = html;
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        chatBox.innerHTML = html || '<div class="text-center text-slate-500 my-auto">Envoyez un message à l\'administration</div>';
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     function envoyerMessageParentWhatsApp() {
-        if (!parentTuteurKey) return;
         const input = document.getElementById('parent-whatsapp-input');
-        const texte = input.value.trim();
-        if (!texte) return;
-
-        const convKey = parentTuteurKey;
-        if (!messagesData[convKey]) messagesData[convKey] = {};
-        const msgId = 'MSG_' + Date.now();
-        messagesData[convKey][msgId] = {
-            expediteur: 'parent',
-            texte,
-            date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        const text = input.value.trim();
+        const tuteurId = sessionActive.tuteurId;
+        if(!text || !tuteurId) return;
+        if(!dbData.messages) dbData.messages = {};
+        if(!dbData.messages[tuteurId]) dbData.messages[tuteurId] = {};
+        const msgId = 'msg_' + Date.now();
+        dbData.messages[tuteurId][msgId] = {
+            sender: 'parent',
+            text: text,
+            date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
         };
-
-        db.ref("ecole_don_bosco/messages").set(messagesData).then(() => {
+        sauvegarderDB().then(() => {
             input.value = '';
-            chargerChatParentWhatsApp();
+            chargerMessagerieParent(tuteurId);
         });
     }
 
     function telechargerBulletinPDF() {
-        const el = elevesData[eleveActifKey];
-        const tut = tuteursData[el.tuteurKey] || {};
-        const trim = document.getElementById('select-trimestre-eleve').value;
+        let eleveKey = sessionActive.role === 'eleve' ? sessionActive.id : enfantActifParentKey;
+        const eleve = dbData.eleves[eleveKey];
+        const tuteur = dbData.tuteurs[eleve.tuteurId] || {};
+        const trimestre = document.getElementById('select-trimestre-eleve').value;
 
-        document.getElementById('bul-trimestre-txt').innerText = `TRIMESTRE ${trim}`;
-        document.getElementById('bul-nom').innerText = el.nom || '';
-        document.getElementById('bul-prenom').innerText = `${el.postnom || ''} ${el.prenom || ''}`;
-        document.getElementById('bul-classe').innerText = el.classe || '';
-        document.getElementById('bul-code').innerText = eleveActifKey;
-        document.getElementById('bul-tuteur').innerText = `${tut.nom || ''} ${tut.tel || ''}`;
-        document.getElementById('bul-date').innerText = new Date().toLocaleDateString();
+        document.getElementById('bul-trimestre-txt').textContent = trimestre === 'T1' ? 'TRIMESTRE 1' : (trimestre === 'T2' ? 'TRIMESTRE 2' : 'TRIMESTRE 3');
+        document.getElementById('bul-nom').textContent = eleve.nom;
+        document.getElementById('bul-prenom').textContent = (eleve.postnom || '') + ' ' + (eleve.prenom || '');
+        document.getElementById('bul-classe').textContent = eleve.classe;
+        document.getElementById('bul-code').textContent = eleve.codeEleve;
+        document.getElementById('bul-tuteur').textContent = `${tuteur.nom || ''} ${tuteur.prenom || ''} (${tuteur.telephone || ''})`;
+        document.getElementById('bul-date').textContent = new Date().toLocaleDateString('fr-FR');
 
-        // Remplir les lignes de cours du bulletin
-        let tousLesCours = [];
-        Object.keys(profsData || {}).forEach(pk => {
-            const p = profsData[pk];
-            if (p.cours && !tousLesCours.includes(p.cours)) tousLesCours.push(p.cours);
-            if (p.coursSuppl && Array.isArray(p.coursSuppl)) {
-                p.coursSuppl.forEach(cs => {
-                    if (!tousLesCours.includes(cs)) tousLesCours.push(cs);
-                });
-            }
-        });
+        let htmlLignes = '';
+        let totMax = 0;
+        let totObt = 0;
 
-        let tbody = document.getElementById('bul-lignes-cours');
-        let html = '';
-        let totalMaxGeneral = 0;
-        let totalObtGeneral = 0;
+        let listeCoursSet = new Set();
+        for(let c in (dbData.baremes || {})) { listeCoursSet.add(c); }
+        if(dbData.notes && dbData.notes[eleveKey] && dbData.notes[eleveKey][trimestre]) {
+            for(let c in dbData.notes[eleveKey][trimestre]) { listeCoursSet.add(c); }
+        }
 
-        tousLesCours.forEach(cours => {
-            let profKeyFound = '';
-            Object.keys(profsData || {}).forEach(pk => {
-                const p = profsData[pk];
-                if (p.cours === cours || (p.coursSuppl && p.coursSuppl.includes(cours))) profKeyFound = pk;
-            });
-
-            const baremeKey = `${profKeyFound}_${cours}`;
-            const b = baremesData[baremeKey] || { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+        listeCoursSet.forEach(cours => {
+            const b = dbData.baremes && dbData.baremes[cours] ? dbData.baremes[cours] : { nbInterros: 4, maxInterro: 10, actifDevoir: 'oui', maxDevoir: 10, actifExamen: 'oui', maxExamen: 50 };
+            const noteObj = dbData.notes && dbData.notes[eleveKey] && dbData.notes[eleveKey][trimestre] && dbData.notes[eleveKey][trimestre][cours] ? dbData.notes[eleveKey][trimestre][cours] : {};
 
             let maxCours = 0;
-            for (let i = 1; i <= b.nbInterros; i++) maxCours += b.maxInterro;
-            if (b.actifDevoir === 'oui') maxCours += b.maxDevoir;
-            if (b.actifExamen === 'oui') maxCours += b.maxExamen;
-
-            const noteKey = `${eleveActifKey}_${cours}_${trim}`;
-            const n = notesData[noteKey] || { int1: '', int2: '', int3: '', int4: '', devoir: '', examen: '' };
-
-            let obtCours = 0;
-            for (let i = 1; i <= b.nbInterros; i++) {
-                const v = parseFloat(n[`int${i}`]);
-                if (!isNaN(v)) obtCours += v;
+            let totalCours = 0;
+            for(let i=1; i<=b.nbInterros; i++) {
+                maxCours += b.maxInterro;
+                const v = parseFloat(noteObj['int' + i]);
+                if(!isNaN(v)) totalCours += v;
             }
-            if (b.actifDevoir === 'oui') {
-                const vDev = parseFloat(n.devoir);
-                if (!isNaN(vDev)) obtCours += vDev;
+            if(b.actifDevoir === 'oui') {
+                maxCours += b.maxDevoir;
+                const v = parseFloat(noteObj.devoir);
+                if(!isNaN(v)) totalCours += v;
             }
-            if (b.actifExamen === 'oui') {
-                const vEx = parseFloat(n.examen);
-                if (!isNaN(vEx)) obtCours += vEx;
+            if(b.actifExamen === 'oui') {
+                maxCours += b.maxExamen;
+                const v = parseFloat(noteObj.examen);
+                if(!isNaN(v)) totalCours += v;
             }
 
-            totalMaxGeneral += maxCours;
-            totalObtGeneral += obtCours;
+            totMax += maxCours;
+            totObt += totalCours;
 
-            html += `<tr>
-                <td class="p-2.5 border border-slate-300 font-semibold">${cours}</td>
-                <td class="p-2.5 border border-slate-300 text-center">${maxCours}</td>
-                <td class="p-2.5 border border-slate-300 text-center font-bold">${obtCours}</td>
+            htmlLignes += `<tr class="border-b border-slate-300">
+                <td class="p-2 border border-slate-300 font-semibold">${cours}</td>
+                <td class="p-2 border border-slate-300 text-center">${maxCours}</td>
+                <td class="p-2 border border-slate-300 text-center font-bold">${totalCours.toFixed(1)}</td>
             </tr>`;
         });
 
-        tbody.innerHTML = html;
-        document.getElementById('bul-total-max').innerText = totalMaxGeneral;
-        document.getElementById('bul-total-obt').innerText = totalObtGeneral.toFixed(1);
+        document.getElementById('bul-lignes-cours').innerHTML = htmlLignes;
+        document.getElementById('bul-total-max').textContent = totMax;
+        document.getElementById('bul-total-obt').textContent = totObt.toFixed(1);
 
-        const bulletinEl = document.getElementById('bulletin-impression');
-        bulletinEl.classList.remove('hidden');
+        const element = document.getElementById('bulletin-impression');
+        element.classList.remove('hidden');
 
         const opt = {
             margin:       10,
-            filename:     `Bulletin_${el.nom}_Trimestre_${trim}.pdf`,
+            filename:     `Bulletin_${eleve.nom}_${eleve.classe}_${trimestre}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        html2pdf().from(bulletinEl).set(opt).save().then(() => {
-            bulletinEl.classList.add('hidden');
+        html2pdf().from(element).set(opt).save().then(() => {
+            element.classList.add('hidden');
         });
+    }
+
+    function imprimerFicheProf() {
+        window.print();
     }
 </script>
 </body>
