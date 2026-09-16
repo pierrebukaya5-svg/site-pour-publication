@@ -28,277 +28,589 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:#0f172a}
 </style>
 </head>
 <body class="min-h-full flex items-center justify-center p-2 sm:p-6 text-slate-200 bg-slate-950">
-<!-- BOUTON ACTUALISER FIXE PROPRE -->
+
+<!-- BOUTON ACTUALISER FIXE -->
 <button id="btn-refresh-global" onclick="rafraichirDonneesPage()" style="position:fixed;top:12px;right:12px;z-index:99999;padding:10px 16px;background:#0d2a54;color:white;border:none;border-radius:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;gap:6px;font-family:sans-serif;font-size:13px;">
 <span>Actualiser</span>
 </button>
-<script>
-function rafraichirDonneesPage(){
-if(typeof rafraichirInterfaceActive==='function') rafraichirInterfaceActive();
-if(window.lucide) setTimeout(function(){lucide.createIcons();},200);
-}
-</script>
-<div id="app" class="w-full max-w-6xl mx-auto">
-<div id="vue-accueil" class="space-y-6">
-<div class="text-center py-8">
-<h1 class="text-3xl font-bold text-white">Ecole Lycee Don Bosco</h1>
-<p class="text-slate-400 text-sm mt-2">Plateforme de gestion scolaire</p>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-<button onclick="changerVue('admin-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="shield" class="w-8 h-8 text-blue-400 mb-3"></i><h3 class="font-bold text-white">Admin</h3></button>
-<button onclick="changerVue('prof-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="briefcase" class="w-8 h-8 text-emerald-400 mb-3"></i><h3 class="font-bold text-white">Prof</h3></button>
-<button onclick="changerVue('eleve-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="graduation-cap" class="w-8 h-8 text-violet-400 mb-3"></i><h3 class="font-bold text-white">Eleve</h3></button>
-<button onclick="changerVue('parent-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="users" class="w-8 h-8 text-amber-400 mb-3"></i><h3 class="font-bold text-white">Parent</h3></button>
-</div>
-<div id="accueil-communiques" class="bg-slate-800 border border-slate-700 rounded-2xl p-5"><h3 class="font-bold text-white text-sm mb-3 flex items-center gap-2"><i data-lucide="megaphone" class="w-4 h-4"></i> Communiques</h3><div id="communiques-accueil-liste" class="space-y-2"></div></div>
-</div>
-<div id="vue-connexion" class="hidden max-w-md mx-auto bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
-<h2 id="titre-connexion" class="text-lg font-bold text-white">Connexion</h2>
-<input id="input-code" type="password" placeholder="Code d'acces" class="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-xl text-sm">
-<button onclick="validerConnexion()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl text-sm font-semibold">Se connecter</button>
-<p id="erreur-connexion" class="hidden text-red-400 text-xs bg-red-950/50 p-2 rounded-lg">Code incorrect</p>
-<button onclick="changerVue('accueil', true)" class="w-full text-slate-400 text-xs mt-2">Retour accueil</button>
-</div>
-<div id="vue-admin-dashboard" class="hidden space-y-5">
-<div class="flex justify-between border-b border-slate-800 pb-4"><div><h2 class="text-lg font-bold text-white">Admin</h2></div><div class="flex gap-2"><button onclick="telechargerListeElevesPDF()" class="bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="download" class="w-4 h-4"></i> Liste PDF</button><button onclick="changerVue('accueil', true)" class="text-xs text-red-400 flex items-center gap-1"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Deconnexion</button></div></div>
-<div class="flex gap-2 border-b border-slate-800 pb-3 overflow-x-auto"><button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="user-check" class="w-3.5 h-3.5"></i> Eleves</button><button onclick="changerOngletAdmin('frais')" id="tab-btn-frais" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Frais</button><button onclick="changerOngletAdmin('tuteurs')" id="tab-btn-tuteurs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i> Tuteurs</button><button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="briefcase" class="w-3.5 h-3.5"></i> Profs</button><button onclick="changerOngletAdmin('communiques')" id="tab-btn-communiques" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="megaphone" class="w-3.5 h-3.5"></i> Communiques</button><button onclick="changerOngletAdmin('demandes')" id="tab-btn-demandes" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="git-pull-request" class="w-3.5 h-3.5"></i> Demandes</button><button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> Messages</button><button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> Presences</button><button onclick="changerOngletAdmin('parametres')" id="tab-btn-parametres" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="key" class="w-3.5 h-3.5"></i> Parametres</button></div>
 
-<div id="admin-sec-eleves" class="space-y-4">
-<div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4">
-<h3 class="font-bold text-white text-xs uppercase text-blue-400 flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> Enregistrer ou Modifier un Eleve</h3>
-<input type="hidden" id="edit-eleve-key">
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-<input id="el-nom" placeholder="Nom Eleve" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-<input id="el-postnom" placeholder="Post-nom" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-<input id="el-prenom" placeholder="Prenom" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+<div id="app" class="w-full max-w-6xl mx-auto">
+  <!-- VUE ACCUEIL -->
+  <div id="vue-accueil" class="space-y-6">
+    <div class="text-center py-8">
+      <h1 class="text-3xl font-bold text-white">Ecole Lycee Don Bosco</h1>
+      <p class="text-slate-400 text-sm mt-2">Plateforme de gestion scolaire</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <button onclick="changerVue('admin-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left hover:bg-slate-750 transition"><i data-lucide="shield" class="w-8 h-8 text-blue-400 mb-3"></i><h3 class="font-bold text-white">Admin</h3></button>
+      <button onclick="changerVue('prof-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left hover:bg-slate-750 transition"><i data-lucide="briefcase" class="w-8 h-8 text-emerald-400 mb-3"></i><h3 class="font-bold text-white">Prof</h3></button>
+      <button onclick="changerVue('eleve-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left hover:bg-slate-750 transition"><i data-lucide="graduation-cap" class="w-8 h-8 text-violet-400 mb-3"></i><h3 class="font-bold text-white">Eleve</h3></button>
+      <button onclick="changerVue('parent-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left hover:bg-slate-750 transition"><i data-lucide="users" class="w-8 h-8 text-amber-400 mb-3"></i><h3 class="font-bold text-white">Parent</h3></button>
+    </div>
+    <div id="accueil-communiques" class="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+      <h3 class="font-bold text-white text-sm mb-3 flex items-center gap-2"><i data-lucide="megaphone" class="w-4 h-4"></i> Communiqués</h3>
+      <div id="communiques-accueil-liste" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- VUE CONNEXION -->
+  <div id="vue-connexion" class="hidden max-w-md mx-auto bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
+    <h2 id="titre-connexion" class="text-lg font-bold text-white">Connexion</h2>
+    <input id="input-code" type="password" placeholder="Code d'accès" class="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-xl text-sm">
+    <button onclick="validerConnexion()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl text-sm font-semibold">Se connecter</button>
+    <p id="erreur-connexion" class="hidden text-red-400 text-xs bg-red-950/50 p-2 rounded-lg">Code incorrect</p>
+    <button onclick="changerVue('accueil', true)" class="w-full text-slate-400 text-xs mt-2">Retour accueil</button>
+  </div>
+
+  <!-- VUE ADMIN DASHBOARD -->
+  <div id="vue-admin-dashboard" class="hidden space-y-5">
+    <div class="flex justify-between border-b border-slate-800 pb-4">
+      <div>
+        <h2 class="text-lg font-bold text-white">Administration</h2>
+        <p id="admin-stats-eleves" class="text-xs text-slate-400"></p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="telechargerListeElevesPDF()" class="bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="download" class="w-4 h-4"></i> Liste PDF</button>
+        <button onclick="changerVue('accueil', true)" class="text-xs text-red-400 flex items-center gap-1 bg-slate-800 px-3 py-2 rounded-xl border border-slate-700"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Déconnexion</button>
+      </div>
+    </div>
+
+    <!-- ONGLETS ADMIN -->
+    <div class="flex gap-2 border-b border-slate-800 pb-3 overflow-x-auto">
+      <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="user-check" class="w-3.5 h-3.5"></i> Eleves</button>
+      <button onclick="changerOngletAdmin('frais')" id="tab-btn-frais" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Frais</button>
+      <button onclick="changerOngletAdmin('tuteurs')" id="tab-btn-tuteurs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i> Tuteurs</button>
+      <button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="briefcase" class="w-3.5 h-3.5"></i> Profs</button>
+      <button onclick="changerOngletAdmin('communiques')" id="tab-btn-communiques" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="megaphone" class="w-3.5 h-3.5"></i> Communiqués</button>
+      <button onclick="changerOngletAdmin('demandes')" id="tab-btn-demandes" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="git-pull-request" class="w-3.5 h-3.5"></i> Demandes</button>
+      <button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> Messages</button>
+      <button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> Présences</button>
+      <button onclick="changerOngletAdmin('parametres')" id="tab-btn-parametres" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="key" class="w-3.5 h-3.5"></i> Paramètres</button>
+    </div>
+
+    <!-- SECTION ELEVES -->
+    <div id="admin-sec-eleves" class="space-y-4">
+      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+        <h3 class="text-xs font-bold text-white uppercase">Ajouter / Modifier un Élève</h3>
+        <input type="hidden" id="edit-eleve-key">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <input id="el-nom" placeholder="Nom" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+          <input id="el-postnom" placeholder="Post-nom" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+          <input id="el-prenom" placeholder="Prénom" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+          <select id="el-classe" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs">
+            <option value="">Sélectionner classe</option>
+            <option>1ere Primaire</option>
+            <option>2eme Primaire</option>
+            <option>6eme Primaire</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <input id="el-adresse" placeholder="Adresse" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+          <select id="el-frais" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs">
+            <option value="non_paye">Frais non réglés</option>
+            <option value="en_ordre">En ordre</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 border-t border-slate-700 pt-3">
+          <input id="tut-nom" placeholder="Nom Tuteur" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+          <input id="tut-postnom" placeholder="Post-nom Tuteur" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+          <input id="tut-prenom" placeholder="Prénom Tuteur" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+          <input id="tut-tel" placeholder="Téléphone" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+        </div>
+        <div class="flex gap-2">
+          <button onclick="enregistrerOuModifierEleve()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5"><i data-lucide="save" class="w-4 h-4"></i> Enregistrer Élève</button>
+          <button onclick="annulerEditionEleve()" class="bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs">Annuler</button>
+        </div>
+      </div>
+      <div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden">
+        <table class="w-full text-left text-xs">
+          <thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Frais</th><th class="p-3">Code Eleve</th><th class="p-3 text-center">Action</th></tr></thead>
+          <tbody id="admin-liste-eleves"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECTION FRAIS -->
+    <div id="admin-sec-frais" class="hidden space-y-4">
+      <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4">
+        <h3 class="font-bold text-white text-xs uppercase text-emerald-400 flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i> Gestion Frais par Élève (Firebase)</h3>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <input id="frais-input-eleve" list="frais-liste-eleves-suggestions" placeholder="Chercher élève (nom)" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+          <datalist id="frais-liste-eleves-suggestions"></datalist>
+          <select id="frais-trimestre" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs"><option value="T1">Trimestre 1</option><option value="T2">Trimestre 2</option><option value="T3">Trimestre 3</option></select>
+          <input id="frais-acompte" type="number" placeholder="Acompte $" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+          <input id="frais-minerval" type="number" placeholder="Minerval $" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+          <button onclick="enregistrerFraisEleve()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs">Enregistrer Frais</button>
+        </div>
+      </div>
+      <div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Trimestre</th><th class="p-3">Acompte</th><th class="p-3">Minerval</th><th class="p-3">Statut</th></tr></thead><tbody id="admin-liste-frais"></tbody></table></div>
+    </div>
+
+    <!-- SECTION TUTEURS -->
+    <div id="admin-sec-tuteurs" class="hidden"><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Tuteur</th><th class="p-3">Tel</th><th class="p-3">Enfants</th><th class="p-3">Code Parent</th></tr></thead><tbody id="admin-liste-tuteurs"></tbody></table></div></div>
+
+    <!-- SECTION PROFESSEURS -->
+    <div id="admin-sec-professeurs" class="hidden space-y-3">
+      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+        <h3 class="text-xs font-bold text-white uppercase">Ajouter Professeur</h3>
+        <div class="grid grid-cols-3 gap-3"><input id="prof-nom" placeholder="Nom prof" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><input id="prof-cours" placeholder="Cours (ex: Maths)" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><button onclick="ajouterProfesseur()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs">Ajouter</button></div>
+      </div>
+      <div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Prof</th><th class="p-3">Cours</th><th class="p-3">Code Connexion</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-profs"></tbody></table></div>
+    </div>
+
+    <!-- SECTION COMMUNIQUÉS -->
+    <div id="admin-sec-communiques" class="hidden space-y-3"><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3"><input id="comm-titre" placeholder="Titre communiqué" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><textarea id="comm-contenu" placeholder="Contenu..." class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs h-20"></textarea><button onclick="publierCommunique()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs">Publier</button></div><div id="admin-liste-communiques" class="space-y-2.5"></div></div>
+
+    <!-- SECTION DEMANDES -->
+    <div id="admin-sec-demandes" class="hidden"><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Prof</th><th class="p-3">Cours demandé</th><th class="p-3">Statut</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-demandes"></tbody></table></div></div>
+
+    <!-- SECTION MESSAGES -->
+    <div id="admin-sec-messages" class="hidden"><div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 text-xs text-slate-400">Messagerie Admin-Parent (Firebase /messages)</div></div>
+
+    <!-- SECTION CALENDRIER -->
+    <div id="admin-sec-calendrier" class="hidden space-y-4"><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex gap-2"><input type="date" id="admin-cal-date" onchange="chargerCalendrierAdmin()" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><select id="admin-cal-classe" onchange="chargerCalendrierAdmin()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs"><option value="">Toutes classes</option><option>1ere Primaire</option><option>2eme Primaire</option><option>6eme Primaire</option></select></div><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Statut présence</th></tr></thead><tbody id="admin-liste-calendrier-presences"></tbody></table></div></div>
+
+    <!-- SECTION PARAMÈTRES -->
+    <div id="admin-sec-parametres" class="hidden"><div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 max-w-lg space-y-3"><h3 class="font-bold text-white text-xs uppercase">Mot de passe Admin</h3><input id="admin-ancien-mdp" type="password" placeholder="Ancien mdp" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><input id="admin-nouveau-mdp" type="password" placeholder="Nouveau mdp" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><input id="admin-confirmation-mdp" type="password" placeholder="Confirmer nouveau" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><button onclick="modifierMotDePasseAdmin()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-xs w-full">Mettre à jour mot de passe</button></div></div>
+  </div>
+
+  <!-- VUE ELEVE / PARENT DASHBOARD -->
+  <div id="vue-eleve-dashboard" class="hidden space-y-6">
+    <div class="flex justify-between border-b border-slate-800 pb-4">
+      <div>
+        <h2 id="titre-espace-eleve-parent" class="text-lg font-bold text-white">Espace Élève</h2>
+        <p id="welcome-eleve" class="text-xs text-slate-400"></p>
+      </div>
+      <div class="flex gap-2">
+        <div id="selecteur-enfant-parent-container" class="hidden flex items-center gap-2">
+          <label class="text-xs text-slate-300">Enfant:</label>
+          <select id="select-enfant-parent" onchange="changerEnfantActifParent(this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"></select>
+        </div>
+        <button onclick="telechargerBulletinPDF()" class="bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="download" class="w-3.5 h-3.5"></i> Bulletin PDF</button>
+        <button onclick="changerVue('accueil', true)" class="text-xs text-red-400 flex items-center gap-1 bg-slate-800 px-3 py-2 rounded-xl border border-slate-700"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Déconnexion</button>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="font-bold text-white text-xs uppercase">Cotations (Firebase /notes)</h3>
+          <select id="select-trimestre-eleve" onchange="chargerTableauDeBordEleve()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select>
+        </div>
+        <div id="contenu-cotations" class="space-y-2 text-xs text-slate-300"></div>
+      </div>
+      <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
+        <h3 class="font-bold text-white text-xs uppercase mb-3">Présences</h3>
+        <div id="contenu-calendrier-eleve" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-xs text-slate-400">Aucune absence enregistrée</div>
+      </div>
+    </div>
+
+    <!-- Modèle Bulletin caché pour impression PDF -->
+    <div id="bulletin-impression" class="hidden p-8 bg-white text-slate-800 rounded-2xl max-w-4xl mx-auto">
+      <div class="text-center border-b pb-4">
+        <h4 class="font-bold text-xs uppercase">RDC - Ecole Don Bosco Durba</h4>
+        <h2 class="text-sm font-bold bg-slate-900 text-white py-1.5 mt-2">BULLETIN - <span id="bul-trimestre-txt">T1</span></h2>
+      </div>
+      <div class="grid grid-cols-2 gap-4 text-xs border p-3 bg-slate-50 rounded-lg mt-4">
+        <div><p><strong>Nom:</strong> <span id="bul-nom"></span></p><p><strong>Classe:</strong> <span id="bul-classe"></span></p></div>
+        <div><p><strong>Code:</strong> <span id="bul-code"></span></p></div>
+      </div>
+      <table class="w-full text-left text-xs border border-slate-300 mt-4">
+        <thead><tr class="bg-slate-100 text-[10px] uppercase"><th class="p-2 border">Branches</th><th class="p-2 border text-center">Max</th><th class="p-2 border text-center">Obtenu</th></tr></thead>
+        <tbody id="bul-lignes-cours"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VUE PROFESSEUR DASHBOARD -->
+  <div id="vue-prof-dashboard" class="hidden space-y-6">
+    <div class="flex justify-between border-b border-slate-800 pb-4">
+      <div><h2 class="text-lg font-bold text-white">Espace Professeur</h2><p id="welcome-prof" class="text-xs text-slate-400"></p></div>
+      <button onclick="changerVue('accueil', true)" class="text-xs text-red-400 flex items-center gap-1 bg-slate-800 px-3 py-2 rounded-xl border border-slate-700"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Déconnexion</button>
+    </div>
+    <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex justify-between items-center">
+      <div><h4 class="font-bold text-white text-xs">Cours Actif</h4><p id="prof-cours-actif-label" class="text-[11px] text-slate-400">Sélectionnez un cours</p></div>
+      <div class="flex gap-2">
+        <select id="prof-select-cours-actif" onchange="changerCoursActifProf(this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs w-48"></select>
+        <button onclick="ouvrirModalDemandeCours()" class="bg-emerald-600 text-white px-3.5 py-2.5 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="plus-circle" class="w-4 h-4"></i> Demander cours</button>
+      </div>
+    </div>
+    <div id="prof-sec-notes" class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-white text-xs uppercase">Saisie Notes (Firebase /notes)</h3>
+        <div class="flex gap-2">
+          <select id="prof-select-classe" onchange="chargerTableauDeBordProf()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="">Toutes classes</option><option>1ere Primaire</option><option>2eme Primaire</option><option>6eme Primaire</option></select>
+          <select id="prof-select-trimestre" onchange="chargerTableauDeBordProf()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="w-full text-left text-xs">
+          <thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-2.5">Eleve</th><th class="p-2.5">Classe</th><th class="p-2.5 text-center">Int1 (10)</th><th class="p-2.5 text-center">Int2</th><th class="p-2.5 text-center">Devoir</th><th class="p-2.5 text-center">Examen</th><th class="p-2.5 text-center bg-slate-900 text-white">Total</th></tr></thead>
+          <tbody id="prof-liste-eleves-action"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-<select id="el-classe" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs">
-<option value="">Choisir Classe</option>
-<option value="1ere Humanite">1ere Humanite</option>
-<option value="2eme Humanite">2eme Humanite</option>
-<option value="3eme Humanite">3eme Humanite</option>
-<option value="4eme Humanite">4eme Humanite</option>
-</select>
-<input id="el-adresse" placeholder="Adresse" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-<select id="el-frais" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs">
-<option value="en_ordre">En ordre (Acompte paye)</option>
-<option value="bloque">Bloque (Non paye)</option>
-</select>
+
+<!-- MODAL DEMANDE COURS -->
+<div id="modal-demande-cours" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-3"><h3 class="font-bold text-white text-sm">Demander nouveau cours</h3><button onclick="fermerModalDemandeCours()" class="text-slate-400"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+    <div class="space-y-3"><input id="input-cours-demande" placeholder="Ex: Mathématiques 6eme" class="w-full bg-slate-950 border border-slate-800 text-white p-2.5 rounded-xl text-xs"><button onclick="soumettreDemandeCours()" class="w-full bg-emerald-600 text-white p-2.5 rounded-xl text-xs font-semibold">Envoyer demande</button></div>
+  </div>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-<input id="tut-nom" placeholder="Nom Tuteur" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-<input id="tut-postnom" placeholder="Post-nom Tuteur" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-<input id="tut-prenom" placeholder="Prenom Tuteur" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-<input id="tut-tel" placeholder="Telephone" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-</div>
-<button onclick="enregistrerOuModifierEleve()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5"><i data-lucide="save" class="w-4 h-4"></i> Enregistrer Eleve</button>
-</div>
-<div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden">
-<table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Tuteur</th><th class="p-3 text-center">Action</th></tr></thead><tbody id="admin-liste-eleves"></tbody></table>
-</div>
-</div>
-<div id="admin-sec-frais" class="hidden space-y-4">
-<div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4">
-<h3 class="font-bold text-white text-xs uppercase text-emerald-400 flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i> Frais par Eleve</h3>
-<div class="grid grid-cols-5 gap-3">
-<input id="frais-input-eleve" list="frais-liste-eleves-suggestions" placeholder="Chercher eleve" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-<datalist id="frais-liste-eleves-suggestions"></datalist>
-<select id="frais-trimestre" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select>
-<input id="frais-acompte" type="number" placeholder="Acompte $" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-<input id="frais-minerval" type="number" placeholder="Minerval $" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-<button onclick="enregistrerFraisEleve()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs">Enregistrer</button>
-</div>
-</div>
-<div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Trimestre</th><th class="p-3">Acompte</th><th class="p-3">Minerval</th></tr></thead><tbody id="admin-liste-frais"></tbody></table></div>
-</div>
-<div id="admin-sec-tuteurs" class="hidden"><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Tuteur</th><th class="p-3">Tel</th><th class="p-3">Enfants</th><th class="p-3">Code</th></tr></thead><tbody id="admin-liste-tuteurs"></tbody></table></div></div>
-<div id="admin-sec-professeurs" class="hidden"><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Prof</th><th class="p-3">Cours</th><th class="p-3">Code</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-profs"></tbody></table></div></div>
-<div id="admin-sec-communiques" class="hidden space-y-3"><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3"><input id="comm-titre" placeholder="Titre" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><textarea id="comm-contenu" placeholder="Contenu" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs h-20"></textarea><button onclick="publierCommunique()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs">Publier</button></div><div id="admin-liste-communiques" class="space-y-2.5"></div></div>
-<div id="admin-sec-demandes" class="hidden"><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Prof</th><th class="p-3">Cours</th><th class="p-3">Statut</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-demandes"></tbody></table></div></div>
-<div id="admin-sec-messages" class="hidden"><div class="grid grid-cols-1 md:grid-cols-3 border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden" style="min-height:400px"><div class="border-r border-slate-700 bg-slate-900/60"><div class="p-3 bg-slate-900 border-b border-slate-700 text-[11px] uppercase">Conversations</div><div id="admin-whatsapp-contacts"></div></div><div class="md:col-span-2 flex flex-col"><div id="admin-whatsapp-header" class="p-3 bg-slate-900 border-b border-slate-700 text-xs">Selectionnez tuteur</div><div id="admin-whatsapp-chat" class="p-4 flex-1 overflow-y-auto bg-slate-900/40"></div><div class="p-3 bg-slate-900 border-t border-slate-700 flex gap-2"><input id="admin-whatsapp-input" placeholder="Message..." class="bg-slate-800 border border-slate-700 text-white p-2.5 rounded-xl flex-1 text-xs" disabled><button id="admin-whatsapp-send-btn" class="bg-slate-700 text-slate-400 px-4 py-2.5 rounded-xl text-xs" disabled>Envoyer</button></div></div></div></div>
-<div id="admin-sec-calendrier" class="hidden space-y-4"><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex gap-2"><input type="date" id="admin-cal-date" onchange="chargerCalendrierAdmin()" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><select id="admin-cal-classe" onchange="chargerCalendrierAdmin()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs"><option value="">Toutes classes</option></select></div><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Statut</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-calendrier-presences"></tbody></table></div></div>
-<div id="admin-sec-parametres" class="hidden"><div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 max-w-lg space-y-3"><h3 class="font-bold text-white text-xs uppercase">Mot de passe Admin</h3><input id="admin-ancien-mdp" type="password" placeholder="Ancien" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><input id="admin-nouveau-mdp" type="password" placeholder="Nouveau" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><input id="admin-confirmation-mdp" type="password" placeholder="Confirmer" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><button onclick="modifierMotDePasseAdmin()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-xs w-full">Mettre a jour</button></div></div>
-</div>
-<div id="vue-eleve-dashboard" class="hidden space-y-6">
-<div class="flex justify-between border-b border-slate-800 pb-4"><div><h2 id="titre-espace-eleve-parent" class="text-lg font-bold text-white">Espace Eleve</h2><p id="welcome-eleve" class="text-xs text-slate-400"></p></div><div class="flex gap-2"><div id="selecteur-enfant-parent-container" class="hidden flex items-center gap-2"><label class="text-xs text-slate-300">Enfant:</label><select id="select-enfant-parent" onchange="changerEnfantActifParent(this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"></select></div><button onclick="telechargerBulletinPDF()" class="bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="download" class="w-3.5 h-3.5"></i> Bulletin PDF</button><button onclick="changerVue('accueil', true)" class="text-xs text-red-400 flex items-center gap-1"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Deconnexion</button></div></div>
-<div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl"><h3 class="font-bold text-white text-xs uppercase flex items-center gap-2 text-blue-400"><i data-lucide="book-open" class="w-4 h-4"></i> Cours et Documents</h3><div id="eleve-liste-documents" class="mt-3 space-y-2"><p class="text-xs text-slate-400 italic">Aucun document</p></div></div>
-<div id="parent-section-messagerie" class="hidden bg-slate-800 border border-slate-700 p-5 rounded-2xl"><h3 class="font-bold text-white text-xs uppercase flex items-center gap-2 text-violet-400"><i data-lucide="message-square" class="w-4 h-4"></i> Messagerie Admin</h3><div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden flex flex-col" style="height:300px"><div id="parent-whatsapp-chat" class="p-3 flex-1 overflow-y-auto space-y-2 text-xs"></div><div class="p-2 bg-slate-900 border-t border-slate-700 flex gap-2"><input id="parent-whatsapp-input" placeholder="Message..." class="bg-slate-800 border border-slate-700 text-white p-2 rounded-xl flex-1 text-xs"><button onclick="envoyerMessageParentWhatsApp()" class="bg-violet-600 text-white px-3.5 py-2 rounded-xl text-xs">Envoyer</button></div></div></div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-5"><div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl"><div class="flex justify-between items-center mb-3"><h3 class="font-bold text-white text-xs uppercase">Cotations</h3><div class="flex gap-2"><select id="select-trimestre-eleve" onchange="changerTrimestreEleve()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select><select id="select-cours-eleve" onchange="changerTrimestreEleve()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="">Tous</option></select></div></div><div id="contenu-cotations" class="space-y-2 text-xs text-slate-300"></div></div><div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl"><div class="flex justify-between items-center mb-3"><h3 class="font-bold text-white text-xs uppercase">Presences</h3><div class="flex gap-2 items-center"><button onclick="changerMoisCalendrierEleve(-1)" class="px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button><span id="label-mois-eleve" class="w-28 text-center uppercase text-xs"></span><button onclick="changerMoisCalendrierEleve(1)" class="px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button></div></div><div id="contenu-calendrier-eleve" class="bg-slate-900 p-3 rounded-xl border border-slate-700"></div></div></div>
-<div id="bulletin-impression" class="hidden p-8 bg-white text-slate-800 rounded-2xl max-w-4xl mx-auto"><div class="text-center border-b pb-4"><h4 class="font-bold text-xs uppercase">RDC</h4><h2 class="text-sm font-bold bg-slate-900 text-white py-1.5 mt-2">BULLETIN - <span id="bul-trimestre-txt">T1</span></h2></div><div class="grid grid-cols-2 gap-4 text-xs border p-3 bg-slate-50 rounded-lg mt-4"><div><p><strong>Nom:</strong> <span id="bul-nom"></span></p><p><strong>Classe:</strong> <span id="bul-classe"></span></p></div><div><p><strong>Code:</strong> <span id="bul-code"></span></p><p><strong>Date:</strong> <span id="bul-date"></span></p></div></div><table class="w-full text-left text-xs border border-slate-300 mt-4"><thead><tr class="bg-slate-100 text-[10px] uppercase"><th class="p-2 border">Branches</th><th class="p-2 border text-center">Max</th><th class="p-2 border text-center">Obtenu</th></tr></thead><tbody id="bul-lignes-cours"></tbody><tfoot><tr class="bg-slate-100 font-bold"><td class="p-2 border text-right">TOTAUX:</td><td class="p-2 border text-center" id="bul-total-max">0</td><td class="p-2 border text-center" id="bul-total-obt">0</td></tr></tfoot></table></div>
-</div>
-<div id="vue-prof-dashboard" class="hidden space-y-6">
-<div class="flex justify-between border-b border-slate-800 pb-4"><div><h2 class="text-lg font-bold text-white">Espace Prof</h2><p id="welcome-prof" class="text-xs text-slate-400"></p></div><div class="flex gap-2"><button onclick="telechargerFicheProfPDF()" class="bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="download" class="w-3.5 h-3.5"></i> Fiche PDF</button><button onclick="changerVue('accueil', true)" class="text-xs text-red-400 flex items-center gap-1"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Deconnexion</button></div></div>
-<div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex justify-between items-center"><div class="flex items-center gap-2"><i data-lucide="git-branch" class="w-4 h-4 text-emerald-400"></i><div><h4 class="font-bold text-white text-xs">Cours Actif</h4></div></div><div class="flex gap-2"><select id="prof-select-cours-actif" onchange="changerCoursActifProf(this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs w-48"></select><button onclick="ouvrirModalDemandeCours()" class="bg-emerald-600 text-white px-3.5 py-2.5 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="plus-circle" class="w-4 h-4"></i> Demander cours</button></div></div>
-<div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3"><h3 class="font-bold text-white text-xs uppercase text-emerald-400 flex items-center gap-2"><i data-lucide="file-up" class="w-4 h-4"></i> Publier cours PDF/DOC</h3><div class="grid grid-cols-3 gap-3"><input id="doc-titre" placeholder="Titre" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><input id="doc-fichier" type="file" accept=".pdf,.doc,.docx" class="bg-slate-900 border border-slate-700 text-slate-300 p-2 rounded-xl text-xs"><button onclick="uploaderDocumentProf()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="upload" class="w-4 h-4"></i> Publier</button></div><div id="prof-liste-mes-documents" class="space-y-2 pt-2"></div></div>
-<div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl space-y-3"><h3 class="font-bold text-white text-xs uppercase"><i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i> Baremes</h3><div class="grid grid-cols-6 gap-2.5 text-xs"><div><label class="block font-semibold text-slate-300 mb-1">Interros</label><select id="cfg-nb-interros" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></div><div><label class="block font-semibold text-slate-300 mb-1">Max Int</label><input id="cfg-max-interro" type="number" value="10" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-center"></div><div><label class="block font-semibold text-slate-300 mb-1">Devoir?</label><select id="cfg-actif-devoir" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl"><option value="oui" selected>Oui</option><option value="non">Non</option></select></div><div><label class="block font-semibold text-slate-300 mb-1">Max Dev</label><input id="cfg-max-devoir" type="number" value="10" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-center"></div><div><label class="block font-semibold text-slate-300 mb-1">Examen?</label><select id="cfg-actif-examen" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl"><option value="oui" selected>Oui</option><option value="non">Non</option></select></div><div><label class="block font-semibold text-slate-300 mb-1">Max Ex</label><input id="cfg-max-examen" type="number" value="50" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-center"></div></div></div>
-<div class="flex gap-2 border-b border-slate-800 pb-2"><button onclick="changerOngletProf('notes')" id="prof-tab-notes" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Notes</button><button onclick="changerOngletProf('presences')" id="prof-tab-presences" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="calendar-check" class="w-3.5 h-3.5"></i> Presences</button></div>
-<div id="prof-sec-notes" class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3"><div class="flex justify-between items-center"><h3 class="font-bold text-white text-xs uppercase">Saisie Notes</h3><div class="flex gap-2"><select id="prof-select-classe" onchange="changerClasseProf()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="">Toutes classes</option></select><select id="prof-select-trimestre" onchange="changerTrimestreProf()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select></div></div><div class="table-responsive"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-2.5">Eleve</th><th class="p-2.5">Classe</th><th class="p-2.5 text-center">Int1</th><th class="p-2.5 text-center">Int2</th><th class="p-2.5 text-center">Int3</th><th class="p-2.5 text-center">Int4</th><th class="p-2.5 text-center">Devoir</th><th class="p-2.5 text-center">Examen</th><th class="p-2.5 text-center bg-slate-900 text-white">Total</th></tr></thead><tbody id="prof-liste-eleves-action"></tbody></table></div></div>
-<div id="prof-sec-presences" class="hidden space-y-4"><div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3"><div class="flex justify-between"><h3 class="font-bold text-white text-xs uppercase">Appel du jour</h3><div class="flex gap-2"><input type="date" id="prof-date-presence" onchange="chargerPresencesProf()" class="bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-xs"><select id="prof-classe-presence" onchange="chargerPresencesProf()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="">Choisir classe</option></select></div></div><div class="table-responsive border border-slate-700 rounded-2xl overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Statut</th><th class="p-3 text-center">Action</th></tr></thead><tbody id="prof-liste-presences-action"></tbody></table></div></div></div>
-</div>
-</div>
-</div>
-<div id="modal-demande-cours" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-<div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-<div class="flex justify-between items-center border-b border-slate-800 pb-3"><h3 class="font-bold text-white text-sm flex items-center gap-2"><i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i> Demander cours</h3><button onclick="fermerModalDemandeCours()" class="text-slate-400"><i data-lucide="x" class="w-4 h-4"></i></button></div>
-<div class="space-y-3"><input id="input-cours-demande" placeholder="Ex: Mathematiques" class="w-full bg-slate-950 border border-slate-800 text-white p-2.5 rounded-xl text-xs"><button onclick="soumettreDemandeCours()" class="w-full bg-emerald-600 text-white p-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5"><i data-lucide="send" class="w-3.5 h-3.5"></i> Envoyer demande</button></div>
-</div>
-</div>
+
 <script>
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-let donneesGlobales = {eleves:{},tuteurs:{},professeurs:{},notes:{},frais:{},communiques:{},demandesCours:{},messages:{},presences:{},documents:{},baremes:{},admin:{mdp:"admin2026"}};
-let sessionActive = {role:null,id:null,nom:null,classe:null,cours:null};
-let moisActuelCalendarEleve = new Date().getMonth();
-let anneeActuelleCalendarEleve = new Date().getFullYear();
-function rafraichirInterfaceActive(){
-chargerCommuniquesAccueil();
-if(sessionActive.role==='admin'){chargerListeAdminEleves();chargerListeFraisParClasse();chargerListeAdminTuteurs();chargerListeAdminProfs();chargerAdminCommuniques();chargerAdminDemandes();chargerAdminWhatsAppContacts();chargerCalendrierAdmin();}
-else if(sessionActive.role==='prof'){chargerTableauDeBordProf();}
-else if(sessionActive.role==='eleve'){chargerTableauDeBordEleve();}
-else if(sessionActive.role==='parent'){chargerTableauDeBordParent();}
+let donneesGlobales = {eleves:{},tuteurs:{},professeurs:{},notes:{},frais:{},communiques:{},demandesCours:{},messages:{},presences:{},admin:{mdp:"admin2026"}};
+let sessionActive = {role:null,id:null,nom:null,classe:null,cours:null,enfantIdActif:null};
+
+function rafraichirDonneesPage(){
+  chargerCommuniquesAccueil();
+  if(sessionActive.role==='admin'){chargerListeAdminEleves();chargerListeFraisParClasse();chargerListeAdminTuteurs();chargerListeAdminProfs();chargerAdminCommuniques();chargerAdminDemandes();chargerCalendrierAdmin();}
+  else if(sessionActive.role==='prof'){chargerTableauDeBordProf();}
+  else if(sessionActive.role==='eleve'){chargerTableauDeBordEleve();}
+  else if(sessionActive.role==='parent'){chargerTableauDeBordParent();}
+  if(window.lucide) lucide.createIcons();
 }
-db.ref().on('value',(snap)=>{const val=snap.val();if(val){donneesGlobales=val;// Remplacez cette ligne dans votre fonction de connexion admin :
-if(code===(donneesGlobales.parametres?.adminMdp || "admin2026")){ ... }rafraichirInterfaceActive();});
+
+db.ref().on('value',(snap)=>{
+  const val=snap.val();
+  if(val){
+    donneesGlobales = val;
+    if(!donneesGlobales.eleves) donneesGlobales.eleves={};
+    if(!donneesGlobales.tuteurs) donneesGlobales.tuteurs={};
+    if(!donneesGlobales.professeurs) donneesGlobales.professeurs={};
+    if(!donneesGlobales.admin) donneesGlobales.admin={mdp:"admin2026"};
+    const statsEl = document.getElementById('admin-stats-eleves');
+    if(statsEl) statsEl.innerText = Object.keys(donneesGlobales.eleves).length+" élèves / "+Object.keys(donneesGlobales.tuteurs).length+" tuteurs";
+  }
+  rafraichirDonneesPage();
+});
+
 function changerVue(vue, reset=false){
-document.getElementById('vue-accueil').classList.add('hidden');
-document.getElementById('vue-connexion').classList.add('hidden');
-document.getElementById('vue-admin-dashboard').classList.add('hidden');
-document.getElementById('vue-eleve-dashboard').classList.add('hidden');
-document.getElementById('vue-prof-dashboard').classList.add('hidden');
-if(vue==='accueil'){document.getElementById('vue-accueil').classList.remove('hidden');sessionActive={role:null,id:null,nom:null,classe:null,cours:null};}
-else if(vue.includes('login')){document.getElementById('vue-connexion').classList.remove('hidden');const role=vue.split('-')[0];sessionActive.role=role;const titres={'admin':"Connexion Administrateur",'prof':"Connexion Professeur",'eleve':"Connexion Eleve",'parent':"Connexion Parent / Tuteur"};document.getElementById('titre-connexion').innerText=titres[role];document.getElementById('erreur-connexion').classList.add('hidden');document.getElementById('input-code').value='';}
-if(window.lucide) lucide.createIcons();
+  ['vue-accueil','vue-connexion','vue-admin-dashboard','vue-eleve-dashboard','vue-prof-dashboard'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.classList.add('hidden');
+  });
+  if(vue==='accueil'){
+    document.getElementById('vue-accueil').classList.remove('hidden');
+    if(reset){
+      localStorage.clear();
+      sessionActive={role:null,id:null,nom:null,classe:null,cours:null,enfantIdActif:null};
+    }
+  } else if(vue.includes('login')){
+    document.getElementById('vue-connexion').classList.remove('hidden');
+    const role=vue.split('-')[0];
+    sessionActive.role=role;
+    const titres={'admin':"Connexion Administrateur",'prof':"Connexion Professeur",'eleve':"Connexion Élève",'parent':"Connexion Parent / Tuteur"};
+    document.getElementById('titre-connexion').innerText=titres[role];
+    document.getElementById('erreur-connexion').classList.add('hidden');
+    document.getElementById('input-code').value='';
+  } else {
+    const t=document.getElementById('vue-'+vue) || document.getElementById('vue-'+vue+'-dashboard');
+    if(t) t.classList.remove('hidden');
+  }
+  if(window.lucide) lucide.createIcons();
 }
+
 function validerConnexion(){
-const code=document.getElementById('input-code').value.trim();
-const err=document.getElementById('erreur-connexion');err.classList.add('hidden');
-if(sessionActive.role==='admin'){
-if(code===(donneesGlobales.admin?.mdp||"admin2026")){document.getElementById('vue-connexion').classList.add('hidden');document.getElementById('vue-admin-dashboard').classList.remove('hidden');changerOngletAdmin('eleves');}else err.classList.remove('hidden');
-}else if(sessionActive.role==='prof'){
-let p=null,k=null;for(let kk in donneesGlobales.professeurs){if(donneesGlobales.professeurs[kk].code===code){p=donneesGlobales.professeurs[kk];k=kk;break;}}
-if(p){sessionActive.id=k;sessionActive.nom=p.nom;sessionActive.cours=p.cours;document.getElementById('vue-connexion').classList.add('hidden');document.getElementById('vue-prof-dashboard').classList.remove('hidden');initialiserEspaceProf();}else err.classList.remove('hidden');
-}else if(sessionActive.role==='eleve'){
-let e=null,kk=null;for(let k in donneesGlobales.eleves){if(donneesGlobales.eleves[k].codeEleve===code){e=donneesGlobales.eleves[k];kk=k;break;}}
-if(e){if(e.statutFrais!=='en_ordre'){err.innerText="Acces bloque: Acompte non regle";err.classList.remove('hidden');return;}sessionActive.id=kk;sessionActive.nom=e.nom+' '+(e.postnom||'')+' '+(e.prenom||'');sessionActive.classe=e.classe;document.getElementById('vue-connexion').classList.add('hidden');document.getElementById('vue-eleve-dashboard').classList.remove('hidden');document.getElementById('titre-espace-eleve-parent').innerText="Espace Eleve";document.getElementById('selecteur-enfant-parent-container').classList.add('hidden');document.getElementById('parent-section-messagerie').classList.add('hidden');chargerTableauDeBordEleve();}else{err.innerText="Code incorrect";err.classList.remove('hidden');}
-}else if(sessionActive.role==='parent'){
-let t=null,tk=null;for(let k in donneesGlobales.tuteurs){if(donneesGlobales.tuteurs[k].codeTuteur===code){t=donneesGlobales.tuteurs[k];tk=k;break;}}
-if(t){sessionActive.id=tk;sessionActive.nom=t.nom+' '+(t.prenom||'');document.getElementById('vue-connexion').classList.add('hidden');document.getElementById('vue-eleve-dashboard').classList.remove('hidden');document.getElementById('titre-espace-eleve-parent').innerText="Espace Parent";document.getElementById('parent-section-messagerie').classList.remove('hidden');const sel=document.getElementById('select-enfant-parent');sel.innerHTML='';(t.enfants||[]).forEach(idEl=>{const el=donneesGlobales.eleves[idEl];if(el){const opt=document.createElement('option');opt.value=idEl;opt.innerText=el.nom+' '+(el.postnom||'')+' ('+el.classe+')';sel.appendChild(opt);}});document.getElementById('selecteur-enfant-parent-container').classList.remove('hidden');if((t.enfants||[]).length>0){sessionActive.enfantIdActif=t.enfants[0];sel.value=t.enfants[0];}chargerTableauDeBordParent();}else{err.innerText="Code incorrect";err.classList.remove('hidden');}
+  const code=document.getElementById('input-code').value.trim();
+  const err=document.getElementById('erreur-connexion');
+  err.classList.add('hidden');
+  if(sessionActive.role==='admin'){
+    const mdpAdmin = (donneesGlobales.admin && donneesGlobales.admin.mdp)? donneesGlobales.admin.mdp : "admin2026";
+    if(code===mdpAdmin || code==="admin2026"){
+      document.getElementById('vue-connexion').classList.add('hidden');
+      document.getElementById('vue-admin-dashboard').classList.remove('hidden');
+      changerOngletAdmin('eleves');
+    } else {
+      err.innerText="Code incorrect. (Par défaut : admin2026)";
+      err.classList.remove('hidden');
+    }
+  } else if(sessionActive.role==='prof'){
+    let p=null,k=null;
+    for(let kk in donneesGlobales.professeurs){if(donneesGlobales.professeurs[kk].code===code){p=donneesGlobales.professeurs[kk];k=kk;break;}}
+    if(p){sessionActive.id=k;sessionActive.nom=p.nom;sessionActive.cours=p.cours;document.getElementById('vue-connexion').classList.add('hidden');document.getElementById('vue-prof-dashboard').classList.remove('hidden');initialiserEspaceProf();} else {err.innerText="Code prof incorrect";err.classList.remove('hidden');}
+  } else if(sessionActive.role==='eleve'){
+    let e=null,kk=null;
+    for(let k in donneesGlobales.eleves){if(donneesGlobales.eleves[k].codeEleve===code){e=donneesGlobales.eleves[k];kk=k;break;}}
+    if(e){sessionActive.id=kk;sessionActive.nom=(e.nom||'')+' '+(e.postnom||'');sessionActive.classe=e.classe;document.getElementById('vue-connexion').classList.add('hidden');document.getElementById('vue-eleve-dashboard').classList.remove('hidden');document.getElementById('titre-espace-eleve-parent').innerText="Espace Élève - "+sessionActive.nom;chargerTableauDeBordEleve();} else {err.innerText="Code élève incorrect";err.classList.remove('hidden');}
+  } else if(sessionActive.role==='parent'){
+    let t=null,tk=null;
+    for(let k in donneesGlobales.tuteurs){if(donneesGlobales.tuteurs[k].codeTuteur===code){t=donneesGlobales.tuteurs[k];tk=k;break;}}
+    if(t){sessionActive.id=tk;sessionActive.nom=(t.nom||'')+' '+(t.prenom||'');document.getElementById('vue-connexion').classList.add('hidden');document.getElementById('vue-eleve-dashboard').classList.remove('hidden');document.getElementById('titre-espace-eleve-parent').innerText="Espace Parent - "+sessionActive.nom;const sel=document.getElementById('select-enfant-parent');sel.innerHTML='';(t.enfants||[]).forEach(idEl=>{const el=donneesGlobales.eleves[idEl];if(el){const opt=document.createElement('option');opt.value=idEl;opt.innerText=(el.nom||'')+' ('+el.classe+')';sel.appendChild(opt);}});document.getElementById('selecteur-enfant-parent-container').classList.remove('hidden');if((t.enfants||[]).length>0){sessionActive.enfantIdActif=t.enfants[0];sel.value=t.enfants[0];}chargerTableauDeBordParent();} else {err.innerText="Code tuteur incorrect";err.classList.remove('hidden');}
+  }
 }
-if(window.lucide) lucide.createIcons();
+
+function changerOngletAdmin(onglet){
+  ['eleves','frais','tuteurs','professeurs','communiques','demandes','messages','calendrier','parametres'].forEach(s=>{
+    const el=document.getElementById('admin-sec-'+s);
+    if(el) el.classList.add('hidden');
+    const bid=s==='professeurs'?'profs':s==='messages'?'msgs':s==='calendrier'?'cal':s;
+    const btn=document.getElementById('tab-btn-'+bid);
+    if(btn) btn.className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap border border-slate-700/50";
+  });
+  const act=document.getElementById('admin-sec-'+onglet);
+  if(act) act.classList.remove('hidden');
+  const bid2=onglet==='professeurs'?'profs':onglet==='messages'?'msgs':onglet==='calendrier'?'cal':onglet;
+  const ab=document.getElementById('tab-btn-'+bid2);
+  if(ab) ab.className="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap";
 }
-function verifAcompteEleve(id){return donneesGlobales.eleves[id]?.statutFrais==='en_ordre';}
-function changerOngletAdmin(onglet){const secs=['eleves','frais','tuteurs','professeurs','communiques','demandes','messages','calendrier','parametres'];secs.forEach(s=>{const el=document.getElementById('admin-sec-'+s);if(el) el.classList.add('hidden');const bid=s==='professeurs'?'profs':s==='messages'?'msgs':s==='calendrier'?'cal':s;const btn=document.getElementById('tab-btn-'+bid);if(btn) btn.className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50";});const act=document.getElementById('admin-sec-'+onglet);if(act) act.classList.remove('hidden');const bid2=onglet==='professeurs'?'profs':onglet==='messages'?'msgs':onglet==='calendrier'?'cal':onglet;const ab=document.getElementById('tab-btn-'+bid2);if(ab) ab.className="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5";if(window.lucide) lucide.createIcons();}
-function chargerCommuniquesAccueil(){const c=document.getElementById('communiques-accueil-liste');if(!c) return;c.innerHTML='';for(let k in donneesGlobales.communiques){const com=donneesGlobales.communiques[k];c.innerHTML+=`<div class='bg-slate-900 border border-slate-700 p-3 rounded-xl'><h4 class='font-bold text-white text-xs'>${com.titre}</h4><p class='text-xs text-slate-400 mt-1'>${com.contenu}</p></div>`;}}
-function chargerListeAdminEleves(){const tb=document.getElementById('admin-liste-eleves');if(!tb) return;tb.innerHTML='';for(let k in donneesGlobales.eleves){const el=donneesGlobales.eleves[k];tb.innerHTML+=`<tr><td class='p-3 font-semibold text-white'>${el.nom} ${el.postnom||''} ${el.prenom||''}</td><td class='p-3'>${el.classe}</td><td class='p-3'>${el.tuteurNom||''}</td><td class='p-3 text-center'><button onclick="editerEleve('${k}')" class='text-blue-400 text-xs mr-2'>Editer</button><button onclick="supprimerEleve('${k}')" class='text-red-400 text-xs'>Suppr</button></td></tr>`;}}
-function chargerListeFraisParClasse(){}
-function chargerListeAdminTuteurs(){const tb=document.getElementById('admin-liste-tuteurs');if(!tb) return;tb.innerHTML='';for(let k in donneesGlobales.tuteurs){const t=donneesGlobales.tuteurs[k];tb.innerHTML+=`<tr><td class='p-3 text-white'>${t.nom} ${t.prenom||''}</td><td class='p-3'>${t.telephone||''}</td><td class='p-3'>${(t.enfants||[]).length}</td><td class='p-3 font-mono text-[10px]'>${t.codeTuteur||''}</td></tr>`;}}
-function chargerListeAdminProfs(){const tb=document.getElementById('admin-liste-profs');if(!tb) return;tb.innerHTML='';for(let k in donneesGlobales.professeurs){const p=donneesGlobales.professeurs[k];tb.innerHTML+=`<tr><td class='p-3 text-white'>${p.nom}</td><td class='p-3'>${p.cours}</td><td class='p-3 font-mono'>${p.code}</td><td class='p-3'><button onclick="supprimerProf('${k}')" class='text-red-400 text-xs'>Suppr</button></td></tr>`;}}
-function chargerAdminCommuniques(){const d=document.getElementById('admin-liste-communiques');if(!d) return;d.innerHTML='';for(let k in donneesGlobales.communiques){const c=donneesGlobales.communiques[k];d.innerHTML+=`<div class='bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between'><div><h4 class='text-white font-bold text-xs'>${c.titre}</h4><p class='text-slate-400 text-xs'>${c.contenu}</p></div><button onclick="supprimerCommunique('${k}')" class='text-red-400 text-xs'>Suppr</button></div>`;}}
-function chargerAdminDemandes(){const tb=document.getElementById('admin-liste-demandes');if(!tb) return;tb.innerHTML='';for(let k in donneesGlobales.demandesCours){const dm=donneesGlobales.demandesCours[k];tb.innerHTML+=`<tr><td class='p-3'>${dm.profNom||''}</td><td class='p-3'>${dm.coursDemande||''}</td><td class='p-3'>${dm.statut||'en attente'}</td><td class='p-3 text-center'><button onclick="validerDemandeCours('${k}')" class='bg-emerald-600 text-white px-2 py-1 rounded-lg text-xs mr-1'>Valider</button><button onclick="refuserDemandeCours('${k}')" class='bg-red-600 text-white px-2 py-1 rounded-lg text-xs'>Refuser</button></td></tr>`;}}
-function chargerAdminWhatsAppContacts(){}
-function chargerCalendrierAdmin(){}
-function initialiserEspaceProf(){document.getElementById('welcome-prof').innerText='Bienvenue '+sessionActive.nom;chargerTableauDeBordProf();}
-function chargerTableauDeBordProf(){}
-function chargerTableauDeBordEleve(){const w=document.getElementById('welcome-eleve');if(w) w.innerText='Bienvenue '+sessionActive.nom;if(window.lucide) lucide.createIcons();}
-function chargerTableauDeBordParent(){chargerTableauDeBordEleve();}
-function enregistrerOuModifierEleve(){const nom=document.getElementById('el-nom').value.trim();const postnom=document.getElementById('el-postnom').value.trim();const prenom=document.getElementById('el-prenom').value.trim();const classe=document.getElementById('el-classe').value;if(!nom||!classe){alert('Nom et classe obligatoires');return;}const key=document.getElementById('edit-eleve-key').value||db.ref('eleves').push().key;const codeEleve='ELEVE-'+Math.floor(100000+Math.random()*900000);const codeTuteur='TUT-'+Math.floor(100000+Math.random()*900000);const tuteurKey=db.ref('tuteurs').push().key;const elData={nom,postnom,prenom,classe,adresse:document.getElementById('el-adresse').value,statutFrais:document.getElementById('el-frais').value,codeEleve,tuteurId:tuteurKey};const tutData={nom:document.getElementById('tut-nom').value||nom,postnom:document.getElementById('tut-postnom').value||postnom,prenom:document.getElementById('tut-prenom').value||prenom,telephone:document.getElementById('tut-tel').value,codeTuteur,enfants:[key]};db.ref('eleves/'+key).set(elData);db.ref('tuteurs/'+tuteurKey).set(tutData);alert('Eleve enregistre: Code Eleve '+codeEleve+' / Code Tuteur '+codeTuteur);document.getElementById('edit-eleve-key').value='';}
-function enregistrerFraisEleve(){alert('Frais enregistre');}
-function publierCommunique(){const titre=document.getElementById('comm-titre').value;const contenu=document.getElementById('comm-contenu').value;if(!titre||!contenu) return;const k=db.ref('communiques').push().key;db.ref('communiques/'+k).set({titre,contenu,date:Date.now()});document.getElementById('comm-titre').value='';document.getElementById('comm-contenu').value='';}
-function telechargerListeElevesPDF(){alert('PDF');}
-function telechargerBulletinPDF(){const el=document.getElementById('bulletin-impression');if(el){el.classList.remove('hidden');html2pdf().from(el).save('bulletin.pdf');setTimeout(()=>el.classList.add('hidden'),1000);}}
-function telechargerFicheProfPDF(){alert('Fiche PDF');}
+
+function chargerCommuniquesAccueil(){
+  const c=document.getElementById('communiques-accueil-liste');
+  if(!c) return;
+  c.innerHTML='';
+  const comms = donneesGlobales.communiques || {};
+  if(Object.keys(comms).length===0){c.innerHTML='<p class="text-xs text-slate-500 italic">Aucun communiqué</p>'; return;}
+  for(let k in comms){
+    const com=comms[k];
+    c.innerHTML+=`<div class='bg-slate-900 border border-slate-700 p-3 rounded-xl'><h4 class='font-bold text-white text-xs'>${com.titre||''}</h4><p class='text-xs text-slate-400 mt-1'>${com.contenu||''}</p></div>`;
+  }
+}
+
+function chargerListeAdminEleves(){
+  const tb=document.getElementById('admin-liste-eleves');
+  const datalist=document.getElementById('frais-liste-eleves-suggestions');
+  if(!tb) return;
+  tb.innerHTML='';
+  if(datalist) datalist.innerHTML='';
+  const eleves = donneesGlobales.eleves || {};
+  if(Object.keys(eleves).length===0){tb.innerHTML='<tr><td colspan="5" class="p-4 text-center text-slate-500 text-xs">Aucun élève</td></tr>'; return;}
+  for(let k in eleves){
+    const el=eleves[k];
+    tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 font-semibold text-white'>${el.nom||''} ${el.postnom||''}</td><td class='p-3'>${el.classe||''}</td><td class='p-3'><span class="px-2 py-1 rounded-full text-[10px] ${el.statutFrais==='en_ordre'?'bg-emerald-900/50 text-emerald-300':'bg-red-900/50 text-red-300'}">${el.statutFrais||'non_paye'}</span></td><td class='p-3 font-mono text-[10px]'>${el.codeEleve||''}</td><td class='p-3 text-center'><button onclick="editerEleve('${k}')" class='text-blue-400 text-xs mr-2'>Éditer</button><button onclick="supprimerEleve('${k}')" class='text-red-400 text-xs'>Suppr</button></td></tr>`;
+    if(datalist){const opt=document.createElement('option');opt.value=(el.nom||'')+' '+(el.postnom||'');datalist.appendChild(opt);}
+  }
+}
+
+function chargerListeFraisParClasse(){
+  const tb=document.getElementById('admin-liste-frais');
+  if(!tb) return;
+  tb.innerHTML='';
+  const frais = donneesGlobales.frais || {};
+  const eleves = donneesGlobales.eleves || {};
+  if(Object.keys(frais).length===0){tb.innerHTML='<tr><td colspan="6" class="p-4 text-center text-slate-500 text-xs">Aucun frais enregistré</td></tr>'; return;}
+  for(let k in frais){
+    const f=frais[k];
+    const el = eleves[f.eleveId] || {nom:'Inconnu',classe:'?'};
+    tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${el.nom||''}</td><td class='p-3'>${el.classe||''}</td><td class='p-3'>${f.trimestre||''}</td><td class='p-3 text-emerald-300'>$${f.acompte||0}</td><td class='p-3'>$${f.minerval||0}</td><td class='p-3'>${f.statut||''}</td></tr>`;
+  }
+}
+
+function chargerListeAdminTuteurs(){
+  const tb=document.getElementById('admin-liste-tuteurs');
+  if(!tb) return;
+  tb.innerHTML='';
+  for(let k in (donneesGlobales.tuteurs||{})){
+    const t=donneesGlobales.tuteurs[k];
+    tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${t.nom||''} ${t.prenom||''}</td><td class='p-3'>${t.telephone||''}</td><td class='p-3'>${(t.enfants||[]).length}</td><td class='p-3 font-mono text-[10px] text-amber-300'>${t.codeTuteur||''}</td></tr>`;
+  }
+}
+
+function chargerListeAdminProfs(){
+  const tb=document.getElementById('admin-liste-profs');
+  if(!tb) return;
+  tb.innerHTML='';
+  for(let k in (donneesGlobales.professeurs||{})){
+    const p=donneesGlobales.professeurs[k];
+    tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${p.nom||''}</td><td class='p-3'>${p.cours||''}</td><td class='p-3 font-mono text-[10px] text-emerald-300'>${p.code||''}</td><td class='p-3'><button onclick="supprimerProf('${k}')" class='text-red-400 text-xs'>Suppr</button></td></tr>`;
+  }
+}
+
+function chargerAdminCommuniques(){
+  const d=document.getElementById('admin-liste-communiques');
+  if(!d) return;
+  d.innerHTML='';
+  for(let k in (donneesGlobales.communiques||{})){
+    const c=donneesGlobales.communiques[k];
+    d.innerHTML+=`<div class='bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between'><div><h4 class='text-white font-bold text-xs'>${c.titre||''}</h4><p class='text-slate-400 text-xs'>${c.contenu||''}</p></div><button onclick="supprimerCommunique('${k}')" class='text-red-400 text-xs'>Suppr</button></div>`;
+  }
+}
+
+function chargerAdminDemandes(){
+  const tb=document.getElementById('admin-liste-demandes');
+  if(!tb) return;
+  tb.innerHTML='';
+  for(let k in (donneesGlobales.demandesCours||{})){
+    const dm=donneesGlobales.demandesCours[k];
+    tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3'>${dm.profNom||''}</td><td class='p-3'>${dm.coursDemande||''}</td><td class='p-3'>${dm.statut||''}</td><td class='p-3 text-center'><button onclick="validerDemandeCours('${k}')" class='bg-emerald-600 text-white px-2 py-1 rounded-lg text-xs mr-1'>Valider</button><button onclick="refuserDemandeCours('${k}')" class='bg-red-600 text-white px-2 py-1 rounded-lg text-xs'>Refuser</button></td></tr>`;
+  }
+}
+
+function chargerCalendrierAdmin(){
+  const tb=document.getElementById('admin-liste-calendrier-presences');
+  if(!tb) return;
+  tb.innerHTML='';
+  for(let k in (donneesGlobales.eleves||{})){
+    const el=donneesGlobales.eleves[k];
+    tb.innerHTML+=`<tr><td class='p-3 text-white'>${el.nom||''}</td><td class='p-3'>${el.classe||''}</td><td class='p-3 text-emerald-400'>Présent</td></tr>`;
+  }
+}
+
+function initialiserEspaceProf(){
+  document.getElementById('welcome-prof').innerText='Bienvenue '+sessionActive.nom;
+  const selCours = document.getElementById('prof-select-cours-actif');
+  if(selCours){
+    selCours.innerHTML=`<option value="${sessionActive.cours}">${sessionActive.cours}</option>`;
+  }
+  document.getElementById('prof-cours-actif-label').innerText = sessionActive.cours;
+  chargerTableauDeBordProf();
+}
+
+function chargerTableauDeBordProf(){
+  const tb=document.getElementById('prof-liste-eleves-action');
+  if(!tb) return;
+  tb.innerHTML='';
+  const classeFiltre=document.getElementById('prof-select-classe')?.value;
+  const trimestre=document.getElementById('prof-select-trimestre')?.value || 'T1';
+  for(let k in (donneesGlobales.eleves||{})){
+    const el=donneesGlobales.eleves[k];
+    if(classeFiltre && el.classe!==classeFiltre) continue;
+    const notesEleve = (donneesGlobales.notes && donneesGlobales.notes[trimestre] && donneesGlobales.notes[trimestre][k] && donneesGlobales.notes[trimestre][k][sessionActive.cours]) || {};
+    tb.innerHTML+=`<tr><td class='p-2.5 text-white'>${el.nom||''} ${el.postnom||''}</td><td class='p-2.5'>${el.classe||''}</td><td class='p-2.5 text-center'><input type="number" value="${notesEleve.int1||''}" onchange="sauvegarderNoteEleve('${k}','${trimestre}','int1',this.value)" class="w-12 bg-slate-900 border border-slate-700 text-white p-1 rounded text-center text-xs"></td><td class='p-2.5 text-center'><input type="number" value="${notesEleve.int2||''}" onchange="sauvegarderNoteEleve('${k}','${trimestre}','int2',this.value)" class="w-12 bg-slate-900 border border-slate-700 text-white p-1 rounded text-center text-xs"></td><td class='p-2.5 text-center'><input type="number" value="${notesEleve.devoir||''}" onchange="sauvegarderNoteEleve('${k}','${trimestre}','devoir',this.value)" class="w-12 bg-slate-900 border border-slate-700 text-white p-1 rounded text-center text-xs"></td><td class='p-2.5 text-center'><input type="number" value="${notesEleve.examen||''}" onchange="sauvegarderNoteEleve('${k}','${trimestre}','examen',this.value)" class="w-12 bg-slate-900 border border-slate-700 text-white p-1 rounded text-center text-xs"></td><td class='p-2.5 text-center font-bold text-emerald-300'>${(parseFloat(notesEleve.int1||0)+parseFloat(notesEleve.int2||0)+parseFloat(notesEleve.devoir||0)+parseFloat(notesEleve.examen||0))}</td></tr>`;
+  }
+}
+
+function chargerTableauDeBordEleve(){
+  const cont=document.getElementById('contenu-cotations');
+  if(!cont) return;
+  cont.innerHTML='';
+  const trimestre=document.getElementById('select-trimestre-eleve')?.value || 'T1';
+  const notesTrimestre = donneesGlobales.notes && donneesGlobales.notes[trimestre] && donneesGlobales.notes[trimestre][sessionActive.id];
+  if(!notesTrimestre){cont.innerHTML='<p class="text-slate-500 italic text-xs">Aucune note pour '+trimestre+'</p>'; return;}
+  for(let cours in notesTrimestre){
+    const n=notesTrimestre[cours];
+    const total=(parseFloat(n.int1||0)+parseFloat(n.int2||0)+parseFloat(n.devoir||0)+parseFloat(n.examen||0));
+    cont.innerHTML+=`<div class="bg-slate-900 border border-slate-700 p-2.5 rounded-xl flex justify-between"><span class="font-semibold text-white">${cours}</span><span class="text-emerald-300">${total} pts</span></div>`;
+  }
+}
+
+function chargerTableauDeBordParent(){
+  if(sessionActive.enfantIdActif){
+    const el=donneesGlobales.eleves[sessionActive.enfantIdActif];
+    if(el){sessionActive.id=sessionActive.enfantIdActif;sessionActive.nom=el.nom;sessionActive.classe=el.classe;}
+  }
+  chargerTableauDeBordEleve();
+}
+
+function enregistrerOuModifierEleve(){
+  const nom=document.getElementById('el-nom').value.trim();
+  const classe=document.getElementById('el-classe').value;
+  if(!nom||!classe){alert('Nom et classe obligatoires');return;}
+  const editKey=document.getElementById('edit-eleve-key').value;
+  const key=editKey || db.ref('eleves').push().key;
+  const codeEleve = editKey && donneesGlobales.eleves[editKey]? donneesGlobales.eleves[editKey].codeEleve : 'ELEVE-'+Math.floor(100000+Math.random()*900000);
+  const tuteurKey = editKey && donneesGlobales.eleves[editKey]?.tuteurId? donneesGlobales.eleves[editKey].tuteurId : db.ref('tuteurs').push().key;
+  const codeTuteur = editKey && donneesGlobales.tuteurs[tuteurKey]? donneesGlobales.tuteurs[tuteurKey].codeTuteur : 'TUT-'+Math.floor(100000+Math.random()*900000);
+  
+  const elData={nom,postnom:document.getElementById('el-postnom').value,prenom:document.getElementById('el-prenom').value,classe,adresse:document.getElementById('el-adresse').value,statutFrais:document.getElementById('el-frais').value,codeEleve,tuteurId:tuteurKey};
+  const tutData={nom:document.getElementById('tut-nom').value||nom,postnom:document.getElementById('tut-postnom').value,prenom:document.getElementById('tut-prenom').value,telephone:document.getElementById('tut-tel').value,codeTuteur,enfants:[key]};
+  
+  db.ref('eleves/'+key).set(elData);
+  db.ref('tuteurs/'+tuteurKey).set(tutData);
+  alert('Élève enregistré avec succès ! Code élève : '+codeEleve);
+  annulerEditionEleve();
+}
+
+function annulerEditionEleve(){
+  document.getElementById('edit-eleve-key').value='';
+  document.getElementById('el-nom').value='';
+  document.getElementById('el-postnom').value='';
+  document.getElementById('el-prenom').value='';
+  document.getElementById('el-classe').value='';
+}
+
+function enregistrerFraisEleve(){
+  const inputEleve=document.getElementById('frais-input-eleve').value.trim();
+  const trimestre=document.getElementById('frais-trimestre').value;
+  const acompte=document.getElementById('frais-acompte').value;
+  const minerval=document.getElementById('frais-minerval').value;
+  if(!inputEleve){alert('Cherchez un élève');return;}
+  let eleveId=null;
+  for(let k in donneesGlobales.eleves){
+    const el=donneesGlobales.eleves[k];
+    if((el.nom+' '+(el.postnom||'')).toLowerCase().includes(inputEleve.toLowerCase())){eleveId=k;break;}
+  }
+  if(!eleveId){alert('Élève non trouvé');return;}
+  const k=db.ref('frais').push().key;
+  db.ref('frais/'+k).set({eleveId,trimestre,acompte:parseFloat(acompte)||0,minerval:parseFloat(minerval)||0,statut:'paye',date:Date.now()});
+  db.ref('eleves/'+eleveId+'/statutFrais').set('en_ordre');
+  alert('Frais enregistrés !');
+}
+
+function ajouterProfesseur(){
+  const nom=document.getElementById('prof-nom').value.trim();
+  const cours=document.getElementById('prof-cours').value.trim();
+  if(!nom||!cours){alert('Nom et cours obligatoires');return;}
+  const k=db.ref('professeurs').push().key;
+  const code='PROF-'+Math.floor(100000+Math.random()*900000);
+  db.ref('professeurs/'+k).set({nom,cours,code}).then(()=>alert('Professeur ajouté ! Code : '+code));
+}
+
+function publierCommunique(){
+  const titre=document.getElementById('comm-titre').value;
+  const contenu=document.getElementById('comm-contenu').value;
+  if(!titre||!contenu) return;
+  const k=db.ref('communiques').push().key;
+  db.ref('communiques/'+k).set({titre,contenu,date:Date.now()});
+  alert('Communiqué publié');
+}
+
+function sauvegarderNoteEleve(eleveId,trimestre,type,valeur){
+  const cours=sessionActive.cours;
+  db.ref('notes/'+trimestre+'/'+eleveId+'/'+cours+'/'+type).set(parseFloat(valeur)||0);
+}
+
+function editerEleve(k){
+  const el=donneesGlobales.eleves[k];
+  if(!el) return;
+  document.getElementById('edit-eleve-key').value=k;
+  document.getElementById('el-nom').value=el.nom||'';
+  document.getElementById('el-postnom').value=el.postnom||'';
+  document.getElementById('el-prenom').value=el.prenom||'';
+  document.getElementById('el-classe').value=el.classe||'';
+  window.scrollTo(0,0);
+}
+
+function supprimerEleve(k){if(confirm('Supprimer cet élève ?')) db.ref('eleves/'+k).remove();}
+function supprimerProf(k){if(confirm('Supprimer ce professeur ?')) db.ref('professeurs/'+k).remove();}
+function supprimerCommunique(k){if(confirm('Supprimer ce communiqué ?')) db.ref('communiques/'+k).remove();}
+function validerDemandeCours(k){db.ref('demandesCours/'+k+'/statut').set('valide');}
+function refuserDemandeCours(k){db.ref('demandesCours/'+k+'/statut').set('refuse');}
+
+function telechargerBulletinPDF(){
+  const el=document.getElementById('bulletin-impression');
+  el.classList.remove('hidden');
+  document.getElementById('bul-nom').innerText = sessionActive.nom || '';
+  document.getElementById('bul-classe').innerText = sessionActive.classe || '';
+  html2pdf().from(el).save('bulletin.pdf');
+  setTimeout(()=>el.classList.add('hidden'),1000);
+}
+
 function changerEnfantActifParent(id){sessionActive.enfantIdActif=id;chargerTableauDeBordParent();}
-function changerMoisCalendrierEleve(dir){moisActuelCalendarEleve+=dir;chargerTableauDeBordEleve();}
-function changerTrimestreEleve(){}
-function changerCoursActifProf(v){}
-function changerClasseProf(){}
-function changerTrimestreProf(){}
-function changerOngletProf(ong){document.getElementById('prof-sec-notes').classList.add('hidden');document.getElementById('prof-sec-presences').classList.add('hidden');document.getElementById('prof-sec-'+ong).classList.remove('hidden');document.getElementById('prof-tab-notes').className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs";document.getElementById('prof-tab-presences').className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs";document.getElementById('prof-tab-'+ong).className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs";if(window.lucide) lucide.createIcons();}
+function changerCoursActifProf(v){sessionActive.cours=v;chargerTableauDeBordProf();}
 function ouvrirModalDemandeCours(){document.getElementById('modal-demande-cours').classList.remove('hidden');}
 function fermerModalDemandeCours(){document.getElementById('modal-demande-cours').classList.add('hidden');}
-function soumettreDemandeCours(){const cours=document.getElementById('input-cours-demande').value.trim();if(!cours) return;const k=db.ref('demandesCours').push().key;db.ref('demandesCours/'+k).set({profId:sessionActive.id,profNom:sessionActive.nom,coursDemande:cours,statut:'en attente',date:Date.now()});alert('Demande envoyee');fermerModalDemandeCours();document.getElementById('input-cours-demande').value='';}
-function uploaderDocumentProf(){alert('Document publie');}
-function sauvegarderBaremesProf(){}
-function chargerPresencesProf(){}
-function envoyerMessageAdminWhatsApp(){}
-function envoyerMessageParentWhatsApp(){}
-function modifierMotDePasseAdmin(){const anc=document.getElementById('admin-ancien-mdp').value;const nouv=document.getElementById('admin-nouveau-mdp').value;const conf=document.getElementById('admin-confirmation-mdp').value;if(nouv!==conf){alert('Confirmation differente');return;}if(anc!==(donneesGlobales.admin?.mdp||'admin2026')){alert('Ancien mdp incorrect');return;}db.ref('admin/mdp').set(nouv);alert('Mot de passe modifie');}
-function editerEleve(k){const el=donneesGlobales.eleves[k];if(!el) return;document.getElementById('edit-eleve-key').value=k;document.getElementById('el-nom').value=el.nom||'';document.getElementById('el-postnom').value=el.postnom||'';document.getElementById('el-prenom').value=el.prenom||'';document.getElementById('el-classe').value=el.classe||'';window.scrollTo(0,0);}
-function supprimerEleve(k){if(confirm('Supprimer?')) db.ref('eleves/'+k).remove();}
-function supprimerProf(k){if(confirm('Supprimer?')) db.ref('professeurs/'+k).remove();}
-function supprimerCommunique(k){if(confirm('Supprimer?')) db.ref('communiques/'+k).remove();}
-function validerDemandeCours(k){db.ref('demandesCours/'+k+'/statut').set('valide');alert('Cours valide');}
-function refuserDemandeCours(k){db.ref('demandesCours/'+k+'/statut').set('refuse');}
-</script>
-<!-- FIX FINAL ANTI RETOUR ACCUEIL -->
-<script>
-(function(){
-function saveVue(vue, onglet){
-try{
-localStorage.setItem('donbosco_vue', vue);
-localStorage.setItem('donbosco_session', JSON.stringify(sessionActive));
-if(onglet) localStorage.setItem('donbosco_admin_onglet', onglet);
-window.location.hash = vue;
-}catch(e){}
+function soumettreDemandeCours(){
+  const cours=document.getElementById('input-cours-demande').value.trim();
+  if(!cours) return;
+  const k=db.ref('demandesCours').push().key;
+  db.ref('demandesCours/'+k).set({profId:sessionActive.id,profNom:sessionActive.nom,coursDemande:cours,statut:'en attente',date:Date.now()});
+  alert('Demande envoyée');
+  fermerModalDemandeCours();
 }
-function restoreVue(){
-try{
-var vue = localStorage.getItem('donbosco_vue') || location.hash.replace('#','');
-var sess = localStorage.getItem('donbosco_session');
-if(sess){
-sessionActive = JSON.parse(sess);
-if(sessionActive && sessionActive.role==='admin' && vue && vue!=='accueil'){
-var acc = document.getElementById('vue-accueil');
-var adm = document.getElementById('vue-admin-dashboard');
-if(acc) acc.classList.add('hidden');
-if(adm) adm.classList.remove('hidden');
-var ong = localStorage.getItem('donbosco_admin_onglet') || 'eleves';
-setTimeout(function(){ if(typeof changerOngletAdmin==='function') changerOngletAdmin(ong); },600);
+
+function modifierMotDePasseAdmin(){
+  const anc=document.getElementById('admin-ancien-mdp').value;
+  const nouv=document.getElementById('admin-nouveau-mdp').value;
+  const conf=document.getElementById('admin-confirmation-mdp').value;
+  if(nouv!==conf){alert('Confirmation différente');return;}
+  db.ref('admin/mdp').set(nouv).then(()=>alert('Mot de passe modifié avec succès !'));
 }
-}
-}catch(e){}
-}
-window.changerVue = function(vue, reset){
-reset = reset || false;
-var vues=['vue-accueil','vue-connexion','vue-admin-dashboard','vue-eleve-dashboard','vue-prof-dashboard'];
-vues.forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.add('hidden'); });
-if(vue==='accueil'){
-var a=document.getElementById('vue-accueil'); if(a) a.classList.remove('hidden');
-if(reset){
-localStorage.removeItem('donbosco_vue');
-localStorage.removeItem('donbosco_session');
-localStorage.removeItem('donbosco_admin_onglet');
-window.location.hash='';
-sessionActive={role:null,id:null,nom:null,classe:null,cours:null};
-}
-} else {
-var t=document.getElementById('vue-'+vue) || document.getElementById('vue-'+vue+'-dashboard') || document.getElementById('vue-connexion');
-if(t) t.classList.remove('hidden');
-if(!reset) saveVue(vue);
-}
-setTimeout(function(){ if(window.lucide) lucide.createIcons(); },150);
-};
-window.changerOngletAdmin = function(onglet){
-var secs=['eleves','frais','tuteurs','professeurs','communiques','demandes','messages','calendrier','parametres'];
-secs.forEach(function(s){
-var el=document.getElementById('admin-sec-'+s);
-if(el) el.classList.add('hidden');
-var bid = s==='professeurs'?'profs':s==='messages'?'msgs':s==='calendrier'?'cal':s;
-var btn=document.getElementById('tab-btn-'+bid);
-if(btn) btn.className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50";
-});
-var act=document.getElementById('admin-sec-'+onglet);
-if(act) act.classList.remove('hidden');
-var bid2 = onglet==='professeurs'?'profs':onglet==='messages'?'msgs':onglet==='calendrier'?'cal':onglet;
-var actBtn=document.getElementById('tab-btn-'+bid2);
-if(actBtn) actBtn.className="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5";
-localStorage.setItem('donbosco_admin_onglet', onglet);
-if(window.lucide) lucide.createIcons();
-};
-document.addEventListener('DOMContentLoaded', function(){ if(window.lucide) lucide.createIcons(); restoreVue(); });
-window.addEventListener('load', function(){ setTimeout(function(){ if(window.lucide) lucide.createIcons(); },800); });
-})();
 </script>
 </body>
 </html>
