@@ -15,34 +15,27 @@
   const firebaseConfig = {
     apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
     authDomain: "site-publication.firebaseapp.com",
+    databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
     projectId: "site-publication",
     storageBucket: "site-publication.firebasestorage.app",
     messagingSenderId: "934019778891",
     appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
   };
 </script>
-<!-- Inclusion de Firebase SDK (Compat) pour la synchronisation Cloud multi-appareils -->
+<!-- Inclusion de Firebase SDK (Compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<!-- Inclusion de html2pdf.js pour le téléchargement PDF non modifiable -->
+<!-- Inclusion de html2pdf.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<!-- Inclusion de Lucide Icons pour des icônes modernes et épurées -->
+<!-- Inclusion de Lucide Icons -->
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-    
     body {
         font-family: 'Plus Jakarta Sans', sans-serif;
         -webkit-text-size-adjust: 100%;
         background-color: #0f172a;
     }
-    
-    .table-responsive {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
     .card-hover {
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -57,7 +50,7 @@
 
 <div class="max-w-6xl w-full bg-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/60 overflow-hidden border border-slate-800 transition-all duration-300 relative" id="app">
     
-    <!-- BOUTON D'ACTUALISATION DOUCE -->
+    <!-- BOUTON D'ACTUALISATION -->
     <button onclick="actualiserDonneesSite()" title="Actualiser les données" class="absolute top-4 right-4 z-20 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-700/60 shadow-sm transition flex items-center gap-1.5 backdrop-blur-md">
         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 
         <span class="hidden sm:inline">Actualiser</span>
@@ -84,23 +77,8 @@
                 <p class="text-xs sm:text-sm text-slate-400 font-medium">Choisissez votre profil pour accéder à vos services dédiés en temps réel</p>
             </div>
             
-            <!-- ESPACE COMMUNIQUÉ GLOBAL SUR L'ACCUEIL -->
-            <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
-                <div class="flex items-center justify-between border-b border-slate-700 pb-2.5">
-                    <h3 class="font-bold text-white text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide text-blue-400">
-                        <i data-lucide="megaphone" class="w-4 h-4"></i> Espace Communiqué Officiel (Visible pour tous)
-                    </h3>
-                    <button onclick="changerVue('admin-login', true)" class="hidden md:inline-flex text-[11px] font-semibold text-blue-400 hover:text-blue-300 underline transition items-center gap-1">
-                        <i data-lucide="shield" class="w-3.5 h-3.5"></i> Espace Admin (PC Uniquement)
-                    </button>
-                </div>
-                <div id="accueil-communiques-liste" class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
-                    <p class="text-xs text-slate-400 italic text-center py-2">Chargement des communiqués...</p>
-                </div>
-            </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
-                <div onclick="changerVue('admin-login', true)" class="hidden md:block group bg-slate-800/80 hover:bg-blue-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
+                <div onclick="changerVue('admin-login')" class="hidden md:block group bg-slate-800/80 hover:bg-blue-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
                     <div class="w-12 h-12 mx-auto mb-3.5 rounded-xl bg-blue-950 text-blue-400 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                         <i data-lucide="settings" class="w-6 h-6"></i>
                     </div>
@@ -108,7 +86,7 @@
                     <p class="text-xs text-slate-400 leading-relaxed font-medium">Gestion complète & frais scolaires</p>
                 </div>
 
-                <div onclick="changerVue('prof-login', true)" class="group bg-slate-800/80 hover:bg-emerald-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
+                <div onclick="changerVue('prof-login')" class="group bg-slate-800/80 hover:bg-emerald-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
                     <div class="w-12 h-12 mx-auto mb-3.5 rounded-xl bg-emerald-950 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
                         <i data-lucide="presentation" class="w-6 h-6"></i>
                     </div>
@@ -116,7 +94,7 @@
                     <p class="text-xs text-slate-400 leading-relaxed font-medium">Notes, calendrier des présences & saisie</p>
                 </div>
 
-                <div onclick="changerVue('eleve-login', true)" class="group bg-slate-800/80 hover:bg-indigo-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
+                <div onclick="changerVue('eleve-login')" class="group bg-slate-800/80 hover:bg-indigo-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
                     <div class="w-12 h-12 mx-auto mb-3.5 rounded-xl bg-indigo-950 text-indigo-400 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
                         <i data-lucide="graduation-cap" class="w-6 h-6"></i>
                     </div>
@@ -124,7 +102,7 @@
                     <p class="text-xs text-slate-400 leading-relaxed font-medium">Consultation détaillée & bulletin officiel</p>
                 </div>
 
-                <div onclick="changerVue('parent-login', true)" class="group bg-slate-800/80 hover:bg-violet-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
+                <div onclick="changerVue('parent-login')" class="group bg-slate-800/80 hover:bg-violet-950/40 border border-slate-700/80 p-6 rounded-2xl card-hover cursor-pointer text-center relative shadow-sm">
                     <div class="w-12 h-12 mx-auto mb-3.5 rounded-xl bg-violet-950 text-violet-400 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-all shadow-sm">
                         <i data-lucide="users" class="w-6 h-6"></i>
                     </div>
@@ -134,9 +112,9 @@
             </div>
         </div>
 
-        <!-- FORMULAIRES DE CONNEXION -->
+        <!-- FORMULAIRE DE CONNEXION -->
         <div id="vue-connexion" class="hidden max-w-sm mx-auto space-y-4 sm:space-y-5 bg-slate-800 p-5 sm:p-8 rounded-2xl border border-slate-700 shadow-xl shadow-black/50">
-            <button onclick="changerVue('accueil', true)" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition">
+            <button onclick="changerVue('accueil')" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> Retour à l'accueil
             </button>
             <div class="space-y-1">
@@ -151,85 +129,71 @@
                 <button onclick="validerConnexion()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-semibold text-xs transition shadow-sm flex items-center justify-center gap-2">
                     <i data-lucide="log-in" class="w-4 h-4"></i> Se connecter
                 </button>
-                <p id="erreur-connexion" class="text-red-400 text-xs text-center font-medium hidden bg-red-950/50 p-2.5 rounded-xl border border-red-900/50">Code incorrect, accès non autorisé ou acompte obligatoire non réglé.</p>
+                <p id="erreur-connexion" class="text-red-400 text-xs text-center font-medium hidden bg-red-950/50 p-2.5 rounded-xl border border-red-900/50">Code incorrect ou accès non autorisé.</p>
             </div>
         </div>
 
         <!-- TABLEAU DE BORD ADMINISTRATION -->
         <div id="vue-admin-dashboard" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-4 gap-4">
-                <div>
-                    <h2 class="text-lg font-bold text-white">Administration Centrale (PC)</h2>
-                    <p class="text-xs text-slate-400 font-medium">Supervision générale, gestion globale et enregistrement des frais</p>
-                </div>
-                <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <button onclick="telechargerListeElevesPDF()" class="bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs flex-1 sm:flex-initial justify-center border border-slate-700">
-                        <i data-lucide="download" class="w-4 h-4"></i> Télécharger Liste (PDF)
-                    </button>
-                    <button onclick="changerVue('accueil', true)" class="text-xs font-semibold text-red-400 hover:text-red-300 px-3 py-2 transition flex items-center gap-1">
-                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Déconnexion
-                    </button>
-                </div>
-            </div>
-
-            <div class="flex gap-2 border-b border-slate-800 pb-3 overflow-x-auto w-full scrollbar-none">
-                <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5">
-                    <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Élèves
-                </button>
-                <button onclick="changerOngletAdmin('frais')" id="tab-btn-frais" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Frais & Acomptes
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <h2 class="text-lg font-bold text-white">Administration Centrale</h2>
+                <button onclick="changerVue('accueil')" class="text-xs font-semibold text-red-400 hover:text-red-300 flex items-center gap-1">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Déconnexion
                 </button>
             </div>
-            <div id="admin-sec-eleves" class="space-y-5"></div>
+            <p class="text-sm text-slate-300">Bienvenue dans l'espace d'administration.</p>
         </div>
 
         <!-- TABLEAU DE BORD ÉLÈVE -->
         <div id="vue-eleve-dashboard" class="hidden space-y-6">
-            <!-- Contenu Élève -->
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <h2 class="text-lg font-bold text-white">Espace Élève</h2>
+                <button onclick="changerVue('accueil')" class="text-xs font-semibold text-red-400 hover:text-red-300 flex items-center gap-1">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Déconnexion
+                </button>
+            </div>
+            <p class="text-sm text-slate-300" id="texte-bienvenue-eleve">Bienvenue sur votre espace.</p>
         </div>
 
         <!-- TABLEAU DE BORD PROFESSEUR -->
         <div id="vue-prof-dashboard" class="hidden space-y-6">
-            <!-- Contenu Professeur -->
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <h2 class="text-lg font-bold text-white">Espace Professeur</h2>
+                <button onclick="changerVue('accueil')" class="text-xs font-semibold text-red-400 hover:text-red-300 flex items-center gap-1">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Déconnexion
+                </button>
+            </div>
+            <p class="text-sm text-slate-300">Bienvenue sur votre espace de saisie des notes.</p>
         </div>
 
     </div>
 </div>
 
-<!-- SCRIPT COMPLET -->
+<!-- SCRIPT DE CONNEXION ET GESTION -->
 <script>
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     let donneesGlobales = {
-        eleves: {}, tuteurs: {}, professeurs: {}, notes: {}, frais: {}, communiques: {}, demandesCours: {}, messages: {}, presences: {}, documents: {}, baremes: {}, admin: { mdp: "admin2026" }
+        eleves: {}, tuteurs: {}, professeurs: {}, notes: {}, frais: {}, communiques: {}, admin: { mdp: "admin2026" }
     };
-    let sessionActive = { role: null, id: null, nom: null, classe: null, cours: null };
+    let sessionActive = { role: null, id: null, nom: null, classe: null };
 
+    // Synchronisation en temps réel avec Firebase
     db.ref().on('value', (snapshot) => {
         const val = snapshot.val();
         if (val) {
             donneesGlobales = val;
             if (!donneesGlobales.admin) donneesGlobales.admin = { mdp: "admin2026" };
         }
-        rafraichirInterfaceActive();
     });
 
     function actualiserDonneesSite() {
         db.ref().once('value').then((snapshot) => {
             const val = snapshot.val();
-            if (val) {
-                donneesGlobales = val;
-                if (!donneesGlobales.admin) donneesGlobales.admin = { mdp: "admin2026" };
-            }
-            rafraichirInterfaceActive();
+            if (val) donneesGlobales = val;
+            alert("Données actualisées avec succès !");
         });
-    }
-
-    function rafraichirInterfaceActive() {
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
     }
 
     function changerVue(vue) {
@@ -241,15 +205,112 @@
 
         if (vue === 'accueil') {
             document.getElementById('vue-accueil').classList.remove('hidden');
-            sessionActive = { role: null, id: null, nom: null, classe: null, cours: null };
+            sessionActive = { role: null, id: null, nom: null, classe: null };
         } else if (vue.includes('login')) {
             document.getElementById('vue-connexion').classList.remove('hidden');
             sessionActive.role = vue.split('-')[0];
+            const titres = {
+                'admin': "Connexion Administrateur",
+                'prof': "Connexion Professeur",
+                'eleve': "Connexion Élève",
+                'parent': "Connexion Parent / Tuteur"
+            };
+            document.getElementById('titre-connexion').innerText = titres[sessionActive.role] || "Connexion";
+            document.getElementById('erreur-connexion').classList.add('hidden');
+            document.getElementById('input-code').value = '';
         }
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     }
+
+    function validerConnexion() {
+        const code = document.getElementById('input-code').value.trim();
+        const errEl = document.getElementById('erreur-connexion');
+        errEl.classList.add('hidden');
+
+        if (!code) {
+            errEl.innerText = "Veuillez entrer un code d'accès.";
+            errEl.classList.remove('hidden');
+            return;
+        }
+
+        if (sessionActive.role === 'admin') {
+            const mdpAdmin = donneesGlobales.admin && donneesGlobales.admin.mdp ? donneesGlobales.admin.mdp : "admin2026";
+            if (code === mdpAdmin) {
+                sessionActive.nom = "Administrateur";
+                document.getElementById('vue-connexion').classList.add('hidden');
+                document.getElementById('vue-admin-dashboard').classList.remove('hidden');
+            } else {
+                errEl.innerText = "Mot de passe administrateur incorrect.";
+                errEl.classList.remove('hidden');
+            }
+        } else if (sessionActive.role === 'prof') {
+            let profTrouve = null;
+            if (donneesGlobales.professeurs) {
+                for (let id in donneesGlobales.professeurs) {
+                    if (donneesGlobales.professeurs[id].code === code) {
+                        profTrouve = donneesGlobales.professeurs[id];
+                        sessionActive.id = id;
+                        break;
+                    }
+                }
+            }
+            if (profTrouve) {
+                sessionActive.nom = profTrouve.nom;
+                document.getElementById('vue-connexion').classList.add('hidden');
+                document.getElementById('vue-prof-dashboard').classList.remove('hidden');
+            } else {
+                errEl.innerText = "Code professeur incorrect.";
+                errEl.classList.remove('hidden');
+            }
+        } else if (sessionActive.role === 'eleve') {
+            let eleveTrouve = null;
+            if (donneesGlobales.eleves) {
+                for (let id in donneesGlobales.eleves) {
+                    if (donneesGlobales.eleves[id].code === code) {
+                        eleveTrouve = donneesGlobales.eleves[id];
+                        sessionActive.id = id;
+                        break;
+                    }
+                }
+            }
+            if (eleveTrouve) {
+                sessionActive.nom = eleveTrouve.nom;
+                sessionActive.classe = eleveTrouve.classe;
+                document.getElementById('vue-connexion').classList.add('hidden');
+                document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
+                document.getElementById('texte-bienvenue-eleve').innerText = `Bienvenue, ${eleveTrouve.nom} (${eleveTrouve.classe || ''})`;
+            } else {
+                errEl.innerText = "Code élève incorrect.";
+                errEl.classList.remove('hidden');
+            }
+        } else if (sessionActive.role === 'parent') {
+            let parentTrouve = null;
+            if (donneesGlobales.tuteurs) {
+                for (let id in donneesGlobales.tuteurs) {
+                    if (donneesGlobales.tuteurs[id].code === code) {
+                        parentTrouve = donneesGlobales.tuteurs[id];
+                        sessionActive.id = id;
+                        break;
+                    }
+                }
+            }
+            if (parentTrouve) {
+                sessionActive.nom = parentTrouve.nom;
+                document.getElementById('vue-connexion').classList.add('hidden');
+                document.getElementById('vue-eleve-dashboard').classList.remove('hidden'); // Redirige vers la vue de consultation
+                document.getElementById('texte-bienvenue-eleve').innerText = `Espace Tuteur / Parent : ${parentTrouve.nom}`;
+            } else {
+                errEl.innerText = "Code parent incorrect.";
+                errEl.classList.remove('hidden');
+            }
+        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // Initialisation des icônes au chargement
+    window.onload = function() {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    };
 </script>
 </body>
 </html>
