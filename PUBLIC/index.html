@@ -776,6 +776,7 @@ function sauvegarderPage(nom) {
     localStorage.setItem('dernierePageDonBosco', nom);
     window.location.hash = nom;
 }
+
 document.addEventListener('DOMContentLoaded', () => {
     var page = localStorage.getItem('dernierePageDonBosco') || window.location.hash.replace('#','');
     if (page && document.getElementById(page)) {
@@ -783,6 +784,19 @@ document.addEventListener('DOMContentLoaded', () => {
         for(var i=0; i<toutes.length; i++){ toutes[i].style.display='none'; }
         document.getElementById(page).style.display='block';
     }
+
+    // PATCH AUTO: on intercepte ta fonction qui change de page
+    // Si ta fonction s'appelle afficherPage, showPage, afficher, showSection, ça va marcher tout seul
+    ['afficherPage','showPage','afficher','showSection','naviguer'].forEach(function(nomFonction){
+        if(typeof window[nomFonction] === 'function' &&!window[nomFonction].patched){
+            var ancienne = window[nomFonction];
+            window[nomFonction] = function(id){
+                sauvegarderPage(id);
+                return ancienne.apply(this, arguments);
+            };
+            window[nomFonction].patched = true;
+        }
+    });
 });
 
     // Paramètres Admin
