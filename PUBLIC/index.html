@@ -10,12 +10,11 @@
         darkMode: 'class',
     }
 </script>
-<!-- Configuration Firebase -->
+<!-- Configuration Firebase d'origine (Intouchée) -->
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
     authDomain: "site-publication.firebaseapp.com",
-    databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
     projectId: "site-publication",
     storageBucket: "site-publication.firebasestorage.app",
     messagingSenderId: "934019778891",
@@ -133,10 +132,6 @@
                     <p class="text-xs text-slate-400 leading-relaxed font-medium">Suivi par cours, calendrier & messagerie</p>
                 </div>
             </div>
-            
-            <div class="block md:hidden text-center text-[11px] text-slate-500 italic bg-slate-900/40 p-3 rounded-xl border border-slate-800">
-                Remarque : L'espace d'administration est exclusivement réservé aux ordinateurs et ne s'affiche pas sur les appareils mobiles.
-            </div>
         </div>
 
         <!-- FORMULAIRES DE CONNEXION -->
@@ -184,29 +179,7 @@
                 <button onclick="changerOngletAdmin('frais')" id="tab-btn-frais" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
                     <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Frais & Acomptes
                 </button>
-                <button onclick="changerOngletAdmin('tuteurs')" id="tab-btn-tuteurs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="users" class="w-3.5 h-3.5"></i> Tuteurs
-                </button>
-                <button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="briefcase" class="w-3.5 h-3.5"></i> Professeurs
-                </button>
-                <button onclick="changerOngletAdmin('communiques')" id="tab-btn-communiques" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="megaphone" class="w-3.5 h-3.5"></i> Communiqués
-                </button>
-                <button onclick="changerOngletAdmin('demandes')" id="tab-btn-demandes" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="git-pull-request" class="w-3.5 h-3.5"></i> Demandes Cours
-                </button>
-                <button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Messagerie
-                </button>
-                <button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Présences
-                </button>
-                <button onclick="changerOngletAdmin('parametres')" id="tab-btn-parametres" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="key" class="w-3.5 h-3.5"></i> Paramètres
-                </button>
             </div>
-
             <div id="admin-sec-eleves" class="space-y-5"></div>
         </div>
 
@@ -223,32 +196,16 @@
     </div>
 </div>
 
-<!-- SCRIPT COMPLET DE GESTION -->
+<!-- SCRIPT COMPLET -->
 <script>
-    // Initialisation de Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     let donneesGlobales = {
-        eleves: {},
-        tuteurs: {},
-        professeurs: {},
-        notes: {},
-        frais: {},
-        communiques: {},
-        demandesCours: {},
-        messages: {},
-        presences: {},
-        documents: {},
-        baremes: {},
-        admin: { mdp: "admin2026" }
+        eleves: {}, tuteurs: {}, professeurs: {}, notes: {}, frais: {}, communiques: {}, demandesCours: {}, messages: {}, presences: {}, documents: {}, baremes: {}, admin: { mdp: "admin2026" }
     };
-
     let sessionActive = { role: null, id: null, nom: null, classe: null, cours: null };
-    let moisActuelCalendarEleve = new Date().getMonth();
-    let anneeActuelleCalendarEleve = new Date().getFullYear();
 
-    // Écouteur en temps réel sur Firebase
     db.ref().on('value', (snapshot) => {
         const val = snapshot.val();
         if (val) {
@@ -258,7 +215,6 @@
         rafraichirInterfaceActive();
     });
 
-    // Fonction d'actualisation douce
     function actualiserDonneesSite() {
         db.ref().once('value').then((snapshot) => {
             const val = snapshot.val();
@@ -267,42 +223,16 @@
                 if (!donneesGlobales.admin) donneesGlobales.admin = { mdp: "admin2026" };
             }
             rafraichirInterfaceActive();
-            const icone = document.querySelector('[data-lucide="refresh-cw"]');
-            if(icone) {
-                icone.classList.add('animate-spin');
-                setTimeout(() => icone.classList.remove('animate-spin'), 1000);
-            }
-        }).catch((err) => {
-            console.error("Erreur lors de la synchronisation :", err);
         });
     }
 
     function rafraichirInterfaceActive() {
-        if (typeof chargerCommuniquesAccueil === 'function') chargerCommuniquesAccueil();
-        if (sessionActive.role === 'admin') {
-            if (typeof chargerListeAdminEleves === 'function') chargerListeAdminEleves();
-            if (typeof chargerListeFraisParClasse === 'function') chargerListeFraisParClasse();
-            if (typeof chargerListeAdminTuteurs === 'function') chargerListeAdminTuteurs();
-            if (typeof chargerListeAdminProfs === 'function') chargerListeAdminProfs();
-            if (typeof chargerAdminCommuniques === 'function') chargerAdminCommuniques();
-            if (typeof chargerAdminDemandes === 'function') chargerAdminDemandes();
-            if (typeof chargerAdminWhatsAppContacts === 'function') chargerAdminWhatsAppContacts();
-            if (typeof chargerCalendrierAdmin === 'function') chargerCalendrierAdmin();
-        } else if (sessionActive.role === 'prof') {
-            if (typeof chargerTableauDeBordProf === 'function') chargerTableauDeBordProf();
-        } else if (sessionActive.role === 'eleve') {
-            if (typeof chargerTableauDeBordEleve === 'function') chargerTableauDeBordEleve();
-        } else if (sessionActive.role === 'parent') {
-            if (typeof chargerTableauDeBordParent === 'function') chargerTableauDeBordParent();
-        }
-        
-        // Regénère les icônes Lucide à chaque changement d'interface
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
     }
 
-    function changerVue(vue, reset = false) {
+    function changerVue(vue) {
         document.getElementById('vue-accueil').classList.add('hidden');
         document.getElementById('vue-connexion').classList.add('hidden');
         document.getElementById('vue-admin-dashboard').classList.add('hidden');
@@ -314,17 +244,7 @@
             sessionActive = { role: null, id: null, nom: null, classe: null, cours: null };
         } else if (vue.includes('login')) {
             document.getElementById('vue-connexion').classList.remove('hidden');
-            const role = vue.split('-')[0];
-            sessionActive.role = role;
-            const titres = {
-                'admin': "Connexion Administrateur",
-                'prof': "Connexion Professeur",
-                'eleve': "Connexion Élève",
-                'parent': "Connexion Parent / Tuteur"
-            };
-            document.getElementById('titre-connexion').innerText = titres[role];
-            document.getElementById('erreur-connexion').classList.add('hidden');
-            document.getElementById('input-code').value = '';
+            sessionActive.role = vue.split('-')[0];
         }
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
