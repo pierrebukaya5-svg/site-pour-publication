@@ -58,7 +58,7 @@
 
 <div class="max-w-6xl w-full bg-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/60 overflow-hidden border border-slate-800 transition-all duration-300 relative" id="app">
     
-    <!-- BOUTON D'ACTUALISATION DOUCE (SANS QUITTER LE SITE) -->
+    <!-- BOUTON D'ACTUALISATION DOUCE -->
     <button onclick="actualiserDonneesSite()" title="Actualiser les données" class="absolute top-4 right-4 z-20 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-700/60 shadow-sm transition flex items-center gap-1.5 backdrop-blur-md">
         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 
         <span class="hidden sm:inline">Actualiser</span>
@@ -207,11 +207,17 @@
                 </button>
             </div>
 
-            <!-- Les sections admin restent intactes -->
-            <div id="admin-sec-eleves" class="space-y-5">
-                <!-- (Contenu de la section élèves inchangé) -->
-            </div>
-            <!-- ... -->
+            <div id="admin-sec-eleves" class="space-y-5"></div>
+        </div>
+
+        <!-- TABLEAU DE BORD ÉLÈVE -->
+        <div id="vue-eleve-dashboard" class="hidden space-y-6">
+            <!-- Contenu Élève -->
+        </div>
+
+        <!-- TABLEAU DE BORD PROFESSEUR -->
+        <div id="vue-prof-dashboard" class="hidden space-y-6">
+            <!-- Contenu Professeur -->
         </div>
 
     </div>
@@ -252,7 +258,7 @@
         rafraichirInterfaceActive();
     });
 
-    // Fonction d'actualisation douce (sans recharger la page du navigateur ni perdre la session)
+    // Fonction d'actualisation douce
     function actualiserDonneesSite() {
         db.ref().once('value').then((snapshot) => {
             const val = snapshot.val();
@@ -261,7 +267,6 @@
                 if (!donneesGlobales.admin) donneesGlobales.admin = { mdp: "admin2026" };
             }
             rafraichirInterfaceActive();
-            // Petit effet visuel discret sur l'icône
             const icone = document.querySelector('[data-lucide="refresh-cw"]');
             if(icone) {
                 icone.classList.add('animate-spin');
@@ -273,24 +278,25 @@
     }
 
     function rafraichirInterfaceActive() {
-        chargerCommuniquesAccueil();
+        if (typeof chargerCommuniquesAccueil === 'function') chargerCommuniquesAccueil();
         if (sessionActive.role === 'admin') {
-            chargerListeAdminEleves();
-            chargerListeFraisParClasse();
-            chargerListeAdminTuteurs();
-            chargerListeAdminProfs();
-            chargerAdminCommuniques();
-            chargerAdminDemandes();
-            chargerAdminWhatsAppContacts();
-            chargerCalendrierAdmin();
+            if (typeof chargerListeAdminEleves === 'function') chargerListeAdminEleves();
+            if (typeof chargerListeFraisParClasse === 'function') chargerListeFraisParClasse();
+            if (typeof chargerListeAdminTuteurs === 'function') chargerListeAdminTuteurs();
+            if (typeof chargerListeAdminProfs === 'function') chargerListeAdminProfs();
+            if (typeof chargerAdminCommuniques === 'function') chargerAdminCommuniques();
+            if (typeof chargerAdminDemandes === 'function') chargerAdminDemandes();
+            if (typeof chargerAdminWhatsAppContacts === 'function') chargerAdminWhatsAppContacts();
+            if (typeof chargerCalendrierAdmin === 'function') chargerCalendrierAdmin();
         } else if (sessionActive.role === 'prof') {
-            chargerTableauDeBordProf();
+            if (typeof chargerTableauDeBordProf === 'function') chargerTableauDeBordProf();
         } else if (sessionActive.role === 'eleve') {
-            chargerTableauDeBordEleve();
+            if (typeof chargerTableauDeBordEleve === 'function') chargerTableauDeBordEleve();
         } else if (sessionActive.role === 'parent') {
-            chargerTableauDeBordParent();
+            if (typeof chargerTableauDeBordParent === 'function') chargerTableauDeBordParent();
         }
-        // IMPORTANT : Regénère les icônes Lucide à chaque mise à jour de l'interface
+        
+        // Regénère les icônes Lucide à chaque changement d'interface
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
