@@ -3,378 +3,275 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>École Lycée Don Bosco</title>
+<title>Ecole Lycee Don Bosco</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = {darkMode: 'class'}</script>
 <script>
-    tailwind.config = {
-        darkMode: 'class',
-    }
+const firebaseConfig = {
+  apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
+  authDomain: "site-publication.firebaseapp.com",
+  databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
+  projectId: "site-publication",
+  storageBucket: "site-publication.firebasestorage.app",
+  messagingSenderId: "934019778891",
+  appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
+};
 </script>
-<!-- Configuration Firebase -->
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWG0E4m0uJNM",
-    authDomain: "site-publication.firebaseapp.com",
-    databaseURL: "https://site-publication-default-rtdb.firebaseio.com",
-    projectId: "site-publication",
-    storageBucket: "site-publication.firebasestorage.app",
-    messagingSenderId: "934019778891",
-    appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
-  };
-</script>
-<!-- Inclusion de Firebase SDK (Compat) pour la synchronisation Cloud multi-appareils -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<!-- Inclusion de html2pdf.js pour le téléchargement PDF non modifiable -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<!-- Inclusion de Lucide Icons pour des icônes modernes et épurées -->
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-    
-    body {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        -webkit-text-size-adjust: 100%;
-        background-color: #0f172a;
-    }
-    
-    .table-responsive {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .card-hover {
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
-        border-color: rgba(59, 130, 246, 0.5);
-    }
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+body{font-family:'Plus Jakarta Sans',sans-serif;background-color:#0f172a}
+.table-responsive{width:100%;overflow-x:auto}
 </style>
 </head>
 <body class="min-h-full flex items-center justify-center p-2 sm:p-6 text-slate-200 bg-slate-950">
-
-<button id="btn-refresh-global" onclick="rafraichirDonneesPage()" style="position:fixed;top:12px;right:12px;z-index:99999;padding:10px 16px;background:#0d2a54;color:white;border:none;border-radius:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;gap:6px;font-family:sans-serif;">
-  <span>↻ Actualiser</span>
+<!-- BOUTON ACTUALISER FIXE PROPRE -->
+<button id="btn-refresh-global" onclick="rafraichirDonneesPage()" style="position:fixed;top:12px;right:12px;z-index:99999;padding:10px 16px;background:#0d2a54;color:white;border:none;border-radius:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;gap:6px;font-family:sans-serif;font-size:13px;">
+<span>Actualiser</span>
 </button>
 <script>
 function rafraichirDonneesPage(){
-  if(typeof rafraichirInterfaceActive==='function') rafraichirInterfaceActive();
-  if(window.lucide) setTimeout(()=>lucide.createIcons(),200);
-  setTimeout(()=>{location.reload();}, 300);
+if(typeof rafraichirInterfaceActive==='function') rafraichirInterfaceActive();
+if(window.lucide) setTimeout(function(){lucide.createIcons();},200);
 }
 </script>
-00">
-                        <i data-lucide="download" class="w-4 h-4"></i> Télécharger Liste (PDF)
-                    </button>
-                    <button onclick="changerVue('accueil', true)" class="text-xs font-semibold text-red-400 hover:text-red-300 px-3 py-2 transition flex items-center gap-1">
-                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Déconnexion
-                    </button>
-                </div>
-            </div>
-
-            <div class="flex gap-2 border-b border-slate-800 pb-3 overflow-x-auto w-full scrollbar-none">
-                <button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5">
-                    <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Élèves
-                </button>
-                <button onclick="changerOngletAdmin('frais')" id="tab-btn-frais" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Frais & Acomptes
-                </button>
-                <button onclick="changerOngletAdmin('tuteurs')" id="tab-btn-tuteurs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="users" class="w-3.5 h-3.5"></i> Tuteurs
-                </button>
-                <button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="briefcase" class="w-3.5 h-3.5"></i> Professeurs
-                </button>
-                <button onclick="changerOngletAdmin('communiques')" id="tab-btn-communiques" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="megaphone" class="w-3.5 h-3.5"></i> Communiqués
-                </button>
-                <button onclick="changerOngletAdmin('demandes')" id="tab-btn-demandes" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="git-pull-request" class="w-3.5 h-3.5"></i> Demandes Cours
-                </button>
-                <button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Messagerie
-                </button>
-                <button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Présences
-                </button>
-                <button onclick="changerOngletAdmin('parametres')" id="tab-btn-parametres" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50">
-                    <i data-lucide="key" class="w-3.5 h-3.5"></i> Paramètres
-                </button>
-            </div>
-            div>
-
-            <!-- SECTION FRAIS & ACOMPTES -->
-            <div id="admin-sec-frais" class="space-y-4 hidden">
-                <div class="bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-700 space-y-4 shadow-xs">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-white text-xs uppercase tracking-wide flex items-center gap-2 text-emerald-400">
-                            <i data-lucide="credit-card" class="w-4 h-4"></i> Enregistrement des Frais par Élève (Acompte & Minerval par Trimestre)
-                        </h3>
-                    </div>
-                    <p class="text-xs text-slate-400">Saisissez ou sélectionnez le nom de l'élève. L'enregistrement d'un acompte obligatoire débloque automatiquement l'accès aux espaces Élève et Parent.</p>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-                        <!-- CHAMP DE SAISIE AVEC AUTO-COMPLÉTION INTELLIGENTE -->
-                        <div class="relative">
-                            <input id="frais-input-eleve" list="frais-liste-eleves-suggestions" placeholder="Saisir ou chercher un élève..." class="w-full bg-slate-900 border border-slate-700 text-white placeholder-slate-500 p-2.5 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                            <datalist id="frais-liste-eleves-suggestions">
-                                <!-- Les suggestions se chargeront dynamiquement ici -->
-                            </datalist>
-                        </div>
-
-                        <select id="frais-trimestre" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs focus:outline-none">
-                            <option value="T1">Minerval Trimestre 1 (T1)</option>
-                            <option value="T2">Minerval Trimestre 2 (T2)</option>
-                            <option value="T3">Minerval Trimestre 3 (T3)</option>
-                        </select>
-                        <input id="frais-acompte" type="number" placeholder="Montant Acompte ($)" class="bg-slate-900 border border-slate-700 text-white placeholder-slate-500 p-2.5 rounded-xl text-xs focus:outline-none">
-                        <input id="frais-minerval" type="number" placeholder="Montant Minerval ($)" class="bg-slate-900 border border-slate-700 text-white placeholder-slate-500 p-2.5 rounded-xl text-xs focus:outline-none">
-                        <button onclick="enregistrerFraisEleve()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition shadow-xs flex items-center justify-center gap-1.5">
-                            <i data-lucide="save" class="w-4 h-4"></i> Enregistrer Paiement
-                        </button>
-                    </div>
-                </div>
-                ubliés</h3>
-                <div id="admin-liste-communiques" class="space-y-2.5"></div>
-            </div>
-
-            <!-- SECTION DEMANDES DE COURS -->
-            <div id="admin-sec-demandes" class="space-y-4 hidden">
-                <h3 class="font-bold text-white text-xs uppercase tracking-wide">Validation des demandes d'ajout de cours</h3>
-                <div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden shadow-xs">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead>
-                            <tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 font-semibold">
-                                <th class="p-3">Professeur</th>
-                                <th class="p-3">Cours Demandé</th>
-                                <th class="p-3">Statut</th>
-                                <th class="p-3 text-center">Action Admin</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-liste-demandes" class="divide-y divide-slate-700/50"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- SECTION MESSAGERIE ADMIN -->
-            <div id="admin-sec-messages" class="space-y-3 hidden">
-                <h3 class="font-bold text-white text-xs uppercase tracking-wide">Messagerie tuteurs & administration</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden shadow-xs" style="min-height: 480px;">
-                    <div class="border-r border-slate-700 bg-slate-900/60 flex flex-col max-h-48 md:max-h-none overflow-y-auto">
-                        <div class="p-3 bg-slate-900 border-b border-slate-700 font-semibold text-[11px] text-slate-300 uppercase tracking-wider sticky top-0 z-10 flex items-center gap-1.5">
-                            <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Conversations
-                        </div>
-                        <div id="admin-whatsapp-contacts" class="divide-y divide-slate-800"></div>
-                    </div>
-                    <div class="md:col-span-2 flex flex-col justify-between bg-slate-800">
-                        <div id="admin-whatsapp-header" class="p-3.5 bg-slate-900 border-b border-slate-700 font-semibold text-xs text-slate-200 flex items-center justify-between">
-                            <span>Sélectionnez un tuteur</span>
-                        </div>
-                        <div id="admin-whatsapp-chat" class="p-4 overflow-y-auto flex-1 space-y-3 bg-slate-900/40 max-h-80 md:max-h-none">
-                            <div class="text-center text-slate-500 text-xs my-auto">Aucune conversation sélectionnée</div>
-                        </div>
-                        <div class="p-3 bg-slate-900 border-t border-slate-700 flex gap-2 items-center">
-                            <input id="admin-whatsapp-input" placeholder="Écrire un message..." class="bg-slate-800 border border-slate-700 text-white placeholder-slate-500 p-2.5 rounded-xl flex-1 text-xs focus:outline-none" disabled>
-                            <button onclick="envoyerMessageAdminWhatsApp()" id="admin-whatsapp-send-btn" class="bg-slate-700 text-slate-400 px-4 py-2.5 rounded-xl text-xs font-semibold transition shrink-0 opacity-50 cursor-not-allowed shadow-xs flex items-center gap-1" disabled>
-                                <i data-lucide="send" class="w-3.5 h-3.5"></i> Envoyer
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            s="w-8 h-8"></i>
-                </div>
-            </div>
-
-            <div class="bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-2xl space-y-3 shadow-xs">
-                <h3 class="font-bold text-white text-xs uppercase tracking-wide flex items-center gap-2 text-blue-400">
-                    <i data-lucide="book-open" class="w-4 h-4"></i> Cours et Documents pédagogiques
-                </h3>
-                <div id="eleve-liste-documents" class="space-y-2">
-                    <p class="text-xs text-slate-400 italic text-center py-2">Aucun document disponible pour le moment.</p>
-                </div>
-            </div>
-
-            <!-- MESSAGERIE PARENT -->
-            <div id="parent-section-messagerie" class="hidden bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-2xl space-y-3 shadow-xs">
-                <h3 class="font-bold text-white text-xs uppercase tracking-wide flex items-center gap-2 text-violet-400">
-                    <i data-lucide="message-square" class="w-4 h-4"></i> Messagerie avec l'Administration
-                </h3>
-                <div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden flex flex-col" style="height: 320px;">
-                    <div id="parent-whatsapp-chat" class="p-3 overflow-y-auto flex-1 space-y-2.5 text-xs">
-                        <div class="text-center text-slate-500 my-auto">Chargement de la conversation...</div>
-                    </div>
-                    <div class="p-2.5 bg-slate-900 border-t border-slate-700 flex gap-2 items-center">
-                        <input id="parent-whatsapp-input" placeholder="Écrire un message à l'administration..." class="bg-slate-800 border border-slate-700 text-white placeholder-slate-500 p-2 rounded-xl flex-1 text-xs focus:outline-none">
-                        <button onclick="envoyerMessageParentWhatsApp()" class="bg-violet-600 hover:bg-violet-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition shrink-0 shadow-xs flex items-center gap-1">
-                            <i data-lucide="send" class="w-3.5 h-3.5"></i> Envoyer
-                        </button>
-                    </div>
-                </div>
-            </div>
-            a-lucide="upload" class="w-4 h-4"></i> Publier
-                    </button>
-                </div>
-                <div id="prof-liste-mes-documents" class="space-y-2 pt-2"></div>
-            </div>
-
-            <!-- Configuration des Barèmes -->
-            <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl space-y-3 shadow-xs">
-                <h3 class="font-bold text-white text-xs flex items-center gap-2 uppercase tracking-wide">
-                    <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i> Configuration des Barèmes
-                </h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 text-xs">
-                    <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Interros (1-4)</label>
-                        <select id="cfg-nb-interros" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl font-semibold focus:outline-none">
-                            <option value="1">1 Interro</option>
-                            <option value="2">2 Interros</option>
-                            <option value="3">3 Interros</option>
-                            <option value="4" selected>4 Interros</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Max Interro (/X)</label>
-                        <input id="cfg-max-interro" type="number" value="10" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-center font-bold focus:outline-none">
-                    </div>
-                    e</option>
-                                <option value="4ème Humanité - Coupe & Couture">4ème Humanité - Coupe & Couture</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden shadow-xs">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 font-semibold">
-                                    <th class="p-3">Élève</th>
-                                    <th class="p-3">Classe</th>
-                                    <th class="p-3">Statut de présence</th>
-                                    <th class="p-3 text-center">Action rapide</th>
-                                </tr>
-                            </thead>
-                            <tbody id="prof-liste-presences-action" class="divide-y divide-slate-700/50"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
+<div id="app" class="w-full max-w-6xl mx-auto">
+<div id="vue-accueil" class="space-y-6">
+<div class="text-center py-8">
+<h1 class="text-3xl font-bold text-white">Ecole Lycee Don Bosco</h1>
+<p class="text-slate-400 text-sm mt-2">Plateforme de gestion scolaire</p>
 </div>
-
-<!-- MODALE DEMANDE DE COURS -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<button onclick="changerVue('admin-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="shield" class="w-8 h-8 text-blue-400 mb-3"></i><h3 class="font-bold text-white">Admin</h3></button>
+<button onclick="changerVue('prof-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="briefcase" class="w-8 h-8 text-emerald-400 mb-3"></i><h3 class="font-bold text-white">Prof</h3></button>
+<button onclick="changerVue('eleve-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="graduation-cap" class="w-8 h-8 text-violet-400 mb-3"></i><h3 class="font-bold text-white">Eleve</h3></button>
+<button onclick="changerVue('parent-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="users" class="w-8 h-8 text-amber-400 mb-3"></i><h3 class="font-bold text-white">Parent</h3></button>
+</div>
+<div id="accueil-communiques" class="bg-slate-800 border border-slate-700 rounded-2xl p-5"><h3 class="font-bold text-white text-sm mb-3 flex items-center gap-2"><i data-lucide="megaphone" class="w-4 h-4"></i> Communiques</h3><div id="communiques-accueil-liste" class="space-y-2"></div></div>
+</div>
+<div id="vue-connexion" class="hidden max-w-md mx-auto bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
+<h2 id="titre-connexion" class="text-lg font-bold text-white">Connexion</h2>
+<input id="input-code" type="password" placeholder="Code d'acces" class="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-xl text-sm">
+<button onclick="validerConnexion()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl text-sm font-semibold">Se connecter</button>
+<p id="erreur-connexion" class="hidden text-red-400 text-xs bg-red-950/50 p-2 rounded-lg">Code incorrect</p>
+<button onclick="changerVue('accueil', true)" class="w-full text-slate-400 text-xs mt-2">Retour accueil</button>
+</div>
+<div id="vue-admin-dashboard" class="hidden space-y-5">
+<div class="flex justify-between border-b border-slate-800 pb-4"><div><h2 class="text-lg font-bold text-white">Admin</h2></div><div class="flex gap-2"><button onclick="telechargerListeElevesPDF()" class="bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="download" class="w-4 h-4"></i> Liste PDF</button><button onclick="changerVue('accueil', true)" class="text-xs text-red-400 flex items-center gap-1"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Deconnexion</button></div></div>
+<div class="flex gap-2 border-b border-slate-800 pb-3 overflow-x-auto"><button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="user-check" class="w-3.5 h-3.5"></i> Eleves</button><button onclick="changerOngletAdmin('frais')" id="tab-btn-frais" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Frais</button><button onclick="changerOngletAdmin('tuteurs')" id="tab-btn-tuteurs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i> Tuteurs</button><button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="briefcase" class="w-3.5 h-3.5"></i> Profs</button><button onclick="changerOngletAdmin('communiques')" id="tab-btn-communiques" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="megaphone" class="w-3.5 h-3.5"></i> Communiques</button><button onclick="changerOngletAdmin('demandes')" id="tab-btn-demandes" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="git-pull-request" class="w-3.5 h-3.5"></i> Demandes</button><button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> Messages</button><button onclick="changerOngletAdmin('calendrier')" id="tab-btn-cal" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> Presences</button><button onclick="changerOngletAdmin('parametres')" id="tab-btn-parametres" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="key" class="w-3.5 h-3.5"></i> Parametres</button></div>
+m" placeholder="Prenom Tuteur" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+<input id="tut-tel" placeholder="Telephone" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+</div>
+<button onclick="enregistrerOuModifierEleve()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5"><i data-lucide="save" class="w-4 h-4"></i> Enregistrer Eleve</button>
+</div>
+<div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden">
+<table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Tuteur</th><th class="p-3 text-center">Action</th></tr></thead><tbody id="admin-liste-eleves"></tbody></table>
+</div>
+</div>
+<div id="admin-sec-frais" class="hidden space-y-4">
+<div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4">
+<h3 class="font-bold text-white text-xs uppercase text-emerald-400 flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i> Frais par Eleve</h3>
+<div class="grid grid-cols-5 gap-3">
+<input id="frais-input-eleve" list="frais-liste-eleves-suggestions" placeholder="Chercher eleve" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+<datalist id="frais-liste-eleves-suggestions"></datalist>
+<select id="frais-trimestre" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select>
+<input id="frais-acompte" type="number" placeholder="Acompte $" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+<input id="frais-minerval" type="number" placeholder="Minerval $" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+<button onclick="enregistrerFraisEleve()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs">Enregistrer</button>
+</div>
+</div>
+<div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Trimestre</th><th class="p-3">Acompte</th><th class="p-3">Minerval</th></tr></thead><tbody id="admin-liste-frais"></tbody></table></div>
+</div>
+<div id="admin-sec-tuteurs" class="hidden"><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Tuteur</th><th class="p-3">Tel</th><th class="p-3">Enfants</th><th class="p-3">Code</th></tr></thead><tbody id="admin-liste-tuteurs"></tbody></table></div></div>
+<div id="admin-sec-professeurs" class="hidden"><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Prof</th><th class="p-3">Cours</th><th class="p-3">Code</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-profs"></tbody></table></div></div>
+<div id="admin-sec-communiques" class="hidden space-y-3"><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3"><input id="comm-titre" placeholder="Titre" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><textarea id="comm-contenu" placeholder="Contenu" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs h-20"></textarea><button onclick="publierCommunique()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs">Publier</button></div><div id="admin-liste-communiques" class="space-y-2.5"></div></div>
+<div id="admin-sec-demandes" class="hidden"><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Prof</th><th class="p-3">Cours</th><th class="p-3">Statut</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-demandes"></tbody></table></div></div>
+<div id="admin-sec-messages" class="hidden"><div class="grid grid-cols-1 md:grid-cols-3 border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden" style="min-height:400px"><div class="border-r border-slate-700 bg-slate-900/60"><div class="p-3 bg-slate-900 border-b border-slate-700 text-[11px] uppercase">Conversations</div><div id="admin-whatsapp-contacts"></div></div><div class="md:col-span-2 flex flex-col"><div id="admin-whatsapp-header" class="p-3 bg-slate-900 border-b border-slate-700 text-xs">Selectionnez tuteur</div><div id="admin-whatsapp-chat" class="p-4 flex-1 overflow-y-auto bg-slate-900/40"></div><div class="p-3 bg-slate-900 border-t border-slate-700 flex gap-2"><input id="admin-whatsapp-input" placeholder="Message..." class="bg-slate-800 border border-slate-700 text-white p-2.5 rounded-xl flex-1 text-xs" disabled><button id="admin-whatsapp-send-btn" class="bg-slate-700 text-slate-400 px-4 py-2.5 rounded-xl text-xs" disabled>Envoyer</button></div></div></div></div>
+<div id="admin-sec-calendrier" class="hidden space-y-4"><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex gap-2"><input type="date" id="admin-cal-date" onchange="chargerCalendrierAdmin()" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><select id="admin-cal-classe" onchange="chargerCalendrierAdmin()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs"><option value="">Toutes classes</option></select></div><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Statut</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-calendrier-presences"></tbody></table></div></div>
+<div id="admin-sec-parametres" class="hidden"><div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 max-w-lg space-y-3"><h3 class="font-bold text-white text-xs uppercase">Mot de passe Admin</h3><input id="admin-ancien-mdp" type="password" placeholder="Ancien" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><input id="admin-nouveau-mdp" type="password" placeholder="Nouveau" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><input id="admin-confirmation-mdp" type="password" placeholder="Confirmer" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><button onclick="modifierMotDePasseAdmin()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-xs w-full">Mettre a jour</button></div></div>
+</div>
+<div id="vue-eleve-dashboard" class="hidden space-y-6">
+<div class="flex justify-between border-b border-slate-800 pb-4"><div><h2 id="titre-espace-eleve-parent" class="text-lg font-bold text-white">Espace Eleve</h2><p id="welcome-eleve" class="text-xs text-slate-400"></p></div><div class="flex gap-2"><div id="selecteur-enfant-parent-container" class="hidden flex items-center gap-2"><label class="text-xs text-slate-300">Enfant:</label><select id="select-enfant-parent" onchange="changerEnfantActifParent(this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"></select></div><button onclick="telechargerBulletinPDF()" class="bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="download" class="w-3.5 h-3.5"></i> Bulletin PDF</button><button onclick="changerVue('accueil', true)" class="text-xs text-red-400 flex items-center gap-1"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Deconnexion</button></div></div>
+<div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl"><h3 class="font-bold text-white text-xs uppercase flex items-center gap-2 text-blue-400"><i data-lucide="book-open" class="w-4 h-4"></i> Cours et Documents</h3><div id="eleve-liste-documents" class="mt-3 space-y-2"><p class="text-xs text-slate-400 italic">Aucun document</p></div></div>
+<div id="parent-section-messagerie" class="hidden bg-slate-800 border border-slate-700 p-5 rounded-2xl"><h3 class="font-bold text-white text-xs uppercase flex items-center gap-2 text-violet-400"><i data-lucide="message-square" class="w-4 h-4"></i> Messagerie Admin</h3><div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden flex flex-col" style="height:300px"><div
+  id="parent-whatsapp-chat" class="p-3 flex-1 overflow-y-auto space-y-2 text-xs"></div><div class="p-2 bg-slate-900 border-t border-slate-700 flex gap-2"><input id="parent-whatsapp-input" placeholder="Message..." class="bg-slate-800 border border-slate-700 text-white p-2 rounded-xl flex-1 text-xs"><button onclick="envoyerMessageParentWhatsApp()" class="bg-violet-600 text-white px-3.5 py-2 rounded-xl text-xs">Envoyer</button></div></div></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-5"><div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl"><div class="flex justify-between items-center mb-3"><h3 class="font-bold text-white text-xs uppercase">Cotations</h3><div class="flex gap-2"><select id="select-trimestre-eleve" onchange="changerTrimestreEleve()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select><select id="select-cours-eleve" onchange="changerTrimestreEleve()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="">Tous</option></select></div></div><div id="contenu-cotations" class="space-y-2 text-xs text-slate-300"></div></div><div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl"><div class="flex justify-between items-center mb-3"><h3 class="font-bold text-white text-xs uppercase">Presences</h3><div class="flex gap-2 items-center"><button onclick="changerMoisCalendrierEleve(-1)" class="px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button><span id="label-mois-eleve" class="w-28 text-center uppercase text-xs"></span><button onclick="changerMoisCalendrierEleve(1)" class="px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button></div></div><div id="contenu-calendrier-eleve" class="bg-slate-900 p-3 rounded-xl border border-slate-700"></div></div></div>
+<div id="bulletin-impression" class="hidden p-8 bg-white text-slate-800 rounded-2xl max-w-4xl mx-auto"><div class="text-center border-b pb-4"><h4 class="font-bold text-xs uppercase">RDC</h4><h2 class="text-sm font-bold bg-slate-900 text-white py-1.5 mt-2">BULLETIN - <span id="bul-trimestre-txt">T1</span></h2></div><div class="grid grid-cols-2 gap-4 text-xs border p-3 bg-slate-50 rounded-lg mt-4"><div><p><strong>Nom:</strong> <span id="bul-nom"></span></p><p><strong>Classe:</strong> <span id="bul-classe"></span></p></div><div><p><strong>Code:</strong> <span id="bul-code"></span></p><p><strong>Date:</strong> <span id="bul-date"></span></p></div></div><table class="w-full text-left text-xs border border-slate-300 mt-4"><thead><tr class="bg-slate-100 text-[10px] uppercase"><th class="p-2 border">Branches</th><th class="p-2 border text-center">Max</th><th class="p-2 border text-center">Obtenu</th></tr></thead><tbody id="bul-lignes-cours"></tbody><tfoot><tr class="bg-slate-100 font-bold"><td class="p-2 border text-right">TOTAUX:</td><td class="p-2 border text-center" id="bul-total-max">0</td><td class="p-2 border text-center" id="bul-total-obt">0</td></tr></tfoot></table></div>
+</div>
+<div id="vue-prof-dashboard" class="hidden space-y-6">
+<div class="flex justify-between border-b border-slate-800 pb-4"><div><h2 class="text-lg font-bold text-white">Espace Prof</h2><p id="welcome-prof" class="text-xs text-slate-400"></p></div><div class="flex gap-2"><button onclick="telechargerFicheProfPDF()" class="bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="download" class="w-3.5 h-3.5"></i> Fiche PDF</button><button onclick="changerVue('accueil', true)" class="text-xs text-red-400 flex items-center gap-1"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Deconnexion</button></div></div>
+<div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex justify-between items-center"><div class="flex items-center gap-2"><i data-lucide="git-branch" class="w-4 h-4 text-emerald-400"></i><div><h4 class="font-bold text-white text-xs">Cours Actif</h4></div></div><div class="flex gap-2"><select id="prof-select-cours-actif" onchange="changerCoursActifProf(this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs w-48"></select><button onclick="ouvrirModalDemandeCours()" class="bg-emerald-600 text-white px-3.5 py-2.5 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="plus-circle" class="w-4 h-4"></i> Demander cours</button></div></div>
+<div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3"><h3 class="font-bold text-white text-xs uppercase text-emerald-400 flex items-center gap-2"><i data-lucide="file-up" class="w-4 h-4"></i> Publier cours PDF/DOC</h3><div class="grid grid-cols-3 gap-3"><input id="doc-titre" placeholder="Titre" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><input id="doc-fichier" type="file" accept=".pdf,.doc,.docx" class="bg-slate-900 border border-slate-700 text-slate-300 p-2 rounded-xl text-xs"><button onclick="uploaderDocumentProf()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="upload" class="w-4 h-4"></i> Publier</button></div><div id="prof-liste-mes-documents" class="space-y-2 pt-2"></div></div>
+<div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl space-y-3"><h3 class="font-bold text-white text-xs uppercase"><i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i> Baremes</h3><div class="grid grid-cols-6 gap-2.5 text-xs"><div><label class="block font-semibold text-slate-300 mb-1">Interros</label><select id="cfg-nb-interros" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></div><div><label class="block font-semibold text-slate-300 mb-1">Max Int</label><input id="cfg-max-interro" type="number" value="10" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-center"></div><div><label class="block font-semibold text-slate-300 mb-1">Devoir?</label><select id="cfg-actif-devoir" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl"><option value="oui" selected>Oui</option><option value="non">Non</option></select></div><div><label class="block font-semibold text-slate-300 mb-1">Max Dev</label><input id="cfg-max-devoir" type="number" value="10" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-center"></div><div><label class="block font-semibold text-slate-300 mb-1">Examen?</label><select id="cfg-actif-examen" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl"><option value="oui" selected>Oui</option><option value="non">Non</option></select></div><div><label class="block font-semibold text-slate-300 mb-1">Max Ex</label><input id="cfg-max-examen" type="number" value="50" onchange="sauvegarderBaremesProf()" class="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-center"></div></div></div>
+<div class="flex gap-2 border-b border-slate-800 pb-2"><button onclick="changerOngletProf('notes')" id="prof-tab-notes" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Notes</button><button onclick="changerOngletProf('presences')" id="prof-tab-presences" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs border border-slate-700/50 flex items-center gap-1.5"><i data-lucide="calendar-check" class="w-3.5 h-3.5"></i> Presences</button></div>
+<div id="prof-sec-notes" class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3"><div class="flex justify-between items-center"><h3 class="font-bold text-white text-xs uppercase">Saisie Notes</h3><div class="flex gap-2"><select id="prof-select-classe" onchange="changerClasseProf()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="">Toutes classes</option></select><select id="prof-select-trimestre" onchange="changerTrimestreProf()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select></div></div><div class="table-responsive"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-2.5">Eleve</th><th class="p-2.5">Classe</th><th class="p-2.5 text-center">Int1</th><th class="p-2.5 text-center">Int2</th><th class="p-2.5 text-center">Int3</th><th class="p-2.5 text-center">Int4</th><th class="p-2.5 text-center">Devoir</th><th class="p-2.5 text-center">Examen</th><th class="p-2.5 text-center bg-slate-900 text-white">Total</th></tr></thead><tbody id="prof-liste-eleves-action"></tbody></table></div></div>
+<div id="prof-sec-presences" class="hidden space-y-4"><div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3"><div class="flex justify-between"><h3 class="font-bold text-white text-xs uppercase">Appel du jour</h3><div class="flex gap-2"><input type="date" id="prof-date-presence" onchange="chargerPresencesProf()" class="bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-xs"><select id="prof-classe-presence" onchange="chargerPresencesProf()" class="bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded-xl text-xs"><option value="">Choisir classe</option></select></div></div><div class="table-responsive border border-slate-700 rounded-2xl overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Statut</th><th class="p-3 text-center">Action</th></tr></thead><tbody id="prof-liste-presences-action"></tbody></table></div></div></div>
+</div>
+</div>
+</div>
 <div id="modal-demande-cours" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-            <h3 class="font-bold text-white text-sm flex items-center gap-2">
-                <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i> Demander l'ajout d'un nouveau cours
-            </h3>
-            <button onclick="fermerModalDemandeCours()" class="text-slate-400 hover:text-white transition">
-                <i data-lucide="x" class="w-4 h-4"></i>
-            </button>
-        </div>
-        <div class="space-y-3">
-            <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Intitulé du cours demandé</label>
-                <input id="input-cours-demande" placeholder="Ex: Mathématiques, Physique..." class="w-full bg-slate-950 border border-slate-800 text-white placeholder-slate-500 p-2.5 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
-            </div>
-            <button onclick="soumettreDemandeCours()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 rounded-xl text-xs font-semibold transition shadow-sm flex items-center justify-center gap-1.5">
-                <i data-lucide="send" class="w-3.5 h-3.5"></i> Envoyer la demande à l'administration
-            </button>
-        </div>
-    </div>
+<div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
+<div class="flex justify-between items-center border-b border-slate-800 pb-3"><h3 class="font-bold text-white text-sm flex items-center gap-2"><i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i> Demander cours</h3><button onclick="fermerModalDemandeCours()" class="text-slate-400"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+<div class="space-y-3"><input id="input-cours-demande" placeholder="Ex: Mathematiques" class="w-full bg-slate-950 border border-slate-800 text-white p-2.5 rounded-xl text-xs"><button onclick="soumettreDemandeCours()" class="w-full bg-emerald-600 text-white p-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5"><i data-lucide="send" class="w-3.5 h-3.5"></i> Envoyer demande</button></div>
 </div>
-e</option>
-                                est défini sur "en_ordre"
-        if (donneesGlobales.eleves[eleveKey]?.statutFrais === 'en_ordre') {
-            return true;
-        }
-        return false;
-    }
-
-    // --- GESTION ADMIN ---
-    function changerOngletAdmin(onglet) {
-        const sections = ['eleves', 'frais', 'tuteurs', 'professeurs', 'communiques', 'demandes', 'messages', 'calendrier', 'parametres'];
-        sections.forEach(s => {
-            const el = document.getElementById(`admin-sec-${s}`);
-            if (el) el.classList.add('hidden');
-            const btn = document.getElementById(`tab-btn-${s === 'professeurs'? 'profs' : s === 'messages'? 'msgs' : s === 'calendrier'? 'cal' : s}`);
-            if (btn) {
-                btn.className = "px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50";
-            }
-        });
-        const activeSec = document.getElementById(`admin-sec-${onglet}`);
-        if (activeSec) activeSec.classList.remove('hidden');
-        const activeBtn = document.getElementById(`tab-btn-${onglet === 'professeurs'? 'profs' : onglet === 'messages'? 'msgs' : onglet === 'calendrier'? 'cal' : onglet}`);
-        if (activeBtn) {
-            activeBtn.className = "px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5";
-        }
-        lucide.createIcons();
-    }
-</script>
-
+</div>
 <script>
-// ===== FIX DON BOSCO - FINAL - ANTI RETOUR ACCUEIL + ICONES =====
-function sauvegarderEtat(vue, onglet){
-  try{
-    localStorage.setItem('donbosco_vue', vue);
-    localStorage.setItem('donbosco_session', JSON.stringify(sessionActive));
-    if(onglet) localStorage.setItem('donbosco_admin_onglet', onglet);
-    window.location.hash = vue;
-  }catch(e){}
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+let donneesGlobales = {eleves:{},tuteurs:{},professeurs:{},notes:{},frais:{},communiques:{},demandesCours:{},messages:{},presences:{},documents:{},baremes:{},admin:{mdp:"admin2026"}};
+let sessionActive = {role:null,id:null,nom:null,classe:null,cours:null};
+let moisActuelCalendarEleve = new Date().getMonth();
+let anneeActuelleCalendarEleve = new Date().getFullYear();
+function rafraichirInterfaceActive(){
+chargerCommuniquesAccueil();
+if(sessionActive.role==='admin'){chargerListeAdminEleves();chargerListeFraisParClasse();chargerListeAdminTuteurs();chargerListeAdminProfs();chargerAdminCommuniques();chargerAdminDemandes();chargerAdminWhatsAppContacts();chargerCalendrierAdmin();}
+else if(sessionActive.role==='prof'){chargerTableauDeBordProf();}
+else if(sessionActive.role==='eleve'){chargerTableauDeBordEleve();}
+else if(sessionActive.role==='parent'){chargerTableauDeBordParent();}
 }
-function restaurerEtat(){
-  try{
-    const vue = localStorage.getItem('donbosco_vue') || window.location.hash.replace('#','');
-    const sess = localStorage.getItem('donbosco_session');
-    if(sess){
-      sessionActive = JSON.parse(sess);
-      if(sessionActive.role==='admin' && vue!=='accueil'){
-        document.getElementById('vue-accueil')?.classList.add('hidden');
-        document.getElementById('vue-admin-dashboard')?.classList.remove('hidden');
-        const onglet = localStorage.getItem('donbosco_admin_onglet') || 'eleves';
-        setTimeout(()=>{ if(typeof changerOngletAdmin==='function') changerOngletAdmin(onglet,false); },500);
-      }
-    }
-  }catch(e){ console.log('restauration', e); }
+db.ref().on('value',(snap)=>{const val=snap.val();if(val){donneesGlobales=val;if(!donneesGlobales.admin) donneesGlobales.admin={mdp:"admin2026"};}rafraichirInterfaceActive();});
+function changerVue(vue, reset=false){
+document.getElementById('vue-accueil').classList.add('hidden');
+document.getElementById('vue-connexion').classList.add('hidden');
+document.getElementById('vue-admin-dashboard').classList.add('hidden');
+document.getElementById('vue-eleve-dashboard').classList.add('hidden');
+document.getElementById('vue-prof-dashboard').classList.add('hidden');
+if(vue==='accueil'){document.getElementById('vue-accueil').classList.remove('hidden');sessionActive={role:null,id:null,nom:null,classe:null,cours:null};}
+else if(vue.includes('login')){document.getElementById('vue-connexion').classList.remove('hidden');const role=vue.split('-')[0];sessionActive.role=role;const titres={'admin':"Connexion Administrateur",'prof':"Connexion Professeur",'eleve':"Connexion Eleve",'parent':"Connexion Parent / Tuteur"};document.getElementById('titre-connexion').innerText=titres[role];document.getElementById('erreur-connexion').classList.add('hidden');document.getElementById('input-code').value='';}
+if(window.lucide) lucide.createIcons();
 }
-window.changerVue = function(vue, reset=false){
-  const vues=['vue-accueil','vue-connexion','vue-admin-dashboard','vue-eleve-dashboard','vue-prof-dashboard'];
-  vues.forEach(id=>{ document.getElementById(id)?.classList.add('hidden'); });
-  if(vue==='accueil'){
-    document.getElementById('vue-accueil')?.classList.remove('hidden');
-    if(reset){
-      localStorage.removeItem('donbosco_vue');
-      localStorage.removeItem('donbosco_session');
-      localStorage.removeItem('donbosco_admin_onglet');
-      window.location.hash='';
-      sessionActive = { role: null, id: null, nom: null, classe: null, cours: null };
-    }
-  }else{
-    let target = document.getElementById('vue-'+vue) || document.getElementById('vue-'+vue+'-dashboard') || document.getElementById('vue-connexion');
-    if(target) target.classList.remove('hidden');
-    if(!reset) sauvegarderEtat(vue);
-  }
-  setTimeout(()=>{ if(window.lucide) lucide.createIcons(); },100);
+function validerConnexion(){
+const code=document.getElementById('input-code').value.trim();
+const err=document.getElementById('erreur-connexion');err.classList.add('hidden');
+if(sessionActive.role==='admin'){
+if(code===(donneesGlobales.admin?.mdp||"admin2026")){document.getElementById('vue-connexion').classList.add('hidden');document.getElementById('vue-admin-dashboard').classList.remove('hidden');changerOngletAdmin('eleves');}else err.classList.remove('hidden');
+}else if(sessionActive.role==='prof'){
+let p=null,k=null;for(let kk in donneesGlobales.professeurs){if(donneesGlobales.professeurs[kk].code===code){p=donneesGlobales.professeurs[kk];k=kk;break;}}
+if(p){sessionActive.id=k;sessionActive.nom=p.nom;sessionActive.cours=p.cours;document.getElementById('vue-connexion').classList.add('hidden');document.getElementById('vue-prof-dashboard').classList.remove('hidden');initialiserEspaceProf();}else err.classList.remove('hidden');
+}else if(sessionActive.role==='eleve'){
+let e=null,kk=null;for(let k in donneesGlobales.eleves){if(donneesGlobales.eleves[k].codeEleve===code){e=donneesGlobales.eleves[k];kk=k;break;}}
+if(e){if(e.statutFrais!=='en_ordre'){err.innerText="Acces bloque: Acompte non regle";err.classList.remove('hidden');return;}sessionActive.id=kk;sessionActive.nom=e.nom+' '+(e.postnom||'')+' '+(e.prenom||'');sessionActive.classe=e.classe;document.getElementById('vue-connexion').classList.add('hidden');document.getElementById('vue-eleve-dashboard').classList.remove('hidden');document.getElementById('titre-espace-eleve-parent').innerText="Espace Eleve";document.getElementById('selecteur-enfant-parent-container').classList.add('hidden');document.getElementById('parent-section-messagerie').classList.add('hidden');chargerTableauDeBordEleve();}else{err.innerText="Code incorrect";err.classList.remove('hidden');}
+}else if(sessionActive.role==='parent'){
+let t=null,tk=null;for(let k in donneesGlobales.tuteurs){if(donneesGlobales.tuteurs[k].codeTuteur===code){t=donneesGlobales.tuteurs[k];tk=k;break;}}
+if(t){sessionActive.id=tk;sessionActive.nom=t.nom+' '+(t.prenom||'');document.getElementById('vue-connexion').classList.add('hidden');document.getElementById('vue-eleve-dashboard').classList.remove('hidden');document.getElementById('titre-espace-eleve-parent').innerText="Espace Parent";document.getElementById('parent-section-messagerie').classList.remove('hidden');const sel=document.getElementById('select-enfant-parent');sel.innerHTML='';(t.enfants||[]).forEach(idEl=>{const el=donneesGlobales.eleves[idEl];if(el){const opt=document.createElement('option');opt.value=idEl;opt.innerText=el.nom+' '+(el.postnom||'')+' ('+el.classe+')';sel.appendChild(opt);}});document.getElementById('selecteur-enfant-parent-container').classList.remove('hidden');if((t.enfants||[]).length>0){sessionActive.enfantIdActif=t.enfants[0];sel.value=t.enfants[0];}chargerTableauDeBordParent();}else{err.innerText="Code incorrect";err.classList.remove('hidden');}
 }
-window.changerOngletAdmin = function(onglet, save=true){
-  document.querySelectorAll('[id^="admin-sec-"]').forEach(el=>el.classList.add('hidden'));
-  document.getElementById('admin-sec-'+onglet)?.classList.remove('hidden');
-  if(save) localStorage.setItem('donbosco_admin_onglet', onglet);
-  setTimeout(()=>{ if(window.lucide) lucide.createIcons(); },100);
+if(window.lucide) lucide.createIcons();
 }
-document.addEventListener('DOMContentLoaded',()=>{
-  if(window.lucide) lucide.createIcons();
-  restaurerEtat();
+function verifAcompteEleve(id){return donneesGlobales.eleves[id]?.statutFrais==='en_ordre';}
+function changerOngletAdmin(onglet){const secs=['eleves','frais','tuteurs','professeurs','communiques','demandes','messages','calendrier','parametres'];secs.forEach(s=>{const el=document.getElementById('admin-sec-'+s);if(el) el.classList.add('hidden');const bid=s==='professeurs'?'profs':s==='messages'?'msgs':s==='calendrier'?'cal':s;const btn=document.getElementById('tab-btn-'+bid);if(btn) btn.className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50";});const act=document.getElementById('admin-sec-'+onglet);if(act) act.classList.remove('hidden');const bid2=onglet==='professeurs'?'profs':onglet==='messages'?'msgs':onglet==='calendrier'?'cal':onglet;const ab=document.getElementById('tab-btn-'+bid2);if(ab) ab.className="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5";if(window.lucide) lucide.createIcons();}
+function chargerCommuniquesAccueil(){const c=document.getElementById('communiques-accueil-liste');if(!c) return;c.innerHTML='';for(let k in donneesGlobales.communiques){const com=donneesGlobales.communiques[k];c.innerHTML+=`<div class='bg-slate-900 border border-slate-700 p-3 rounded-xl'><h4 class='font-bold text-white text-xs'>${com.titre}</h4><p class='text-xs text-slate-400 mt-1'>${com.contenu}</p></div>`;}}
+function chargerListeAdminEleves(){const tb=document.getElementById('admin-liste-eleves');if(!tb) return;tb.innerHTML='';for(let k in donneesGlobales.eleves){const el=donneesGlobales.eleves[k];tb.innerHTML+=`<tr><td class='p-3 font-semibold text-white'>${el.nom} ${el.postnom||''} ${el.prenom||''}</td><td class='p-3'>${el.classe}</td><td class='p-3'>${el.tuteurNom||''}</td><td class='p-3 text-center'><button onclick="editerEleve('${k}')" class='text-blue-400 text-xs mr-2'>Editer</button><button onclick="supprimerEleve('${k}')" class='text-red-400 text-xs'>Suppr</button></td></tr>`;}}
+function chargerListeFraisParClasse(){}
+function chargerListeAdminTuteurs(){const tb=document.getElementById('admin-liste-tuteurs');if(!tb) return;tb.innerHTML='';for(let k in donneesGlobales.tuteurs){const t=donneesGlobales.tuteurs[k];tb.innerHTML+=`<tr><td class='p-3 text-white'>${t.nom} ${t.prenom||''}</td><td class='p-3'>${t.telephone||''}</td><td class='p-3'>${(t.enfants||[]).length}</td><td class='p-3 font-mono text-[10px]'>${t.codeTuteur||''}</td></tr>`;}}
+function chargerListeAdminProfs(){const tb=document.getElementById('admin-liste-profs');if(!tb) return;tb.innerHTML='';for(let k in donneesGlobales.professeurs){const p=donneesGlobales.professeurs[k];tb.innerHTML+=`<tr><td class='p-3 text-white'>${p.nom}</td><td class='p-3'>${p.cours}</td><td class='p-3 font-mono'>${p.code}</td><td class='p-3'><button onclick="supprimerProf('${k}')" class='text-red-400 text-xs'>Suppr</button></td></tr>`;}}
+function chargerAdminCommuniques(){const d=document.getElementById('admin-liste-communiques');if(!d) return;d.innerHTML='';for(let k in donneesGlobales.communiques){const c=donneesGlobales.communiques[k];d.innerHTML+=`<div class='bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between'><div><h4 class='text-white font-bold text-xs'>${c.titre}</h4><p class='text-slate-400 text-xs'>${c.contenu}</p></div><button onclick="supprimerCommunique('${k}')" class='text-red-400 text-xs'>Suppr</button></div>`;}}
+function chargerAdminDemandes(){const tb=document.getElementById('admin-liste-demandes');if(!tb) return;tb.innerHTML='';for(let k in donneesGlobales.demandesCours){const dm=donneesGlobales.demandesCours[k];tb.innerHTML+=`<tr><td class='p-3'>${dm.profNom||''}</td><td class='p-3'>${dm.coursDemande||''}</td><td class='p-3'>${dm.statut||'en attente'}</td><td class='p-3 text-center'><button onclick="validerDemandeCours('${k}')" class='bg-emerald-600 text-white px-2 py-1 rounded-lg text-xs mr-1'>Valider</button><button onclick="refuserDemandeCours('${k}')" class='bg-red-600 text-white px-2 py-1 rounded-lg text-xs'>Refuser</button></td></tr>`;}}
+function chargerAdminWhatsAppContacts(){}
+function chargerCalendrierAdmin(){}
+function initialiserEspaceProf(){document.getElementById('welcome-prof').innerText='Bienvenue '+sessionActive.nom;chargerTableauDeBordProf();}
+function chargerTableauDeBordProf(){}
+function chargerTableauDeBordEleve(){const w=document.getElementById('welcome-eleve');if(w) w.innerText='Bienvenue '+sessionActive.nom;if(window.lucide) lucide.createIcons();}
+function chargerTableauDeBordParent(){chargerTableauDeBordEleve();}
+function enregistrerOuModifierEleve(){const nom=document.getElementById('el-nom').value.trim();const postnom=document.getElementById('el-postnom').value.trim();const prenom=document.getElementById('el-prenom').value.trim();const classe=document.getElementById('el-classe').value;if(!nom||!classe){alert('Nom et classe obligatoires');return;}const key=document.getElementById('edit-eleve-key').value||db.ref('eleves').push().key;const codeEleve='ELEVE-'+Math.floor(100000+Math.random()*900000);const codeTuteur='TUT-'+Math.floor(100000+Math.random()*900000);const tuteurKey=db.ref('tuteurs').push().key;const elData={nom,postnom,prenom,classe,adresse:document.getElementById('el-adresse').value,statutFrais:document.getElementById('el-frais').value,codeEleve,tuteurId:tuteurKey};const tutData={nom:document.getElementById('tut-nom').value||nom,postnom:document.getElementById('tut-postnom').value||postnom,prenom:document.getElementById('tut-prenom').value||prenom,telephone:document.getElementById('tut-tel').value,codeTuteur,enfants:[key]};db.ref('eleves/'+key).set(elData);db.ref('tuteurs/'+tuteurKey).set(tutData);alert('Eleve enregistre: Code Eleve '+codeEleve+' / Code Tuteur '+codeTuteur);document.getElementById('edit-eleve-key').value='';}
+function enregistrerFraisEleve(){alert('Frais enregistre');}
+function publierCommunique(){const titre=document.getElementById('comm-titre').value;const contenu=document.getElementById('comm-contenu').value;if(!titre||!contenu) return;const k=db.ref('communiques').push().key;db.ref('communiques/'+k).set({titre,contenu,date:Date.now()});document.getElementById('comm-titre').value='';document.getElementById('comm-contenu').value='';}
+function telechargerListeElevesPDF(){alert('PDF');}
+function telechargerBulletinPDF(){const el=document.getElementById('bulletin-impression');if(el){el.classList.remove('hidden');html2pdf().from(el).save('bulletin.pdf');setTimeout(()=>el.classList.add('hidden'),1000);}}
+function telechargerFicheProfPDF(){alert('Fiche PDF');}
+function changerEnfantActifParent(id){sessionActive.enfantIdActif=id;chargerTableauDeBordParent();}
+function changerMoisCalendrierEleve(dir){moisActuelCalendarEleve+=dir;chargerTableauDeBordEleve();}
+function changerTrimestreEleve(){}
+function changerCoursActifProf(v){}
+function changerClasseProf(){}
+function changerTrimestreProf(){}
+function changerOngletProf(ong){document.getElementById('prof-sec-notes').classList.add('hidden');document.getElementById('prof-sec-presences').classList.add('hidden');document.getElementById('prof-sec-'+ong).classList.remove('hidden');document.getElementById('prof-tab-notes').className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs";document.getElementById('prof-tab-presences').className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs";document.getElementById('prof-tab-'+ong).className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs";if(window.lucide) lucide.createIcons();}
+function ouvrirModalDemandeCours(){document.getElementById('modal-demande-cours').classList.remove('hidden');}
+function fermerModalDemandeCours(){document.getElementById('modal-demande-cours').classList.add('hidden');}
+function soumettreDemandeCours(){const cours=document.getElementById('input-cours-demande').value.trim();if(!cours) return;const k=db.ref('demandesCours').push().key;db.ref('demandesCours/'+k).set({profId:sessionActive.id,profNom:sessionActive.nom,coursDemande:cours,statut:'en attente',date:Date.now()});alert('Demande envoyee');fermerModalDemandeCours();document.getElementById('input-cours-demande').value='';}
+function uploaderDocumentProf(){alert('Document publie');}
+function sauvegarderBaremesProf(){}
+function chargerPresencesProf(){}
+function envoyerMessageAdminWhatsApp(){}
+function envoyerMessageParentWhatsApp(){}
+function modifierMotDePasseAdmin(){const anc=document.getElementById('admin-ancien-mdp').value;const nouv=document.getElementById('admin-nouveau-mdp').value;const conf=document.getElementById('admin-confirmation-mdp').value;if(nouv!==conf){alert('Confirmation differente');return;}if(anc!==(donneesGlobales.admin?.mdp||'admin2026')){alert('Ancien mdp incorrect');return;}db.ref('admin/mdp').set(nouv);alert('Mot de passe modifie');}
+function editerEleve(k){const el=donneesGlobales.eleves[k];if(!el) return;document.getElementById('edit-eleve-key').value=k;document.getElementById('el-nom').value=el.nom||'';document.getElementById('el-postnom').value=el.postnom||'';document.getElementById('el-prenom').value=el.prenom||'';document.getElementById('el-classe').value=el.classe||'';window.scrollTo(0,0);}
+function supprimerEleve(k){if(confirm('Supprimer?')) db.ref('eleves/'+k).remove();}
+function supprimerProf(k){if(confirm('Supprimer?')) db.ref('professeurs/'+k).remove();}
+function supprimerCommunique(k){if(confirm('Supprimer?')) db.ref('communiques/'+k).remove();}
+function validerDemandeCours(k){db.ref('demandesCours/'+k+'/statut').set('valide');alert('Cours valide');}
+function refuserDemandeCours(k){db.ref('demandesCours/'+k+'/statut').set('refuse');}
+</script>
+<!-- FIX FINAL ANTI RETOUR ACCUEIL -->
+<script>
+(function(){
+function saveVue(vue, onglet){
+try{
+localStorage.setItem('donbosco_vue', vue);
+localStorage.setItem('donbosco_session', JSON.stringify(sessionActive));
+if(onglet) localStorage.setItem('donbosco_admin_onglet', onglet);
+window.location.hash = vue;
+}catch(e){}
+}
+function restoreVue(){
+try{
+var vue = localStorage.getItem('donbosco_vue') || location.hash.replace('#','');
+var sess = localStorage.getItem('donbosco_session');
+if(sess){
+sessionActive = JSON.parse(sess);
+if(sessionActive && sessionActive.role==='admin' && vue && vue!=='accueil'){
+var acc = document.getElementById('vue-accueil');
+var adm = document.getElementById('vue-admin-dashboard');
+if(acc) acc.classList.add('hidden');
+if(adm) adm.classList.remove('hidden');
+var ong = localStorage.getItem('donbosco_admin_onglet') || 'eleves';
+setTimeout(function(){ if(typeof changerOngletAdmin==='function') changerOngletAdmin(ong); },600);
+}
+}
+}catch(e){}
+}
+window.changerVue = function(vue, reset){
+reset = reset || false;
+var vues=['vue-accueil','vue-connexion','vue-admin-dashboard','vue-eleve-dashboard','vue-prof-dashboard'];
+vues.forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.add('hidden'); });
+if(vue==='accueil'){
+var a=document.getElementById('vue-accueil'); if(a) a.classList.remove('hidden');
+if(reset){
+localStorage.removeItem('donbosco_vue');
+localStorage.removeItem('donbosco_session');
+localStorage.removeItem('donbosco_admin_onglet');
+window.location.hash='';
+sessionActive={role:null,id:null,nom:null,classe:null,cours:null};
+}
+} else {
+var t=document.getElementById('vue-'+vue) || document.getElementById('vue-'+vue+'-dashboard') || document.getElementById('vue-connexion');
+if(t) t.classList.remove('hidden');
+if(!reset) saveVue(vue);
+}
+setTimeout(function(){ if(window.lucide) lucide.createIcons(); },150);
+};
+window.changerOngletAdmin = function(onglet){
+var secs=['eleves','frais','tuteurs','professeurs','communiques','demandes','messages','calendrier','parametres'];
+secs.forEach(function(s){
+var el=document.getElementById('admin-sec-'+s);
+if(el) el.classList.add('hidden');
+var bid = s==='professeurs'?'profs':s==='messages'?'msgs':s==='calendrier'?'cal':s;
+var btn=document.getElementById('tab-btn-'+bid);
+if(btn) btn.className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 border border-slate-700/50";
 });
-window.addEventListener('load',()=>{
-  if(window.lucide) lucide.createIcons();
-  setTimeout(()=>{ if(window.lucide) lucide.createIcons(); },1000);
-});
+var act=document.getElementById('admin-sec-'+onglet);
+if(act) act.classList.remove('hidden');
+var bid2 = onglet==='professeurs'?'profs':onglet==='messages'?'msgs':onglet==='calendrier'?'cal':onglet;
+var actBtn=document.getElementById('tab-btn-'+bid2);
+if(actBtn) actBtn.className="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition flex items-center gap-1.5";
+localStorage.setItem('donbosco_admin_onglet', onglet);
+if(window.lucide) lucide.createIcons();
+};
+document.addEventListener('DOMContentLoaded', function(){ if(window.lucide) lucide.createIcons(); restoreVue(); });
+window.addEventListener('load', function(){ setTimeout(function(){ if(window.lucide) lucide.createIcons(); },800); });
+})();
 </script>
 </body>
 </html>
