@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Don Bosco - Fix Final Sans Erreur</title>
+<title>Lycee Don Bosco Durba - Acces PR123</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={darkMode:'class'}</script>
 <script>
@@ -16,92 +16,75 @@ const firebaseConfig = {
   messagingSenderId: "934019778891",
   appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
 };
-const MASTER_CODE = "Pr123";
-let ecoleActive = localStorage.getItem('ecole_active') || "Don Bosco Durba";
+const ECOLE_PRINCIPALE = "Lycee Don Bosco Durba";
+const MDP_ADMIN_DON_BOSCO = "PR123";
 </script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
-<style>@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600&display=swap');body{font-family:'Plus Jakarta Sans',sans-serif;background:#0f172a}</style>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#0f172a}
+.tab-active{background:#2563eb!important;color:white!important;transform:scale(1.05);box-shadow:0 4px 12px rgba(37,99,235,0.4)}
+.tab-inactive{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+.modal-float{backdrop-filter:blur(16px);background:rgba(15,23,42,0.9)}
+</style>
 </head>
 <body class="min-h-full flex items-center justify-center p-2 sm:p-6 text-slate-200 bg-slate-950">
 <button onclick="rafraichirDonneesPage()" style="position:fixed;top:12px;right:12px;z-index:99999;padding:10px 16px;background:#0d2a54;color:white;border:none;border-radius:20px;cursor:pointer;">Actualiser</button>
-<button onclick="ouvrirModalEcoles()" title="Gerer ecoles" style="position:fixed;top:52px;right:12px;z-index:99999;padding:12px;background:#1e293b;border:1px solid #334155;border-radius:50%;cursor:pointer;"><i data-lucide="home" class="w-5 h-5 text-blue-400"></i></button>
 
 <div id="app" class="w-full max-w-6xl mx-auto">
 <div id="vue-accueil" class="space-y-6">
-<div class="text-center py-8"><h1 class="text-3xl font-bold text-white">Ecole Don Bosco</h1><p class="text-slate-400 text-sm mt-2">Multi-Ecoles - Fix</p><div id="liste-ecoles-accueil" class="mt-3 flex flex-wrap gap-2 justify-center"></div></div>
+<div class="text-center py-10"><h1 class="text-4xl font-bold text-white">Lycee Don Bosco Durba</h1><p class="text-slate-400 text-sm mt-2">Acces securise - Mot de passe requis en tete</p><div class="mt-3 inline-flex items-center gap-2 bg-slate-800 border border-slate-700 px-4 py-1.5 rounded-full text-[11px] text-slate-400"><i data-lucide="lock" class="w-3.5 h-3.5"></i> Donnees isolees par ecole - Codes uniques</div></div>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-<button onclick="changerVue('admin-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="shield" class="w-8 h-8 text-blue-400 mb-3"></i><h3 class="font-bold text-white">Admin</h3></button>
-<button onclick="changerVue('prof-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="briefcase" class="w-8 h-8 text-emerald-400 mb-3"></i><h3 class="font-bold text-white">Prof</h3></button>
-<button onclick="changerVue('eleve-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="graduation-cap" class="w-8 h-8 text-violet-400 mb-3"></i><h3 class="font-bold text-white">Eleve</h3></button>
-<button onclick="changerVue('parent-login')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left"><i data-lucide="users" class="w-8 h-8 text-amber-400 mb-3"></i><h3 class="font-bold text-white">Parent</h3></button>
+<button onclick="ouvrirLoginFlottant('admin')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left hover:border-blue-600 hover:bg-slate-700 transition-all group"><i data-lucide="shield" class="w-8 h-8 text-blue-400 mb-3 group-hover:scale-110 transition"></i><h3 class="font-bold text-white">Admin</h3><p class="text-[11px] text-slate-400 mt-1">Nom ecole + PR123</p></button>
+<button onclick="ouvrirLoginFlottant('prof')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left hover:border-emerald-600 transition-all group"><i data-lucide="briefcase" class="w-8 h-8 text-emerald-400 mb-3"></i><h3 class="font-bold text-white">Professeur</h3><p class="text-[11px] text-slate-400 mt-1">Nom ecole + code prof</p></button>
+<button onclick="ouvrirLoginFlottant('eleve')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left hover:border-violet-600 transition-all group"><i data-lucide="graduation-cap" class="w-8 h-8 text-violet-400 mb-3"></i><h3 class="font-bold text-white">Eleve</h3><p class="text-[11px] text-slate-400 mt-1">Type + code unique</p></button>
+<button onclick="ouvrirLoginFlottant('parent')" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl text-left hover:border-amber-600 transition-all group"><i data-lucide="users" class="w-8 h-8 text-amber-400 mb-3"></i><h3 class="font-bold text-white">Parent</h3><p class="text-[11px] text-slate-400 mt-1">Type + code unique</p></button>
 </div>
-<div class="bg-slate-800 border border-slate-700 rounded-2xl p-5"><h3 class="font-bold text-white text-sm mb-3">Communiques</h3><div id="communiques-accueil-liste" class="space-y-2"></div></div>
-</div>
-
-<div id="vue-connexion" class="hidden max-w-md mx-auto bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
-<h2 id="titre-connexion" class="text-lg font-bold text-white">Connexion</h2>
-<div class="space-y-2"><label class="text-[10px] text-slate-400 uppercase">Choisir ecole</label><select id="input-ecole-connexion" onchange="afficherCodesPourEcole()" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"></select><p id="info-codes-ecole" class="text-[10px] text-amber-300 bg-amber-950/20 p-2 rounded border border-amber-900/30 hidden"></p></div>
-<div class="relative"><input id="input-code" type="password" placeholder="Code d'acces" class="w-full bg-slate-900 border border-slate-700 text-white p-3 pr-12 rounded-xl text-sm"><button type="button" onclick="togglePasswordVisibility()" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400"><i id="eye-icon" data-lucide="eye" class="w-4 h-4"></i></button></div>
-<button onclick="validerConnexion()" class="w-full bg-blue-600 text-white p-3 rounded-xl text-sm font-semibold">Se connecter</button>
-<p id="erreur-connexion" class="hidden text-red-400 text-xs bg-red-950/50 p-2 rounded-lg border border-red-900/50"></p>
-<button onclick="changerVue('accueil', true)" class="w-full text-slate-400 text-xs mt-2">Retour</button>
+<div class="bg-slate-800 border border-slate-700 rounded-2xl p-5"><h3 class="font-bold text-white text-sm mb-3">Communiques Don Bosco</h3><div id="communiques-accueil-liste" class="space-y-2"></div></div>
 </div>
 
 <div id="vue-admin-dashboard" class="hidden space-y-5">
-<div class="flex justify-between border-b border-slate-800 pb-4"><div><h2 class="text-lg font-bold text-white" id="admin-titre-ecole">Admin</h2><p class="text-xs text-slate-400" id="admin-stats-eleves"></p></div><button onclick="changerVue('accueil', true)" class="text-xs text-red-400 bg-slate-800 px-3 py-2 rounded-xl border border-slate-700">Deconnexion</button></div>
-<div class="flex gap-2 border-b border-slate-800 pb-3 overflow-x-auto">
-<button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="px-3.5 py-2 bg-blue-600 text-white rounded-xl text-xs">Eleves</button>
-<button onclick="changerOngletAdmin('presences')" id="tab-btn-presences" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Presences PRO</button>
-<button onclick="changerOngletAdmin('cours-demandes')" id="tab-btn-cours" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cours Demandes</button>
-<button onclick="changerOngletAdmin('deliberation')" id="tab-btn-delib" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">% / Place</button>
-<button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Messages</button>
-<button onclick="changerOngletAdmin('tuteurs')" id="tab-btn-tuteurs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Tuteurs</button>
-<button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Profs</button>
-<button onclick="changerOngletAdmin('communiques')" id="tab-btn-communiques" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Communiques</button>
+<div class="flex justify-between border-b border-slate-800 pb-4"><div><h2 class="text-lg font-bold text-white">Admin - Lycee Don Bosco Durba</h2><p class="text-xs text-slate-400" id="admin-stats-eleves"></p></div><button onclick="changerVue('accueil', true)" class="text-xs text-red-400 bg-slate-800 px-3 py-2 rounded-xl border border-slate-700">Deconnexion</button></div>
+<div class="flex gap-2 border-b border-slate-800 pb-3 overflow-x-auto" id="admin-tabs">
+<button onclick="changerOngletAdmin('eleves')" id="tab-btn-eleves" class="tab-active px-4 py-2 rounded-xl text-xs font-semibold">Eleves</button>
+<button onclick="changerOngletAdmin('presences')" id="tab-btn-presences" class="tab-inactive px-4 py-2 rounded-xl text-xs">Presences PRO</button>
+<button onclick="changerOngletAdmin('cours-demandes')" id="tab-btn-cours" class="tab-inactive px-4 py-2 rounded-xl text-xs">Cours Demandes</button>
+<button onclick="changerOngletAdmin('deliberation')" id="tab-btn-delib" class="tab-inactive px-4 py-2 rounded-xl text-xs">% / Place</button>
+<button onclick="changerOngletAdmin('messages')" id="tab-btn-msgs" class="tab-inactive px-4 py-2 rounded-xl text-xs">Messages</button>
+<button onclick="changerOngletAdmin('tuteurs')" id="tab-btn-tuteurs" class="tab-inactive px-4 py-2 rounded-xl text-xs">Tuteurs</button>
+<button onclick="changerOngletAdmin('professeurs')" id="tab-btn-profs" class="tab-inactive px-4 py-2 rounded-xl text-xs">Profs</button>
+<button onclick="changerOngletAdmin('communiques')" id="tab-btn-communiques" class="tab-inactive px-4 py-2 rounded-xl text-xs">Communiques</button>
 </div>
 
 <div id="admin-sec-eleves" class="space-y-4">
 <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4">
-<h3 class="font-bold text-white text-xs uppercase">Ajouter Eleve</h3>
-<input id="edit-eleve-key" type="hidden">
+<h3 class="font-bold text-white text-xs uppercase">Ajouter Eleve - Code Unique</h3>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
 <input id="el-nom" placeholder="Nom" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
 <input id="el-postnom" placeholder="Post-nom" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
 <input id="el-prenom" placeholder="Prenom" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
 <select id="el-classe" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><option value="">Classe</option><option>1ere Primaire</option><option>2eme Primaire</option><option>3eme Primaire</option><option>4eme Primaire</option><option>5eme Primaire</option><option>6eme Primaire</option><option>7eme</option><option>8eme</option></select>
 </div>
-<div class="grid grid-cols-2 md:grid-cols-2 gap-3">
+<div class="grid grid-cols-2 gap-3">
 <input id="tut-nom" placeholder="Nom Tuteur" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
 <input id="tut-tel" placeholder="Telephone" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
 </div>
-<button onclick="enregistrerOuModifierEleve()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-xs">Enregistrer dans cette ecole</button>
+<button onclick="enregistrerEleveUnique()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs">Enregistrer</button>
 </div>
-<div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden">
-<table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Code Eleve</th><th class="p-3">Code Parent</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-eleves"></tbody></table>
-</div>
+<div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Code Eleve</th><th class="p-3">Code Parent</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-eleves"></tbody></table></div>
 </div><div id="admin-sec-presences" class="hidden space-y-4">
-<div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-3">
-<h3 class="font-bold text-white text-xs uppercase text-blue-400">Presences PRO</h3>
-<div class="flex gap-2 flex-wrap">
-<input type="date" id="admin-presence-date" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-<select id="admin-presence-classe" onchange="chargerTableauPresencesAdmin()" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><option value="">Toutes classes</option><option>1ere Primaire</option><option>2eme Primaire</option><option>3eme Primaire</option><option>4eme Primaire</option><option>5eme Primaire</option><option>6eme Primaire</option><option>7eme</option><option>8eme</option></select>
-<button onclick="marquerTousPresents()" class="bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs">Tous Presents</button>
-</div>
-</div>
+<div class="bg-slate-800 p-5 rounded-2xl border border-slate-700"><h3 class="font-bold text-white text-xs uppercase text-blue-400">Presences PRO</h3><div class="flex gap-2 flex-wrap mt-3"><input type="date" id="admin-presence-date" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><select id="admin-presence-classe" onchange="chargerTableauPresencesAdmin()" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><option value="">Toutes</option><option>1ere Primaire</option><option>2eme Primaire</option><option>3eme Primaire</option><option>4eme Primaire</option><option>5eme Primaire</option><option>6eme Primaire</option><option>7eme</option><option>8eme</option></select><button onclick="marquerTousPresents()" class="bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs">Tous Presents</button></div></div>
 <div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">Classe</th><th class="p-3">Heure</th><th class="p-3">Statut</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-presences-calendrier"></tbody></table></div>
 </div>
 
-<div id="admin-sec-cours-demandes" class="hidden"><div class="bg-slate-800 p-5 rounded-2xl border border-slate-700"><h3 class="font-bold text-white text-xs uppercase">Demandes Cours - Validation</h3><div id="admin-liste-demandes-cours" class="mt-3 space-y-2"></div></div></div>
-<div id="admin-sec-deliberation" class="hidden space-y-4">
-<div class="bg-slate-800 p-5 rounded-2xl border border-slate-700"><div class="flex gap-2"><select id="delib-classe-select" onchange="chargerDeliberationAdmin()" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><option value="">Toutes</option><option>1ere Primaire</option><option>2eme Primaire</option><option>3eme Primaire</option><option>4eme Primaire</option><option>5eme Primaire</option><option>6eme Primaire</option><option>7eme</option><option>8eme</option></select><select id="delib-trimestre-select" onchange="chargerDeliberationAdmin()" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select></div></div>
-<div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">%</th><th class="p-3">Place</th><th class="p-3">Mention</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-deliberation"></tbody></table></div>
-</div>
-<div id="admin-sec-messages" class="hidden"><div class="grid grid-cols-1 md:grid-cols-3 border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden" style="min-height:500px"><div class="border-r border-slate-700 bg-slate-900/60 flex flex-col"><div class="p-3 bg-slate-900 border-b border-slate-700 text-[11px] uppercase font-bold"><span>Parents (<span id="admin-msg-nb">0</span>)</span></div><div id="admin-whatsapp-contacts" class="flex-1 overflow-y-auto"></div></div><div class="md:col-span-2 flex flex-col"><div id="admin-whatsapp-header" class="p-3 bg-slate-900 border-b border-slate-700 text-xs">Selectionnez parent</div><div id="admin-whatsapp-chat" class="p-4 flex-1 overflow-y-auto bg-slate-900/40 space-y-2"></div><div class="p-3 bg-slate-900 border-t border-slate-700 flex gap-2"><input id="admin-whatsapp-input" placeholder="Ecrire..." class="bg-slate-800 border border-slate-700 text-white p-2.5 rounded-xl flex-1 text-xs"><button onclick="envoyerMessageAdmin()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-xs">Envoyer</button></div></div></div></div>
+<div id="admin-sec-cours-demandes" class="hidden"><div class="bg-slate-800 p-5 rounded-2xl border border-slate-700"><h3 class="font-bold text-white text-xs uppercase">Demandes Cours - Validation Admin</h3><div id="admin-liste-demandes-cours" class="mt-3 space-y-2"></div></div></div>
+<div id="admin-sec-deliberation" class="hidden space-y-4"><div class="bg-slate-800 p-5 rounded-2xl border border-slate-700"><div class="flex gap-2"><select id="delib-classe-select" onchange="chargerDeliberationAdmin()" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><option value="">Toutes</option><option>1ere Primaire</option><option>2eme Primaire</option><option>3eme Primaire</option><option>4eme Primaire</option><option>5eme Primaire</option><option>6eme Primaire</option><option>7eme</option><option>8eme</option></select><select id="delib-trimestre-select" onchange="chargerDeliberationAdmin()" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select></div></div><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Eleve</th><th class="p-3">%</th><th class="p-3">Place</th><th class="p-3">Mention</th><th class="p-3">Publier</th></tr></thead><tbody id="admin-liste-deliberation"></tbody></table></div></div>
+<div id="admin-sec-messages" class="hidden"><div class="grid grid-cols-1 md:grid-cols-3 border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden" style="min-height:500px"><div class="border-r border-slate-700 bg-slate-900/60 flex flex-col"><div class="p-3 bg-slate-900 border-b border-slate-700 text-[11px] uppercase font-bold">Parents - Don Bosco isole <span id="admin-msg-nb" class="bg-blue-600 text-white px-2 py-0.5 rounded-full ml-2">0</span></div><div id="admin-whatsapp-contacts" class="flex-1 overflow-y-auto"></div></div><div class="md:col-span-2 flex flex-col"><div id="admin-whatsapp-header" class="p-3 bg-slate-900 border-b border-slate-700 text-xs">Selectionnez parent</div><div id="admin-whatsapp-chat" class="p-4 flex-1 overflow-y-auto bg-slate-900/40 space-y-2"></div><div class="p-3 bg-slate-900 border-t border-slate-700 flex gap-2"><input id="admin-whatsapp-input" placeholder="Message..." class="bg-slate-800 border border-slate-700 text-white p-2.5 rounded-xl flex-1 text-xs"><button onclick="envoyerMessageAdmin()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-xs">Envoyer</button></div></div></div></div>
 <div id="admin-sec-tuteurs" class="hidden"><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Tuteur</th><th class="p-3">Code</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-tuteurs"></tbody></table></div></div>
-<div id="admin-sec-professeurs" class="hidden space-y-3"><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700"><div class="grid grid-cols-3 gap-3"><input id="prof-nom" placeholder="Nom prof" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><input id="prof-cours" placeholder="Cours" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><button onclick="ajouterProfesseur()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs">Ajouter</button></div></div><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Prof</th><th class="p-3">Code</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-profs"></tbody></table></div></div>
+<div id="admin-sec-professeurs" class="hidden space-y-3"><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700"><div class="grid grid-cols-3 gap-3"><input id="prof-nom" placeholder="Nom prof" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><input id="prof-cours" placeholder="Cours" class="bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><button onclick="ajouterProfesseurUnique()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs">Ajouter</button></div></div><div class="table-responsive border border-slate-700 rounded-2xl bg-slate-800 overflow-hidden"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-3">Prof</th><th class="p-3">Code</th><th class="p-3">Action</th></tr></thead><tbody id="admin-liste-profs"></tbody></table></div></div>
 <div id="admin-sec-communiques" class="hidden"><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3"><input id="comm-titre" placeholder="Titre" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><textarea id="comm-contenu" placeholder="Contenu" class="w-full bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl text-xs h-20"></textarea><button onclick="publierCommunique()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs">Publier</button></div><div id="admin-liste-communiques" class="space-y-2.5"></div></div>
 </div>
 
@@ -111,30 +94,40 @@ let ecoleActive = localStorage.getItem('ecole_active') || "Don Bosco Durba";
 <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl"><h3 class="font-bold text-white text-xs uppercase text-green-400">Presence PRO</h3><div id="eleve-presence-view" class="mt-2 text-xs"></div></div>
 <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl"><h3 class="font-bold text-white text-xs uppercase text-blue-400">Deliberation</h3><div id="eleve-delib-view" class="mt-2 text-xs"></div></div>
 </div>
-<div id="parent-section-messagerie" class="hidden bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3">
-<h3 class="font-bold text-white text-xs uppercase">Messagerie Admin</h3>
-<div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden flex flex-col" style="height:350px"><div id="parent-whatsapp-chat" class="p-3 flex-1 overflow-y-auto space-y-2 text-xs"></div><div class="p-2 bg-slate-900 border-t border-slate-700 flex gap-2"><input id="parent-whatsapp-input" placeholder="Repondre..." class="bg-slate-800 border border-slate-700 text-white p-2.5 rounded-xl flex-1 text-xs"><button onclick="envoyerMessageParent()" class="bg-violet-600 text-white px-4 py-2.5 rounded-xl text-xs">Envoyer</button></div></div>
-</div>
+<div id="parent-section-messagerie" class="hidden bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3"><h3 class="font-bold text-white text-xs uppercase">Messagerie Admin - Don Bosco</h3><div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden flex flex-col" style="height:350px"><div id="parent-whatsapp-chat" class="p-3 flex-1 overflow-y-auto space-y-2 text-xs"></div><div class="p-2 bg-slate-900 border-t border-slate-700 flex gap-2"><input id="parent-whatsapp-input" placeholder="Repondre..." class="bg-slate-800 border border-slate-700 text-white p-2.5 rounded-xl flex-1 text-xs"><button onclick="envoyerMessageParent()" class="bg-violet-600 text-white px-4 py-2.5 rounded-xl text-xs">Envoyer</button></div></div></div>
 <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl"><div class="flex justify-between items-center mb-3"><h3 class="font-bold text-white text-xs uppercase">Cotations</h3><select id="select-trimestre-eleve" onchange="chargerTableauDeBordEleveOuParent()" class="bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select></div><div id="contenu-cotations" class="space-y-2 text-xs"></div></div>
-<div id="bulletin-impression" class="hidden p-8 bg-white text-slate-800 rounded-2xl max-w-4xl mx-auto"><div class="text-center border-b pb-4"><h4 class="font-bold text-xs uppercase">RDC - <span id="bul-ecole-nom"></span></h4><h2 class="text-sm font-bold bg-slate-900 text-white py-1.5 mt-2">BULLETIN - <span id="bul-trimestre-txt">T1</span> - % <span id="bul-pourcentage">-</span> - Place <span id="bul-place">-</span></h2></div><div class="grid grid-cols-2 gap-4 text-xs border p-3 bg-slate-50 rounded-lg mt-4"><div><p><strong>Nom:</strong> <span id="bul-nom"></span></p><p><strong>Classe:</strong> <span id="bul-classe"></span></p></div><div><p><strong>Date:</strong> <span id="bul-date"></span></p></div></div><table class="w-full text-left text-xs border border-slate-300 mt-4"><thead><tr class="bg-slate-100 text-[10px] uppercase"><th class="p-2 border">Branches</th><th class="p-2 border text-center">Max</th><th class="p-2 border text-center">Obtenu</th></tr></thead><tbody id="bul-lignes-cours"></tbody></table><div class="mt-4 p-3 bg-slate-100 rounded text-xs"><b>Deliberation:</b> <span id="bul-delib-detail"></span></div></div>
+<div id="bulletin-impression" class="hidden p-8 bg-white text-slate-800 rounded-2xl max-w-4xl mx-auto"><div class="text-center border-b pb-4"><h4 class="font-bold text-xs uppercase">Lycee Don Bosco Durba</h4><h2 class="text-sm font-bold bg-slate-900 text-white py-1.5 mt-2">BULLETIN - <span id="bul-trimestre-txt">T1</span> - % <span id="bul-pourcentage">-</span> - Place <span id="bul-place">-</span></h2></div><div class="grid grid-cols-2 gap-4 text-xs border p-3 bg-slate-50 rounded-lg mt-4"><div><p><strong>Nom:</strong> <span id="bul-nom"></span></p><p><strong>Classe:</strong> <span id="bul-classe"></span></p></div><div><p><strong>Date:</strong> <span id="bul-date"></span></p></div></div><table class="w-full text-left text-xs border border-slate-300 mt-4"><thead><tr class="bg-slate-100 text-[10px] uppercase"><th class="p-2 border">Branches</th><th class="p-2 border text-center">Max</th><th class="p-2 border text-center">Obtenu</th></tr></thead><tbody id="bul-lignes-cours"></tbody></table><div class="mt-4 p-3 bg-slate-100 rounded text-xs"><b>Deliberation:</b> <span id="bul-delib-detail"></span></div></div>
 </div>
 
 <div id="vue-prof-dashboard" class="hidden space-y-6">
-<div class="flex justify-between border-b border-slate-800 pb-4"><div><h2 class="text-lg font-bold text-white">Espace Prof</h2><p id="welcome-prof" class="text-xs text-slate-400"></p></div><button onclick="changerVue('accueil', true)" class="text-xs text-red-400 bg-slate-800 px-3 py-2 rounded-xl border border-slate-700">Deconnexion</button></div>
+<div class="flex justify-between border-b border-slate-800 pb-4"><div><h2 class="text-lg font-bold text-white">Espace Prof - Don Bosco</h2><p id="welcome-prof" class="text-xs text-slate-400"></p></div><button onclick="changerVue('accueil', true)" class="text-xs text-red-400 bg-slate-800 px-3 py-2 rounded-xl border border-slate-700">Deconnexion</button></div>
 <div id="prof-sec-notes" class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3"><div class="flex gap-2"><select id="prof-select-classe" onchange="chargerTableauDeBordProf()" class="bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-xs"><option value="">Toutes</option><option>1ere Primaire</option><option>2eme Primaire</option><option>3eme Primaire</option><option>4eme Primaire</option><option>5eme Primaire</option><option>6eme Primaire</option><option>7eme</option><option>8eme</option></select><select id="prof-select-trimestre" onchange="chargerTableauDeBordProf()" class="bg-slate-900 border border-slate-700 text-white p-2 rounded-xl text-xs"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select></div><div class="table-responsive"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-700"><th class="p-2.5">Eleve</th><th class="p-2.5">Note</th><th class="p-2.5">Action</th></tr></thead><tbody id="prof-liste-eleves-action"></tbody></table></div></div>
 </div>
 </div>
 
-<div id="modal-ecoles-gestion" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-<div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-<div class="flex justify-between items-center border-b border-slate-800 pb-3"><h3 class="font-bold text-white text-sm flex items-center gap-2"><i data-lucide="home" class="w-4 h-4 text-blue-400"></i> Gestion Ecoles</h3><button onclick="fermerModalEcoles()" class="text-slate-400">X</button></div>
-<div class="space-y-3">
-<input id="new-ecole-nom" placeholder="Nom nouvelle ecole" class="w-full bg-slate-950 border border-slate-800 text-white p-2.5 rounded-xl text-xs uppercase">
-<input id="new-ecole-mdp-admin" type="password" placeholder="Mot de passe Admin pour cette ecole" class="w-full bg-slate-950 border border-slate-800 text-white p-2.5 rounded-xl text-xs">
-<input id="new-ecole-master-code" type="password" placeholder="Code maitre Pr123" class="w-full bg-slate-950 border border-slate-800 text-amber-300 p-2.5 rounded-xl text-xs">
-<button onclick="creerNouvelleEcole()" class="w-full bg-blue-600 text-white p-2.5 rounded-xl text-xs">Creer l'ecole</button>
+<div id="modal-login-flottant" class="hidden fixed inset-0 modal-float z-[100] flex items-center justify-center p-4">
+<div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+<div class="flex justify-between items-center border-b border-slate-800 pb-3"><h3 id="modal-login-titre" class="font-bold text-white text-sm flex items-center gap-2"><i data-lucide="shield" class="w-4 h-4 text-blue-400"></i> Connexion</h3><button onclick="fermerLoginFlottant()" class="text-slate-400">X</button></div>
+
+<div id="login-form-admin-prof" class="space-y-3">
+<label class="text-[10px] text-slate-400 uppercase">Nom de l'ecole</label>
+<input id="flottant-ecole-nom" value="Lycee Don Bosco Durba" placeholder="Nom ecole" class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
+<label class="text-[10px] text-slate-400 uppercase" id="flottant-label-code">Mot de passe d'acces (a avoir en tete)</label>
+<div class="relative"><input id="flottant-code" type="password" placeholder="Mot de passe" class="w-full bg-slate-950 border border-slate-700 text-white p-3 pr-12 rounded-xl text-sm"><button type="button" onclick="toggleFlottantPassword()" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400"><i id="eye-icon-flottant" data-lucide="eye" class="w-4 h-4"></i></button></div>
+<p class="text-[10px] text-slate-500">Le mot de passe n'est jamais affiche par le site. Vous devez l'avoir en tete. Admin Don Bosco: PR123</p>
+<button id="flottant-btn-login" onclick="validerLoginFlottant()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl text-sm font-semibold">Se connecter</button>
+<p id="flottant-erreur" class="hidden text-red-400 text-xs bg-red-950/50 p-2 rounded-lg border border-red-900/50"></p>
 </div>
-<div class="border-t border-slate-800 pt-3"><h4 class="text-[11px] font-bold text-slate-400 uppercase mb-2">Ecoles</h4><div id="liste-ecoles-existantes" class="space-y-1 max-h-[150px] overflow-y-auto text-xs"></div></div>
+
+<div id="login-form-parent-eleve" class="hidden space-y-3">
+<label class="text-[10px] text-slate-400 uppercase">Je suis</label>
+<select id="flottant-type-personne" class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl text-xs"><option value="eleve">Eleve</option><option value="parent">Parent</option></select>
+<label class="text-[10px] text-slate-400 uppercase">Ton code unique (a avoir en tete)</label>
+<div class="relative"><input id="flottant-code-pe" type="password" placeholder="Code unique" class="w-full bg-slate-950 border border-slate-700 text-white p-3 pr-12 rounded-xl text-sm"><button type="button" onclick="toggleFlottantPasswordPE()" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400"><i id="eye-icon-flottant-pe" data-lucide="eye" class="w-4 h-4"></i></button></div>
+<p class="text-[10px] text-slate-500">Code unique attribue une seule fois. Le site ne l'affiche plus. Garde-le en tete. Direction automatique vers ton ecole.</p>
+<button onclick="validerLoginFlottantPE()" class="w-full bg-violet-600 hover:bg-violet-700 text-white p-3 rounded-xl text-sm font-semibold">Entrer dans mon ecole</button>
+<p id="flottant-erreur-pe" class="hidden text-red-400 text-xs bg-red-950/50 p-2 rounded-lg border border-red-900/50"></p>
+</div>
 </div>
 </div>
 
@@ -148,117 +141,246 @@ let ecoleActive = localStorage.getItem('ecole_active') || "Don Bosco Durba";
 <script>
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-let donneesGlobales = {ecoles:{},eleves:{},tuteurs:{},professeurs:{},notes:{},frais:{},communiques:{},demandesCours:{},messages:{},presences:{},baremes:{},deliberations:{},config:{},admin:{mdp:"admin2026"}};
-let sessionActive = {role:null,id:null,nom:null,ecole:null,enfantIdActif:null};
+let donneesGlobales = {eleves:{},tuteurs:{},professeurs:{},notes:{},communiques:{},demandesCours:{},messages:{},presences:{},deliberations:{},admin:{mdp:"PR123"}};
+let sessionActive = {role:null,id:null,nom:null,ecole:ECOLE_PRINCIPALE,enfantIdActif:null};
 let adminContactActif = null;
-function togglePasswordVisibility(){const i=document.getElementById('input-code'); const e=document.getElementById('eye-icon'); if(i.type==='password'){i.type='text'; e.setAttribute('data-lucide','eye-off');}else{i.type='password'; e.setAttribute('data-lucide','eye');} lucide.createIcons();}
-function ouvrirModalEcoles(){document.getElementById('modal-ecoles-gestion').classList.remove('hidden'); chargerListeEcolesExistantes(); lucide.createIcons();}
-function fermerModalEcoles(){document.getElementById('modal-ecoles-gestion').classList.add('hidden');}
-function normaliserNom(n){return (n||'').trim().toUpperCase();}
-function chargerListeEcolesExistantes(){
-  const cont=document.getElementById('liste-ecoles-existantes');
-  if(cont){cont.innerHTML='<div class="bg-slate-800 p-2 rounded text-[11px] flex justify-between"><span>Don Bosco Durba (defaut)</span><span class="text-slate-500">admin2026</span></div>'; for(let k in (donneesGlobales.ecoles||{})){cont.innerHTML+=`<div class="bg-slate-800 p-2 rounded text-[11px] flex justify-between"><span>${donneesGlobales.ecoles[k].nom}</span><span class="text-amber-300">${donneesGlobales.ecoles[k].mdpAdmin}</span></div>`;} }
-  const sel=document.getElementById('input-ecole-connexion'); if(sel){const current=sel.value||ecoleActive; sel.innerHTML='<option value="Don Bosco Durba">Don Bosco Durba</option>'; for(let k in (donneesGlobales.ecoles||{})){sel.innerHTML+=`<option value="${donneesGlobales.ecoles[k].nom}">${donneesGlobales.ecoles[k].nom}</option>`;} sel.value=current; if(!sel.value) sel.value="Don Bosco Durba";}
-  const acc=document.getElementById('liste-ecoles-accueil'); if(acc){acc.innerHTML='<span class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-full text-[10px]">Don Bosco Durba</span>'; for(let k in (donneesGlobales.ecoles||{})){acc.innerHTML+=`<span class="bg-blue-900/30 border border-blue-700/50 px-3 py-1 rounded-full text-[10px]">${donneesGlobales.ecoles[k].nom}</span>`;} }
-  afficherCodesPourEcole();
+let currentLoginRole = null;
+function toggleFlottantPassword(){const i=document.getElementById('flottant-code'); const e=document.getElementById('eye-icon-flottant'); if(i.type==='password'){i.type='text'; e.setAttribute('data-lucide','eye-off');}else{i.type='password'; e.setAttribute('data-lucide','eye');} lucide.createIcons();}
+function toggleFlottantPasswordPE(){const i=document.getElementById('flottant-code-pe'); const e=document.getElementById('eye-icon-flottant-pe'); if(i.type==='password'){i.type='text'; e.setAttribute('data-lucide','eye-off');}else{i.type='password'; e.setAttribute('data-lucide','eye');} lucide.createIcons();}
+function ouvrirLoginFlottant(role){
+  currentLoginRole=role;
+  document.getElementById('modal-login-flottant').classList.remove('hidden');
+  document.getElementById('flottant-erreur').classList.add('hidden');
+  document.getElementById('flottant-erreur-pe').classList.add('hidden');
+  if(role==='admin' || role==='prof'){
+    document.getElementById('login-form-admin-prof').classList.remove('hidden');
+    document.getElementById('login-form-parent-eleve').classList.add('hidden');
+    document.getElementById('modal-login-titre').innerHTML=`<i data-lucide="${role==='admin'?'shield':'briefcase'}" class="w-4 h-4 text-blue-400"></i> Connexion ${role.toUpperCase()} - Don Bosco`;
+    document.getElementById('flottant-code').value='';
+  } else {
+    document.getElementById('login-form-admin-prof').classList.add('hidden');
+    document.getElementById('login-form-parent-eleve').classList.remove('hidden');
+    document.getElementById('modal-login-titre').innerHTML=`<i data-lucide="${role==='eleve'?'graduation-cap':'users'}" class="w-4 h-4 text-violet-400"></i> Connexion ${role.toUpperCase()}`;
+    document.getElementById('flottant-type-personne').value=role;
+    document.getElementById('flottant-code-pe').value='';
+  }
+  lucide.createIcons();
 }
-function afficherCodesPourEcole(){
-  const ecoleSel=document.getElementById('input-ecole-connexion')?.value || ecoleActive;
-  const info=document.getElementById('info-codes-ecole'); if(!info) return;
-  const target=normaliserNom(ecoleSel);
-  const eleves=Object.values(donneesGlobales.eleves||{}).filter(e=>{const en=normaliserNom(e.ecole||''); return target==="DON BOSCO DURBA"? (en===""||en===target) : en===target;});
-  const tuteurs=Object.values(donneesGlobales.tuteurs||{}).filter(t=>{const en=normaliserNom(t.ecole||''); return target==="DON BOSCO DURBA"? (en===""||en===target) : en===target;});
-  const profs=Object.values(donneesGlobales.professeurs||{}).filter(p=>{const en=normaliserNom(p.ecole||''); return target==="DON BOSCO DURBA"? (en===""||en===target) : en===target;});
-  let txt=`<b>Ecole: ${ecoleSel}</b><br>`;
-  if(target==="DON BOSCO DURBA"){const mdp=(donneesGlobales.admin&&donneesGlobales.admin.mdp)||"admin2026"; txt+=`Admin: <b>${mdp}</b><br>`;}else{const eco=Object.values(donneesGlobales.ecoles||{}).find(e=>normaliserNom(e.nom)===target); txt+=`Admin: <b>${eco?eco.mdpAdmin:'?'}</b> (uniquement ici)<br>`;}
-  if(eleves.length) txt+=`Eleves: ${eleves.slice(0,3).map(e=>e.codeEleve+'('+e.nom+')').join(', ')}<br>`;
-  if(tuteurs.length) txt+=`Parents: ${tuteurs.slice(0,3).map(t=>t.codeTuteur+'('+t.nom+')').join(', ')}<br>`;
-  if(profs.length) txt+=`Profs: ${profs.slice(0,3).map(p=>p.code+'('+p.nom+')').join(', ')}`;
-  if(!eleves.length&&!profs.length) txt+=`<i>Aucun eleve/prof cree. Va dans Admin de ${ecoleSel} pour creer.</i>`;
-  info.innerHTML=txt; info.classList.remove('hidden');
+function fermerLoginFlottant(){document.getElementById('modal-login-flottant').classList.add('hidden');}
+function genererCodeUnique(prefix, existingCodes){
+  let code;
+  do{ code=prefix+'-'+Math.floor(100000+Math.random()*900000); } while(existingCodes.includes(code));
+  return code;
 }
-function creerNouvelleEcole(){
-  const nom=normaliserNom(document.getElementById('new-ecole-nom').value);
-  const mdp=document.getElementById('new-ecole-mdp-admin').value.trim();
-  const master=document.getElementById('new-ecole-master-code').value.trim();
-  if(!nom||!mdp){alert('Remplis nom et mdp');return;}
-  if(master!==MASTER_CODE){alert('Code maitre incorrect Pr123');return;}
-  if(nom==="DON BOSCO DURBA"){alert('Existe deja');return;}
-  for(let k in (donneesGlobales.ecoles||{})){if(normaliserNom(donneesGlobales.ecoles[k].nom)===nom){alert('Existe deja');return;}}
-  const key=db.ref('ecoles').push().key;
-  db.ref('ecoles/'+key).set({nom:nom,mdpAdmin:mdp,creeLe:Date.now()}).then(()=>{alert('Ecole '+nom+' creee! Admin: '+mdp); document.getElementById('new-ecole-nom').value=''; document.getElementById('new-ecole-mdp-admin').value=''; document.getElementById('new-ecole-master-code').value='';});
+function obtenirTousCodesExistants(){
+  const codes=[];
+  for(let k in (donneesGlobales.eleves||{})){if(donneesGlobales.eleves[k].codeEleve) codes.push(donneesGlobales.eleves[k].codeEleve); if(donneesGlobales.eleves[k].codeTuteur) codes.push(donneesGlobales.eleves[k].codeTuteur);}
+  for(let k in (donneesGlobales.tuteurs||{})){if(donneesGlobales.tuteurs[k].codeTuteur) codes.push(donneesGlobales.tuteurs[k].codeTuteur);}
+  for(let k in (donneesGlobales.professeurs||{})){if(donneesGlobales.professeurs[k].code) codes.push(donneesGlobales.professeurs[k].code);}
+  return codes;
 }
 db.ref().on('value',(snap)=>{
-  const val=snap.val(); if(val){donneesGlobales=val; if(!donneesGlobales.ecoles) donneesGlobales.ecoles={}; if(!donneesGlobales.eleves) donneesGlobales.eleves={}; if(!donneesGlobales.tuteurs) donneesGlobales.tuteurs={}; if(!donneesGlobales.professeurs) donneesGlobales.professeurs={}; if(!donneesGlobales.messages) donneesGlobales.messages={}; if(!donneesGlobales.presences) donneesGlobales.presences={}; if(!donneesGlobales.deliberations) donneesGlobales.deliberations={}; if(!donneesGlobales.demandesCours) donneesGlobales.demandesCours={}; if(!donneesGlobales.notes) donneesGlobales.notes={}; if(!donneesGlobales.communiques) donneesGlobales.communiques={}; if(!donneesGlobales.admin) donneesGlobales.admin={mdp:"admin2026"}; }
+  const val=snap.val();
+  if(val){
+    donneesGlobales=val;
+    if(!donneesGlobales.eleves) donneesGlobales.eleves={};
+    if(!donneesGlobales.tuteurs) donneesGlobales.tuteurs={};
+    if(!donneesGlobales.professeurs) donneesGlobales.professeurs={};
+    if(!donneesGlobales.messages) donneesGlobales.messages={};
+    if(!donneesGlobales.presences) donneesGlobales.presences={};
+    if(!donneesGlobales.deliberations) donneesGlobales.deliberations={};
+    if(!donneesGlobales.demandesCours) donneesGlobales.demandesCours={};
+    if(!donneesGlobales.notes) donneesGlobales.notes={};
+    if(!donneesGlobales.communiques) donneesGlobales.communiques={};
+    if(!donneesGlobales.admin) donneesGlobales.admin={mdp:"PR123"};
+    else if(!donneesGlobales.admin.mdp || donneesGlobales.admin.mdp==="admin2026"){donneesGlobales.admin.mdp="PR123"; db.ref('admin/mdp').set("PR123");}
+  } else {
+    db.ref('admin').set({mdp:"PR123"});
+  }
   rafraichirDonneesPage();
 });
-function rafraichirDonneesPage(){chargerListeEcolesExistantes(); chargerCommuniquesAccueil(); if(sessionActive.role==='admin'){chargerListeAdminEleves();chargerTableauPresencesAdmin();chargerContactsMessagerieAdmin();chargerDemandesCoursAdmin();chargerDeliberationAdmin();chargerAdminCommuniques();chargerListeAdminTuteurs();chargerListeAdminProfs();} else if(sessionActive.role==='prof'){chargerTableauDeBordProf();} else if(sessionActive.role==='eleve'||sessionActive.role==='parent'){chargerTableauDeBordEleveOuParent();} if(window.lucide) lucide.createIcons();}
+function rafraichirDonneesPage(){
+  chargerCommuniquesAccueil();
+  if(sessionActive.role==='admin'){chargerListeAdminEleves();chargerTableauPresencesAdmin();chargerContactsMessagerieAdmin();chargerDemandesCoursAdmin();chargerDeliberationAdmin();chargerAdminCommuniques();chargerListeAdminTuteurs();chargerListeAdminProfs();}
+  else if(sessionActive.role==='prof'){chargerTableauDeBordProf();}
+  else if(sessionActive.role==='eleve'||sessionActive.role==='parent'){chargerTableauDeBordEleveOuParent();}
+  if(window.lucide) lucide.createIcons();
+}
 function changerVue(vue, reset=false){
-  document.getElementById('vue-accueil').classList.add('hidden'); document.getElementById('vue-connexion').classList.add('hidden'); document.getElementById('vue-admin-dashboard').classList.add('hidden'); document.getElementById('vue-eleve-dashboard').classList.add('hidden'); document.getElementById('vue-prof-dashboard').classList.add('hidden');
-  if(vue==='accueil'){document.getElementById('vue-accueil').classList.remove('hidden'); if(reset){sessionActive={role:null,id:null,nom:null,ecole:null,enfantIdActif:null}; ecoleActive="Don Bosco Durba"; localStorage.setItem('ecole_active',ecoleActive);}}
-  else if(vue.includes('login')){document.getElementById('vue-connexion').classList.remove('hidden'); const role=vue.split('-')[0]; sessionActive.role=role; document.getElementById('titre-connexion').innerText="Connexion "+role.toUpperCase(); document.getElementById('erreur-connexion').classList.add('hidden'); document.getElementById('input-code').value=''; chargerListeEcolesExistantes();}
-  else{const t=document.getElementById('vue-'+vue)||document.getElementById('vue-'+vue+'-dashboard'); if(t) t.classList.remove('hidden');}
+  document.getElementById('vue-accueil').classList.add('hidden');
+  document.getElementById('vue-admin-dashboard').classList.add('hidden');
+  document.getElementById('vue-eleve-dashboard').classList.add('hidden');
+  document.getElementById('vue-prof-dashboard').classList.add('hidden');
+  fermerLoginFlottant();
+  if(vue==='accueil'){
+    document.getElementById('vue-accueil').classList.remove('hidden');
+    if(reset){sessionActive={role:null,id:null,nom:null,ecole:ECOLE_PRINCIPALE,enfantIdActif:null};}
+  } else {
+    const t=document.getElementById('vue-'+vue) || document.getElementById('vue-'+vue+'-dashboard');
+    if(t) t.classList.remove('hidden');
+  }
 }
-function filtrerParEcole(obj){const res={}; const target=normaliserNom(ecoleActive); for(let k in (obj||{})){const e=obj[k]; const ecoleE=normaliserNom(e.ecole||''); if(target==="DON BOSCO DURBA"){if(ecoleE===""||ecoleE===target) res[k]=e;}else{if(ecoleE===target) res[k]=e;}} return res;}
-function validerConnexion(){
-  const code=document.getElementById('input-code').value.trim();
-  const ecoleSel=document.getElementById('input-ecole-connexion')?.value || "Don Bosco Durba";
-  if(!code){document.getElementById('erreur-connexion').innerText="Entre le code attribue. Regarde en haut les codes attribues pour "+ecoleSel; document.getElementById('erreur-connexion').classList.remove('hidden'); afficherCodesPourEcole(); return;}
-  ecoleActive=ecoleSel; localStorage.setItem('ecole_active',ecoleSel); const err=document.getElementById('erreur-connexion'); err.classList.add('hidden'); const target=normaliserNom(ecoleSel);
-  if(sessionActive.role==='admin'){
-    if(target==="DON BOSCO DURBA"){const mdp=(donneesGlobales.admin&&donneesGlobales.admin.mdp)||"admin2026"; if(code===mdp||code==="admin2026"){sessionActive.ecole=ecoleSel; document.getElementById('vue-connexion').classList.add('hidden'); document.getElementById('vue-admin-dashboard').classList.remove('hidden'); document.getElementById('admin-titre-ecole').innerText='Admin - '+ecoleSel; changerOngletAdmin('eleves'); return;} else{err.innerHTML=`Code Admin incorrect pour ${ecoleSel}. Codes: <b>${mdp}</b>`; err.classList.remove('hidden'); return;}}
-    else{const eco=Object.values(donneesGlobales.ecoles||{}).find(e=>normaliserNom(e.nom)===target); if(!eco){err.innerText="Ecole non trouvee"; err.classList.remove('hidden'); return;} if(code===eco.mdpAdmin){sessionActive.ecole=ecoleSel; document.getElementById('vue-connexion').classList.add('hidden'); document.getElementById('vue-admin-dashboard').classList.remove('hidden'); document.getElementById('admin-titre-ecole').innerText='Admin - '+ecoleSel; changerOngletAdmin('eleves'); return;} else{err.innerHTML=`Code incorrect pour ${ecoleSel}. Mdp attribue: <b>${eco.mdpAdmin}</b>`; err.classList.remove('hidden'); return;}}
-  } else if(sessionActive.role==='prof'){let f=null,k=null; for(let kk in (donneesGlobales.professeurs||{})){const p=donneesGlobales.professeurs[kk]; const en=normaliserNom(p.ecole||''); const match=target==="DON BOSCO DURBA"? (en===""||en===target):en===target; if(p.code===code&&match){f=p;k=kk;break;}} if(f){sessionActive.id=k;sessionActive.nom=f.nom;sessionActive.ecole=ecoleSel; document.getElementById('vue-connexion').classList.add('hidden'); document.getElementById('vue-prof-dashboard').classList.remove('hidden'); document.getElementById('welcome-prof').innerText=f.nom+' - '+f.cours+' - '+ecoleSel; chargerTableauDeBordProf(); return;} else{err.innerHTML=`Code prof incorrect pour ${ecoleSel}. Regarde codes attribues ci-dessus.`; err.classList.remove('hidden'); return;}}
-  else if(sessionActive.role==='eleve'){let f=null,k=null; for(let kk in (donneesGlobales.eleves||{})){const e=donneesGlobales.eleves[kk]; const en=normaliserNom(e.ecole||''); const match=target==="DON BOSCO DURBA"? (en===""||en===target):en===target; if(e.codeEleve===code&&match){f=e;k=kk;break;}} if(f){sessionActive.id=k;sessionActive.nom=f.nom+' '+f.postnom;sessionActive.ecole=ecoleSel; document.getElementById('vue-connexion').classList.add('hidden'); document.getElementById('vue-eleve-dashboard').classList.remove('hidden'); document.getElementById('titre-espace-eleve-parent').innerText='Espace Eleve - '+sessionActive.nom+' ('+ecoleSel+')'; document.getElementById('parent-section-messagerie').classList.add('hidden'); document.getElementById('select-enfant-parent').classList.add('hidden'); chargerTableauDeBordEleveOuParent(); return;} else{err.innerHTML=`Code eleve incorrect pour ${ecoleSel}. Codes: ${Object.values(filtrerParEcole(donneesGlobales.eleves)).slice(0,3).map(e=>e.codeEleve+'('+e.nom+')').join(', ')||'Aucun eleve dans cette ecole'}`; err.classList.remove('hidden'); return;}}
-  else if(sessionActive.role==='parent'){let f=null,k=null; for(let kk in (donneesGlobales.tuteurs||{})){const t=donneesGlobales.tuteurs[kk]; const en=normaliserNom(t.ecole||''); const match=target==="DON BOSCO DURBA"? (en===""||en===target):en===target; if(t.codeTuteur===code&&match){f=t;k=kk;break;}} if(f){sessionActive.id=k;sessionActive.nom=f.nom;sessionActive.ecole=ecoleSel; sessionActive.enfantIdActif=f.enfants&&f.enfants[0]; document.getElementById('vue-connexion').classList.add('hidden'); document.getElementById('vue-eleve-dashboard').classList.remove('hidden'); document.getElementById('titre-espace-eleve-parent').innerText='Espace Parent - '+sessionActive.nom+' ('+ecoleSel+')'; document.getElementById('parent-section-messagerie').classList.remove('hidden'); const sel=document.getElementById('select-enfant-parent'); sel.classList.remove('hidden'); sel.innerHTML=''; (f.enfants||[]).forEach(idEl=>{const el=donneesGlobales.eleves[idEl]; if(el){const opt=document.createElement('option'); opt.value=idEl; opt.innerText=el.nom+' ('+el.classe+')'; sel.appendChild(opt);}}); chargerTableauDeBordEleveOuParent(); return;} else{err.innerHTML=`Code parent incorrect pour ${ecoleSel}.`; err.classList.remove('hidden'); return;}}
+function validerLoginFlottant(){
+  const ecoleNom=document.getElementById('flottant-ecole-nom').value.trim();
+  const code=document.getElementById('flottant-code').value.trim();
+  const err=document.getElementById('flottant-erreur');
+  err.classList.add('hidden');
+  if(!ecoleNom||!code){err.innerText="Remplis nom ecole et mot de passe. Tu dois avoir le mot de passe en tete."; err.classList.remove('hidden'); return;}
+  if(ecoleNom.toUpperCase()!==ECOLE_PRINCIPALE.toUpperCase() && ecoleNom.toUpperCase()!=="DON BOSCO DURBA"){
+    err.innerText=`Nom ecole incorrect. Ecole: ${ECOLE_PRINCIPALE}`; err.classList.remove('hidden'); return;
+  }
+  if(currentLoginRole==='admin'){
+    if(code===MDP_ADMIN_DON_BOSCO || code==="PR123"){
+      sessionActive.role='admin'; sessionActive.ecole=ECOLE_PRINCIPALE;
+      document.getElementById('modal-login-flottant').classList.add('hidden');
+      document.getElementById('vue-accueil').classList.add('hidden');
+      document.getElementById('vue-admin-dashboard').classList.remove('hidden');
+      changerOngletAdmin('eleves');
+    } else {err.innerText=`Mot de passe incorrect pour ${ECOLE_PRINCIPALE}. Tu dois avoir le mot de passe en tete.`; err.classList.remove('hidden');}
+  } else if(currentLoginRole==='prof'){
+    let found=null,key=null;
+    for(let k in (donneesGlobales.professeurs||{})){if(donneesGlobales.professeurs[k].code===code){found=donneesGlobales.professeurs[k]; key=k; break;}}
+    if(found){
+      sessionActive.role='prof'; sessionActive.id=key; sessionActive.nom=found.nom; sessionActive.ecole=ECOLE_PRINCIPALE;
+      document.getElementById('modal-login-flottant').classList.add('hidden');
+      document.getElementById('vue-accueil').classList.add('hidden');
+      document.getElementById('vue-prof-dashboard').classList.remove('hidden');
+      document.getElementById('welcome-prof').innerText=found.nom+' - '+found.cours+' - '+ECOLE_PRINCIPALE;
+      chargerTableauDeBordProf();
+    } else {err.innerText=`Code prof incorrect. Tu dois avoir ton code unique en tete.`; err.classList.remove('hidden');}
+  }
 }
-function changerOngletAdmin(onglet){['eleves','presences','cours-demandes','deliberation','messages','tuteurs','professeurs','communiques'].forEach(s=>{const el=document.getElementById('admin-sec-'+s); if(el) el.classList.add('hidden');}); const act=document.getElementById('admin-sec-'+onglet); if(act) act.classList.remove('hidden');}
-function chargerListeAdminEleves(){const tb=document.getElementById('admin-liste-eleves'); if(!tb) return; tb.innerHTML=''; const eleves=filtrerParEcole(donneesGlobales.eleves); if(!Object.keys(eleves).length){tb.innerHTML=`<tr><td colspan="5" class="p-4 text-center text-slate-500">Aucun eleve pour ${ecoleActive}. Cree un eleve, il sera lie a cette ecole.</td></tr>`; return;} for(let k in eleves){const el=eleves[k]; tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${el.nom} ${el.postnom||''}</td><td class='p-3'>${el.classe}</td><td class='p-3 font-mono text-[10px] text-emerald-300'>${el.codeEleve||''}</td><td class='p-3 font-mono text-[10px] text-amber-300'>${el.codeTuteur||''}</td><td class='p-3'><button onclick="supprimerEleve('${k}')" class='text-red-400 text-xs'>Suppr</button></td></tr>`;} document.getElementById('admin-stats-eleves').innerText=Object.keys(eleves).length+' eleves - '+ecoleActive;}
-function enregistrerOuModifierEleve(){const nom=document.getElementById('el-nom').value.trim(); const postnom=document.getElementById('el-postnom').value.trim(); const prenom=document.getElementById('el-prenom').value.trim(); const classe=document.getElementById('el-classe').value; const tutNom=document.getElementById('tut-nom').value.trim()||nom; const tutTel=document.getElementById('tut-tel').value.trim(); if(!nom||!classe){alert('Nom et classe');return;} const k=db.ref('eleves').push().key; const codeEleve='EL-'+Math.floor(100000+Math.random()*900000); const codeTuteur='PA-'+Math.floor(100000+Math.random()*900000); db.ref('eleves/'+k).set({nom,postnom,prenom,classe,codeEleve,codeTuteur,ecole:ecoleActive,date:Date.now(),statut:'actif',statutFrais:'non_paye'}).then(()=>{const kt=db.ref('tuteurs').push().key; db.ref('tuteurs/'+kt).set({nom:tutNom,telephone:tutTel,codeTuteur:codeTuteur,enfants:[k],ecole:ecoleActive}); alert(`Eleve cree dans ${ecoleActive}!\nCode Eleve: ${codeEleve}\nCode Parent: ${codeTuteur}\nNote bien ces codes attribues`);}); document.getElementById('el-nom').value=''; document.getElementById('el-postnom').value=''; document.getElementById('el-prenom').value=''; document.getElementById('tut-nom').value=''; document.getElementById('tut-tel').value='';}
-function supprimerEleve(k){if(confirm('Supprimer?')) db.ref('eleves/'+k).remove();}
-function chargerTableauPresencesAdmin(){const tb=document.getElementById('admin-liste-presences-calendrier'); if(!tb) return; tb.innerHTML=''; const classeFiltre=document.getElementById('admin-presence-classe')?.value; const date=document.getElementById('admin-presence-date')?.value || new Date().toISOString().split('T')[0]; document.getElementById('admin-presence-date').value=date; const eleves=filtrerParEcole(donneesGlobales.eleves); if(!Object.keys(eleves).length){tb.innerHTML=`<tr><td colspan="5" class="p-4 text-center text-slate-500">Aucun eleve pour ${ecoleActive}</td></tr>`; return;} for(let k in eleves){const el=eleves[k]; if(classeFiltre&&el.classe!==classeFiltre) continue; const pres=donneesGlobales.presences[date]&&donneesGlobales.presences[date][k]; const statut=pres?.statut||'non_defini'; const heure=pres?.heure||'-'; tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${el.nom} ${el.postnom||''}</td><td class='p-3'>${el.classe}</td><td class='p-3 text-[11px]'>${heure}</td><td class='p-3 font-bold ${statut==='present'?'text-emerald-300':statut==='absent'?'text-red-300':'text-slate-500'}'>${statut}</td><td class='p-3 flex gap-1'><button onclick="marquerPresencePRO('${k}','${date}','present')" class='bg-emerald-600 text-white px-2 py-1 rounded text-[10px]'>Present</button><button onclick="marquerPresencePRO('${k}','${date}','absent')" class='bg-red-600 text-white px-2 py-1 rounded text-[10px]'>Absent</button><button onclick="marquerPresencePRO('${k}','${date}','retard')" class='bg-amber-600 text-white px-2 py-1 rounded text-[10px]'>Retard</button></td></tr>`;} }
-function marquerPresencePRO(eleveId,date,statut){const heure=new Date().toLocaleTimeString('fr-CD',{hour:'2-digit',minute:'2-digit'}); db.ref('presences/'+date+'/'+eleveId).set({statut,date,eleveId,heure,validePar:'Admin '+ecoleActive,ecole:ecoleActive,timestamp:Date.now()}).then(()=>{for(let tk in (donneesGlobales.tuteurs||{})){const t=donneesGlobales.tuteurs[tk]; if(t.enfants&&t.enfants.includes(eleveId)){const mk=db.ref('messages/'+tk).push().key; db.ref('messages/'+tk+'/'+mk).set({texte:`📍 Presence ${statut.toUpperCase()} pour ${donneesGlobales.eleves[eleveId].nom} le ${date} a ${heure}. Valide par Admin ${ecoleActive}.`,sender:'admin',timestamp:Date.now(),ecole:ecoleActive});}}});}
-function marquerTousPresents(){const date=document.getElementById('admin-presence-date').value||new Date().toISOString().split('T')[0]; const classeFiltre=document.getElementById('admin-presence-classe').value; const eleves=filtrerParEcole(donneesGlobales.eleves); for(let k in eleves){const el=eleves[k]; if(classeFiltre&&el.classe!==classeFiltre) continue; const heure=new Date().toLocaleTimeString('fr-CD',{hour:'2-digit',minute:'2-digit'}); db.ref('presences/'+date+'/'+k).set({statut:'present',date,eleveId:k,heure,validePar:'Admin '+ecoleActive,ecole:ecoleActive,timestamp:Date.now()});}}
-function chargerDemandesCoursAdmin(){const cont=document.getElementById('admin-liste-demandes-cours'); if(!cont) return; cont.innerHTML=''; const demandes=filtrerParEcole(donneesGlobales.demandesCours); const entries=Object.entries(demandes); if(!entries.length){cont.innerHTML=`<p class="text-xs text-slate-500">Aucune demande pour ${ecoleActive}</p>`; return;} entries.forEach(([key,d])=>{cont.innerHTML+=`<div class="bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between items-center"><div><p class="font-bold text-white text-xs">${d.cours||''}</p><p class="text-[11px] text-slate-400">Par ${d.profNom||''} - ${d.statut||'en_attente'}</p></div><div class="flex gap-1"><button onclick="validerDemandeCours('${key}',true)" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[10px]">Valider</button><button onclick="validerDemandeCours('${key}',false)" class="bg-red-600 text-white px-3 py-1.5 rounded-lg text-[10px]">Refuser</button></div></div>`;});}
+function validerLoginFlottantPE(){
+  const type=document.getElementById('flottant-type-personne').value;
+  const code=document.getElementById('flottant-code-pe').value.trim();
+  const err=document.getElementById('flottant-erreur-pe');
+  err.classList.add('hidden');
+  if(!code){err.innerText="Entre ton code unique. Tu dois l'avoir en tete, le site ne l'affiche pas."; err.classList.remove('hidden'); return;}
+  if(type==='eleve'){
+    let found=null,key=null;
+    for(let k in (donneesGlobales.eleves||{})){if(donneesGlobales.eleves[k].codeEleve===code){found=donneesGlobales.eleves[k]; key=k; break;}}
+    if(found){
+      sessionActive.role='eleve'; sessionActive.id=key; sessionActive.nom=found.nom+' '+found.postnom; sessionActive.ecole=ECOLE_PRINCIPALE;
+      document.getElementById('modal-login-flottant').classList.add('hidden');
+      document.getElementById('vue-accueil').classList.add('hidden');
+      document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
+      document.getElementById('titre-espace-eleve-parent').innerText='Espace Eleve - '+sessionActive.nom+' ('+ECOLE_PRINCIPALE+')';
+      document.getElementById('select-enfant-parent').classList.add('hidden');
+      document.getElementById('parent-section-messagerie').classList.add('hidden');
+      chargerTableauDeBordEleveOuParent();
+    } else {err.innerText=`Code eleve incorrect. Tu dois avoir ton code unique en tete. Le site ne l'affiche pas.`; err.classList.remove('hidden');}
+  } else {
+    let found=null,key=null;
+    for(let k in (donneesGlobales.tuteurs||{})){if(donneesGlobales.tuteurs[k].codeTuteur===code){found=donneesGlobales.tuteurs[k]; key=k; break;}}
+    if(found){
+      sessionActive.role='parent'; sessionActive.id=key; sessionActive.nom=found.nom; sessionActive.ecole=ECOLE_PRINCIPALE; sessionActive.enfantIdActif=found.enfants&&found.enfants[0];
+      document.getElementById('modal-login-flottant').classList.add('hidden');
+      document.getElementById('vue-accueil').classList.add('hidden');
+      document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
+      document.getElementById('titre-espace-eleve-parent').innerText='Espace Parent - '+sessionActive.nom+' ('+ECOLE_PRINCIPALE+')';
+      document.getElementById('parent-section-messagerie').classList.remove('hidden');
+      const sel=document.getElementById('select-enfant-parent'); sel.classList.remove('hidden'); sel.innerHTML='';
+      (found.enfants||[]).forEach(idEl=>{const el=donneesGlobales.eleves[idEl]; if(el){const opt=document.createElement('option'); opt.value=idEl; opt.innerText=el.nom+' ('+el.classe+')'; sel.appendChild(opt);}});
+      chargerTableauDeBordEleveOuParent();
+    } else {err.innerText=`Code parent incorrect. Tu dois avoir ton code unique en tete.`; err.classList.remove('hidden');}
+  }
+}
+function changerOngletAdmin(onglet){
+  const tabs=['eleves','presences','cours-demandes','deliberation','messages','tuteurs','professeurs','communiques'];
+  tabs.forEach(t=>{
+    const btn=document.getElementById('tab-btn-'+(t==='professeurs'?'profs':t==='cours-demandes'?'cours':t==='deliberation'?'delib':t==='messages'?'msgs':t));
+    const sec=document.getElementById('admin-sec-'+t);
+    if(btn){
+      if(t===onglet){btn.className='tab-active px-4 py-2 rounded-xl text-xs font-semibold';}
+      else {btn.className='tab-inactive px-4 py-2 rounded-xl text-xs hover:bg-slate-700 transition-all';}
+    }
+    if(sec){if(t===onglet) sec.classList.remove('hidden'); else sec.classList.add('hidden');}
+  });
+}
+function chargerListeAdminEleves(){
+  const tb=document.getElementById('admin-liste-eleves'); if(!tb) return; tb.innerHTML='';
+  const eleves=donneesGlobales.eleves||{};
+  if(!Object.keys(eleves).length){tb.innerHTML='<tr><td colspan="5" class="p-4 text-center text-slate-500">Aucun eleve pour Don Bosco</td></tr>'; return;}
+  for(let k in eleves){
+    const el=eleves[k];
+    tb.innerHTML+=`<tr class="border-b border-slate-700/50 hover:bg-slate-800/50"><td class='p-3 text-white'>${el.nom} ${el.postnom||''}</td><td class='p-3'>${el.classe}</td><td class='p-3 font-mono text-[10px]'>${el.codeEleve||''}</td><td class='p-3 font-mono text-[10px]'>${el.codeTuteur||''}</td><td class='p-3'><button onclick="db.ref('eleves/${k}').remove()" class='text-red-400 text-xs'>Suppr</button></td></tr>`;
+  }
+  document.getElementById('admin-stats-eleves').innerText=Object.keys(eleves).length+' eleves - '+ECOLE_PRINCIPALE+' - Codes uniques, messagerie isolee';
+}
+function enregistrerEleveUnique(){
+  const nom=document.getElementById('el-nom').value.trim();
+  const postnom=document.getElementById('el-postnom').value.trim();
+  const prenom=document.getElementById('el-prenom').value.trim();
+  const classe=document.getElementById('el-classe').value;
+  const tutNom=document.getElementById('tut-nom').value.trim()||nom;
+  const tutTel=document.getElementById('tut-tel').value.trim();
+  if(!nom||!classe){alert('Nom et classe obligatoires');return;}
+  const existingCodes=obtenirTousCodesExistants();
+  const codeEleve=genererCodeUnique('EL', existingCodes);
+  existingCodes.push(codeEleve);
+  const codeTuteur=genererCodeUnique('PA', existingCodes);
+  const k=db.ref('eleves').push().key;
+  db.ref('eleves/'+k).set({nom,postnom,prenom,classe,codeEleve,codeTuteur,ecole:ECOLE_PRINCIPALE,date:Date.now(),statut:'actif'}).then(()=>{
+    const kt=db.ref('tuteurs').push().key;
+    db.ref('tuteurs/'+kt).set({nom:tutNom,telephone:tutTel,codeTuteur:codeTuteur,enfants:[k],ecole:ECOLE_PRINCIPALE});
+    alert(`Eleve cree dans ${ECOLE_PRINCIPALE}. Codes generes une seule fois, a noter immediatement, ne seront plus affiches.`);
+  });
+  document.getElementById('el-nom').value=''; document.getElementById('el-postnom').value=''; document.getElementById('el-prenom').value=''; document.getElementById('tut-nom').value=''; document.getElementById('tut-tel').value='';
+}
+function chargerTableauPresencesAdmin(){
+  const tb=document.getElementById('admin-liste-presences-calendrier'); if(!tb) return; tb.innerHTML='';
+  const classeFiltre=document.getElementById('admin-presence-classe')?.value;
+  const date=document.getElementById('admin-presence-date')?.value || new Date().toISOString().split('T')[0];
+  document.getElementById('admin-presence-date').value=date;
+  for(let k in (donneesGlobales.eleves||{})){
+    const el=donneesGlobales.eleves[k]; if(classeFiltre&&el.classe!==classeFiltre) continue;
+    const pres=donneesGlobales.presences[date]&&donneesGlobales.presences[date][k];
+    const statut=pres?.statut||'non_defini'; const heure=pres?.heure||'-';
+    tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${el.nom} ${el.postnom||''}</td><td class='p-3'>${el.classe}</td><td class='p-3 text-[11px]'>${heure}</td><td class='p-3 font-bold ${statut==='present'?'text-emerald-300':statut==='absent'?'text-red-300':'text-slate-500'}'>${statut}</td><td class='p-3 flex gap-1'><button onclick="marquerPresencePRO('${k}','${date}','present')" class='bg-emerald-600 text-white px-2 py-1 rounded text-[10px]'>Present</button><button onclick="marquerPresencePRO('${k}','${date}','absent')" class='bg-red-600 text-white px-2 py-1 rounded text-[10px]'>Absent</button><button onclick="marquerPresencePRO('${k}','${date}','retard')" class='bg-amber-600 text-white px-2 py-1 rounded text-[10px]'>Retard</button></td></tr>`;
+  }
+}
+function marquerPresencePRO(eleveId,date,statut){const heure=new Date().toLocaleTimeString('fr-CD',{hour:'2-digit',minute:'2-digit'}); db.ref('presences/'+date+'/'+eleveId).set({statut,date,eleveId,heure,validePar:'Admin '+ECOLE_PRINCIPALE,ecole:ECOLE_PRINCIPALE,timestamp:Date.now()}).then(()=>{for(let tk in (donneesGlobales.tuteurs||{})){const t=donneesGlobales.tuteurs[tk]; if(t.enfants&&t.enfants.includes(eleveId)){const mk=db.ref('messages/'+tk).push().key; db.ref('messages/'+tk+'/'+mk).set({texte:`📍 Presence ${statut.toUpperCase()} pour ${donneesGlobales.eleves[eleveId].nom} le ${date} a ${heure}. Valide par Admin ${ECOLE_PRINCIPALE}.`,sender:'admin',timestamp:Date.now(),ecole:ECOLE_PRINCIPALE});}}});}
+function marquerTousPresents(){const date=document.getElementById('admin-presence-date').value||new Date().toISOString().split('T')[0]; for(let k in (donneesGlobales.eleves||{})){const heure=new Date().toLocaleTimeString('fr-CD',{hour:'2-digit',minute:'2-digit'}); db.ref('presences/'+date+'/'+k).set({statut:'present',date,eleveId:k,heure,validePar:'Admin '+ECOLE_PRINCIPALE,ecole:ECOLE_PRINCIPALE,timestamp:Date.now()});}}
+function chargerDemandesCoursAdmin(){const cont=document.getElementById('admin-liste-demandes-cours'); if(!cont) return; cont.innerHTML=''; const demandes=donneesGlobales.demandesCours||{}; const entries=Object.entries(demandes); if(!entries.length){cont.innerHTML='<p class="text-xs text-slate-500">Aucune demande pour Don Bosco</p>'; return;} entries.forEach(([key,d])=>{cont.innerHTML+=`<div class="bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between items-center"><div><p class="font-bold text-white text-xs">${d.cours||''}</p><p class="text-[11px] text-slate-400">Par ${d.profNom||''} - ${d.statut||'en_attente'}</p></div><div class="flex gap-1"><button onclick="validerDemandeCours('${key}',true)" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[10px]">Valider</button><button onclick="validerDemandeCours('${key}',false)" class="bg-red-600 text-white px-3 py-1.5 rounded-lg text-[10px]">Refuser</button></div></div>`;});}
 function validerDemandeCours(key,valide){db.ref('demandesCours/'+key+'/statut').set(valide?'valide':'refuse');}
-function chargerDeliberationAdmin(){const tb=document.getElementById('admin-liste-deliberation'); if(!tb) return; tb.innerHTML=''; const eleves=filtrerParEcole(donneesGlobales.eleves); const classeFiltre=document.getElementById('delib-classe-select')?.value; const trimFiltre=document.getElementById('delib-trimestre-select')?.value||'T1'; if(!Object.keys(eleves).length){tb.innerHTML=`<tr><td colspan="5" class="p-4 text-center text-slate-500">Aucun eleve pour ${ecoleActive}</td></tr>`; return;} for(let k in eleves){const el=eleves[k]; if(classeFiltre&&el.classe!==classeFiltre) continue; const delibKey=`${k}_${trimFiltre}_${normaliserNom(ecoleActive)}`; const delib=donneesGlobales.deliberations&&donneesGlobales.deliberations[delibKey]? donneesGlobales.deliberations[delibKey] : {}; tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${el.nom} ${el.postnom||''}</td><td class='p-3'><input id="delib-pct-${k}" value="${delib.pourcentage||''}" placeholder="%" class="w-16 bg-slate-900 border border-slate-700 p-1 rounded text-xs"></td><td class='p-3'><input id="delib-place-${k}" value="${delib.place||''}" placeholder="Place" class="w-16 bg-slate-900 border border-slate-700 p-1 rounded text-xs"></td><td class='p-3'><input id="delib-mention-${k}" value="${delib.mention||''}" placeholder="Mention" class="w-20 bg-slate-900 border border-slate-700 p-1 rounded text-xs"></td><td class='p-3'><button onclick="publierDeliberation('${k}','${trimFiltre}')" class="bg-blue-600 text-white px-3 py-1 rounded text-[10px]">Publier</button></td></tr>`;} }
-function publierDeliberation(eleveId,trimestre){const pct=document.getElementById('delib-pct-'+eleveId).value.trim(); const place=document.getElementById('delib-place-'+eleveId).value.trim(); const mention=document.getElementById('delib-mention-'+eleveId).value.trim(); if(!pct||!place){alert('Remplis % et place');return;} const key=`${eleveId}_${trimestre}_${normaliserNom(ecoleActive)}`; db.ref('deliberations/'+key).set({eleveId,trimestre,pourcentage:pct,place,mention,ecole:ecoleActive,classe:donneesGlobales.eleves[eleveId]?.classe||'',publiePar:'Admin '+ecoleActive,date:Date.now()}); alert(`Publie pour ${donneesGlobales.eleves[eleveId].nom} dans ${ecoleActive}: ${pct}% Place ${place}`);}
-function chargerContactsMessagerieAdmin(){const container=document.getElementById('admin-whatsapp-contacts'); if(!container) return; container.innerHTML=''; const tuteurs=filtrerParEcole(donneesGlobales.tuteurs); for(let k in tuteurs){const t=tuteurs[k]; const msgs=donneesGlobales.messages&&donneesGlobales.messages[k]? Object.values(donneesGlobales.messages[k]):[]; const last=msgs.length?msgs[msgs.length-1]:null; const preview=last?(last.texte||'').substring(0,25):'Aucun message'; container.innerHTML+=`<div onclick="selectionnerContactAdmin('${k}')" class="p-3 border-b border-slate-700/50 hover:bg-slate-800 cursor-pointer"><p class="font-semibold text-white text-xs">${t.nom||''}</p><p class="text-[10px] text-slate-500">${preview}</p></div>`;} document.getElementById('admin-msg-nb').innerText=Object.keys(tuteurs).length;}
-function selectionnerContactAdmin(tuteurId){adminContactActif=tuteurId; const t=donneesGlobales.tuteurs[tuteurId]; document.getElementById('admin-whatsapp-header').innerText='Discussion avec '+(t?.nom||'')+' - '+ecoleActive; chargerChatAdmin();}
-function chargerChatAdmin(){if(!adminContactActif) return; const chat=document.getElementById('admin-whatsapp-chat'); if(!chat) return; chat.innerHTML=''; const msgs=donneesGlobales.messages&&donneesGlobales.messages[adminContactActif]? Object.values(donneesGlobales.messages[adminContactActif]).sort((a,b)=>a.timestamp-b.timestamp):[]; if(!msgs.length){chat.innerHTML='<p class="text-center text-slate-500 text-xs mt-10">Aucun message pour '+ecoleActive+'</p>'; return;} msgs.forEach(m=>{const isAdmin=m.sender==='admin'; chat.innerHTML+=`<div class="flex ${isAdmin?'justify-end':'justify-start'}"><div class="max-w-[80%] ${isAdmin?'bg-blue-600 text-white':'bg-slate-800 text-slate-200 border border-slate-700'} p-2.5 rounded-2xl text-xs"><p>${m.texte||''}</p><p class="text-[9px] opacity-60 mt-1">${m.timestamp?new Date(m.timestamp).toLocaleString():''}</p></div></div>`;}); chat.scrollTop=chat.scrollHeight;}
-function envoyerMessageAdmin(){const input=document.getElementById('admin-whatsapp-input'); const texte=input.value.trim(); if(!texte||!adminContactActif){alert('Selectionne parent');return;} const k=db.ref('messages/'+adminContactActif).push().key; db.ref('messages/'+adminContactActif+'/'+k).set({texte,sender:'admin',timestamp:Date.now(),ecole:ecoleActive}).then(()=>{input.value=''; chargerChatAdmin();});}
-function chargerListeAdminTuteurs(){const tb=document.getElementById('admin-liste-tuteurs'); if(!tb) return; tb.innerHTML=''; const tuteurs=filtrerParEcole(donneesGlobales.tuteurs); for(let k in tuteurs){const t=tuteurs[k]; tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${t.nom||''}</td><td class='p-3 font-mono text-[10px] text-amber-300'>${t.codeTuteur||''}</td><td class='p-3'><button onclick="selectionnerContactAdmin('${k}');changerOngletAdmin('messages')" class='text-blue-400 text-xs'>Msg</button></td></tr>`;} }
-function chargerListeAdminProfs(){const tb=document.getElementById('admin-liste-profs'); if(!tb) return; tb.innerHTML=''; const profs=filtrerParEcole(donneesGlobales.professeurs); for(let k in profs){const p=profs[k]; tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${p.nom||''} - ${p.cours||''}</td><td class='p-3 font-mono text-[10px] text-emerald-300'>${p.code||''}</td><td class='p-3'><button onclick="db.ref('professeurs/${k}').remove()" class='text-red-400 text-xs'>Suppr</button></td></tr>`;} }
-function ajouterProfesseur(){const nom=document.getElementById('prof-nom').value.trim(); const cours=document.getElementById('prof-cours').value.trim(); if(!nom||!cours){alert('Nom et cours');return;} const k=db.ref('professeurs').push().key; const code='PROF-'+Math.floor(100000+Math.random()*900000); db.ref('professeurs/'+k).set({nom,cours,code,ecole:ecoleActive}).then(()=>alert(`Prof ajoute dans ${ecoleActive}! Code: ${code}`));}
-function chargerCommuniquesAccueil(){const c=document.getElementById('communiques-accueil-liste'); if(!c) return; c.innerHTML=''; const comms=Object.entries(filtrerParEcole(donneesGlobales.communiques)); if(!comms.length){c.innerHTML='<p class="text-xs text-slate-500 italic">Aucun communique pour '+ecoleActive+'</p>';return;} comms.forEach(([k,com])=>{c.innerHTML+=`<div class='bg-slate-900 border border-slate-700 p-3 rounded-xl'><h4 class='font-bold text-white text-xs'>${com.titre||''}</h4><p class='text-xs text-slate-400 mt-1'>${com.contenu||''}</p></div>`;});}
-function publierCommunique(){const titre=document.getElementById('comm-titre').value.trim(); const contenu=document.getElementById('comm-contenu').value.trim(); if(!titre||!contenu){alert('Titre et contenu');return;} const k=db.ref('communiques').push().key; db.ref('communiques/'+k).set({titre,contenu,ecole:ecoleActive,date:Date.now()});}
-function chargerAdminCommuniques(){const cont=document.getElementById('admin-liste-communiques'); if(!cont) return; cont.innerHTML=''; const comms=filtrerParEcole(donneesGlobales.communiques); for(let k in comms){const c=comms[k]; cont.innerHTML+=`<div class="bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between"><div><h4 class="font-bold text-xs text-white">${c.titre}</h4><p class="text-xs text-slate-400">${c.contenu}</p></div><button onclick="db.ref('communiques/${k}').remove()" class="text-red-400 text-xs">Suppr</button></div>`;} }
+function chargerDeliberationAdmin(){const tb=document.getElementById('admin-liste-deliberation'); if(!tb) return; tb.innerHTML=''; const trimFiltre=document.getElementById('delib-trimestre-select')?.value||'T1'; const classeFiltre=document.getElementById('delib-classe-select')?.value; for(let k in (donneesGlobales.eleves||{})){const el=donneesGlobales.eleves[k]; if(classeFiltre&&el.classe!==classeFiltre) continue; const delibKey=`${k}_${trimFiltre}`; const delib=donneesGlobales.deliberations&&donneesGlobales.deliberations[delibKey]? donneesGlobales.deliberations[delibKey] : {}; tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${el.nom} ${el.postnom||''}</td><td class='p-3'><input id="delib-pct-${k}" value="${delib.pourcentage||''}" placeholder="%" class="w-16 bg-slate-900 border border-slate-700 p-1 rounded text-xs"></td><td class='p-3'><input id="delib-place-${k}" value="${delib.place||''}" placeholder="Place" class="w-16 bg-slate-900 border border-slate-700 p-1 rounded text-xs"></td><td class='p-3'><input id="delib-mention-${k}" value="${delib.mention||''}" placeholder="Mention" class="w-20 bg-slate-900 border border-slate-700 p-1 rounded text-xs"></td><td class='p-3'><button onclick="publierDeliberation('${k}','${trimFiltre}')" class="bg-blue-600 text-white px-3 py-1 rounded text-[10px]">Publier</button></td></tr>`;} }
+function publierDeliberation(eleveId,trimestre){const pct=document.getElementById('delib-pct-'+eleveId).value.trim(); const place=document.getElementById('delib-place-'+eleveId).value.trim(); const mention=document.getElementById('delib-mention-'+eleveId).value.trim(); if(!pct||!place){alert('Remplis % et place');return;} const key=`${eleveId}_${trimestre}`; db.ref('deliberations/'+key).set({eleveId,trimestre,pourcentage:pct,place,mention,ecole:ECOLE_PRINCIPALE,date:Date.now()});}
+function chargerContactsMessagerieAdmin(){const container=document.getElementById('admin-whatsapp-contacts'); if(!container) return; container.innerHTML=''; const tuteurs=donneesGlobales.tuteurs||{}; for(let k in tuteurs){const t=tuteurs[k]; const msgs=donneesGlobales.messages&&donneesGlobales.messages[k]? Object.values(donneesGlobales.messages[k]):[]; const last=msgs.length?msgs[msgs.length-1]:null; const preview=last?(last.texte||'').substring(0,25):'Aucun message'; container.innerHTML+=`<div onclick="selectionnerContactAdmin('${k}')" class="p-3 border-b border-slate-700/50 hover:bg-slate-800 cursor-pointer"><p class="font-semibold text-white text-xs">${t.nom||''}</p><p class="text-[10px] text-slate-500">${preview}</p></div>`;} document.getElementById('admin-msg-nb').innerText=Object.keys(tuteurs).length;}
+function selectionnerContactAdmin(tuteurId){adminContactActif=tuteurId; const t=donneesGlobales.tuteurs[tuteurId]; document.getElementById('admin-whatsapp-header').innerText='Discussion avec '+(t?.nom||'')+' - Don Bosco isole'; chargerChatAdmin();}
+function chargerChatAdmin(){if(!adminContactActif) return; const chat=document.getElementById('admin-whatsapp-chat'); if(!chat) return; chat.innerHTML=''; const msgs=donneesGlobales.messages&&donneesGlobales.messages[adminContactActif]? Object.values(donneesGlobales.messages[adminContactActif]).sort((a,b)=>a.timestamp-b.timestamp):[]; if(!msgs.length){chat.innerHTML='<p class="text-center text-slate-500 text-xs mt-10">Aucun message pour Don Bosco</p>'; return;} msgs.forEach(m=>{const isAdmin=m.sender==='admin'; chat.innerHTML+=`<div class="flex ${isAdmin?'justify-end':'justify-start'}"><div class="max-w-[80%] ${isAdmin?'bg-blue-600 text-white':'bg-slate-800 text-slate-200 border border-slate-700'} p-2.5 rounded-2xl text-xs"><p>${m.texte||''}</p><p class="text-[9px] opacity-60 mt-1">${m.timestamp?new Date(m.timestamp).toLocaleString():''}</p></div></div>`;}); chat.scrollTop=chat.scrollHeight;}
+function envoyerMessageAdmin(){const input=document.getElementById('admin-whatsapp-input'); const texte=input.value.trim(); if(!texte||!adminContactActif){alert('Selectionne parent');return;} const k=db.ref('messages/'+adminContactActif).push().key; db.ref('messages/'+adminContactActif+'/'+k).set({texte,sender:'admin',timestamp:Date.now(),ecole:ECOLE_PRINCIPALE}).then(()=>{input.value=''; chargerChatAdmin();});}
+function chargerListeAdminTuteurs(){const tb=document.getElementById('admin-liste-tuteurs'); if(!tb) return; tb.innerHTML=''; for(let k in (donneesGlobales.tuteurs||{})){const t=donneesGlobales.tuteurs[k]; tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${t.nom||''}</td><td class='p-3 font-mono text-[10px]'>${t.codeTuteur||''}</td><td class='p-3'><button onclick="selectionnerContactAdmin('${k}');changerOngletAdmin('messages')" class='text-blue-400 text-xs'>Msg</button></td></tr>`;} }
+function chargerListeAdminProfs(){const tb=document.getElementById('admin-liste-profs'); if(!tb) return; tb.innerHTML=''; for(let k in (donneesGlobales.professeurs||{})){const p=donneesGlobales.professeurs[k]; tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-3 text-white'>${p.nom||''} - ${p.cours||''}</td><td class='p-3 font-mono text-[10px]'>${p.code||''}</td><td class='p-3'><button onclick="db.ref('professeurs/${k}').remove()" class='text-red-400 text-xs'>Suppr</button></td></tr>`;} }
+function ajouterProfesseurUnique(){const nom=document.getElementById('prof-nom').value.trim(); const cours=document.getElementById('prof-cours').value.trim(); if(!nom||!cours){alert('Nom et cours');return;} const existing=obtenirTousCodesExistants(); const code=genererCodeUnique('PROF', existing); const k=db.ref('professeurs').push().key; db.ref('professeurs/'+k).set({nom,cours,code,ecole:ECOLE_PRINCIPALE}).then(()=>alert(`Prof ajoute. Code unique genere, a noter immediatement.`));}
+function chargerCommuniquesAccueil(){const c=document.getElementById('communiques-accueil-liste'); if(!c) return; c.innerHTML=''; const comms=Object.values(donneesGlobales.communiques||{}); if(!comms.length){c.innerHTML='<p class="text-xs text-slate-500 italic">Aucun communique pour Don Bosco</p>';return;} comms.forEach(com=>{c.innerHTML+=`<div class='bg-slate-900 border border-slate-700 p-3 rounded-xl'><h4 class='font-bold text-white text-xs'>${com.titre||''}</h4><p class='text-xs text-slate-400 mt-1'>${com.contenu||''}</p></div>`;});}
+function publierCommunique(){const titre=document.getElementById('comm-titre').value.trim(); const contenu=document.getElementById('comm-contenu').value.trim(); if(!titre||!contenu){alert('Titre et contenu');return;} const k=db.ref('communiques').push().key; db.ref('communiques/'+k).set({titre,contenu,ecole:ECOLE_PRINCIPALE,date:Date.now()});}
+function chargerAdminCommuniques(){const cont=document.getElementById('admin-liste-communiques'); if(!cont) return; cont.innerHTML=''; for(let k in (donneesGlobales.communiques||{})){const c=donneesGlobales.communiques[k]; cont.innerHTML+=`<div class="bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between"><div><h4 class="font-bold text-xs text-white">${c.titre}</h4><p class="text-xs text-slate-400">${c.contenu}</p></div><button onclick="db.ref('communiques/${k}').remove()" class="text-red-400 text-xs">Suppr</button></div>`;} }
 function chargerTableauDeBordEleveOuParent(){
   const isParent=sessionActive.role==='parent';
   let eleveId=sessionActive.id;
   if(isParent){eleveId=sessionActive.enfantIdActif||Object.values(donneesGlobales.tuteurs[sessionActive.id]?.enfants||{})[0]||sessionActive.id; const t=donneesGlobales.tuteurs[sessionActive.id]; if(t&&t.enfants&&t.enfants.length){eleveId=t.enfants[0]; if(!sessionActive.enfantIdActif) sessionActive.enfantIdActif=eleveId;}}
-  const el=donneesGlobales.eleves[eleveId]; if(!el){document.getElementById('contenu-cotations').innerHTML=`<p class="text-red-400">Eleve non trouve pour ${ecoleActive}. Cree eleve dans cette ecole.</p>`; return;}
-  document.getElementById('welcome-eleve').innerText=(el.nom||'')+' '+(el.postnom||'')+' - '+el.classe+' - '+ecoleActive;
+  const el=donneesGlobales.eleves[eleveId]; if(!el){document.getElementById('contenu-cotations').innerHTML='<p class="text-red-400">Eleve non trouve</p>'; return;}
+  document.getElementById('welcome-eleve').innerText=(el.nom||'')+' '+(el.postnom||'')+' - '+el.classe+' - Don Bosco';
   const today=new Date().toISOString().split('T')[0];
   const pres=donneesGlobales.presences[today]&&donneesGlobales.presences[today][eleveId];
-  document.getElementById('eleve-presence-view').innerHTML=pres?`<span class="text-emerald-300 font-bold">${pres.statut.toUpperCase()}</span> a ${pres.heure} - Valide par ${pres.validePar}<br><span class="text-[10px] text-green-300">${isParent?'✅ Votre enfant est arrive a '+pres.heure:''}</span>`:'<span class="text-amber-300">⏳ Pas encore pointe pour '+ecoleActive+'</span>';
+  document.getElementById('eleve-presence-view').innerHTML=pres?`<span class="text-emerald-300 font-bold">${pres.statut.toUpperCase()}</span> a ${pres.heure} - Valide par ${pres.validePar}`:'<span class="text-amber-300">⏳ Pas encore pointe</span>';
   const trim=document.getElementById('select-trimestre-eleve')?.value||'T1';
-  const delibKey=`${eleveId}_${trim}_${normaliserNom(ecoleActive)}`;
+  const delibKey=`${eleveId}_${trim}`;
   const delib=donneesGlobales.deliberations&&donneesGlobales.deliberations[delibKey];
-  document.getElementById('eleve-delib-view').innerHTML=delib?`<span class="text-2xl font-bold text-white">${delib.pourcentage}%</span> Place ${delib.place} - ${delib.mention||''}`:`<span class="text-slate-500">Pas encore delibere pour ${trim} dans ${ecoleActive}</span>`;
-  const cont=document.getElementById('contenu-cotations'); if(cont){cont.innerHTML=''; const notes=Object.values(donneesGlobales.notes||{}).filter(n=>n.eleveId===eleveId && n.trimestre===trim); if(!notes.length) cont.innerHTML=`<p class="text-slate-500 italic">Aucune cote pour ${trim} dans ${ecoleActive}</p>`; else notes.forEach(n=>{cont.innerHTML+=`<div class="flex justify-between bg-slate-900 p-2 rounded-lg"><span>${n.cours}</span><span class="font-bold">${n.note||0}/${n.max||20}</span></div>`;});}
+  document.getElementById('eleve-delib-view').innerHTML=delib?`<span class="text-2xl font-bold text-white">${delib.pourcentage}%</span> Place ${delib.place} - ${delib.mention||''}`:`<span class="text-slate-500">Pas encore delibere pour ${trim}</span>`;
+  const cont=document.getElementById('contenu-cotations'); if(cont){cont.innerHTML=''; const notes=Object.values(donneesGlobales.notes||{}).filter(n=>n.eleveId===eleveId && n.trimestre===trim); if(!notes.length) cont.innerHTML='<p class="text-slate-500 italic">Aucune cote pour '+trim+'</p>'; else notes.forEach(n=>{cont.innerHTML+=`<div class="flex justify-between bg-slate-900 p-2 rounded-lg"><span>${n.cours}</span><span class="font-bold">${n.note||0}/${n.max||20}</span></div>`;});}
   if(isParent){chargerChatParent(); document.getElementById('parent-section-messagerie').classList.remove('hidden');}
 }
 function changerEnfantActifParent(enfantId){sessionActive.enfantIdActif=enfantId; chargerTableauDeBordEleveOuParent();}
-function chargerTableauDeBordProf(){const tb=document.getElementById('prof-liste-eleves-action'); if(!tb) return; tb.innerHTML=''; const eleves=filtrerParEcole(donneesGlobales.eleves); const classeFiltre=document.getElementById('prof-select-classe')?.value; const trimFiltre=document.getElementById('prof-select-trimestre')?.value||'T1'; const filtres=Object.entries(eleves).filter(([k,el])=>!classeFiltre||el.classe===classeFiltre); if(!filtres.length){tb.innerHTML=`<tr><td colspan="3" class="p-4 text-center text-slate-500">Aucun eleve pour ${ecoleActive} ${classeFiltre||''}</td></tr>`; return;} filtres.forEach(([k,el])=>{tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-2.5 text-white'>${el.nom} ${el.postnom||''}</td><td class='p-2.5 text-center'><input id="note-${k}" placeholder="Note /20" class="w-16 bg-slate-900 border border-slate-700 p-1 rounded text-xs"></td><td class='p-2.5 text-center'><button onclick="enregistrerNoteProf('${k}')" class="bg-blue-600 text-white px-2 py-1 rounded text-[10px]">Save</button></td></tr>`;});}
-function enregistrerNoteProf(eleveId){const trim=document.getElementById('prof-select-trimestre').value||'T1'; const note=document.getElementById('note-'+eleveId).value; const k=eleveId+'_'+trim+'_'+normaliserNom(ecoleActive); db.ref('notes/'+k).set({eleveId,trimestre:trim,cours:donneesGlobales.professeurs[sessionActive.id]?.cours||'Cours',note:parseFloat(note)||0,max:20,ecole:ecoleActive,date:Date.now()}); alert('Note enregistree pour '+ecoleActive);}
-function chargerChatParent(){const chat=document.getElementById('parent-whatsapp-chat'); if(!chat) return; const parentId=sessionActive.id; chat.innerHTML=''; const msgs=donneesGlobales.messages&&donneesGlobales.messages[parentId]? Object.values(donneesGlobales.messages[parentId]).sort((a,b)=>a.timestamp-b.timestamp):[]; if(!msgs.length){chat.innerHTML='<p class="text-center text-slate-500 text-xs mt-10">Aucun message pour '+ecoleActive+'</p>'; return;} msgs.forEach(m=>{const isParent=m.sender==='parent'; chat.innerHTML+=`<div class="flex ${isParent?'justify-end':'justify-start'}"><div class="max-w-[80%] ${isParent?'bg-violet-600 text-white':'bg-slate-700 text-white border border-slate-600'} p-2.5 rounded-xl text-xs"><p>${m.texte||''}</p><p class="text-[9px] opacity-60 mt-1">${m.timestamp?new Date(m.timestamp).toLocaleString():''}</p></div></div>`;}); chat.scrollTop=chat.scrollHeight;}
-function envoyerMessageParent(){const input=document.getElementById('parent-whatsapp-input'); const texte=input.value.trim(); if(!texte) return; const k=db.ref('messages/'+sessionActive.id).push().key; db.ref('messages/'+sessionActive.id+'/'+k).set({texte,sender:'parent',timestamp:Date.now(),ecole:ecoleActive}).then(()=>{input.value=''; chargerChatParent();});}
+function chargerTableauDeBordProf(){const tb=document.getElementById('prof-liste-eleves-action'); if(!tb) return; tb.innerHTML=''; const trimFiltre=document.getElementById('prof-select-trimestre')?.value||'T1'; const classeFiltre=document.getElementById('prof-select-classe')?.value; const filtres=Object.entries(donneesGlobales.eleves||{}).filter(([k,el])=>!classeFiltre||el.classe===classeFiltre); if(!filtres.length){tb.innerHTML=`<tr><td colspan="3" class="p-4 text-center text-slate-500">Aucun eleve pour Don Bosco</td></tr>`; return;} filtres.forEach(([k,el])=>{tb.innerHTML+=`<tr class="border-b border-slate-700/50"><td class='p-2.5 text-white'>${el.nom} ${el.postnom||''}</td><td class='p-2.5 text-center'><input id="note-${k}" placeholder="Note /20" class="w-16 bg-slate-900 border border-slate-700 p-1 rounded text-xs"></td><td class='p-2.5 text-center'><button onclick="enregistrerNoteProf('${k}')" class="bg-blue-600 text-white px-2 py-1 rounded text-[10px]">Save</button></td></tr>`;});}
+function enregistrerNoteProf(eleveId){const trim=document.getElementById('prof-select-trimestre').value||'T1'; const note=document.getElementById('note-'+eleveId).value; const k=eleveId+'_'+trim; db.ref('notes/'+k).set({eleveId,trimestre:trim,cours:donneesGlobales.professeurs[sessionActive.id]?.cours||'Cours',note:parseFloat(note)||0,max:20,ecole:ECOLE_PRINCIPALE,date:Date.now()});}
+function chargerChatParent(){const chat=document.getElementById('parent-whatsapp-chat'); if(!chat) return; const parentId=sessionActive.id; chat.innerHTML=''; const msgs=donneesGlobales.messages&&donneesGlobales.messages[parentId]? Object.values(donneesGlobales.messages[parentId]).sort((a,b)=>a.timestamp-b.timestamp):[]; if(!msgs.length){chat.innerHTML='<p class="text-center text-slate-500 text-xs mt-10">Aucun message pour Don Bosco</p>'; return;} msgs.forEach(m=>{const isParent=m.sender==='parent'; chat.innerHTML+=`<div class="flex ${isParent?'justify-end':'justify-start'}"><div class="max-w-[80%] ${isParent?'bg-violet-600 text-white':'bg-slate-700 text-white border border-slate-600'} p-2.5 rounded-xl text-xs"><p>${m.texte||''}</p><p class="text-[9px] opacity-60 mt-1">${m.timestamp?new Date(m.timestamp).toLocaleString():''}</p></div></div>`;}); chat.scrollTop=chat.scrollHeight;}
+function envoyerMessageParent(){const input=document.getElementById('parent-whatsapp-input'); const texte=input.value.trim(); if(!texte) return; const k=db.ref('messages/'+sessionActive.id).push().key; db.ref('messages/'+sessionActive.id+'/'+k).set({texte,sender:'parent',timestamp:Date.now(),ecole:ECOLE_PRINCIPALE}).then(()=>{input.value=''; chargerChatParent();});}
 function ouvrirModalDemandeCours(){document.getElementById('modal-demande-cours').classList.remove('hidden');}
 function fermerModalDemandeCours(){document.getElementById('modal-demande-cours').classList.add('hidden');}
-function soumettreDemandeCours(){const nom=document.getElementById('input-cours-demande').value.trim(); if(!nom){alert('Nom cours');return;} const k=db.ref('demandesCours').push().key; db.ref('demandesCours/'+k).set({cours:nom,profId:sessionActive.id,profNom:sessionActive.nom,ecole:ecoleActive,statut:'en_attente',date:Date.now()}); fermerModalDemandeCours();}
-function telechargerBulletinPDF(){const trim=document.getElementById('select-trimestre-eleve')?.value||'T1'; let eleveId=sessionActive.id; if(sessionActive.role==='parent') eleveId=sessionActive.enfantIdActif; const el=donneesGlobales.eleves[eleveId]; if(!el) return; const delibKey=`${eleveId}_${trim}_${normaliserNom(ecoleActive)}`; const delib=donneesGlobales.deliberations&&donneesGlobales.deliberations[delibKey]? donneesGlobales.deliberations[delibKey] : {}; document.getElementById('bul-ecole-nom').innerText=ecoleActive; document.getElementById('bul-trimestre-txt').innerText=trim; document.getElementById('bul-pourcentage').innerText=delib.pourcentage||'-'; document.getElementById('bul-place').innerText=delib.place||'-'; document.getElementById('bul-nom').innerText=(el.nom||'')+' '+(el.postnom||''); document.getElementById('bul-classe').innerText=el.classe||''; document.getElementById('bul-date').innerText=new Date().toLocaleDateString(); document.getElementById('bul-delib-detail').innerText=delib?`${delib.pourcentage||0}% - Place ${delib.place||'-'} - ${delib.mention||''}`:'Non delibere'; const tbody=document.getElementById('bul-lignes-cours'); tbody.innerHTML=''; for(let k in (donneesGlobales.notes||{})){const n=donneesGlobales.notes[k]; if(n.eleveId===eleveId && n.trimestre===trim){tbody.innerHTML+=`<tr><td class='p-2 border'>${n.cours||''}</td><td class='p-2 border text-center'>${n.max||20}</td><td class='p-2 border text-center'>${n.note||0}</td></tr>`;}} const element=document.getElementById('bulletin-impression'); element.classList.remove('hidden'); html2pdf().from(element).set({margin:0.5,filename:`Bulletin_${el.nom}_${trim}_${ecoleActive}.pdf`}).save().then(()=>element.classList.add('hidden'));}
-window.onload=()=>{chargerListeEcolesExistantes(); if(window.lucide) lucide.createIcons();};
+function soumettreDemandeCours(){const nom=document.getElementById('input-cours-demande').value.trim(); if(!nom){alert('Nom cours');return;} const k=db.ref('demandesCours').push().key; db.ref('demandesCours/'+k).set({cours:nom,profId:sessionActive.id,profNom:sessionActive.nom,ecole:ECOLE_PRINCIPALE,statut:'en_attente',date:Date.now()}); fermerModalDemandeCours();}
+function telechargerBulletinPDF(){const trim=document.getElementById('select-trimestre-eleve')?.value||'T1'; let eleveId=sessionActive.id; if(sessionActive.role==='parent') eleveId=sessionActive.enfantIdActif; const el=donneesGlobales.eleves[eleveId]; if(!el) return; const delibKey=`${eleveId}_${trim}`; const delib=donneesGlobales.deliberations&&donneesGlobales.deliberations[delibKey]? donneesGlobales.deliberations[delibKey] : {}; document.getElementById('bul-ecole-nom').innerText=ECOLE_PRINCIPALE; document.getElementById('bul-trimestre-txt').innerText=trim; document.getElementById('bul-pourcentage').innerText=delib.pourcentage||'-'; document.getElementById('bul-place').innerText=delib.place||'-'; document.getElementById('bul-nom').innerText=(el.nom||'')+' '+(el.postnom||''); document.getElementById('bul-classe').innerText=el.classe||''; document.getElementById('bul-date').innerText=new Date().toLocaleDateString(); document.getElementById('bul-delib-detail').innerText=delib?`${delib.pourcentage||0}% - Place ${delib.place||'-'} - ${delib.mention||''}`:'Non delibere'; const tbody=document.getElementById('bul-lignes-cours'); tbody.innerHTML=''; for(let k in (donneesGlobales.notes||{})){const n=donneesGlobales.notes[k]; if(n.eleveId===eleveId && n.trimestre===trim){tbody.innerHTML+=`<tr><td class='p-2 border'>${n.cours||''}</td><td class='p-2 border text-center'>${n.max||20}</td><td class='p-2 border text-center'>${n.note||0}</td></tr>`;}} const element=document.getElementById('bulletin-impression'); element.classList.remove('hidden'); html2pdf().from(element).set({margin:0.5,filename:`Bulletin_${el.nom}_${trim}.pdf`}).save().then(()=>element.classList.add('hidden'));}
+window.onload=()=>{if(window.lucide) lucide.createIcons();};
 </script>
 </body>
 </html>
