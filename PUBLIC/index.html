@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full dark">
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lycee Don Bosco - WORK V2</title>
+<title>Lycee Don Bosco - Systeme Scolaire Complet RDC</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:'class'}</script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDpzKHm93AJnwGsqptCBNfmWGOE4m0uJNM",
@@ -16,148 +19,121 @@ const firebaseConfig = {
   messagingSenderId: "934019778891",
   appId: "1:934019778891:web:0a63eab2d542607a2a80ce"
 };
-const ECOLE_PRINCIPALE = "Lycee Don Bosco";
-const MDP_ADMIN_DON_BOSCO = "PR123";
-let CODE_MAITRE_AJOUT_ECOLE = "ajout123";
+const ECOLE = "Lycee Don Bosco";
+const CODE_ADMIN = "PR123";
+const CLASSES_RDC = ["1ere Maternelle","2e Maternelle","3e Maternelle","1ere Primaire","2e Primaire","3e Primaire","4e Primaire","5e Primaire","6e Primaire","7e EB","8e EB","1ere Scientifique","2e Scientifique","3e Math-Physique","4e Math-Physique","5e Math-Physique","6e Math-Physique","3e Bio-Chimie","6e Bio-Chimie","3e Latin-Philo","6e Latin-Philo","3e Com & Gestion","6e Com & Gestion","3e Pedagogie","6e Pedagogie"];
+const COURS_RDC = ["Francais","Mathematiques","Physique","Chimie","Biologie","Histoire","Geographie","Anglais","ECM","Philosophie","Informatique","EPS","Religion","Comptabilite","Economie","Pedagogie","Entrepreneuriat"];
 </script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
-body{font-family:'Plus Jakarta Sans',sans-serif;background:#0f172a}
-.tab-active{background:#2563eb!important;color:white!important}
-.tab-inactive{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#020617;color:#e2e8f0}
+.card{background:#0f172a;border:1px solid #1e293b;border-radius:16px}
+.btn{padding:10px 16px;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;transition:.2s}
+.btn:hover{transform:scale(1.02)}
+.tab-active{background:#2563eb;color:white}
+.tab-inactive{background:#1e293b;color:#94a3b8;border:1px solid #334155}
 </style>
 </head>
-<body class="min-h-full p-2 sm:p-6 text-slate-200 bg-slate-950"><div id="app" class="w-full max-w-6xl mx-auto">
+<body class="min-h-screen p-3 md:p-6">
+<div id="app" class="max-w-7xl mx-auto">
 <div id="vue-accueil" class="space-y-6">
-  <div class="text-center py-10">
-    <h1 class="text-4xl font-bold text-white">Lycee Don Bosco</h1>
-    <p class="text-slate-400 text-sm mt-2">Systeme Scolaire RDC - V2 Securise</p>
-    <div class="mt-3 inline-flex gap-2 bg-slate-800 border border-slate-700 px-4 py-1.5 rounded-full text-[11px]">Connecte: Lycee Don Bosco</div>
-  </div>
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-    <button onclick="ouvrirLoginFlottant('admin')" class="bg-blue-600 p-6 rounded-2xl text-left"><p class="font-bold">Espace Admin</p><p class="text-xs opacity-80">Code PR123 - Entree</p></button>
-    <button onclick="ouvrirLoginFlottant('prof')" class="bg-violet-600 p-6 rounded-2xl text-left"><p class="font-bold">Espace Professeur</p><p class="text-xs opacity-80">Code PROF-xxxx</p></button>
-    <button onclick="ouvrirLoginFlottant('eleve')" class="bg-emerald-600 p-6 rounded-2xl text-left"><p class="font-bold">Espace Eleve / Parent</p><p class="text-xs opacity-80">EL-xxxx / PA-xxxx - 1 code = 3 enfants</p></button>
-  </div>
-  <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl"><h3 class="font-bold text-xs uppercase mb-3">Communiques Publics</h3><div id="communiques-accueil-liste" class="space-y-2 text-xs"></div></div>
-</div><!-- MODAL LOGIN -->
-<div id="modal-login-flottant" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-    <div class="flex justify-between border-b border-slate-800 pb-3"><h3 class="font-bold text-sm">Connexion Don Bosco</h3><button onclick="fermerLoginFlottant()" class="text-xs">X Echap</button></div>
-    <input id="flottant-ecole-nom" value="Lycee Don Bosco" class="w-full bg-slate-800 p-2.5 rounded-xl text-xs">
-    <div class="relative"><input id="flottant-code" type="password" placeholder="PR123 ou PROF-xxxx" class="w-full bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm"><button type="button" onclick="toggleFlottantPassword()" class="absolute right-2 top-2">👁</button></div>
-    <button onclick="validerLoginFlottant()" class="w-full bg-blue-600 p-3 rounded-xl text-sm">Se connecter Entree</button>
-    <p id="flottant-erreur" class="hidden text-red-400 text-xs bg-red-950/30 p-2 rounded"></p>
-    <div class="border-t border-slate-800 pt-3">
-      <select id="flottant-type-personne" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"><option value="eleve">Eleve EL-xxxx</option><option value="parent">Parent PA-xxxx - voit 3 enfants</option></select>
-      <input id="flottant-code-pe" type="password" placeholder="Code EL ou PA" class="w-full bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm mt-2">
-      <button onclick="validerLoginFlottantPE()" class="w-full bg-emerald-600 p-3 rounded-xl text-sm mt-2">Entrer Eleve/Parent</button>
-      <p id="flottant-erreur-pe" class="hidden text-red-400 text-xs"></p>
+  <header class="card p-6 flex justify-between items-center">
+    <div class="flex gap-3 items-center">
+      <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center"><i data-lucide="graduation-cap" class="text-white"></i></div>
+      <div><h1 class="font-bold text-lg">Lycee Don Bosco</h1><p class="text-xs text-slate-400">Systeme Complet RDC - V3 Normes</p><p class="text-[10px] text-emerald-400 mt-1">Base connectee: site-publication.firebaseio.com</p></div>
     </div>
+    <div class="hidden md:flex gap-2 text-[10px]"><span class="bg-slate-800 px-3 py-1 rounded-full">Admin PR123</span><span class="bg-slate-800 px-3 py-1 rounded-full">1 PA = 3 enfants</span></div>
+  </header>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <button onclick="openLogin('admin')" class="card p-6 text-left hover:border-blue-600"><i data-lucide="shield" class="w-8 h-8 text-blue-500 mb-3"></i><h3 class="font-bold">Espace Administration</h3><p class="text-xs text-slate-400 mt-1">Gestion complete: eleves, profs, frais, resultats, bulletins, presences, communiques</p><p class="mt-3 text-[11px] bg-blue-600 inline-block px-3 py-1 rounded-full">Code: PR123</p></button>
+    <button onclick="openLogin('prof')" class="card p-6 text-left hover:border-violet-600"><i data-lucide="book-open" class="w-8 h-8 text-violet-500 mb-3"></i><h3 class="font-bold">Espace Professeur</h3><p class="text-xs text-slate-400 mt-1">Cotation Devoirs/Interros/Examens, presences, messages</p><p class="mt-3 text-[11px] bg-violet-600 inline-block px-3 py-1 rounded-full">Code PROF-xxxx</p></button>
+    <button onclick="openLogin('eleve')" class="card p-6 text-left hover:border-emerald-600"><i data-lucide="users" class="w-8 h-8 text-emerald-500 mb-3"></i><h3 class="font-bold">Espace Eleve / Parent</h3><p class="text-xs text-slate-400 mt-1">Bulletin %, place, conduite, frais, presences. 1 PA = 3 enfants</p><p class="mt-3 text-[11px] bg-emerald-600 inline-block px-3 py-1 rounded-full">EL-xxxx / PA-xxxx</p></button>
+  </div>
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="card p-5"><h4 class="font-bold text-xs uppercase text-slate-400 mb-3">Statistiques Ecole</h4><div class="grid grid-cols-3 gap-3 text-center"><div><p class="text-2xl font-bold text-white" id="stat-eleves">0</p><p class="text-[10px] text-slate-500">Eleves</p></div><div><p class="text-2xl font-bold text-white" id="stat-profs">0</p><p class="text-[10px] text-slate-500">Profs</p></div><div><p class="text-2xl font-bold text-white" id="stat-classes">0</p><p class="text-[10px] text-slate-500">Classes</p></div></div></div>
+    <div class="card p-5 md:col-span-2"><h4 class="font-bold text-xs uppercase text-slate-400 mb-3">Communiques Officiels</h4><div id="communiques-accueil" class="space-y-2 max-h-[180px] overflow-y-auto text-xs"></div></div>
   </div>
 </div>
-
-<!-- ADMIN DASHBOARD - TOUT DEDANS MAINTENANT -->
-<div id="vue-admin-dashboard" class="hidden space-y-4">
-  <div class="flex justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl"><h2 class="font-bold text-sm">Admin - Lycee Don Bosco - PR123</h2><button onclick="changerVue('accueil',true)" class="bg-slate-700 px-3 py-1 rounded-lg text-xs">Deconnexion</button></div>
-  <div class="flex gap-2 flex-wrap">
-    <button onclick="showAdminSec('eleves')" class="tab-active px-4 py-2 rounded-xl text-xs">Eleves</button>
-    <button onclick="showAdminSec('profs')" class="tab-inactive px-4 py-2 rounded-xl text-xs">Profs (Admin seulement)</button>
-    <button onclick="showAdminSec('frais')" class="tab-inactive px-4 py-2 rounded-xl text-xs">Frais</button>
-    <button onclick="showAdminSec('deliberation')" class="tab-inactive px-4 py-2 rounded-xl text-xs">Resultats % / Place</button>
-    <button onclick="showAdminSec('communiques')" class="tab-inactive px-4 py-2 rounded-xl text-xs">Communiques (Admin seulement)</button>
-  </div>  <div id="admin-sec-eleves" class="space-y-4">
-    <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-3">
-      <h3 class="text-blue-300 font-bold text-xs uppercase">1. Eleve - Identite Complete RDC + Tuteur 1 CODE = 3 ENFANTS</h3>
-      <div class="grid grid-cols-2 gap-2">
-        <input id="el-nom" placeholder="Nom eleve *" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs">
-        <input id="el-postnom" placeholder="Post-nom" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs">
-        <input id="el-prenom" placeholder="Prenom *" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs">
-        <select id="el-classe" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"><option value="">Choisir Classe RDC</option><option>1ere Maternelle</option><option>6eme Primaire</option><option>7eme EB</option><option>8eme EB</option><option>3eme Math-Physique</option><option>6eme Math-Physique</option></select>
-      </div>
-      <div class="grid grid-cols-2 gap-2 bg-amber-950/20 border border-amber-800/30 p-3 rounded-xl">
-        <input id="tut-nom" placeholder="Nom Tuteur *" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs">
-        <input id="tut-tel" placeholder="Tel Tuteur * cle unique PA" class="bg-slate-950 border border-amber-700/50 p-2 rounded-xl text-xs">
-      </div>
-      <button onclick="enregistrerEleveUnique()" class="w-full bg-blue-600 p-3 rounded-xl text-xs font-bold">+ Enregistrer Eleve (EL + PA)</button>
-      <div id="admin-liste-eleves" class="space-y-1 max-h-[300px] overflow-y-auto"></div>
-    </div>
+<div id="modal-login" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur z-50 flex items-center justify-center p-4">  <div class="card max-w-md w-full p-6 space-y-4">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-3"><h3 id="login-titre" class="font-bold">Connexion</h3><button onclick="closeLogin()" class="text-xs bg-slate-800 px-3 py-1 rounded-full">X</button></div>
+    <input id="login-ecole" value="Lycee Don Bosco" readonly class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-xs text-slate-400">
+    <div id="login-admin-prof" class="space-y-3"><input id="login-code" type="password" placeholder="Code PR123 ou PROF-xxxx" class="w-full bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm"><button onclick="doLoginAdminProf()" class="w-full bg-blue-600 btn">Se connecter [Entree]</button><p id="login-err" class="hidden text-xs text-red-400 bg-red-950/30 p-2 rounded"></p></div>
+    <div id="login-eleve-parent" class="hidden space-y-3"><select id="login-type" class="w-full bg-slate-950 border border-slate-700 p-3 rounded-xl text-xs"><option value="eleve">Eleve - EL-xxxx</option><option value="parent">Parent - PA-xxxx (voit 3 enfants)</option></select><input id="login-code-pe" type="password" placeholder="Votre code" class="w-full bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm"><button onclick="doLoginEleveParent()" class="w-full bg-emerald-600 btn">Entrer</button><p id="login-err-pe" class="hidden text-xs text-red-400"></p></div>
   </div>
-
-  <div id="admin-sec-profs" class="hidden space-y-4">
-    <div class="bg-slate-800 border border-violet-700/50 p-5 rounded-2xl">
-      <h3 class="text-violet-300 font-bold text-xs uppercase">Enregistrer Prof - ADMIN SEULEMENT - Multi-Cours</h3>
-      <input id="prof-nom" placeholder="Nom Prof *" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs mt-3">
-      <input id="prof-cours" placeholder="Cours: Math, Physique, Chimie" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs mt-2">
-      <button onclick="ajouterProfesseurUnique()" class="w-full bg-violet-600 p-3 rounded-xl text-xs mt-2">+ Enregistrer Prof CODE PROF-xxxx</button>
-      <div id="admin-liste-profs" class="mt-3 space-y-1"></div>
-    </div>
-  </div>  <div id="admin-sec-frais" class="hidden">
-    <div class="bg-slate-800 border border-amber-700/50 p-5 rounded-2xl">
-      <h3 class="text-amber-300 font-bold text-xs uppercase">Frais - Acompte / Minerval</h3>
-      <div class="grid grid-cols-2 gap-2 mt-3">
-        <input id="frais-acompte-attendu" type="number" placeholder="Acompte $" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs">
-        <input id="frais-minerval-attendu" type="number" placeholder="Minerval $" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs">
-      </div>
-      <button onclick="enregistrerConfigFrais()" class="w-full bg-amber-600 p-2.5 rounded-xl text-xs mt-2">Fixer Frais</button>
-      <div id="admin-liste-frais" class="mt-3"></div>
-    </div>
-  </div>
-
-  <div id="admin-sec-deliberation" class="hidden">
-    <div class="bg-slate-800 border border-emerald-700/50 p-5 rounded-2xl">
-      <h3 class="text-emerald-300 font-bold text-xs uppercase">Publication Resultats - % / Place / Conduite / Repêchage - ADMIN SEULEMENT</h3>
-      <div class="flex gap-2 mt-3">
-        <select id="admin-classe-resultat" class="flex-1 bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"><option value="">Choisir Classe</option></select>
-        <button onclick="calculerDeliberation()" class="bg-emerald-600 px-4 py-2 rounded-xl text-xs">Calculer</button>
-      </div>
-      <div id="admin-table-delib" class="mt-4 overflow-x-auto"></div>
-    </div>
-  </div>
-
-  <div id="admin-sec-communiques" class="hidden">
-    <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
-      <h3 class="text-xs font-bold uppercase">Publier Communique - ADMIN SEULEMENT</h3>
-      <input id="comm-titre" placeholder="Titre" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs mt-3">
-      <textarea id="comm-contenu" placeholder="Contenu communique" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs mt-2 h-20"></textarea>
-      <button onclick="publierCommunique()" class="w-full bg-blue-600 p-2.5 rounded-xl text-xs mt-2">Publier Communique</button>
-      <div id="admin-liste-communiques" class="mt-3 space-y-1 text-xs"></div>
-    </div>
-  </div>
-</div><div id="vue-prof-dashboard" class="hidden space-y-4">
-  <div class="flex justify-between bg-slate-900 p-4 rounded-2xl"><h2 class="font-bold text-sm" id="prof-nom-affiche">Prof</h2><button onclick="changerVue('accueil',true)" class="bg-slate-700 px-3 py-1 rounded-lg text-xs">Deconnexion</button></div>
-  <div class="bg-slate-800 p-4 rounded-2xl"><h3 class="text-xs uppercase font-bold text-violet-400">Cotation</h3><div id="prof-fiche-cotation" class="mt-3"></div><button onclick="enregistrerToutesCotes()" class="w-full bg-emerald-600 p-2.5 rounded-xl text-xs mt-3">Enregistrer Cotes</button></div>
 </div>
-
-<div id="vue-eleve-dashboard" class="hidden space-y-4">
-  <div class="flex justify-between bg-slate-900 p-4 rounded-2xl"><h2 class="font-bold text-sm" id="eleve-nom-affiche">Eleve</h2><button onclick="changerVue('accueil',true)" class="bg-slate-700 px-3 py-1 rounded-lg text-xs">Deconnexion</button></div>
-  <div id="parent-select-enfants" class="hidden bg-amber-950/20 border border-amber-800/30 p-4 rounded-2xl"><div id="parent-liste-enfants-boutons" class="flex gap-2 flex-wrap"></div></div>
-  <div class="bg-slate-800 p-4 rounded-2xl"><div id="eleve-liste-cotes" class="space-y-1 text-xs"></div></div>
-  <div class="bg-slate-800 border border-emerald-800/30 p-4 rounded-2xl"><div id="eleve-bulletin-final"></div></div>
-</div><script>
+<div id="vue-admin" class="hidden space-y-4">
+  <header class="card p-4 flex justify-between items-center"><div><h2 class="font-bold">Administration - Lycee Don Bosco</h2><p class="text-[11px] text-slate-400">Code maitre PR123 - Acces total</p></div><button onclick="showVue('accueil',true)" class="bg-slate-800 px-4 py-2 rounded-xl text-xs">Deconnexion</button></header>
+  <div class="flex gap-2 flex-wrap"><button onclick="showAdmin('eleves')" id="tab-eleves" class="btn tab-active">Eleves & Parents</button><button onclick="showAdmin('profs')" id="tab-profs" class="btn tab-inactive">Professeurs</button><button onclick="showAdmin('frais')" id="tab-frais" class="btn tab-inactive">Frais Scolaires</button><button onclick="showAdmin('notes')" id="tab-notes" class="btn tab-inactive">Notes & Deliberation</button><button onclick="showAdmin('presences')" id="tab-presences" class="btn tab-inactive">Presences</button><button onclick="showAdmin('comms')" id="tab-comms" class="btn tab-inactive">Communiques</button></div>
+  <div id="admin-eleves" class="grid lg:grid-cols-2 gap-4">
+    <div class="card p-5 space-y-3"><h3 class="font-bold text-xs uppercase text-blue-400">Inscription Eleve RDC Complete - 1 TEL = MEME CODE PARENT POUR 3 ENFANTS</h3>
+      <div class="grid grid-cols-2 gap-2"><input id="el-nom" placeholder="Nom *" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"><input id="el-postnom" placeholder="Post-nom" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"><input id="el-prenom" placeholder="Prenom *" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"><input id="el-naissance" type="date" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"></div>
+      <input id="el-adresse" placeholder="Adresse complete" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs">
+      <select id="el-classe" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"></select>
+      <div class="bg-amber-950/20 border border-amber-700/30 p-3 rounded-xl space-y-2"><p class="text-[10px] font-bold text-amber-300">TUTEUR - MEME TEL = MEME CODE PA AUTOMATIQUE</p><div class="grid grid-cols-2 gap-2"><input id="tu-nom" placeholder="Nom tuteur *" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"><input id="tu-tel" placeholder="Tel tuteur * cle" class="bg-slate-950 border border-amber-700/50 p-2 rounded-xl text-xs"><input id="tu-prenom" placeholder="Prenom tuteur" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"><input id="tu-adresse" placeholder="Adresse tuteur" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"></div></div>
+      <button onclick="addEleve()" class="w-full bg-blue-600 btn">+ Enregistrer Eleve (genere EL + PA)</button>
+    </div>
+    <div class="card p-5"><div class="flex justify-between items-center mb-3"><h4 class="font-bold text-xs uppercase text-slate-400">Liste Eleves</h4><input id="search-eleve" placeholder="Rechercher..." class="bg-slate-950 border border-slate-700 p-1.5 rounded-lg text-[11px]" onkeyup="renderEleves()"></div><div id="list-eleves" class="space-y-2 max-h-[600px] overflow-y-auto"></div></div>
+  </div>
+  <div id="admin-profs" class="hidden grid lg:grid-cols-2 gap-4">
+    <div class="card p-5 space-y-3"><h3 class="font-bold text-xs uppercase text-violet-400">Enregistrer Professeur - Multi-Cours - ADMIN SEULEMENT</h3><div class="grid grid-cols-2 gap-2"><input id="pr-nom" placeholder="Nom *" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"><input id="pr-postnom" placeholder="Post-nom" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"><input id="pr-prenom" placeholder="Prenom *" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"><input id="pr-tel" placeholder="Telephone" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"></div><p class="text-[10px] text-slate-500">Selectionne plusieurs cours (Ctrl+clic)</p><select id="pr-cours" multiple class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs h-32"></select><button onclick="addProf()" class="w-full bg-violet-600 btn">+ Enregistrer Prof</button></div>    <div class="card p-5"><h4 class="font-bold text-xs uppercase text-slate-400 mb-3">Liste Profs - Codes visibles que par Admin</h4><div id="list-profs" class="space-y-2 max-h-[600px] overflow-y-auto"></div></div>
+  </div>
+  <div id="admin-frais" class="hidden space-y-4">
+    <div class="card p-5"><h3 class="font-bold text-xs uppercase text-amber-400">Configuration Frais par Classe - ADMIN SEULEMENT</h3><div class="grid grid-cols-3 gap-2 mt-3"><select id="frais-classe" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"></select><input id="frais-acompte" type="number" placeholder="Acompte $" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"><input id="frais-minerval" type="number" placeholder="Minerval $" class="bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"></div><button onclick="saveFraisConfig()" class="w-full bg-amber-600 btn mt-3">Fixer Frais Classe</button><div id="frais-config-list" class="mt-4 text-xs"></div></div>
+    <div class="card p-5"><h4 class="font-bold text-xs uppercase text-slate-400 mb-3">Suivi Paiements Eleves</h4><div class="overflow-x-auto"><table class="w-full text-[11px]"><thead><tr class="text-slate-500 border-b border-slate-700"><th class="p-2 text-left">Eleve</th><th class="p-2">Classe</th><th class="p-2">Paye</th><th class="p-2">Reste</th><th class="p-2">Statut</th><th class="p-2">Action</th></tr></thead><tbody id="frais-eleves-tb"></tbody></table></div></div>
+  </div>
+  <div id="admin-notes" class="hidden space-y-4">
+    <div class="card p-5"><h3 class="font-bold text-xs uppercase text-emerald-400">Deliberation - % / Place / Conduite / Repêchage - ADMIN SEULEMENT</h3><div class="flex gap-2 mt-3"><select id="delib-classe" class="flex-1 bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"></select><button onclick="calcDelib()" class="bg-emerald-600 btn">Calculer Bulletin</button></div><div id="delib-table" class="mt-4 overflow-x-auto"></div></div>
+  </div>
+  <div id="admin-presences" class="hidden card p-5"><h3 class="font-bold text-xs uppercase text-slate-400 mb-3">Presences Journalieres</h3><div class="flex gap-2 mb-3"><input id="presence-date" type="date" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"><select id="presence-classe" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"></select><button onclick="loadPresences()" class="bg-blue-600 btn">Charger</button></div><div id="presence-list"></div></div>
+  <div id="admin-comms" class="hidden card p-5 space-y-3"><h3 class="font-bold text-xs uppercase text-slate-400">Publier Communique Officiel - ADMIN SEULEMENT</h3><input id="comm-titre" placeholder="Titre communique" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"><textarea id="comm-texte" placeholder="Texte..." class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs h-24"></textarea><button onclick="publishComm()" class="w-full bg-blue-600 btn">Publier</button><div id="admin-comms-list" class="space-y-2 text-xs"></div></div>
+</div>
+<div id="vue-prof" class="hidden space-y-4">
+  <header class="card p-4 flex justify-between"><div><h2 class="font-bold" id="prof-name">Professeur</h2><p class="text-xs text-slate-400" id="prof-cours-list"></p></div><button onclick="showVue('accueil',true)" class="bg-slate-800 px-4 py-2 rounded-xl text-xs">Deconnexion</button></header>
+  <div class="grid lg:grid-cols-3 gap-4"><div class="card p-5 lg:col-span-1 space-y-3"><h3 class="font-bold text-xs uppercase text-violet-400">Cotation</h3><select id="prof-classe" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"></select><select id="prof-matiere" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"></select><div class="grid grid-cols-3 gap-2"><select id="prof-type" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"><option>Devoir</option><option>Interrogation</option><option>Examen S1</option><option>Examen S2</option></select><input id="prof-max" type="number" value="20" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"><input id="prof-date" type="date" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"></div><button onclick="loadElevesCotation()" class="w-full bg-violet-600 btn">Charger Eleves</button></div><div class="card p-5 lg:col-span-2"><div class="flex justify-between items-center mb-3"><h4 class="text-xs uppercase font-bold text-slate-400">Fiche de cotation - Publie direct chez eleve</h4><button onclick="saveAllNotes()" class="bg-emerald-600 btn text-[11px]">Tout Enregistrer</button></div><div id="prof-cotation-list" class="space-y-2 max-h-[600px] overflow-y-auto"></div></div></div>
+  <div class="card p-5"><h4 class="text-xs uppercase font-bold text-slate-400 mb-3">Mes dernieres cotes publiees</h4><div id="prof-history" class="space-y-1 text-[11px] max-h-[200px] overflow-y-auto"></div></div>
+</div>
+<div id="vue-eleve" class="hidden space-y-4">
+  <header class="card p-4 flex justify-between"><div><h2 class="font-bold" id="eleve-name">Eleve</h2><p class="text-xs text-slate-400" id="eleve-classe"></p></div><button onclick="showVue('accueil',true)" class="bg-slate-800 px-4 py-2 rounded-xl text-xs">Deconnexion</button></header>  <div id="parent-switch" class="hidden card p-4 bg-amber-950/20 border-amber-800/30"><p class="text-xs font-bold text-amber-300 mb-2">Vos enfants - 1 code PA pour tous</p><div id="parent-enfants-btns" class="flex gap-2 flex-wrap"></div></div>
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="card p-5"><h4 class="font-bold text-xs uppercase text-blue-400 mb-3">Mes Notes - Devoirs / Interros / Examens</h4><div id="eleve-notes" class="space-y-2 max-h-[350px] overflow-y-auto text-xs"></div></div>
+    <div class="card p-5 border-emerald-800/30"><h4 class="font-bold text-xs uppercase text-emerald-400 mb-3">Bulletin Final - % / Place / Conduite</h4><div id="eleve-bulletin" class="text-xs"></div></div>
+    <div class="space-y-4"><div class="card p-5"><h4 class="font-bold text-xs uppercase text-amber-400 mb-2">Frais Scolaires</h4><div id="eleve-frais" class="text-xs"></div></div><div class="card p-5"><h4 class="font-bold text-xs uppercase text-slate-400 mb-2">Presences</h4><div id="eleve-presences" class="text-xs max-h-[150px] overflow-y-auto"></div></div></div>
+  </div>
+  <div class="card p-5"><h4 class="font-bold text-xs uppercase text-slate-400 mb-3">Communiques Ecole</h4><div id="eleve-comms" class="space-y-2 text-xs max-h-[200px] overflow-y-auto"></div></div>
+</div>
+</div>
+<script>
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-let donneesGlobales = {ecoles:{},eleves:{},tuteurs:{},professeurs:{},notes:{},communiques:{},deliberations:{},fraisConfig:{},admin:{mdp:"PR123"}};
-let sessionActive = {role:null,id:null,nom:null,ecole:ECOLE_PRINCIPALE,enfantIdActif:null};
-
-function showAdminSec(nom){
-  document.querySelectorAll('[id^="admin-sec-"]').forEach(el=>el.classList.add('hidden'));
-  document.getElementById('admin-sec-'+nom).classList.remove('hidden');
-}
-function changerVue(vue,reset){document.getElementById('vue-accueil').classList.add('hidden');document.getElementById('vue-admin-dashboard').classList.add('hidden');document.getElementById('vue-prof-dashboard').classList.add('hidden');document.getElementById('vue-eleve-dashboard').classList.add('hidden');if(reset)sessionActive={role:null,id:null,nom:null,ecole:ECOLE_PRINCIPALE,enfantIdActif:null};if(vue==='accueil')document.getElementById('vue-accueil').classList.remove('hidden');if(vue==='admin')document.getElementById('vue-admin-dashboard').classList.remove('hidden');if(vue==='prof')document.getElementById('vue-prof-dashboard').classList.remove('hidden');if(vue==='eleve')document.getElementById('vue-eleve-dashboard').classList.remove('hidden');}
-function ouvrirLoginFlottant(role){document.getElementById('modal-login-flottant').classList.remove('hidden');}
-function fermerLoginFlottant(){document.getElementById('modal-login-flottant').classList.add('hidden');}
-function toggleFlottantPassword(){const i=document.getElementById('flottant-code');i.type=i.type==='password'?'text':'password';}
-function obtenirTousCodesExistants(){const codes=[];for(let k in donneesGlobales.eleves){if(donneesGlobales.eleves[k].codeEleve)codes.push(donneesGlobales.eleves[k].codeEleve);if(donneesGlobales.eleves[k].codeTuteur)codes.push(donneesGlobales.eleves[k].codeTuteur);}for(let k in donneesGlobales.professeurs){if(donneesGlobales.professeurs[k].code)codes.push(donneesGlobales.professeurs[k].code);}return codes;}
-function genererCodeUnique(prefix,existing){let c;do{c=prefix+'-'+Math.floor(100000+Math.random()*900000);}while(existing.includes(c));existing.push(c);return c;}
-function enregistrerEleveUnique(){const nom=document.getElementById('el-nom').value.trim();const postnom=document.getElementById('el-postnom').value.trim();const prenom="";const classe=document.getElementById('el-classe').value;const tutNom=document.getElementById('tut-nom').value.trim();const tutTel=document.getElementById('tut-tel').value.trim();if(!nom||!classe||!tutTel){alert('Nom, Classe, Tel Tuteur obligatoire');return;}const existing=obtenirTousCodesExistants();let codeTuteurExist=null;for(let k in donneesGlobales.eleves){if(donneesGlobales.eleves[k].tuteurTel===tutTel)codeTuteurExist=donneesGlobales.eleves[k].codeTuteur;}const codeEleve=genererCodeUnique('EL',existing);const codeTuteur=codeTuteurExist||genererCodeUnique('PA',existing);const key=db.ref('eleves').push().key;db.ref('eleves/'+key).set({nom:nom+' '+postnom,nom_seul:nom,postnom,classe,codeEleve,codeTuteur,tuteurNom:tutNom,tuteurTel:tutTel,ecole:ECOLE_PRINCIPALE,statut:'actif'}).then(()=>alert('Eleve OK - EL:'+codeEleve+' PA:'+codeTuteur));}
-function ajouterProfesseurUnique(){const nom=document.getElementById('prof-nom').value.trim();const cours=document.getElementById('prof-cours').value.trim();if(!nom||!cours)return;const existing=obtenirTousCodesExistants();const code=genererCodeUnique('PROF',existing);const key=db.ref('professeurs').push().key;db.ref('professeurs/'+key).set({nom,cours,code,ecole:ECOLE_PRINCIPALE}).then(()=>alert('Prof OK CODE:'+code));}
-function publierCommunique(){const titre=document.getElementById('comm-titre').value.trim();const contenu=document.getElementById('comm-contenu').value.trim();if(!titre||!contenu)return;const key=db.ref('communiques').push().key;db.ref('communiques/'+key).set({titre,contenu,ecole:ECOLE_PRINCIPALE,date:Date.now()});}
-function validerLoginFlottant(){const code=document.getElementById('flottant-code').value.trim();if(code.toUpperCase()==="PR123"){sessionActive={role:'admin',id:'admin',nom:'Admin Don Bosco',ecole:ECOLE_PRINCIPALE};fermerLoginFlottant();changerVue('admin');}else{const pk=Object.keys(donneesGlobales.professeurs).find(k=>donneesGlobales.professeurs[k].code===code.toUpperCase());if(pk){sessionActive={role:'prof',id:pk,nom:donneesGlobales.professeurs[pk].nom,ecole:ECOLE_PRINCIPALE};fermerLoginFlottant();changerVue('prof');}else{document.getElementById('flottant-erreur').innerText='Code incorrect';document.getElementById('flottant-erreur').classList.remove('hidden');}}}
-function validerLoginFlottantPE(){const code=document.getElementById('flottant-code-pe').value.trim().toUpperCase();let ek=Object.keys(donneesGlobales.eleves).find(k=>donneesGlobales.eleves[k].codeEleve===code);if(ek){sessionActive={role:'eleve',id:ek,nom:donneesGlobales.eleves[ek].nom,ecole:ECOLE_PRINCIPALE,enfantIdActif:ek};fermerLoginFlottant();changerVue('eleve');return;}ek=Object.keys(donneesGlobales.eleves).find(k=>donneesGlobales.eleves[k].codeTuteur===code);if(ek){sessionActive={role:'parent',id:donneesGlobales.eleves[ek].tuteurTel,nom:donneesGlobales.eleves[ek].tuteurNom,ecole:ECOLE_PRINCIPALE,enfantIdActif:ek};fermerLoginFlottant();changerVue('eleve');}else{document.getElementById('flottant-erreur-pe').innerText='Code introuvable';document.getElementById('flottant-erreur-pe').classList.remove('hidden');}}
-db.ref().on('value',snap=>{donneesGlobales=snap.val()||{eleves:{},professeurs:{},communiques:{}};if(window.lucide)lucide.createIcons();});
+let DATA = {eleves:{},professeurs:{},tuteurs:{},notes:{},communiques:{},deliberations:{},fraisConfig:{},presences:{}};
+let SESSION = {role:null,id:null,enfantActif:null};
+let currentLoginRole = null;
+function fillSelects(){const classes = CLASSES_RDC; ['el-classe','frais-classe','delib-classe','prof-classe','presence-classe'].forEach(id=>{const s=document.getElementById(id); if(!s) return; const v=s.value; s.innerHTML='<option value="">Choisir Classe RDC</option>'; classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;s.appendChild(o);}); if(v) s.value=v;}); const coursSel = document.getElementById('pr-cours'); if(coursSel){coursSel.innerHTML=''; COURS_RDC.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;coursSel.appendChild(o);});} const d=document.getElementById('prof-date'); if(d) d.valueAsDate=new Date(); const pd=document.getElementById('presence-date'); if(pd) pd.valueAsDate=new Date();}
+fillSelects();
+function showVue(vue,reset){if(reset)SESSION={role:null,id:null,enfantActif:null}; document.getElementById('vue-accueil').classList.add('hidden'); document.getElementById('vue-admin').classList.add('hidden'); document.getElementById('vue-prof').classList.add('hidden'); document.getElementById('vue-eleve').classList.add('hidden'); if(vue==='accueil')document.getElementById('vue-accueil').classList.remove('hidden'); if(vue==='admin')document.getElementById('vue-admin').classList.remove('hidden'); if(vue==='prof')document.getElementById('vue-prof').classList.remove('hidden'); if(vue==='eleve')document.getElementById('vue-eleve').classList.remove('hidden'); if(window.lucide) lucide.createIcons();}
+function showAdmin(sec){['eleves','profs','frais','notes','presences','comms'].forEach(s=>{const el=document.getElementById('admin-'+s); if(el) el.classList.add('hidden'); const tab=document.getElementById('tab-'+s); if(tab){tab.classList.remove('tab-active'); tab.classList.add('tab-inactive');}}); const target=document.getElementById('admin-'+sec); if(target){target.classList.remove('hidden'); if(target.classList.contains('grid')) target.classList.add('grid');} const t=document.getElementById('tab-'+sec); if(t){t.classList.add('tab-active'); t.classList.remove('tab-inactive');}}
+function openLogin(role){currentLoginRole=role; document.getElementById('modal-login').classList.remove('hidden'); document.getElementById('login-admin-prof').classList.add('hidden'); document.getElementById('login-eleve-parent').classList.add('hidden'); if(role==='admin'||role==='prof'){document.getElementById('login-admin-prof').classList.remove('hidden'); document.getElementById('login-titre').innerText=role==='admin'?'Connexion Admin - PR123':'Connexion Professeur'; document.getElementById('login-code').focus();} else {document.getElementById('login-eleve-parent').classList.remove('hidden'); document.getElementById('login-titre').innerText='Connexion Eleve / Parent - 1 code = 3 enfants';}}
+function closeLogin(){document.getElementById('modal-login').classList.add('hidden');}
+function getAllCodes(){const codes=new Set(); Object.values(DATA.eleves).forEach(e=>{if(e.codeEleve)codes.add(e.codeEleve); if(e.codeTuteur)codes.add(e.codeTuteur);}); Object.values(DATA.professeurs).forEach(p=>{if(p.codeProf)codes.add(p.codeProf); if(p.code)codes.add(p.code);}); return codes;}
+function genCode(prefix){const codes=getAllCodes(); let c; do{c=prefix+'-'+Math.floor(100000+Math.random()*900000);}while(codes.has(c)); return c;}etElementById('el-adresse').value.trim(); const classe=document.getElementById('el-classe').value; const tuNom=document.getElementById('tu-nom').value.trim(); const tuTel=document.getElementById('tu-tel').value.trim(); if(!nom||!classe||!tuTel){alert('Nom, Classe, Tel Tuteur obligatoires');return;} let codeTuteurExist=null; for(let k in DATA.eleves){if(DATA.eleves[k].tuteurTel===tuTel){codeTuteurExist=DATA.eleves[k].codeTuteur; break;}} for(let k in DATA.tuteurs){if(DATA.tuteurs[k].tel===tuTel){codeTuteurExist=DATA.tuteurs[k].codeTuteur; break;}} const codeEleve=genCode('EL'); const codeTuteurFinal=codeTuteurExist||genCode('PA'); const key=db.ref('eleves').push().key; db.ref('eleves/'+key).set({nom:nom+' '+postnom+' '+prenom,nom_seul:nom,postnom,prenom,naissance,adresse,classe,ecole:ECOLE,codeEleve,codeTuteur:codeTuteurFinal,tuteurNom:tuNom,tuteurTel:tuTel,statut:'actif',frais:{acomptePaye:0,minervalPaye:0,totalPaye:0,reste:0,statut:'non_defini'}}).then(()=>{const existsT=Object.keys(DATA.tuteurs).find(k=>DATA.tuteurs[k].tel===tuTel); if(!existsT){const kt=db.ref('tuteurs').push().key; db.ref('tuteurs/'+kt).set({nom:tuNom,tel:tuTel,codeTuteur:codeTuteurFinal,enfants:[key],ecole:ECOLE});} else {const enfants=DATA.tuteurs[existsT].enfants||[]; enfants.push(key); db.ref('tuteurs/'+existsT+'/enfants').set(enfants);} alert('Eleve OK EL:'+codeEleve+' PA:'+codeTuteurFinal);});}
+function addProf(){const nom=document.getElementById('pr-nom').value.trim(); const postnom=document.getElementById('pr-postnom').value.trim(); const prenom=document.getElementById('pr-prenom').value.trim(); const sel=document.getElementById('pr-cours'); const cours=Array.from(sel.selectedOptions).map(o=>o.value); if(!nom||cours.length===0){alert('Nom et au moins 1 cours');return;} const code=genCode('PROF'); const key=db.ref('professeurs').push().key; db.ref('professeurs/'+key).set({nom:nom+' '+postnom+' '+prenom,cours,ecole:ECOLE,codeProf:code,code:code,statut:'actif'}).then(()=>alert('Prof OK CODE:'+code));}
+function saveFraisConfig(){const classe=document.getElementById('frais-classe').value; const acompte=parseFloat(document.getElementById('frais-acompte').value)||0; const minerval=parseFloat(document.getElementById('frais-minerval').value)||0; if(!classe){alert('Choisir classe');return;} const key=classe.replace(/\s+/g,'_'); db.ref('fraisConfig/'+key).set({classe,acompte,minerval,total:acompte+minerval,ecole:ECOLE});}
+function publishComm(){const t=document.getElementById('comm-titre').value.trim(); const tx=document.getElementById('comm-texte').value.trim(); if(!t||!tx)return; const k=db.ref('communiques').push().key; db.ref('communiques/'+k).set({titre:t,texte:tx,ecole:ECOLE,date:Date.now()});}
+function calcDelib(){const classe=document.getElementById('delib-classe').value; if(!classe)return; const elevesClasse=Object.entries(DATA.eleves).filter(([k,e])=>e.classe===classe); const results=[]; elevesClasse.forEach(([key,el])=>{const notes=Object.values(DATA.notes).filter(n=>n.eleveId===key); const tot=notes.reduce((s,n)=>s+parseFloat(n.cote||0),0); const max=notes.reduce((s,n)=>s+parseFloat(n.max||20),0); const perc=max? (tot/max*100).toFixed(1):0; results.push({key,nom:el.nom,perc:parseFloat(perc)});}); results.sort((a,b)=>b.perc-a.perc); let html='<table class="w-full text-[11px]"><tr class="text-slate-500 border-b border-slate-700"><th class="p-2 text-left">Place</th><th class="p-2 text-left">Nom</th><th class="p-2">%</th><th class="p-2">Decision</th><th class="p-2">Conduite</th><th class="p-2">Repechage</th></tr>'; results.forEach((r,i)=>{const dec=r.perc>=50?'Passe':r.perc>=35?'Repêché':'Echoue'; html+=`<tr class="border-b border-slate-800"><td class="p-2">${i+1}</td><td class="p-2">${r.nom}</td><td class="p-2 font-bold">${r.perc}%</td><td class="p-2">${dec}</td><td class="p-2"><select id="cond-${r.key}" class="bg-slate-950 border border-slate-700 p-1 rounded text-[10px]"><option>Tres Bonne</option><option>Bonne</option></select></td><td class="p-2"><input id="rep-${r.key}" class="bg-slate-950 border border-slate-700 p-1 rounded text-[10px] w-20"></td></tr>`;}); html+='</table><button onclick="saveDelib()" class="w-full mt-3 bg-emerald-600 btn">Publier Bulletins</button>'; document.getElementById('delib-table').innerHTML=html; window._delibTemp=results;}
+function saveDelib(){const classe=document.getElementById('delib-classe').value; window._delibTemp.forEach((r,i)=>{const cond=document.getElementById('cond-'+r.key)?.value||'Bonne'; const rep=document.getElementById('rep-'+r.key)?.value||''; const dec=r.perc>=50?'Passe':r.perc>=35?'Repêché':'Echoue'; db.ref('deliberations/'+r.key).set({classe,ecole:ECOLE,pourcentage:r.perc,place:i+1,totalClasse:window._delibTemp.length,decision:dec,conduite:cond,coursARepecher:rep,date:Date.now()});}); alert('Bulletins publies!');}
+function doLoginAdminProf(){const code=document.getElementById('login-code').value.trim().toUpperCase(); const err=document.getElementById('login-err'); err.classList.add('hidden'); if(currentLoginRole==='admin'){if(code===CODE_ADMIN){SESSION={role:'admin',id:'admin',nom:'Admin Don Bosco',ecole:ECOLE}; closeLogin(); showVue('admin'); showAdmin('eleves'); return;} else {err.innerText='Code Admin PR123 incorrect'; err.classList.remove('hidden'); return;}} if(currentLoginRole==='prof'){const pk=Object.keys(DATA.professeurs).find(k=> (DATA.professeurs[k].codeProf||DATA.professeurs[k].code)===code); if(pk){SESSION={role:'prof',id:pk,nom:DATA.professeurs[pk].nom,ecole:ECOLE}; closeLogin(); showVue('prof'); initProf(pk); return;} else {err.innerText='Code prof introuvable'; err.classList.remove('hidden');}}function doLoginEleveParent(){const type=document.getElementById('login-type').value; const code=document.getElementById('login-code-pe').value.trim().toUpperCase(); const err=document.getElementById('login-err-pe'); err.classList.add('hidden'); if(type==='eleve'){const ek=Object.keys(DATA.eleves).find(k=>DATA.eleves[k].codeEleve===code); if(ek){SESSION={role:'eleve',id:ek,nom:DATA.eleves[ek].nom,ecole:ECOLE,enfantActif:ek}; closeLogin(); showVue('eleve'); initEleve(ek,false); return;} else {err.innerText='Code eleve introuvable'; err.classList.remove('hidden');}} else {const ek=Object.keys(DATA.eleves).find(k=>DATA.eleves[k].codeTuteur===code); if(ek){SESSION={role:'parent',id:DATA.eleves[ek].tuteurTel,nom:DATA.eleves[ek].tuteurNom,ecole:ECOLE,enfantActif:ek}; closeLogin(); showVue('eleve'); initEleve(ek,true); return;} else {err.innerText='Code parent PA introuvable'; err.classList.remove('hidden');}}}
+function initProf(pk){const p=DATA.professeurs[pk]; if(!p)return; document.getElementById('prof-name').innerText=p.nom; document.getElementById('prof-cours-list').innerText=(p.cours||[]).join(', '); const selM=document.getElementById('prof-matiere'); selM.innerHTML='<option value="">Choisir Matiere</option>'; (p.cours||[]).forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selM.appendChild(o);}); renderProfHistory();}
+function loadElevesCotation(){const classe=document.getElementById('prof-classe').value; if(!classe)return; const cont=document.getElementById('prof-cotation-list'); cont.innerHTML=''; Object.entries(DATA.eleves).filter(([k,e])=>e.classe===classe).forEach(([k,e])=>{const d=document.createElement('div'); d.className='card p-3 flex gap-2 items-center'; d.innerHTML=`<span class="flex-1 text-xs">${e.nom}</span><input id="cote-${k}" type="number" min="0" max="20" step="0.5" placeholder="/20" class="w-20 bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"><button onclick="publishOneNote('${k}')" class="bg-blue-600 btn text-[11px]">Publier</button>`; cont.appendChild(d);});}
+function publishOneNote(eleveId){const classe=document.getElementById('prof-classe').value; const matiere=document.getElementById('prof-matiere').value; const type=document.getElementById('prof-type').value; const max=document.getElementById('prof-max').value||20; const val=parseFloat(document.getElementById('cote-'+eleveId).value); if(!matiere||isNaN(val))return; const k=db.ref('notes').push().key; db.ref('notes/'+k).set({eleveId,profId:SESSION.id,classe,matiere,cote:val,max:parseFloat(max),type,date:document.getElementById('prof-date').value||new Date().toISOString(),ecole:ECOLE});}
+function saveAllNotes(){document.querySelectorAll('[id^="cote-"]').forEach(inp=>{if(inp.value){const id=inp.id.replace('cote-',''); publishOneNote(id);}}); alert('Toutes cotes publiees');}
+function renderProfHistory(){const cont=document.getElementById('prof-history'); if(!cont)return; cont.innerHTML=''; Object.values(DATA.notes).filter(n=>n.profId===SESSION.id).slice(-20).reverse().forEach(n=>{const el=DATA.eleves[n.eleveId]; if(!el)return; const d=document.createElement('div'); d.className='bg-slate-800 p-2 rounded flex justify-between'; d.innerHTML=`<span>${el.nom} - ${n.matiere} [${n.type}] ${n.cote}/${n.max}</span><span class="text-slate-500">${(n.date||'').substring(0,10)}</span>`; cont.appendChild(d);});}
+function initEleve(eleveKey,isParent){const el=DATA.eleves[eleveKey]; if(!el)return; SESSION.enfantActif=eleveKey; document.getElementById('eleve-name').innerText=(isParent?'Parent de: ':'Eleve: ')+el.nom; document.getElementById('eleve-classe').innerText=el.classe+' | EL:'+el.codeEleve+' | PA:'+el.codeTuteur; const parentDiv=document.getElementById('parent-switch'); if(isParent){const tel=el.tuteurTel; const enfants=Object.entries(DATA.eleves).filter(([k,e])=>e.tuteurTel===tel); if(enfants.length>1){parentDiv.classList.remove('hidden'); const btnCont=document.getElementById('parent-enfants-btns'); btnCont.innerHTML=''; enfants.forEach(([k,e])=>{const b=document.createElement('button'); b.className=(k===eleveKey?'bg-amber-600':'bg-slate-700')+' btn text-[11px]'; b.textContent=e.nom+' ('+e.classe+')'; b.onclick=()=>initEleve(k,true); btnCont.appendChild(b);});} else {parentDiv.classList.add('hidden');}} else {parentDiv.classList.add('hidden');} renderEleveNotes(eleveKey); renderEleveBulletin(eleveKey);}
+function renderEleveNotes(key){const cont=document.getElementById('eleve-notes'); cont.innerHTML=''; const notes=Object.values(DATA.notes).filter(n=>n.eleveId===key).sort((a,b)=>new Date(b.date)-new Date(a.date)); if(!notes.length){cont.innerHTML='<p class="text-slate-500 text-[11px]">Aucune cote</p>';return;} notes.forEach(n=>{const d=document.createElement('div'); d.className='bg-slate-800 p-2.5 rounded-xl flex justify-between items-center'; d.innerHTML=`<div><p class="font-bold text-white text-xs">${n.matiere} - ${n.type}</p><p class="text-[10px] text-slate-400">${(n.date||'').substring(0,10)}</p></div><div class="bg-blue-600 px-3 py-1 rounded-full font-bold text-xs">${n.cote}/${n.max}</div>`; cont.appendChild(d);});}
+function renderEleveBulletin(key){const cont=document.getElementById('eleve-bulletin'); const delib=DATA.deliberations[key]; if(!delib){cont.innerHTML='<p class="text-slate-500 text-[11px]">Bulletin non publie</p>';return;} cont.innerHTML=`<div class="grid grid-cols-2 gap-2"><div class="bg-slate-800 p-3 rounded-xl"><p class="text-[10px] text-slate-400">Pourcentage</p><p class="font-bold text-lg ${delib.pourcentage>=50?'text-emerald-400':'text-amber-400'}">${delib.pourcentage}%</p></div><div class="bg-slate-800 p-3 rounded-xl"><p class="text-[10px] text-slate-400">Place</p><p class="font-bold">${delib.place}e / ${delib.totalClasse}</p></div><div class="bg-slate-800 p-3 rounded-xl"><p class="text-[10px] text-slate-400">Decision</p><p class="font-bold">${delib.decision}</p></div><div class="bg-slate-800 p-3 rounded-xl"><p class="text-[10px] text-slate-400">Conduite</p><p class="font-bold">${delib.conduite}</p></div></div>`;}
+function renderEleves(){const cont=document.getElementById('list-eleves'); if(!cont)return; const search=(document.getElementById('search-eleve').value||'').toLowerCase(); cont.innerHTML=''; Object.entries(DATA.eleves).forEach(([k,e])=>{if(search &&!e.nom.toLowerCase().includes(search)) return; const d=document.createElement('div'); d.className='bg-slate-800 p-2.5 rounded-xl flex justify-between items-center'; d.innerHTML=`<div><p class="font-bold text-xs">${e.nom} - ${e.classe}</p><p class="text-[10px] text-slate-400">EL:${e.codeEleve} | PA:${e.codeTuteur} | Tel:${e.tuteurTel||''}</p></div><button onclick="db.ref('eleves/${k}').remove()" class="text-red-400 text-[10px]">Suppr</button>`; cont.appendChild(d);}); document.getElementById('stat-eleves').innerText=Object.keys(DATA.eleves).length;}
+function renderProfs(){const cont=document.getElementById('list-profs'); if(!cont)return; cont.innerHTML=''; Object.entries(DATA.professeurs).forEach(([k,p])=>{const d=document.createElement('div'); d.className='bg-slate-800 p-2.5 rounded-xl flex justify-between'; d.innerHTML=`<div><p class="font-bold text-xs">${p.nom}</p><p class="text-[10px] text-slate-400">${(p.cours||[]).join(', ')} | ${p.codeProf||p.code}</p></div><button onclick="db.ref('professeurs/${k}').remove()" class="text-red-400 text-[10px]">Suppr</button>`; cont.appendChild(d);}); document.getElementById('stat-profs').innerText=Object.keys(DATA.professeurs).length;}
+function renderComms(){const acc=document.getElementById('communiques-accueil'); const admin=document.getElementById('admin-comms-list'); if(acc){acc.innerHTML=''; Object.entries(DATA.communiques).slice(-5).reverse().forEach(([k,c])=>{const d=document.createElement('div'); d.className='bg-slate-800 p-2 rounded'; d.innerHTML=`<p class="font-bold">${c.titre}</p><p class="text-[11px] text-slate-400">${c.texte}</p>`; acc.appendChild(d);});} if(admin){admin.innerHTML=''; Object.entries(DATA.communiques).forEach(([k,c])=>{const d=document.createElement('div'); d.className='bg-slate-800 p-2 rounded flex justify-between'; d.innerHTML=`<span>${c.titre}</span><button onclick="db.ref('communiques/${k}').remove()" class="text-red-400 text-[10px]">Suppr</button>`; admin.appendChild(d);});}}
+db.ref().on('value',snap=>{const val=snap.val()||{}; DATA=val; if(!DATA.eleves)DATA.eleves={}; if(!DATA.professeurs)DATA.professeurs={}; if(!DATA.tuteurs)DATA.tuteurs={}; if(!DATA.notes)DATA.notes={}; if(!DATA.communiques)DATA.communiques={}; if(!DATA.deliberations)DATA.deliberations={}; if(!DATA.fraisConfig)DATA.fraisConfig={}; renderEleves(); renderProfs(); renderComms(); if(SESSION.role==='prof') renderProfHistory(); if(SESSION.enfantActif){renderEleveNotes(SESSION.enfantActif); renderEleveBulletin(SESSION.enfantActif);} if(window.lucide) lucide.createIcons();});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'){const modal=document.getElementById('modal-login'); if(!modal.classList.contains('hidden')){if(currentLoginRole==='admin'||currentLoginRole==='prof') doLoginAdminProf(); else doLoginEleveParent();}} if(e.key==='Escape') closeLogin();});
+window.addEventListener('load',()=>{fillSelects(); if(window.lucide) lucide.createIcons();});
 </script>
 </div></body></html>
