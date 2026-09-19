@@ -124,8 +124,69 @@ function renderFraisConfig(){const div=document.getElementById('frais-config-lis
 function renderEleves(){const cont=document.getElementById('list-eleves'); if(!cont) return; const search=(document.getElementById('search-eleve')?.value||'').toLowerCase(); cont.innerHTML=''; Object.entries(DATA.eleves).forEach(([key,e])=>{if(search &&!e.nom.toLowerCase().includes(search)) return; const frais=DATA.fraisConfig[e.classe.replace(/\s/g,'_')]||{acompte:0,minerval:0,total:0}; const paye=(e.frais?.totalPaye)||0; const reste=frais.total-paye; const bloque=e.statut==='bloque_frais'; cont.innerHTML+=`<div class="bg-slate-900 p-3 rounded-xl flex justify-between"><div><p class="font-bold text-xs">${e.nom} - ${e.classe} ${bloque?'🔒 BLOQUE':''}</p><p class="text-[10px] text-slate-400">EL: ${e.codeEleve} | PA: ${e.codeTuteur} (meme TEL = meme code) | Tel Tuteur: ${e.tuteurTel}</p><p class="text-[10px]">Frais: Paye ${paye}$ Reste ${reste}$ / ${frais.total}$</p></div><div class="flex flex-col gap-1"><button onclick="bloquerEleve('${key}')" class="text-[10px] ${bloque?'bg-emerald-700':'bg-red-700'} px-2 py-1 rounded">Bloquer</button><button onclick="db.ref('eleves/${key}').remove()" class="text-[10px] bg-slate-700 px-2 py-1 rounded">Suppr</button></div></div>`;});}
 function bloquerEleve(key){const el=DATA.eleves[key]; const nouveau=el.statut==='bloque_frais'?'actif':'bloque_frais'; db.ref('eleves/'+key+'/statut').set(nouveau);}
 function renderProfs(){const cont=document.getElementById('list-profs'); if(!cont) return; cont.innerHTML=''; Object.entries(DATA.professeurs).forEach(([k,p])=>{cont.innerHTML+=`<div class="bg-slate-900 p-3 rounded-xl flex justify-between"><div><p class="font-bold text-xs">${p.nom}</p><p class="text-[10px] text-violet-300">Code: ${p.codeProf||p.code} | Cours: ${(p.cours||[]).join(', ')}</p></div><button onclick="db.ref('professeurs/${k}').remove()" class="text-[10px] bg-slate-700 px-2 py-1 rounded">Suppr</button></div>`;});}
-function doLoginAdminProf(){const code=document.getElementById('login-code').value.trim(); const err=document.getElementById('login-err'); err.classList.add('hidden'); if(currentLoginRole==='admin'){if(code===CODE_ADMIN||code==='PR123'){SESSION={role:'admin',id:'admin'}; closeLogin(); showVue('admin'); showAdmin('eleves'); renderAll();} else {err.innerText='Code Admin incorrect - PR123'; err.classList.remove('hidden');} return;} if(currentLoginRole==='prof'){let found=null; for(let k in DATA.professeurs){if((DATA.professeurs[k].codeProf===code)||(DATA.professeurs[k].code===code)){found={k,...DATA.professeurs[k]}; break;}} if(found){SESSION={role:'prof',id:found.k}; closeLogin(); showVue('prof'); document.getElementById('prof-name').innerText=found.nom; document.getElementById('prof-cours-list').innerText='Cours: '+(found.cours||[]).join(', '); const selM=document.getElementById('prof-matiere'); selM.innerHTML=''; (found.cours||[]).forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selM.appendChild(o);});} else {err.innerText='Code prof introuvable'; err.classList.remove('hidden');}}}function doLoginEleveParent(){const type=document.getElementById('login-type').value; const code=document.getElementById('login-code-pe').value.trim(); const err=document.getElementById('login-err-pe'); err.classList.add('hidden'); if(type==='eleve'){let found=null; for(let k in DATA.eleves){if(DATA.eleves[k].codeEleve===code){found={k,...DATA.eleves[k]}; break;}} if(!found){err.innerText='EL introuvable'; err.classList.remove('hidden'); return;} if(found.statut==='bloque_frais'){err.innerText='🔒 BLOQUE FRAIS - Contact Admin'; err.classList.remove('hidden'); return;} SESSION={role:'eleve',id:found.k,enfantActif:found.k}; closeLogin(); showVue('eleve'); loadEleve(found.k);} else {let foundT=null; for(let k in DATA.tuteurs){if(DATA.tuteurs[k].codeTuteur===code){foundT={k,...DATA.tuteurs[k]}; break;}} if(!foundT){let foundE=null; for(let k in DATA.eleves){if(DATA.eleves[k].codeTuteur===code){foundE=DATA.eleves[k]; foundT={k:'virtuel',codeTuteur:code,enfants:Object.keys(DATA.eleves).filter(id=>DATA.eleves[id].codeTuteur===code),tel:foundE.tuteurTel}; break;}} if(!foundT){err.innerText='PA introuvable'; err.classList.remove('hidden'); return;}} const enfants=foundT.enfants||Object.keys(DATA.eleves).filter(id=>DATA.eleves[id].codeTuteur===code); if(!enfants.length){err.innerText='Aucun enfant pour ce PA'; err.classList.remove('hidden'); return;} SESSION={role:'parent',id:foundT.k,enfantActif:enfants[0]}; closeLogin(); showVue('eleve'); const sw=document.getElementById('parent-switch'); sw.classList.remove('hidden'); const btns=document.getElementById('parent-enfants-btns'); btns.innerHTML=''; enfants.forEach(eid=>{const e=DATA.eleves[eid]; const b=document.createElement('button'); b.className='bg-amber-600 px-3 py-1 rounded-full text-xs'; b.innerText=e.nom+' ('+e.classe+')'; b.onclick=()=>{SESSION.enfantActif=eid; loadEleve(eid);}; btns.appendChild(b);}); loadEleve(enfants[0]);}}
-function loadEleve(eleveId){const e=DATA.eleves[eleveId]; if(!e) return; document.getElementById('eleve-name').innerText=e.nom; document.getElementById('eleve-classe').innerText=e.classe+' - EL:'+e.codeEleve+' PA:'+e.codeTuteur; const fraisConf=DATA.fraisConfig[e.classe.replace(/\s/g,'_')]||{total:0,acompte:0,minerval:0}; const paye=e.frais?.totalPaye||0; const reste=fraisConf.total-paye; document.getElementById('eleve-frais').innerHTML=`<p>Total attendu: ${fraisConf.total}$ (Acompte ${fraisConf.acompte}$ + Minerval ${fraisConf.minerval}$)</p><p>Paye: ${paye}$ | Reste: <span class="${reste>0?'text-red-400':'text-emerald-400'}">${reste}$</span></p><p>Statut: ${e.statut==='bloque_frais'?'🔒 BLOQUE':'✅ Actif'}</p>`; const notes=Object.values(DATA.notes).filter(n=>n.eleveId===eleveId); const cont=document.getElementById('eleve-notes'); cont.innerHTML=''; if(!notes.length) cont.innerHTML='<p class="text-slate-500 italic">Aucune note encore</p>'; else notes.forEach(n=>{cont.innerHTML+=`<div class="flex justify-between bg-slate-900 p-2 rounded"><span>${n.cours} - ${n.type} (${n.trimestre||'T1'})</span><span class="font-bold">${n.note}/${n.max}</span></div>`;}); const delib=DATA.deliberations[eleveId+'_T1']||DATA.deliberations[eleveId]; if(delib){document.getElementById('eleve-bulletin').innerHTML=`<p class="text-2xl font-bold">${delib.pourcentage||0}%</p><p>Place: ${delib.place||'-'}</p><p>Conduite: ${delib.conduite||'-'}</p><p>Mention: ${delib.mention||'-'}</p><p class="mt-2 text-[11px]">${delib.decision||''}</p>`;} else {document.getElementById('eleve-bulletin').innerHTML='<p class="text-slate-500">Pas encore delibere</p>';} const pres=Object.entries(DATA.presences).filter(([d,v])=>v[eleveId]); const presDiv=document.getElementById('eleve-presences'); presDiv.innerHTML=''; pres.forEach(([date,obj])=>{presDiv.innerHTML+=`<div class="flex justify-between"><span>${date}</span><span class="${obj[eleveId]?.statut==='present'?'text-emerald-400':'text-red-400'}">${obj[eleveId]?.statut}</span></div>`;}); renderEleveComms();}
+function doLoginAdminProf(){const code=document.getElementById('login-code').value.trim(); const err=document.getElementById('login-err'); err.classList.add('hidden'); if(currentLoginRole==='admin'){if(code===CODE_ADMIN||code==='PR123'){SESSION={role:'admin',id:'admin'}; closeLogin(); showVue('admin'); showAdmin('eleves'); renderAll();} else {err.innerText='Code Admin incorrect - PR123'; err.classList.remove('hidden');} return;} if(currentLoginRole==='prof'){let found=null; for(let k in DATA.professeurs){if((DATA.professeurs[k].codeProf===code)||(DATA.professeurs[k].code===code)){found={k,...DATA.professeurs[k]}; break;}} if(found){SESSION={role:'prof',id:found.k}; closeLogin(); showVue('prof'); document.getElementById('prof-name').innerText=found.nom; document.getElementById('prof-cours-list').innerText='Cours: '+(found.cours||[]).join(', '); const selM=document.getElementById('prof-matiere'); selM.innerHTML=''; (found.cours||[]).forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selM.appendChild(o);});} else {err.innerText='Code prof introuvable'; err.classList.remove('hidden');}}}
+function doLoginEleveParent(){
+  const type=document.getElementById('login-type').value;
+  const code=document.getElementById('login-code-pe').value.trim();
+  const err=document.getElementById('login-err-pe');
+  err.classList.add('hidden');
+
+  if(Object.keys(DATA.eleves).length===0){
+    err.innerText='Patiente... Firebase charge encore. Reessaie dans 2 sec';
+    err.classList.remove('hidden');
+    return;
+  }
+
+  if(type==='eleve'){
+    let found=null; let foundKey=null;
+    for(let k in DATA.eleves){ if((DATA.eleves[k].codeEleve||'').trim()===code){ found=DATA.eleves[k]; foundKey=k; break; } }
+    if(!found){ err.innerText='Code EL introuvable: '+code; err.classList.remove('hidden'); return; }
+    SESSION={role:'eleve', id:foundKey, enfantActif:foundKey};
+    closeLogin(); showVue('eleve'); setTimeout(()=>loadEleve(foundKey),300);
+  }else{
+    // PARENT
+    let enfants=[];
+    for(let k in DATA.eleves){ if((DATA.eleves[k].codeTuteur||'').trim()===code) enfants.push(k); }
+    if(enfants.length===0){ err.innerText='Code PA introuvable: '+code; err.classList.remove('hidden'); return; }
+
+    SESSION={role:'parent', id:code, enfantActif:enfants[0]};
+    closeLogin(); showVue('eleve');
+
+    setTimeout(()=>{
+      const sw=document.getElementById('parent-switch');
+      const btns=document.getElementById('parent-enfants-btns');
+      if(sw) sw.classList.remove('hidden');
+      if(btns){
+        btns.innerHTML='';
+        enfants.forEach(eid=>{
+          const e=DATA.eleves[eid];
+          const b=document.createElement('button');
+          b.className='bg-amber-600 hover:bg-amber-500 px-3 py-2 rounded-full text-xs';
+          b.innerText=(e?e.nom:eid)+' ('+(e?e.classe:'')+')';
+          b.onclick=()=>{ SESSION.enfantActif=eid; loadEleve(eid); };
+          btns.appendChild(b);
+        });
+      }
+      loadEleve(enfants[0]);
+    },300);
+  }
+}
+
+function loadEleve(eleveId){
+  const e=DATA.eleves[eleveId];
+  if(!e){ alert('Eleve '+eleveId+' introuvable'); return; }
+  const nameEl=document.getElementById('eleve-name');
+  if(nameEl) nameEl.innerText=e.nom;
+  const classeEl=document.getElementById('eleve-classe');
+  if(classeEl) classeEl.innerText=e.classe+' - EL:'+e.codeEleve+' PA:'+e.codeTuteur;
+  const fraisEl=document.getElementById('eleve-frais');
+  if(fraisEl) fraisEl.innerHTML=`Paye: ${e.frais?.totalPaye||0}$ | Statut: ${e.statut||'actif'}`;
+  const notesEl=document.getElementById('eleve-notes');
+  if(notesEl){
+    const notes=Object.values(DATA.notes).filter(n=>n.eleveId===eleveId);
+    notesEl.innerHTML=notes.length? notes.map(n=>`<div class="bg-slate-900 p-2 rounded text-xs flex justify-between"><span>${n.cours} ${n.type}</span><span>${n.note}/${n.max}</span></div>`).join('') : '<p class="text-xs text-slate-500">Aucune note</p>';
+  }
+}
 function loadElevesCotation(){
   const classe=document.getElementById('prof-classe')?.value||'';
   const cont=document.getElementById('prof-cotation-list');
