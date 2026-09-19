@@ -84,7 +84,11 @@ body{font-family:Plus Jakarta Sans,sans-serif;background:#020617;color:#e2e8f0}
 </div><div id="vue-prof" class="hidden space-y-4">
 <header class="card p-4 flex justify-between"><div><h2 class="font-bold" id="prof-name">Professeur</h2><p class="text-xs text-slate-400" id="prof-cours-list"></p></div><button onclick="showVue('accueil',true)" class="bg-slate-800 px-4 py-2 rounded-xl text-xs">Deconnexion</button></header>
 <div class="grid lg:grid-cols-3 gap-4"><div class="card p-5 lg:col-span-1 space-y-3"><h3 class="font-bold text-xs uppercase text-violet-400">Cotation</h3><select id="prof-classe" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"></select><select id="prof-matiere" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-xl text-xs"></select><div class="grid grid-cols-3 gap-2"><select id="prof-type" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"><option>Devoir</option><option>Interrogation</option><option>Examen S1</option><option>Examen S2</option></select><input id="prof-max" type="number" value="20" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"><input id="prof-date" type="date" class="bg-slate-950 border border-slate-700 p-2 rounded-xl text-xs"></div><button onclick="loadElevesCotation()" class="w-full bg-violet-600 btn">Charger Eleves</button></div><div class="card p-5 lg:col-span-2"><div class="flex justify-between items-center mb-3"><h4 class="text-xs uppercase font-bold text-slate-400">Fiche de cotation - Publie direct chez eleve</h4><button onclick="saveAllNotes()" class="bg-emerald-600 btn text-[11px]">Tout Enregistrer</button></div><div id="prof-cotation-list" class="space-y-2 max-h-[600px] overflow-y-auto"></div></div></div>
-<div class="card p-5"><h4 class="text-xs uppercase font-bold text-slate-400 mb-3">Mes dernieres cotes publiees</h4><div id="prof-history" class="space-y-1 text-[11px] max-h-[200px] overflow-y-auto"></div></div>
+<div class="mt-6">
+  <h3 class="font-bold text-sm mb-2">MES DERNIERES COTES PUBLIEES</h3>
+  <div id="prof-dernieres-cotes" class="bg-slate-900 rounded p-2 space-y-1 min-h-[100px] text-xs">
+    <p class="text-slate-500 italic">Chargement...</p>
+  </div>
 </div>
 <div id="vue-eleve" class="hidden space-y-4">
 <header class="card p-4 flex justify-between"><div><h2 class="font-bold" id="eleve-name">Eleve</h2><p class="text-xs text-slate-400" id="eleve-classe"></p></div><button onclick="showVue('accueil',true)" class="bg-slate-800 px-4 py-2 rounded-xl text-xs">Deconnexion</button></header>
@@ -154,7 +158,75 @@ function loadPresences(){const date=document.getElementById('presence-date').val
 function setPresence(date,eleveId,statut){db.ref('presences/'+date+'/'+eleveId).set({statut,date,eleveId,heure:new Date().toLocaleTimeString(),ecole:ECOLE});}
 function renderFraisTb(){const tb=document.getElementById('frais-eleves-tb'); if(!tb) return; tb.innerHTML=''; Object.entries(DATA.eleves).forEach(([k,e])=>{const cfg=DATA.fraisConfig[e.classe.replace(/\s/g,'_')]||{total:0}; const paye=e.frais?.totalPaye||0; const reste=cfg.total-paye; tb.innerHTML+=`<tr class="border-b border-slate-800"><td class="p-2">${e.nom}</td><td class="p-2">${e.classe}</td><td class="p-2">${paye}$</td><td class="p-2 ${reste>0?'text-red-400':'text-emerald-400'}">${reste}$</td><td class="p-2">${e.statut}</td><td class="p-2"><button onclick="addFrais('${k}')" class="bg-amber-600 px-2 py-1 rounded text-[10px]">+Paye</button></td></tr>`;});}
 function addFrais(key){const montant=parseFloat(prompt('Montant paye $?')); if(!montant) return; const e=DATA.eleves[key]; const cfg=DATA.fraisConfig[e.classe.replace(/\s/g,'_')]||{total:0,acompte:0,minerval:0}; const total=(e.frais?.totalPaye||0)+montant; const reste=cfg.total-total; db.ref('eleves/'+key+'/frais').set({totalPaye:total,reste,acomptePaye:Math.min(total,cfg.acompte),minervalPaye:Math.max(0,total-cfg.acompte)});}
-function renderAll(){renderEleves(); renderProfs(); renderFraisConfig(); renderFraisTb(); renderEleveComms(); document.getElementById('stat-eleves').innerText=Object.keys(DATA.eleves).length; document.getElementById('stat-profs').innerText=Object.keys(DATA.professeurs).length; document.getElementById('stat-classes').innerText=new Set(Object.values(DATA.eleves).map(e=>e.classe)).size; if(window.lucide) lucide.createIcons();}
+function renderDerniereCotesProf(){
+  const cont = document.getElementById('prof-dernieres-cotes');
+  if(!cont) return;
+  const mesNotes = Object.entries(DATA.notes)
+   .filter(([k,n])=> n.profId === SESSION.id)
+   .sort((a,b)=> (b[1].date||0) - (a[1].date||0))
+   .slice(0,20);
+
+  if(mesNotes.length===0){
+    cont.innerHTML = '<p class="text-slate-500 italic text-xs p-2">Aucune cote publiee</p>';
+    return;
+  }
+
+  cont.innerHTML = '';
+  mesNotes.forEach(([key,n])=>{
+    const eleve = DATA.eleves[n.eleveId];
+    const nom = eleve? eleve.nom : 'Eleve supprime';
+    cont.innerHTML += `<div class="flex justify-between bg-slate-800 p-2 rounded text-xs mb-1"><span>${nom} - ${n.cours} ${n.note}/${n.max}</span><button onclick="db.ref('notes/${key}').remove()" class="text-red-400">X</button></div>`;
+  });
+}
+
+function renderAll(){ // <-- JUSTE APRES
+  //...
+}
+function renderAll(){
+  renderEleves();
+  renderProfs();
+  renderFraisConfig();
+  renderFraisTb();
+  renderEleveComms();
+  fillSelects();
+  renderDerniereCotesProf(); // <-- PARTIE 3 ICI
+
+  const el = document.getElementById('stat-eleves');
+  if(el) el.innerText = Object.keys(DATA.eleves).length;
+  const pr = document.getElementById('stat-profs');
+  if(pr) pr.innerText = Object.keys(DATA.professeurs).length;
+  const cl = document.getElementById('stat-classes');
+  if(cl) cl.innerText = new Set(Object.values(DATA.eleves).map(e=>e.classe)).size;
+
+  if(window.lucide) lucide.createIcons();
+}
+
+// Et MODIFIE ta fonction saveNote existante pour qu'elle rafraichisse en bas :
+function saveNote(eleveId){
+  const inp = document.getElementById('note-'+eleveId);
+  const note = parseFloat(inp.value);
+  if(isNaN(note)){ alert('Mets une note'); return; }
+  const cours = document.getElementById('prof-matiere').value || document.querySelector('select:nth-of-type(2)')?.value || 'Geographie';
+  const type = document.getElementById('prof-type').value || 'Devoir';
+  const max = parseFloat(document.getElementById('prof-max').value) || 20;
+  const key = db.ref('notes').push().key;
+  db.ref('notes/'+key).set({
+    eleveId: eleveId,
+    cours: cours,
+    type: type,
+    note: note,
+    max: max,
+    profId: SESSION.id,
+    profNom: SESSION.nom || 'Prof',
+    date: Date.now(),
+    trimestre: 'T1',
+    ecole: ECOLE
+  }).then(()=>{
+    inp.value = '';
+    alert('Cote publiee!');
+    renderDerniereCotesProf(); // <-- RAFRAICHIT LA LISTE DU BAS
+  });
+}
 // FIREBASE LISTENER CORRIGE - Plus de bug }etElementById
 db.ref().on('value',snap=>{const val=snap.val()||{}; DATA.eleves=val.eleves||{}; DATA.professeurs=val.professeurs||{}; DATA.tuteurs=val.tuteurs||{}; DATA.notes=val.notes||{}; DATA.communiques=val.communiques||{}; DATA.deliberations=val.deliberations||{}; DATA.fraisConfig=val.fraisConfig||{}; DATA.presences=val.presences||{}; renderAll(); if(SESSION.role==='eleve'||SESSION.role==='parent'){loadEleve(SESSION.enfantActif);} fillSelects(); if(window.lucide) lucide.createIcons();});
 window.onload=()=>{fillSelects(); if(window.lucide) lucide.createIcons();};
