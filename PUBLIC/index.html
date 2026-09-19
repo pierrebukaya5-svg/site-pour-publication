@@ -106,7 +106,16 @@ let SESSION = {role:null,id:null,enfantActif:null};
 let currentLoginRole = null;
 function fillSelects(){const classes = CLASSES_RDC; ['el-classe','frais-classe','delib-classe','prof-classe','presence-classe'].forEach(id=>{const s=document.getElementById(id); if(!s) return; const v=s.value; s.innerHTML='<option value="">Choisir Classe RDC</option>'; classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;s.appendChild(o);}); if(v) s.value=v;}); const coursSel = document.getElementById('pr-cours'); if(coursSel){coursSel.innerHTML=''; COURS_RDC.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;coursSel.appendChild(o);});} const d=document.getElementById('prof-date'); if(d) d.valueAsDate=new Date(); const pd=document.getElementById('presence-date'); if(pd) pd.valueAsDate=new Date();}
 fillSelects();
-function showVue(vue,reset){if(reset)SESSION={role:null,id:null,enfantActif:null}; document.getElementById('vue-accueil').classList.add('hidden'); document.getElementById('vue-admin').classList.add('hidden'); document.getElementById('vue-prof').classList.add('hidden'); document.getElementById('vue-eleve').classList.add('hidden'); if(vue==='accueil')document.getElementById('vue-accueil').classList.remove('hidden'); if(vue==='admin')document.getElementById('vue-admin').classList.remove('hidden'); if(vue==='prof')document.getElementById('vue-prof').classList.remove('hidden'); if(vue==='eleve')document.getElementById('vue-eleve').classList.remove('hidden'); if(window.lucide) lucide.createIcons();}
+function showVue(vue,reset){
+  if(reset) SESSION={role:null,id:null,enfantActif:null};
+  const vues=['vue-accueil','vue-admin','vue-eleve','vue-prof'];
+  vues.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.add('hidden');
+  });
+  const cible=document.getElementById('vue-'+vue);
+  if(cible) cible.classList.remove('hidden');
+}
 function showAdmin(sec){['eleves','profs','frais','notes','presences','comms'].forEach(s=>{const el=document.getElementById('admin-'+s); if(el) el.classList.add('hidden'); const tab=document.getElementById('tab-'+s); if(tab){tab.classList.remove('tab-active'); tab.classList.add('tab-inactive');}}); const target=document.getElementById('admin-'+sec); if(target){target.classList.remove('hidden'); if(target.classList.contains('grid')) target.classList.add('grid');} const t=document.getElementById('tab-'+sec); if(t){t.classList.add('tab-active'); t.classList.remove('tab-inactive');}}
 function openLogin(role){currentLoginRole=role; document.getElementById('modal-login').classList.remove('hidden'); document.getElementById('login-admin-prof').classList.add('hidden'); document.getElementById('login-eleve-parent').classList.add('hidden'); if(role==='admin'||role==='prof'){document.getElementById('login-admin-prof').classList.remove('hidden'); document.getElementById('login-titre').innerText=role==='admin'?'Connexion Admin':'Connexion Professeur'; document.getElementById('login-code').focus();} else {document.getElementById('login-eleve-parent').classList.remove('hidden'); document.getElementById('login-titre').innerText='Connexion Eleve / Parent';}}
 function closeLogin(){document.getElementById('modal-login').classList.add('hidden');}
