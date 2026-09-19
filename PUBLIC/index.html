@@ -3,517 +3,732 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LYCEE DON BOSCO DURBA - Gestion Scolaire</title>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<title>LYCEE DON BOSCO DURBA - V2 RDC</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-white">
 
 <script>
-// --- CONFIG MONO-ECOLE - PLUS DE MULTI-ECOLES ---
-const firebaseConfig = {
-  // COLLE TA CONFIG FIREBASE ICI
-  databaseURL: "https://site-publication-default-rtdb.firebaseio.com"
-};
-
+// CONFIG MONO-ECOLE
 const ECOLE_PRINCIPALE = "LYCEE DON BOSCO DURBA";
 const MDP_ADMIN_DON_BOSCO = "ADM-JK";
 const MDP_SECOURS = "PR123";
 
-let donneesGlobales = {eleves:{},tuteurs:{},professeurs:{},notes:{},communiques:{},demandesCours:{},messages:{},presences:{},deliberations:{},fraisConfig:{},admin:{mdp:"ADM-JK"}};
-let sessionActive = {role:null,id:null,nom:null,ecole:ECOLE_PRINCIPALE,enfantIdActif:null};
-</script><!-- VUE ACCUEIL - UNE SEULE ECOLE -->
+const firebaseConfig = {
+  apiKey: "TON_API_KEY",
+  authDomain: "TON_AUTH_DOMAIN",
+  databaseURL: "https://TON_PROJECT.firebaseio.com",
+  projectId: "TON_PROJECT",
+  storageBucket: "TON_BUCKET",
+  messagingSenderId: "TON_ID",
+  appId: "TON_APP_ID"
+};
+
+let donneesGlobales = {eleves:{}, tuteurs:{}, professeurs:{}, notes:{}, communiques:{}, deliberations:{}, fraisConfig:{}, messages:{}};
+let sessionActive = {role:null, id:null, nom:null, ecole:ECOLE_PRINCIPALE, enfantIdActif:null};
+
+const CLASSES_RDC = [
+  "1ère Maternelle","2ème Maternelle","3ème Maternelle",
+  "1ère Primaire","2ème Primaire","3ème Primaire","4ème Primaire","5ème Primaire","6ème Primaire",
+  "7ème EB","8ème EB",
+  "1ère Scientifique","2ème Scientifique",
+  "3ème Math-Physique","4ème Math-Physique","5ème Math-Physique","6ème Math-Physique",
+  "3ème Bio-Chimie","4ème Bio-Chimie","5ème Bio-Chimie","6ème Bio-Chimie",
+  "3ème Latin-Philo","4ème Latin-Philo","5ème Latin-Philo","6ème Latin-Philo",
+  "3ème Com & Gestion","4ème Com & Gestion","5ème Com & Gestion","6ème Com & Gestion",
+  "3ème Pédagogie Générale","4ème Pédagogie Générale","5ème Pédagogie Générale","6ème Pédagogie Générale",
+  "3ème Coupe et Couture","4ème Coupe et Couture","5ème Coupe et Couture","6ème Coupe et Couture",
+  "3ème Mécanique","4ème Mécanique","5ème Mécanique","6ème Mécanique",
+  "3ème Electronique","4ème Electronique","5ème Electronique","6ème Electronique"
+];
+
+const COURS_RDC = [
+  "Français","Mathématiques","Physique","Chimie","Biologie","Histoire","Géographie","Anglais",
+  "Education Civique et Morale","Philosophie","Informatique","EPS","Religion","Dessin","Musique",
+  "Comptabilité","Economie","Pédagogie","Psychologie","Entrepreneuriat","Electricité","Mécanique","Coupe et Couture"
+];
+</script><!-- VUE ACCUEIL -->
 <div id="vue-accueil" class="min-h-screen p-4">
   <header class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-center mb-4">
     <div>
       <h1 class="font-bold text-sm">LYCEE DON BOSCO DURBA</h1>
-      <p id="accueil-ecole-connectee" class="text-[11px] text-slate-400">Connecté: LYCEE DON BOSCO DURBA</p>
+      <p class="text-[11px] text-slate-400">Système Scolaire RDC - Mono-École V2</p>
     </div>
-    <div class="text-[10px] text-emerald-400 bg-emerald-900/20 px-3 py-1 rounded-full">Mono-École Actif</div>
+    <div class="text-[10px] text-emerald-400 bg-emerald-900/20 px-3 py-1 rounded-full">V2 Active</div>
   </header>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <button onclick="ouvrirLoginFlottant('admin')" class="bg-blue-600 p-6 rounded-2xl text-left">
+    <button onclick="ouvrirLoginFlottant('admin')" class="bg-blue-600 p-6 rounded-2xl text-left hover:bg-blue-700">
       <p class="font-bold text-sm">Espace Admin</p>
       <p class="text-[11px] opacity-80">Code: ADM-JK</p>
-      <p class="text-[10px] mt-2 bg-black/20 p-1 rounded">Entrée pour se connecter</p>
+      <p class="text-[10px] mt-2 bg-black/20 p-1 rounded">Appuie Entrée pour connecter</p>
     </button>
-
-    <button onclick="ouvrirLoginFlottant('prof')" class="bg-violet-600 p-6 rounded-2xl text-left">
-      <p class="font-bold text-sm">Espace Prof</p>
-      <p class="text-[11px] opacity-80">Code prof unique</p>
+    <button onclick="ouvrirLoginFlottant('prof')" class="bg-violet-600 p-6 rounded-2xl text-left hover:bg-violet-700">
+      <p class="font-bold text-sm">Espace Professeur</p>
+      <p class="text-[11px] opacity-80">Code unique PR-xxxx</p>
     </button>
-
-    <button onclick="ouvrirLoginFlottant('eleve')" class="bg-emerald-600 p-6 rounded-2xl text-left">
+    <button onclick="ouvrirLoginFlottant('eleve')" class="bg-emerald-600 p-6 rounded-2xl text-left hover:bg-emerald-700">
       <p class="font-bold text-sm">Espace Élève / Parent</p>
-      <p class="text-[11px] opacity-80">Code élève / parent</p>
+      <p class="text-[11px] opacity-80">1 code parent = 3 enfants</p>
     </button>
   </div>
 
   <div id="communiques-accueil" class="mt-6 bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-    <h3 class="font-bold text-xs uppercase mb-3">Communiqués <span id="comm-ecole-nom">- LYCEE DON BOSCO DURBA</span></h3>
+    <h3 class="font-bold text-xs uppercase mb-3">Communiqués - LYCEE DON BOSCO DURBA</h3>
     <div id="liste-communiques-accueil" class="space-y-2 text-xs text-slate-300">Chargement...</div>
   </div>
 </div>
 
-<!-- MODAL LOGIN SIMPLIFIÉ - PLUS DE CHAMP NOM ECOLE -->
+<!-- MODAL LOGIN V2 - SANS NOM ECOLE -->
 <div id="modal-login-flottant" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
   <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
     <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-      <h3 class="font-bold text-white text-sm">Connexion LYCEE DON BOSCO DURBA</h3>
-      <button onclick="fermerLoginFlottant()" class="text-slate-400">X [Echap]</button>
+      <h3 class="font-bold text-white text-sm">Connexion DON BOSCO DURBA</h3>
+      <button onclick="fermerLoginFlottant()" class="text-slate-400 text-xs">X [Echap]</button>
     </div>
 
-    <!-- ADMIN / PROF -->
     <div id="login-form-admin-prof" class="space-y-3">
-      <label class="text-[10px] text-slate-400 uppercase">École (fixe)</label>
       <input value="LYCEE DON BOSCO DURBA" readonly class="w-full bg-slate-800 border border-slate-700 text-slate-400 p-2.5 rounded-xl text-xs">
-
-      <label class="text-[10px] text-slate-400 uppercase">Code d'accès [Entrée]</label>
       <div class="relative">
-        <input id="flottant-code" type="password" placeholder="ADM-JK ou code prof" class="w-full bg-slate-950 border border-slate-700 text-white p-3 pr-12 rounded-xl text-sm">
+        <input id="flottant-code" type="password" placeholder="ADM-JK ou code prof PR-xxxx" class="w-full bg-slate-950 border border-slate-700 text-white p-3 pr-12 rounded-xl text-sm">
         <button type="button" onclick="toggleFlottantPassword()" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400">👁</button>
       </div>
       <button onclick="validerLoginFlottant()" class="w-full bg-blue-600 text-white p-3 rounded-xl text-sm font-semibold">Se connecter [Entrée]</button>
       <p id="flottant-erreur" class="hidden text-red-400 text-xs bg-red-950/50 p-2 rounded-lg"></p>
     </div>
 
-    <!-- ELEVE / PARENT -->
     <div id="login-form-parent-eleve" class="hidden space-y-3">
       <select id="flottant-type-personne" class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl text-xs">
-        <option value="eleve">Élève</option>
-        <option value="parent">Parent</option>
+        <option value="eleve">Élève (EL-xxxx)</option>
+        <option value="parent">Parent (PA-xxxx) - voit tous ses enfants</option>
       </select>
-      <input id="flottant-code-pe" type="password" placeholder="Code élève / parent" class="w-full bg-slate-950 border border-slate-700 text-white p-3 rounded-xl text-sm">
+      <input id="flottant-code-pe" type="password" placeholder="Code EL ou PA" class="w-full bg-slate-950 border border-slate-700 text-white p-3 rounded-xl text-sm">
       <button onclick="validerLoginFlottantPE()" class="w-full bg-emerald-600 text-white p-3 rounded-xl text-sm font-semibold">Entrer [Entrée]</button>
       <p id="flottant-erreur-pe" class="hidden text-red-400 text-xs bg-red-950/50 p-2 rounded-lg"></p>
     </div>
   </div>
-</div><!-- VUE ADMIN DASHBOARD - MONO ECOLE -->
+</div><!-- VUE ADMIN - DEBUT -->
 <div id="vue-admin-dashboard" class="hidden min-h-screen p-4 space-y-4">
+
+  <!-- HEADER -->
   <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
     <h2 class="font-bold text-sm">Admin - LYCEE DON BOSCO DURBA</h2>
-    <button onclick="changerVue('accueil',true)" class="bg-slate-700 px-3 py-1.5 rounded-lg text-[11px]">Déconnexion [Echap]</button>
+    <button onclick="changerVue('accueil',true)" class="bg-slate-700 px-3 py-1.5 rounded-lg text-[11px]">Déconnexion</button>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <!-- LISTE ELEVES - CORRIGÉE SANS FILTRE -->
-    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-      <h3 class="font-bold text-xs uppercase mb-3">Élèves - Tous affichés</h3>
-      <div class="flex gap-2 mb-3">
-        <input id="admin-nom-eleve" placeholder="Nom" class="flex-1 bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs">
-        <input id="admin-classe-eleve" placeholder="Classe ex: 6eme" class="w-20 bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs">
-        <button onclick="ajouterEleveAdmin()" class="bg-blue-600 px-3 py-2 rounded-lg text-xs">+ Ajouter [Entrée]</button>
+  <!-- BLOC 1 : ELEVE -->
+  <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+    <h3 class="font-bold text-xs uppercase mb-3 text-blue-400">Enregistrement Élève - RDC</h3>
+
+    <p class="text-[10px] text-slate-500 mb-2">Identité Élève</p>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <input id="el-nom" placeholder="Nom *" class="bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+      <input id="el-postnom" placeholder="Post-Nom" class="bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+      <input id="el-prenom" placeholder="Prénom *" class="bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+      <input id="el-naissance" type="date" class="bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+    </div>
+    <input id="el-adresse" placeholder="Adresse complète *" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white mb-2">
+    <select id="el-classe" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white mb-4">
+      <option value="">-- Choisir Classe RDC --</option>
+    </select>
+
+    <div class="bg-amber-950/20 border border-amber-800/30 p-3 rounded-xl mb-3">
+      <p class="text-[10px] font-bold text-amber-300 uppercase mb-2">Identité Tuteur - 1 CODE POUR 3 ENFANTS</p>
+      <div class="grid grid-cols-2 gap-2">
+        <input id="tu-nom" placeholder="Nom Tuteur *" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white">
+        <input id="tu-postnom" placeholder="Post-Nom Tuteur" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white">
+        <input id="tu-prenom" placeholder="Prénom Tuteur *" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white">
+        <input id="tu-tel" placeholder="Tél Tuteur * (clé)" class="bg-slate-950 border border-amber-700/50 p-2 rounded-lg text-xs text-white">
       </div>
-      <div id="admin-liste-eleves" class="space-y-1 max-h-[300px] overflow-y-auto text-xs"></div>
+      <input id="tu-adresse" placeholder="Adresse Tuteur" class="w-full mt-2 bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white">
+      <p class="text-[9px] text-slate-500 mt-2">Astuce : si même numéro de téléphone, le système garde le même code PA-xxxx pour tous ses enfants.</p>
     </div>
 
-    <!-- LISTE PROFS -->
-    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-      <h3 class="font-bold text-xs uppercase mb-3">Professeurs</h3>
-      <div class="flex gap-2 mb-3">
-        <input id="admin-nom-prof" placeholder="Nom prof" class="flex-1 bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs">
-        <input id="admin-matiere-prof" placeholder="Matière" class="w-24 bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs">
-        <button onclick="ajouterProfAdmin()" class="bg-violet-600 px-3 py-2 rounded-lg text-xs">+ Ajouter</button>
-      </div>
-      <div id="admin-liste-profs" class="space-y-1 max-h-[300px] overflow-y-auto text-xs"></div>
-    </div>
+    <button onclick="ajouterEleveComplet()" class="w-full bg-blue-600 p-3 rounded-xl text-sm font-bold">+ Enregistrer Élève</button>
   </div>
 
-  <!-- FRAIS CONFIG -->
-  <div class="bg-amber-950/20 border border-amber-800/30 p-4 rounded-2xl">
-    <h3 class="font-bold text-xs uppercase mb-2 text-amber-300">Config Frais - Acompte / Minerval [F]</h3>
-    <div class="flex gap-2">
-      <input id="frais-acompte-attendu" type="number" placeholder="Acompte $" class="flex-1 bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs">
-      <input id="frais-minerval-attendu" type="number" placeholder="Minerval $" class="flex-1 bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs">
-      <button onclick="enregistrerConfigFrais()" class="bg-amber-600 px-3 py-2 rounded-lg text-xs">Enregistrer [Entrée]</button>
-    </div>
+  <!-- BLOC 2 : LISTE ELEVES SEPAREE - NE MELANGE PLUS -->
+  <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+    <h4 class="text-[11px] font-bold uppercase text-slate-400 mb-3">Liste Élèves - Tous affichés</h4>
+    <div id="admin-liste-eleves" class="space-y-2 max-h-[400px] overflow-y-auto"></div>
+  </div>
+
+</div>
+
+<script>
+// REMPLIT LES CLASSES RDC SANS MELANGE
+function remplirClassesRDC(){
+  const sel = document.getElementById('el-classe');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">-- Choisir Classe RDC --</option>';
+  CLASSES_RDC.forEach(c=>{
+    const opt=document.createElement('option');
+    opt.value=c; opt.textContent=c;
+    sel.appendChild(opt);
+  });
+}
+
+function ajouterEleveComplet(){
+  const nom = document.getElementById('el-nom').value.trim();
+  const postnom = document.getElementById('el-postnom').value.trim();
+  const prenom = document.getElementById('el-prenom').value.trim();
+  const naissance = document.getElementById('el-naissance').value;
+  const adresse = document.getElementById('el-adresse').value.trim();
+  const classe = document.getElementById('el-classe').value;
+  const tuNom = document.getElementById('tu-nom').value.trim();
+  const tuPostnom = document.getElementById('tu-postnom').value.trim();
+  const tuPrenom = document.getElementById('tu-prenom').value.trim();
+  const tuTel = document.getElementById('tu-tel').value.trim();
+  const tuAdresse = document.getElementById('tu-adresse').value.trim();
+
+  if(!nom ||!prenom ||!classe ||!tuTel){ alert('Nom, Prénom, Classe et Tél Tuteur obligatoires'); return; }
+
+  let codeTuteurExistant = null;
+  let tuteurKeyExistant = null;
+  for(let k in (donneesGlobales.tuteurs||{})){
+    if(donneesGlobales.tuteurs[k].tel===tuTel){ codeTuteurExistant=donneesGlobales.tuteurs[k].codeTuteur; tuteurKeyExistant=k; break; }
+  }
+  if(!codeTuteurExistant){
+    for(let k in (donneesGlobales.eleves||{})){
+      if(donneesGlobales.eleves[k].tuteurTel===tuTel){ codeTuteurExistant=donneesGlobales.eleves[k].codeTuteur; break; }
+    }
+  }
+
+  const codes=obtenirTousCodesExistants();
+  const codeEleve=genererCodeUnique('EL',codes);
+  const codeTuteurFinal = codeTuteurExistant || genererCodeUnique('PA',codes);
+  const keyEleve=db.ref('eleves').push().key;
+
+  db.ref('eleves/'+keyEleve).set({
+    nom: nom+' '+postnom+' '+prenom, nom_seul:nom, postnom:postnom, prenom:prenom,
+    naissance:naissance, adresse:adresse, classe:classe,
+    ecole:ECOLE_PRINCIPALE, codeEleve:codeEleve, codeTuteur:codeTuteurFinal,
+    tuteurNom: tuNom+' '+tuPostnom+' '+tuPrenom, tuteurTel:tuTel, tuteurAdresse:tuAdresse,
+    statut:'actif', frais:{acompte:0,minerval:0}
+  });
+
+  if(!tuteurKeyExistant){
+    const keyT=db.ref('tuteurs').push().key;
+    db.ref('tuteurs/'+keyT).set({ nom:tuNom+' '+tuPostnom+' '+tuPrenom, tel:tuTel, adresse:tuAdresse, codeTuteur:codeTuteurFinal, enfants:[keyEleve], ecole:ECOLE_PRINCIPALE });
+  }else{
+    const enfants = donneesGlobales.tuteurs[tuteurKeyExistant].enfants||[];
+    enfants.push(keyEleve);
+    db.ref('tuteurs/'+tuteurKeyExistant+'/enfants').set(enfants);
+  }
+
+  // vide les champs
+  document.getElementById('el-nom').value=''; document.getElementById('el-postnom').value=''; document.getElementById('el-prenom').value=''; document.getElementById('el-adresse').value='';
+  alert('OK! EL: '+codeEleve+' | Parent: '+codeTuteurFinal);
+}
+</script><!-- BLOC PROF - MULTI-COURS RDC -->
+<div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+  <h3 class="font-bold text-xs uppercase mb-3 text-violet-400">Enregistrement Professeur - Multi-Cours</h3>
+
+  <p class="text-[10px] text-slate-500 mb-2">Identité Prof</p>
+  <div class="grid grid-cols-3 gap-2 mb-3">
+    <input id="prof-nom" placeholder="Nom *" class="bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+    <input id="prof-postnom" placeholder="Post-Nom" class="bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+    <input id="prof-prenom" placeholder="Prénom *" class="bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+  </div>
+
+  <p class="text-[10px] text-slate-500 mb-1">Cours enseignés - tu peux choisir plusieurs (CTRL + clic)</p>
+  <select id="prof-cours" multiple class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white h-36 mb-3">
+    <!-- rempli par JS -->
+  </select>
+
+  <button onclick="ajouterProfComplet()" class="w-full bg-violet-600 p-3 rounded-xl text-sm font-bold">+ Enregistrer Professeur</button>
+
+  <div class="mt-4 bg-slate-950 p-3 rounded-xl">
+    <h4 class="text-[10px] font-bold uppercase text-slate-400 mb-2">Liste Profs</h4>
+    <div id="admin-liste-profs" class="space-y-1 max-h-[300px] overflow-y-auto"></div>
   </div>
 </div>
 
 <script>
-// PARTIE 3 JS - FONCTIONS ADMIN SIMPLIFIÉES
-function getEcoleActive(){ return ECOLE_PRINCIPALE; }
-
-function chargerListeAdminEleves(){
-  const cont=document.getElementById('admin-liste-eleves');
-  if(!cont) return;
-  cont.innerHTML='';
-  const eleves=donneesGlobales.eleves||{};
-  // PLUS DE FILTRE ecole - ON AFFICHE TOUT
-  const liste=Object.values(eleves);
-  if(liste.length===0){
-    cont.innerHTML='<p class="text-[11px] text-slate-500 p-2">0 élève. Ajoute un élève ci-dessus.</p>';
-    return;
-  }
-  liste.forEach((el,idx)=>{
-    const key=Object.keys(eleves)[idx];
-    const div=document.createElement('div');
-    div.className='bg-slate-800 p-2 rounded-lg flex justify-between items-center';
-    div.innerHTML=`<div><p class="font-bold text-white">${el.nom} - ${el.classe}</p><p class="text-[10px] text-slate-400">${el.codeEleve||''} | ${el.codeTuteur||''}</p></div><button onclick="supprimerEleveAdmin('${key}')" class="bg-red-900/50 text-red-300 px-2 py-1 rounded text-[10px]">Suppr</button>`;
-    cont.appendChild(div);
+// REMPLIT LES COURS RDC
+function remplirCoursRDC(){
+  const sel = document.getElementById('prof-cours');
+  if(!sel) return;
+  sel.innerHTML='';
+  COURS_RDC.forEach(c=>{
+    const opt=document.createElement('option');
+    opt.value=c; opt.textContent=c;
+    sel.appendChild(opt);
   });
 }
 
-function ajouterEleveAdmin(){
-  const nom=document.getElementById('admin-nom-eleve').value.trim();
-  const classe=document.getElementById('admin-classe-eleve').value.trim();
-  if(!nom||!classe){alert('Nom + classe requis');return;}
+function ajouterProfComplet(){
+  const nom = document.getElementById('prof-nom').value.trim();
+  const postnom = document.getElementById('prof-postnom').value.trim();
+  const prenom = document.getElementById('prof-prenom').value.trim();
+  const select = document.getElementById('prof-cours');
+  const coursSelectionnes = Array.from(select.selectedOptions).map(o=>o.value);
+
+  if(!nom ||!prenom || coursSelectionnes.length===0){ alert('Nom, Prénom et au moins 1 cours obligatoire'); return; }
+
   const codes=obtenirTousCodesExistants();
-  const codeEleve=genererCodeUnique('EL',codes);
-  const codeTuteur=genererCodeUnique('PA',codes);
-  const key=db.ref('eleves').push().key;
-  db.ref('eleves/'+key).set({
-    nom:nom, classe:classe, ecole:ECOLE_PRINCIPALE,
-    codeEleve:codeEleve, codeTuteur:codeTuteur,
-    statut:'actif', frais:{acompte:0,minerval:0}
+  const codeProf=genererCodeUnique('PR',codes);
+  const key=db.ref('professeurs').push().key;
+
+  db.ref('professeurs/'+key).set({
+    nom: nom+' '+postnom+' '+prenom,
+    nom_seul:nom, postnom:postnom, prenom:prenom,
+    cours: coursSelectionnes, // TABLEAU MULTI-COURS
+    matiere: coursSelectionnes.join(', '), // pour compatibilité ancienne version
+    ecole:ECOLE_PRINCIPALE,
+    codeProf:codeProf,
+    statut:'actif'
   }).then(()=>{
-    document.getElementById('admin-nom-eleve').value='';
-    document.getElementById('admin-classe-eleve').value='';
+    alert('Prof enregistré! Code: '+codeProf+' | Cours: '+coursSelectionnes.join(', '));
+    document.getElementById('prof-nom').value='';
+    document.getElementById('prof-postnom').value='';
+    document.getElementById('prof-prenom').value='';
   });
+}
+
+// REMPLACE TON ANCIEN renderAdminListes POUR AFFICHER VRAIMENT
+function renderAdminListes(){
+  const contEl = document.getElementById('admin-liste-eleves');
+  if(contEl){
+    contEl.innerHTML='';
+    Object.keys(donneesGlobales.eleves||{}).forEach(k=>{
+      const e=donneesGlobales.eleves[k];
+      const d=document.createElement('div');
+      d.className='bg-slate-800 p-2 rounded-lg flex justify-between items-center';
+      d.innerHTML=`<div><p class="font-bold text-white text-[11px]">${e.nom} - ${e.classe}</p><p class="text-[9px] text-slate-400">EL: ${e.codeEleve} | PA: ${e.codeTuteur} | Tél Tuteur: ${e.tuteurTel||''}</p></div><button onclick="db.ref('eleves/${k}').remove()" class="text-red-400 text-[10px]">Suppr</button>`;
+      contEl.appendChild(d);
+    });
+  }
+
+  const contProf = document.getElementById('admin-liste-profs');
+  if(contProf){
+    contProf.innerHTML='';
+    Object.keys(donneesGlobales.professeurs||{}).forEach(k=>{
+      const p=donneesGlobales.professeurs[k];
+      const coursTxt = Array.isArray(p.cours)? p.cours.join(', ') : p.matiere;
+      const d=document.createElement('div');
+      d.className='bg-slate-800 p-2 rounded-lg flex justify-between items-center';
+      d.innerHTML=`<div><p class="font-bold text-white text-[11px]">${p.nom}</p><p class="text-[9px] text-slate-400">${coursTxt} | ${p.codeProf}</p></div><button onclick="db.ref('professeurs/${k}').remove()" class="text-red-400 text-[10px]">Suppr</button>`;
+      contProf.appendChild(d);
+    });
+  }
 }
 </script><!-- VUE PROF DASHBOARD -->
 <div id="vue-prof-dashboard" class="hidden min-h-screen p-4 space-y-4">
   <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
-    <h2 id="titre-espace-prof" class="font-bold text-sm">Espace Prof - LYCEE DON BOSCO DURBA</h2>
+    <div>
+      <h2 class="font-bold text-sm" id="prof-nom-affiche">Prof Dashboard</h2>
+      <p id="prof-cours-affiche" class="text-[10px] text-slate-400"></p>
+    </div>
     <button onclick="changerVue('accueil',true)" class="bg-slate-700 px-3 py-1.5 rounded-lg text-[11px]">Déconnexion</button>
   </div>
-  <div id="prof-liste-eleves" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl text-xs">Chargement élèves...</div>
-  <div id="prof-section-notes" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl text-xs">Notes</div>
-</div>
 
-<!-- VUE ELEVE / PARENT DASHBOARD -->
-<div id="vue-eleve-dashboard" class="hidden min-h-screen p-4 space-y-4">
-  <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
-    <h2 id="titre-espace-eleve-parent" class="font-bold text-sm">Espace Élève</h2>
-    <button onclick="changerVue('accueil',true)" class="bg-slate-700 px-3 py-1.5 rounded-lg text-[11px]">Déconnexion</button>
+  <!-- SELECT CLASSE + MATIERE -->
+  <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+    <h3 class="font-bold text-xs uppercase text-violet-400 mb-3">Fiche Cotation par Classe</h3>
+    <div class="grid grid-cols-2 gap-2">
+      <select id="prof-classe-select" onchange="chargerElevesPourCotation()" class="bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+        <option value="">Choisir Classe</option>
+      </select>
+      <select id="prof-matiere-select" class="bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+        <option value="">Choisir Matière</option>
+      </select>
+    </div>
+    <div class="grid grid-cols-3 gap-2 mt-3">
+      <select id="prof-type-cote" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white">
+        <option>Devoir</option><option>Interrogation</option><option>Examen S1</option><option>Examen S2</option>
+      </select>
+      <input id="prof-max-cote" type="number" value="20" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white" placeholder="Max /20">
+      <input id="prof-date-cote" type="date" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white">
+    </div>
   </div>
-  <div id="eleve-infos-frais" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl text-xs"></div>
-  <div id="eleve-notes" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl text-xs">Notes...</div>
-  <div id="select-enfant-parent" class="hidden"></div>
-  <div id="parent-section-messagerie" class="hidden"></div>
+
+  <!-- TABLE ELEVES POUR COTATION -->
+  <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+    <div class="flex justify-between items-center mb-3">
+      <h4 class="text-[11px] font-bold uppercase text-slate-400">Élèves de la classe</h4>
+      <button onclick="enregistrerToutesCotes()" class="bg-emerald-600 px-3 py-1 rounded-lg text-[10px] font-bold">Enregistrer Tout</button>
+    </div>
+    <div id="prof-fiche-cotation" class="space-y-2 max-h-[500px] overflow-y-auto"></div>
+  </div>
+
+  <!-- HISTORIQUE NOTES DU PROF -->
+  <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+    <h4 class="text-[11px] font-bold uppercase text-slate-400 mb-2">Mes Côtes Publiées (visible parents)</h4>
+    <div id="prof-historique-notes" class="space-y-1 text-[11px] max-h-[300px] overflow-y-auto"></div>
+  </div>
 </div>
 
 <script>
-// PARTIE 4 JS - LOGIN MONO-ECOLE CORRIGÉ (C'EST ICI QUE ADM-JK NE MARCHAIT PAS)
-
-function ouvrirLoginFlottant(role){
-  currentLoginRole=role;
-  document.getElementById('modal-login-flottant').classList.remove('hidden');
-  document.getElementById('flottant-erreur').classList.add('hidden');
-  document.getElementById('flottant-erreur-pe').classList.add('hidden');
-  if(role==='admin'||role==='prof'){
-    document.getElementById('login-form-admin-prof').classList.remove('hidden');
-    document.getElementById('login-form-parent-eleve').classList.add('hidden');
-    document.getElementById('flottant-code').value='';
-    setTimeout(()=>document.getElementById('flottant-code').focus(),100);
-  }else{
-    document.getElementById('login-form-admin-prof').classList.add('hidden');
-    document.getElementById('login-form-parent-eleve').classList.remove('hidden');
-    document.getElementById('flottant-type-personne').value=role;
-    document.getElementById('flottant-code-pe').value='';
-    setTimeout(()=>document.getElementById('flottant-code-pe').focus(),100);
-  }
+function initProfDashboard(profId){
+  const prof = donneesGlobales.professeurs[profId];
+  if(!prof) return;
+  document.getElementById('prof-nom-affiche').textContent = prof.nom;
+  const coursList = Array.isArray(prof.cours)? prof.cours : [prof.matiere];
+  document.getElementById('prof-cours-affiche').textContent = coursList.join(', ');
+  const selMat = document.getElementById('prof-matiere-select');
+  selMat.innerHTML='<option value="">Choisir Matière</option>';
+  coursList.forEach(c=>{
+    const o=document.createElement('option'); o.value=c; o.textContent=c; selMat.appendChild(o);
+  });
+  remplirClassesRDC(); // assure que select classe est rempli
+  const selClasse = document.getElementById('prof-classe-select');
+  selClasse.innerHTML='<option value="">Choisir Classe</option>';
+  CLASSES_RDC.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; selClasse.appendChild(o); });
 }
-function fermerLoginFlottant(){document.getElementById('modal-login-flottant').classList.add('hidden');}
-function toggleFlottantPassword(){const i=document.getElementById('flottant-code'); i.type=i.type==='password'?'text':'password';}
-function toggleFlottantPasswordPE(){const i=document.getElementById('flottant-code-pe'); i.type=i.type==='password'?'text':'password';}
+
+function chargerElevesPourCotation(){
+  const classe=document.getElementById('prof-classe-select').value;
+  const cont=document.getElementById('prof-fiche-cotation');
+  cont.innerHTML='';
+  if(!classe) return;
+  Object.keys(donneesGlobales.eleves||{}).forEach(key=>{
+    const el=donneesGlobales.eleves[key];
+    if(el.classe===classe){
+      // cherche derniere cote pour cet eleve + matiere
+      const matiereSel = document.getElementById('prof-matiere-select').value;
+      const div=document.createElement('div');
+      div.className='bg-slate-800 p-2.5 rounded-xl flex gap-2 items-center';
+      div.innerHTML=`
+        <span class="flex-1 text-[11px] font-medium">${el.nom}</span>
+        <input id="cote-${key}" type="number" min="0" max="20" step="0.5" placeholder="/20" class="w-16 bg-slate-950 border border-slate-700 p-1.5 rounded-lg text-xs text-white">
+        <button onclick="publierCoteUnitaire('${key}')" class="bg-blue-600 px-2.5 py-1.5 rounded-lg text-[10px] font-bold">Publier</button>
+      `;
+      cont.appendChild(div);
+    }
+  });
+}
+
+function publierCoteUnitaire(eleveKey){
+  const classe=document.getElementById('prof-classe-select').value;
+  const matiere=document.getElementById('prof-matiere-select').value;
+  const type=document.getElementById('prof-type-cote').value;
+  const max=document.getElementById('prof-max-cote').value||20;
+  const coteVal=parseFloat(document.getElementById('cote-'+eleveKey).value);
+  if(!matiere){ alert('Choisis matière'); return; }
+  if(isNaN(coteVal)){ alert('Entre côte'); return; }
+
+  const key=db.ref('notes').push().key;
+  db.ref('notes/'+key).set({
+    eleveId:eleveKey, profId:sessionActive.id, classe:classe, matiere:matiere,
+    cote:coteVal, max:parseFloat(max), type:type, date:document.getElementById('prof-date-cote').value||new Date().toISOString(),
+    ecole:ECOLE_PRINCIPALE
+  }).then(()=>{
+    // visible instantanément côté parent/élève
+    document.getElementById('cote-'+eleveKey).value='';
+  });
+}
+
+function enregistrerToutesCotes(){
+  // boucle sur tous les inputs visibles
+  Object.keys(donneesGlobales.eleves||{}).forEach(k=>{
+    const inp=document.getElementById('cote-'+k);
+    if(inp && inp.value) publierCoteUnitaire(k);
+  });
+  alert('Toutes les côtes publiées - parents voient maintenant');
+}
+
+function renderProfNotes(){
+  const cont=document.getElementById('prof-historique-notes');
+  if(!cont) return;
+  cont.innerHTML='';
+  Object.values(donneesGlobales.notes||{}).filter(n=>n.profId===sessionActive.id).slice(-20).reverse().forEach(n=>{
+    const eleve=donneesGlobales.eleves[n.eleveId];
+    if(!eleve) return;
+    const d=document.createElement('div');
+    d.className='bg-slate-800 p-2 rounded-lg flex justify-between';
+    d.innerHTML=`<span>${eleve.nom} - ${n.matiere} [${n.type}] : ${n.cote}/${n.max}</span><span class="text-slate-500 text-[9px]">${(n.date||'').substring(0,10)}</span>`;
+    cont.appendChild(d);
+  });
+}
+</script><!-- VUE ELEVE / PARENT -->
+<div id="vue-eleve-dashboard" class="hidden min-h-screen p-4 space-y-4">
+  <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
+    <div>
+      <h2 class="font-bold text-sm" id="eleve-nom-affiche">Espace Élève</h2>
+      <p id="eleve-classe-affiche" class="text-[10px] text-slate-400"></p>
+    </div>
+    <button onclick="changerVue('accueil',true)" class="bg-slate-700 px-3 py-1.5 rounded-lg text-[11px]">Déconnexion</button>
+  </div>
+
+  <!-- SI PARENT MULTI-ENFANTS - SELECTEUR -->
+  <div id="parent-select-enfants" class="hidden bg-amber-950/20 border border-amber-800/30 p-4 rounded-2xl">
+    <h3 class="font-bold text-xs uppercase text-amber-300 mb-2">Vos Enfants - 1 seul code PA</h3>
+    <p class="text-[10px] text-slate-400 mb-2">Vous avez plusieurs enfants enregistrés avec le même numéro de tuteur. Choisissez :</p>
+    <div id="parent-liste-enfants-boutons" class="flex flex-wrap gap-2"></div>
+  </div>
+
+  <!-- COTES DEVOIR/INTERRO/EXAMEN - VISIBLE DIRECT -->
+  <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+    <h3 class="font-bold text-xs uppercase text-emerald-400 mb-3">Mes Côtes - Devoirs / Interros / Examens (Prof)</h3>
+    <div id="eleve-liste-cotes" class="space-y-2 max-h-[300px] overflow-y-auto text-[11px]"></div>
+  </div>
+
+  <!-- BULLETIN FINAL ADMIN - % / PLACE / REPECHAGE / CONDUITE -->
+  <div class="bg-slate-900 border border-emerald-800/30 p-4 rounded-2xl">
+    <h3 class="font-bold text-xs uppercase text-emerald-300 mb-3">Bulletin Final - Délibération</h3>
+    <div id="eleve-bulletin-final" class="space-y-2 text-xs"></div>
+  </div>
+
+  <!-- FRAIS + COMMUNIQUES -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+      <h4 class="text-[11px] font-bold uppercase text-slate-400 mb-2">Frais Scolaires</h4>
+      <div id="eleve-frais" class="text-xs"></div>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+      <h4 class="text-[11px] font-bold uppercase text-slate-400 mb-2">Communiqués École</h4>
+      <div id="eleve-communiques" class="text-xs space-y-1 max-h-[200px] overflow-y-auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- VUE ADMIN - DELIBERATION -->
+<div class="bg-slate-900 border border-emerald-800/30 p-4 rounded-2xl mt-4">
+  <h3 class="font-bold text-xs uppercase text-emerald-400 mb-3">Admin - Publier Résultats par Classe [% / Place / Repêchage / Conduite]</h3>
+  <div class="flex gap-2">
+    <select id="admin-classe-resultat" onchange="calculerDeliberation()" class="flex-1 bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+      <option value="">Choisir Classe</option>
+    </select>
+    <button onclick="calculerDeliberation()" class="bg-emerald-600 px-4 py-2 rounded-lg text-xs font-bold">Calculer</button>
+  </div>
+  <div id="admin-table-delib" class="mt-4 overflow-x-auto"></div>
+</div>
+
+<script>
+function initEleveDashboard(eleveKey, estParent){
+  const eleve = donneesGlobales.eleves[eleveKey];
+  if(!eleve) return;
+  sessionActive.enfantIdActif = eleveKey;
+  document.getElementById('eleve-nom-affiche').textContent = (estParent?'Parent de : ':'Élève : ') + eleve.nom;
+  document.getElementById('eleve-classe-affiche').textContent = eleve.classe + ' | Code: ' + eleve.codeEleve + ' | Tuteur: ' + eleve.tuteurNom;
+
+  // SI PARENT AVEC PLUSIEURS ENFANTS
+  const parentDiv = document.getElementById('parent-select-enfants');
+  const btnCont = document.getElementById('parent-liste-enfants-boutons');
+  if(estParent){
+    const tel = eleve.tuteurTel;
+    const enfantsDuParent = Object.keys(donneesGlobales.eleves).filter(k=>donneesGlobales.eleves[k].tuteurTel===tel);
+    if(enfantsDuParent.length>1){
+      parentDiv.classList.remove('hidden');
+      btnCont.innerHTML='';
+      enfantsDuParent.forEach(k=>{
+        const e = donneesGlobales.eleves[k];
+        const b=document.createElement('button');
+        b.className = (k===eleveKey?'bg-amber-600':'bg-slate-700')+' px-3 py-2 rounded-xl text-[11px]';
+        b.textContent = e.nom + ' ('+e.classe+')';
+        b.onclick=()=>initEleveDashboard(k,true);
+        btnCont.appendChild(b);
+      });
+    }else{
+      parentDiv.classList.add('hidden');
+    }
+  }else{
+    parentDiv.classList.add('hidden');
+  }
+
+  renderEleveCotes(eleveKey);
+  renderEleveBulletin(eleveKey);
+}
+
+function renderEleveCotes(eleveKey){
+  const cont=document.getElementById('eleve-liste-cotes');
+  cont.innerHTML='';
+  const notes = Object.values(donneesGlobales.notes||{}).filter(n=>n.eleveId===eleveKey).sort((a,b)=> new Date(b.date)-new Date(a.date));
+  if(notes.length===0){ cont.innerHTML='<p class="text-slate-500">Aucune côte publiée encore par les profs</p>'; return; }
+  notes.forEach(n=>{
+    const d=document.createElement('div');
+    d.className='bg-slate-800 p-2.5 rounded-xl flex justify-between items-center';
+    d.innerHTML=`<div><p class="font-bold text-white">${n.matiere} - ${n.type}</p><p class="text-[10px] text-slate-400">${(n.date||'').substring(0,10)} | Prof: ${(donneesGlobales.professeurs[n.profId]||{}).nom||''}</p></div><div class="bg-blue-600 px-3 py-1.5 rounded-full font-bold text-white">${n.cote}/${n.max}</div>`;
+    cont.appendChild(d);
+  });
+}
+
+function renderEleveBulletin(eleveKey){
+  const cont=document.getElementById('eleve-bulletin-final');
+  const delib=donneesGlobales.deliberations? donneesGlobales.deliberations[eleveKey]: null;
+  if(!delib){ cont.innerHTML='<p class="text-slate-500 text-[11px]">Bulletin final non publié encore par l\'admin</p>'; return; }
+  cont.innerHTML=`
+    <div class="grid grid-cols-2 gap-2">
+      <div class="bg-slate-800 p-3 rounded-xl"><p class="text-[10px] text-slate-400">Pourcentage</p><p class="font-bold text-lg ${delib.pourcentage>=50?'text-emerald-400':'text-amber-400'}">${delib.pourcentage}%</p></div>
+      <div class="bg-slate-800 p-3 rounded-xl"><p class="text-[10px] text-slate-400">Place</p><p class="font-bold text-lg">${delib.place}e / ${delib.totalClasse||'?'}</p></div>
+      <div class="bg-slate-800 p-3 rounded-xl"><p class="text-[10px] text-slate-400">Décision</p><p class="font-bold ${delib.decision==='Passe'?'text-emerald-400':delib.decision==='Repêché'?'text-amber-400':'text-red-400'}">${delib.decision}</p></div>
+      <div class="bg-slate-800 p-3 rounded-xl"><p class="text-[10px] text-slate-400">Conduite</p><p class="font-bold">${delib.conduite}</p></div>
+    </div>
+    ${delib.coursARepecher? `<div class="bg-amber-950/30 border border-amber-800/30 p-3 rounded-xl mt-2"><p class="text-[10px] text-amber-300">Cours à repêcher</p><p class="font-bold text-sm">${delib.coursARepecher}</p></div>`:''}
+  `;
+}
+
+function calculerDeliberation(){
+  const classe=document.getElementById('admin-classe-resultat').value;
+  if(!classe){ alert('Choisis classe'); return; }
+  const resultats=[];
+  for(let eKey in donneesGlobales.eleves){
+    if(donneesGlobales.eleves[eKey].classe!==classe) continue;
+    const notesEleve=Object.values(donneesGlobales.notes||{}).filter(n=>n.eleveId===eKey);
+    const total=notesEleve.reduce((s,n)=>s+parseFloat(n.cote||0),0);
+    const maxTotal=notesEleve.reduce((s,n)=>s+parseFloat(n.max||20),0);
+    const pourcentage = maxTotal? (total/maxTotal*100).toFixed(1):0;
+    resultats.push({key:eKey, nom:donneesGlobales.eleves[eKey].nom, pourcentage:parseFloat(pourcentage), notes:notesEleve});
+  }
+  resultats.sort((a,b)=>b.pourcentage-a.pourcentage);
+  let html='<table class="w-full text-[11px]"><tr class="text-slate-400 border-b border-slate-700"><th class="p-2 text-left">Place</th><th class="p-2 text-left">Nom</th><th class="p-2">%</th><th class="p-2">Décision</th><th class="p-2">Conduite</th><th class="p-2">Cours repêchage</th></tr>';
+  resultats.forEach((r,i)=>{
+    let decision = r.pourcentage>=50?'Passe':(r.pourcentage>=35?'Repêché':'Échoue');
+    html+=`<tr class="border-t border-slate-800"><td class="p-2">${i+1}</td><td class="p-2">${r.nom}</td><td class="p-2 font-bold">${r.pourcentage}%</td><td class="p-2 ${decision==='Passe'?'text-emerald-400':decision==='Repêché'?'text-amber-400':'text-red-400'}">${decision}</td><td class="p-2"><select id="cond-${r.key}" class="bg-slate-950 border border-slate-700 p-1 rounded text-[10px]"><option>Très Bonne</option><option>Bonne</option><option>Assez Bonne</option><option>Mauvaise</option></select></td><td class="p-2"><input id="rep-${r.key}" placeholder="Ex: Math, Physique" class="w-24 bg-slate-950 border border-slate-700 p-1 rounded text-[10px]"></td></tr>`;
+  });
+  html+=`</table><button onclick="enregistrerDeliberation()" class="w-full mt-4 bg-blue-600 p-3 rounded-xl text-sm font-bold">Publier Bulletin Final (visible parents)</button>`;
+  document.getElementById('admin-table-delib').innerHTML=html;
+  window.resultatsTemp=resultats;
+}
+
+function enregistrerDeliberation(){
+  const classe=document.getElementById('admin-classe-resultat').value;
+  const total = window.resultatsTemp.length;
+  window.resultatsTemp.forEach((r,i)=>{
+    const conduite=document.getElementById('cond-'+r.key)?.value||'Bonne';
+    const coursRep=document.getElementById('rep-'+r.key)?.value||'';
+    const decision = r.pourcentage>=50?'Passe':(r.pourcentage>=35?'Repêché':'Échoue');
+    db.ref('deliberations/'+r.key).set({
+      ecole:ECOLE_PRINCIPALE, classe:classe,
+      pourcentage:r.pourcentage, place:i+1, totalClasse:total, decision:decision,
+      conduite:conduite, coursARepecher:coursRep, date:new Date().toISOString()
+    });
+  });
+  alert('Résultats publiés! Les parents voient % place conduite repêchage');
+}
+</script><!-- COMMUNIQUES ADMIN -->
+<div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl mt-4">
+  <h3 class="font-bold text-xs uppercase text-slate-400 mb-2">Publier Communiqué</h3>
+  <input id="comm-titre" placeholder="Titre communiqué" class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white mb-2">
+  <textarea id="comm-texte" placeholder="Texte communiqué..." class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-xs text-white h-20"></textarea>
+  <button onclick="publierCommunique()" class="w-full mt-2 bg-slate-700 p-2.5 rounded-xl text-xs font-bold">Publier</button>
+  <div id="admin-liste-communiques" class="mt-3 space-y-1 text-xs"></div>
+</div>
+
+</div> <!-- fin vue-admin-dashboard -->
+
+<script>
+// INIT FIREBASE + LISTENERS
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function obtenirTousCodesExistants(){
+  const codes=new Set();
+  Object.values(donneesGlobales.eleves||{}).forEach(e=>{ if(e.codeEleve) codes.add(e.codeEleve); if(e.codeTuteur) codes.add(e.codeTuteur); });
+  Object.values(donneesGlobales.professeurs||{}).forEach(p=>{ if(p.codeProf) codes.add(p.codeProf); });
+  Object.values(donneesGlobales.tuteurs||{}).forEach(t=>{ if(t.codeTuteur) codes.add(t.codeTuteur); });
+  return codes;
+}
+function genererCodeUnique(prefix, codesExistants){
+  let code; do{ code=prefix+'-'+Math.floor(100000+Math.random()*900000); }while(codesExistants.has(code));
+  codesExistants.add(code); return code;
+}
+
+function changerVue(vue, deconnexion){
+  if(deconnexion) sessionActive={role:null,id:null,nom:null,ecole:ECOLE_PRINCIPALE,enfantIdActif:null};
+  document.getElementById('vue-accueil').classList.add('hidden');
+  document.getElementById('vue-admin-dashboard').classList.add('hidden');
+  document.getElementById('vue-prof-dashboard').classList.add('hidden');
+  document.getElementById('vue-eleve-dashboard').classList.add('hidden');
+  if(vue==='accueil') document.getElementById('vue-accueil').classList.remove('hidden');
+  if(vue==='admin') document.getElementById('vue-admin-dashboard').classList.remove('hidden');
+  if(vue==='prof') document.getElementById('vue-prof-dashboard').classList.remove('hidden');
+  if(vue==='eleve') document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
+}
+
+// LOGIN SANS NOM ECOLE - BUG CORRIGE
+let roleLoginActuel=null;
+function ouvrirLoginFlottant(role){
+  roleLoginActuel=role;
+  document.getElementById('modal-login-flottant').classList.remove('hidden');
+  document.getElementById('login-form-admin-prof').classList.add('hidden');
+  document.getElementById('login-form-parent-eleve').classList.add('hidden');
+  if(role==='admin'||role==='prof'){ document.getElementById('login-form-admin-prof').classList.remove('hidden'); document.getElementById('flottant-code').focus(); }
+  else{ document.getElementById('login-form-parent-eleve').classList.remove('hidden'); document.getElementById('flottant-code-pe').focus(); }
+}
+function fermerLoginFlottant(){ document.getElementById('modal-login-flottant').classList.add('hidden'); }
+function toggleFlottantPassword(){ const i=document.getElementById('flottant-code'); i.type=i.type==='password'?'text':'password'; }
 
 function validerLoginFlottant(){
-  const code=document.getElementById('flottant-code').value.trim();
+  const code=document.getElementById('flottant-code').value.trim().toUpperCase();
   const err=document.getElementById('flottant-erreur');
   err.classList.add('hidden');
-  if(!code){err.innerText="Entre code"; err.classList.remove('hidden'); return;}
-
-  // ADMIN - MONO ECOLE
-  if(currentLoginRole==='admin'){
-    if(code===MDP_ADMIN_DON_BOSCO || code===MDP_SECOURS || code==="ADM-JK" || code==="PR123"){
-      sessionActive={role:'admin', id:'admin', nom:'Admin Don Bosco', ecole:ECOLE_PRINCIPALE};
-      fermerLoginFlottant();
-      changerVue('admin-dashboard');
-      rafraichirDonneesPage();
-      return;
-    }else{
-      err.innerText="Code Admin incorrect. Utilise ADM-JK ou PR123";
-      err.classList.remove('hidden'); return;
-    }
+  if(roleLoginActuel==='admin'){
+    if(code===MDP_ADMIN_DON_BOSCO || code===MDP_SECOURS){
+      sessionActive={role:'admin',id:'admin-don-bosco',nom:'Admin DON BOSCO',ecole:ECOLE_PRINCIPALE};
+      fermerLoginFlottant(); changerVue('admin'); remplirClassesRDC(); remplirCoursRDC(); return;
+    }else{ err.textContent='Code Admin incorrect. Utilise ADM-JK'; err.classList.remove('hidden'); return; }
   }
-
-  // PROF - CHERCHE DANS BASE SANS FILTRE ECOLE
-  if(currentLoginRole==='prof'){
-    let found=null,key=null;
-    for(let k in (donneesGlobales.professeurs||{})){
-      if(donneesGlobales.professeurs[k].code===code){found=donneesGlobales.professeurs[k]; key=k; break;}
-    }
-    if(!found){err.innerText="Code prof incorrect"; err.classList.remove('hidden'); return;}
-    sessionActive={role:'prof', id:key, nom:found.nom, ecole:ECOLE_PRINCIPALE};
-    fermerLoginFlottant();
-    changerVue('prof-dashboard');
-    rafraichirDonneesPage();
-    return;
+  if(roleLoginActuel==='prof'){
+    const profKey=Object.keys(donneesGlobales.professeurs||{}).find(k=>donneesGlobales.professeurs[k].codeProf===code);
+    if(profKey){ sessionActive={role:'prof',id:profKey,nom:donneesGlobales.professeurs[profKey].nom,ecole:ECOLE_PRINCIPALE}; fermerLoginFlottant(); changerVue('prof'); initProfDashboard(profKey); renderProfNotes(); return; }
+    else{ err.textContent='Code prof introuvable'; err.classList.remove('hidden'); }
   }
 }
 
 function validerLoginFlottantPE(){
   const type=document.getElementById('flottant-type-personne').value;
-  const code=document.getElementById('flottant-code-pe').value.trim();
+  const code=document.getElementById('flottant-code-pe').value.trim().toUpperCase();
   const err=document.getElementById('flottant-erreur-pe');
   err.classList.add('hidden');
-  if(!code){err.innerText="Entre code"; err.classList.remove('hidden'); return;}
-
   if(type==='eleve'){
-    let found=null,key=null;
-    for(let k in (donneesGlobales.eleves||{})){
-      if(donneesGlobales.eleves[k].codeEleve===code){found=donneesGlobales.eleves[k]; key=k; break;}
-    }
-    if(!found){err.innerText="Code élève incorrect"; err.classList.remove('hidden'); return;}
-    if(found.statut==='bloque_frais'){err.innerText="Accès bloqué frais non payés"; err.classList.remove('hidden'); return;}
-    sessionActive={role:'eleve', id:key, nom:found.nom, ecole:ECOLE_PRINCIPALE};
-    fermerLoginFlottant();
-    document.getElementById('vue-accueil').classList.add('hidden');
-    document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
-    chargerTableauDeBordEleveOuParent();
-  } else {
-    let found=null,key=null;
-    for(let k in (donneesGlobales.tuteurs||{})){
-      if(donneesGlobales.tuteurs[k].codeTuteur===code){found=donneesGlobales.tuteurs[k]; key=k; break;}
-    }
-    // cherche aussi dans eleves.codeTuteur (ancien système)
-    if(!found){
-      for(let k in (donneesGlobales.eleves||{})){
-        if(donneesGlobales.eleves[k].codeTuteur===code){found={nom:"Parent de "+donneesGlobales.eleves[k].nom, enfants:[k]}; key="parent-"+k; break;}
-      }
-    }
-    if(!found){err.innerText="Code parent incorrect"; err.classList.remove('hidden'); return;}
-    sessionActive={role:'parent', id:key, nom:found.nom, ecole:ECOLE_PRINCIPALE, enfantIdActif:found.enfants?found.enfants[0]:null};
-    fermerLoginFlottant();
-    document.getElementById('vue-accueil').classList.add('hidden');
-    document.getElementById('vue-eleve-dashboard').classList.remove('hidden');
-    chargerTableauDeBordEleveOuParent();
-  }
-}
-</script><script>
-// PARTIE 5 JS - INIT FIREBASE MONO-ECOLE
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-let currentLoginRole=null;
-let adminContactActif=null;
-let ecoleSelectionneePourBloquer=null;
-let eleveSelectionnePourFrais=null;
-
-function initialiserFirebaseListeners(){
-  db.ref().on('value', snap=>{
-    const data=snap.val()||{};
-    donneesGlobales.eleves = data.eleves||{};
-    donneesGlobales.tuteurs = data.tuteurs||{};
-    donneesGlobales.professeurs = data.professeurs||data.profs||{};
-    donneesGlobales.notes = data.notes||{};
-    donneesGlobales.communiques = data.communiques||{};
-    donneesGlobales.demandesCours = data.demandesCours||{};
-    donneesGlobales.messages = data.messages||{};
-    donneesGlobales.presences = data.presences||{};
-    donneesGlobales.deliberations = data.deliberations||{};
-    donneesGlobales.fraisConfig = data.fraisConfig||{};
-    donneesGlobales.admin = data.admin||{mdp:MDP_ADMIN_DON_BOSCO};
-
-    console.log('Firebase MAJ - Eleves:', Object.keys(donneesGlobales.eleves).length, 'Profs:', Object.keys(donneesGlobales.professeurs).length);
-
-    rafraichirDonneesPage();
-  });
-}
-
-function rafraichirDonneesPage(){
-  chargerCommuniquesAccueil();
-  chargerFraisAdmin();
-  if(sessionActive.role==='admin'){
-    chargerListeAdminEleves();
-    chargerListeAdminProfs();
-    chargerListeAdminTuteurs();
-    chargerTableauPresencesAdmin();
-    chargerContactsMessagerieAdmin();
-    chargerDemandesCoursAdmin();
-    chargerDeliberationAdmin();
-    chargerAdminCommuniques();
-  }
-  else if(sessionActive.role==='prof'){chargerTableauDeBordProf();}
-  else if(sessionActive.role==='eleve'||sessionActive.role==='parent'){chargerTableauDeBordEleveOuParent();}
-}
-
-function changerVue(vue, reset=false){
-  document.getElementById('vue-accueil').classList.add('hidden');
-  document.getElementById('vue-admin-dashboard').classList.add('hidden');
-  document.getElementById('vue-eleve-dashboard').classList.add('hidden');
-  document.getElementById('vue-prof-dashboard').classList.add('hidden');
-  fermerLoginFlottant();
-  if(vue==='accueil'){
-    document.getElementById('vue-accueil').classList.remove('hidden');
-    if(reset){sessionActive={role:null,id:null,nom:null,ecole:ECOLE_PRINCIPALE,enfantIdActif:null};}
-    document.getElementById('accueil-ecole-connectee').innerText='Connecté: '+ECOLE_PRINCIPALE;
-    document.getElementById('comm-ecole-nom').innerText='- '+ECOLE_PRINCIPALE;
-  } else {
-    const t=document.getElementById('vue-'+vue) || document.getElementById('vue-'+vue+'-dashboard');
-    if(t) t.classList.remove('hidden');
+    const eKey=Object.keys(donneesGlobales.eleves||{}).find(k=>donneesGlobales.eleves[k].codeEleve===code);
+    if(eKey){ sessionActive={role:'eleve',id:eKey,nom:donneesGlobales.eleves[eKey].nom,ecole:ECOLE_PRINCIPALE}; fermerLoginFlottant(); changerVue('eleve'); initEleveDashboard(eKey,false); return; }
+    else{ err.textContent='Code élève introuvable'; err.classList.remove('hidden'); }
+  }else{
+    // PARENT - 1 CODE VOIT TOUS SES ENFANTS
+    const eKey=Object.keys(donneesGlobales.eleves||{}).find(k=>donneesGlobales.eleves[k].codeTuteur===code);
+    if(eKey){ sessionActive={role:'parent',id:donneesGlobales.eleves[eKey].tuteurTel,nom:donneesGlobales.eleves[eKey].tuteurNom,ecole:ECOLE_PRINCIPALE}; fermerLoginFlottant(); changerVue('eleve'); initEleveDashboard(eKey,true); return; }
+    else{ err.textContent='Code parent introuvable - vérifie PA-xxxx'; err.classList.remove('hidden'); }
   }
 }
 
-function genererCodeUnique(prefix, existingCodes){
-  let code;
-  do{ code=prefix+'-'+Math.floor(100000+Math.random()*900000); }while(existingCodes.includes(code));
-  return code;
+function publierCommunique(){
+  const titre=document.getElementById('comm-titre').value.trim();
+  const texte=document.getElementById('comm-texte').value.trim();
+  if(!titre||!texte) return;
+  const key=db.ref('communiques').push().key;
+  db.ref('communiques/'+key).set({titre:titre,texte:texte,ecole:ECOLE_PRINCIPALE,date:new Date().toISOString()});
+  document.getElementById('comm-titre').value=''; document.getElementById('comm-texte').value='';
 }
 
-function obtenirTousCodesExistants(){
-  const codes=[];
-  for(let k in (donneesGlobales.eleves||{})){
-    if(donneesGlobales.eleves[k].codeEleve) codes.push(donneesGlobales.eleves[k].codeEleve);
-    if(donneesGlobales.eleves[k].codeTuteur) codes.push(donneesGlobales.eleves[k].codeTuteur);
-  }
-  for(let k in (donneesGlobales.tuteurs||{})){
-    if(donneesGlobales.tuteurs[k].codeTuteur) codes.push(donneesGlobales.tuteurs[k].codeTuteur);
-  }
-  for(let k in (donneesGlobales.professeurs||{})){
-    if(donneesGlobales.professeurs[k].code) codes.push(donneesGlobales.professeurs[k].code);
-  }
-  return codes;
-}
-
-function chargerCommuniquesAccueil(){
-  const cont=document.getElementById('liste-communiques-accueil');
-  if(!cont) return;
-  const comms=donneesGlobales.communiques||{};
-  cont.innerHTML='';
-  if(Object.keys(comms).length===0){cont.innerHTML='<p class="text-[11px] text-slate-500">Aucun communiqué</p>'; return;}
-  Object.values(comms).reverse().forEach(c=>{
-    const div=document.createElement('div');
-    div.className='bg-slate-800 p-3 rounded-xl';
-    div.innerHTML=`<p class="font-bold">${c.titre||''}</p><p class="text-[11px] text-slate-300">${c.contenu||''}</p>`;
-    cont.appendChild(div);
-  });
-}
-
-// LANCE AU CHARGEMENT
-document.addEventListener('DOMContentLoaded', ()=>{
-  initialiserFirebaseListeners();
+// LISTENERS TEMPS REEL
+db.ref('eleves').on('value',snap=>{ donneesGlobales.eleves=snap.val()||{}; renderAdminListes(); if(sessionActive.role==='eleve'||sessionActive.role==='parent'){ renderEleveCotes(sessionActive.enfantIdActif||sessionActive.id); } });
+db.ref('professeurs').on('value',snap=>{ donneesGlobales.professeurs=snap.val()||{}; renderAdminListes(); });
+db.ref('tuteurs').on('value',snap=>{ donneesGlobales.tuteurs=snap.val()||{}; });
+db.ref('notes').on('value',snap=>{ donneesGlobales.notes=snap.val()||{}; renderProfNotes(); if(sessionActive.enfantIdActif) renderEleveCotes(sessionActive.enfantIdActif); });
+db.ref('deliberations').on('value',snap=>{ donneesGlobales.deliberations=snap.val()||{}; if(sessionActive.enfantIdActif) renderEleveBulletin(sessionActive.enfantIdActif); });
+db.ref('communiques').on('value',snap=>{
+  const comms=snap.val()||{}; donneesGlobales.communiques=comms;
+  const contAcc=document.getElementById('liste-communiques-accueil');
+  const contAdmin=document.getElementById('admin-liste-communiques');
+  const contEleve=document.getElementById('eleve-communiques');
+  if(contAcc){ contAcc.innerHTML=''; Object.values(comms).slice(-5).reverse().forEach(c=>{ const d=document.createElement('div'); d.className='bg-slate-800 p-2 rounded-lg'; d.innerHTML=`<p class="font-bold">${c.titre}</p><p class="text-[11px] text-slate-400">${c.texte}</p>`; contAcc.appendChild(d); }); }
+  if(contAdmin){ contAdmin.innerHTML=''; Object.entries(comms).forEach(([k,c])=>{ const d=document.createElement('div'); d.className='bg-slate-800 p-2 rounded flex justify-between'; d.innerHTML=`<span>${c.titre}</span><button onclick="db.ref('communiques/${k}').remove()" class="text-red-400 text-[10px]">X</button>`; contAdmin.appendChild(d); }); }
+  if(contEleve){ contEleve.innerHTML=''; Object.values(comms).forEach(c=>{ const d=document.createElement('div'); d.className='bg-slate-800 p-2 rounded'; d.innerHTML=`<p class="font-bold text-[11px]">${c.titre}</p><p class="text-[10px] text-slate-400">${c.texte}</p>`; contEleve.appendChild(d); }); }
 });
 
-// RACCOURCIS CLAVIER
-document.addEventListener('keydown', function(e){
-  if(e.key==='Escape'){
-    if(sessionActive.role){changerVue('accueil',true);}
-    else {fermerLoginFlottant();}
-  }
+// RACCOURCIS CLAVIER ENTREE / ECHAP
+document.addEventListener('keydown',e=>{
   if(e.key==='Enter'){
-    const activeLogin=!document.getElementById('modal-login-flottant').classList.contains('hidden');
-    if(activeLogin){
-      if(currentLoginRole==='admin'||currentLoginRole==='prof'){validerLoginFlottant();}
-      else {validerLoginFlottantPE();}
+    const modal=document.getElementById('modal-login-flottant');
+    if(!modal.classList.contains('hidden')){
+      if(roleLoginActuel==='admin'||roleLoginActuel==='prof') validerLoginFlottant();
+      else validerLoginFlottantPE();
     }
   }
+  if(e.key==='Escape') fermerLoginFlottant();
 });
-</script><script>
-// PARTIE 6 JS - RESTE DES FONCTIONS MONO-ECOLE
 
-function chargerListeAdminProfs(){
-  const cont=document.getElementById('admin-liste-profs');
-  if(!cont) return;
-  cont.innerHTML='';
-  const profs=donneesGlobales.professeurs||{};
-  const liste=Object.values(profs);
-  if(liste.length===0){
-    cont.innerHTML='<p class="text-[11px] text-slate-500 p-2">0 prof. Ajoute ci-dessus.</p>';
-    return;
-  }
-  liste.forEach((pr,idx)=>{
-    const key=Object.keys(profs)[idx];
-    const div=document.createElement('div');
-    div.className='bg-slate-800 p-2 rounded-lg flex justify-between items-center mb-1';
-    div.innerHTML=`<div><p class="font-bold text-white">${pr.nom}</p><p class="text-[10px] text-slate-400">${pr.matiere||''} - Code: ${pr.code||''}</p></div><button onclick="supprimerProfAdmin('${key}')" class="bg-red-900/50 text-red-300 px-2 py-1 rounded text-[10px]">Suppr</button>`;
-    cont.appendChild(div);
-  });
-}
+window.addEventListener('load',()=>{
+  remplirClassesRDC();
+  remplirCoursRDC();
+  document.getElementById('prof-date-cote').valueAsDate=new Date();
+});
 
-function ajouterProfAdmin(){
-  const nom=document.getElementById('admin-nom-prof').value.trim();
-  const matiere=document.getElementById('admin-matiere-prof').value.trim();
-  if(!nom){alert('Nom requis'); return;}
-  const codes=obtenirTousCodesExistants();
-  const code=genererCodeUnique('PR',codes);
-  const key=db.ref('professeurs').push().key;
-  db.ref('professeurs/'+key).set({
-    nom:nom, matiere:matiere||'Général', ecole:ECOLE_PRINCIPALE, code:code
-  }).then(()=>{
-    document.getElementById('admin-nom-prof').value='';
-    document.getElementById('admin-matiere-prof').value='';
-  });
-}
-
-function supprimerEleveAdmin(key){ if(!confirm('Supprimer cet élève?')) return; db.ref('eleves/'+key).remove(); }
-function supprimerProfAdmin(key){ if(!confirm('Supprimer ce prof?')) return; db.ref('professeurs/'+key).remove(); }
-
-function chargerListeAdminTuteurs(){
-  // optionnel - affiche parents liés aux élèves
-  // pour simplifier, on les génère depuis eleves.codeTuteur
-}
-
-function chargerFraisAdmin(){
-  const cfg=donneesGlobales.fraisConfig||{};
-  const principale=cfg.principale||cfg[ECOLE_PRINCIPALE.replace(/\s+/g,'_')]||{acompte:0,minerval:0};
-  const inpA=document.getElementById('frais-acompte-attendu');
-  const inpM=document.getElementById('frais-minerval-attendu');
-  if(inpA) inpA.value=principale.acompte||'';
-  if(inpM) inpM.value=principale.minerval||'';
-}
-
-function enregistrerConfigFrais(){
-  const acompte=parseFloat(document.getElementById('frais-acompte-attendu').value)||0;
-  const minerval=parseFloat(document.getElementById('frais-minerval-attendu').value)||0;
-  if(!acompte &&!minerval){alert('Entre Acompte et Minerval'); return;}
-  db.ref('fraisConfig/principale').set({
-    ecole:ECOLE_PRINCIPALE, acompte:acompte, minerval:minerval, total:acompte+minerval
-  }).then(()=>alert('Frais enregistrés: Acompte $'+acompte+' + Minerval $'+minerval));
-}
-
-function chargerTableauDeBordEleveOuParent(){
-  const eleveId=sessionActive.role==='eleve'?sessionActive.id:sessionActive.enfantIdActif;
-  const eleve=donneesGlobales.eleves[eleveId];
-  if(!eleve) return;
-  const contFrais=document.getElementById('eleve-infos-frais');
-  if(contFrais){
-    const payeA=eleve.frais?eleve.frais.acompte:0;
-    const payeM=eleve.frais?eleve.frais.minerval:0;
-    const cfg=donneesGlobales.fraisConfig?.principale||{acompte:0,minerval:0};
-    contFrais.innerHTML=`<p class="font-bold">Élève: ${eleve.nom} - ${eleve.classe}</p><p class="text-[11px]">Acompte: $${payeA}/${cfg.acompte} | Minerval: $${payeM}/${cfg.minerval}</p><p class="text-[10px] text-slate-400">Code Parent: ${eleve.codeTuteur}</p>`;
-  }
-}
-
-function chargerTableauDeBordProf(){
-  const cont=document.getElementById('prof-liste-eleves');
-  if(!cont) return;
-  cont.innerHTML='';
-  const eleves=Object.values(donneesGlobales.eleves||{});
-  if(eleves.length===0){cont.innerHTML='0 élève'; return;}
-  eleves.forEach(el=>{
-    const div=document.createElement('div');
-    div.className='bg-slate-800 p-2 rounded-lg mb-1 flex justify-between';
-    div.innerHTML=`<span>${el.nom} - ${el.classe}</span><span class="text-[10px] text-slate-400">${el.codeEleve}</span>`;
-    cont.appendChild(div);
-  });
-}
-
-// Stubs pour ne pas casser l'ancien code
-function chargerTableauPresencesAdmin(){}
-function chargerContactsMessagerieAdmin(){}
-function chargerDemandesCoursAdmin(){}
-function chargerDeliberationAdmin(){}
-function chargerAdminCommuniques(){}
-function envoyerMessageAdmin(){}
-function envoyerMessageParent(){}
-function soumettreDemandeCours(){}
-function fermerModalDemandeCours(){}
-function fermerModalFraisEleve(){}
-function enregistrerFraisEleve(){}
-</script><!-- FIN HTML MONO-ECOLE -->
+</script>
 </body>
 </html>
